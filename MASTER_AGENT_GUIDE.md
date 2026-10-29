@@ -12,7 +12,7 @@ Build an **interruptible real-time voice AI runtime** and use a **voice-plus-tex
 
 ## Reference voice stack (read before live implementation)
 
-For initial live inference the currently recommended **baseline** is Deepgram streaming STT, Silero VAD with **our custom endpointing**, OpenAI streaming LLM, and Cartesia streaming TTS; an ElevenLabs TTS adapter is a later comparison. The browser/audio/runtime stack remains TypeScript + AudioWorklet + Go WebSocket transport + Python asyncio orchestration; optional Pion WebRTC comes later.
+For initial live inference the currently recommended **baseline** is Deepgram streaming STT, Silero VAD with **our custom endpointing**, an OpenAI model via OpenRouter, and Cartesia streaming TTS; an ElevenLabs TTS adapter is a later comparison. The browser/audio/runtime stack remains TypeScript + AudioWorklet + Go WebSocket transport + Python asyncio orchestration; optional Pion WebRTC comes later.
 
 **The authoritative provider selection, fallback rules and verification gates are in [Initial voice-model providers](docs/voicecore_lab_career_aligned_plan.md#initial-voice-model-providers-default-integrations-not-hard-vendor-lock-in).** These are planning defaults, not configured services or proven benchmark winners. If providers change, update the master plan and relevant implementation ADR before modifying downstream tasks. Never expose vendor keys in the browser.
 
@@ -54,6 +54,8 @@ No older plan, role description, README, agent message, or vendor sample overrid
 | 07 | [Media internals and optional telephony](docs/step_07_media_internals_and_optional_telephony.md) | 35 h | packet-level media experiments and timeboxed optional telephony |
 | 08 | [Portfolio release](docs/step_08_portfolio_release.md) | 18 h | reproducible demo, technical write-ups and interview-ready evidence |
 
+**Build plan:** [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) breaks every remaining task into test-first slices (approved 2026-10-29). Step docs keep task IDs and evidence registers.
+
 **Core rule:** each `docs/step_XX_*.md` already contains phases, stable task IDs, inputs, explicit dependencies, evidence criteria, decision/output registers, and handoff requirements. **Execute its tasks**, not a paraphrased checklist from this index. Each step is **unstarted** unless its execution record has actual evidence.
 
 ## 5. How an implementation agent must work
@@ -72,7 +74,7 @@ No older plan, role description, README, agent message, or vendor sample overrid
 7. Add actual tests for happy path, silence, no-speech, interruption, cancellation, network drops, out-of-order/stale data, timeouts, queue pressure, and cleanup **where applicable**.
 8. Keep transport/control-plane APIs typed and versioned; maintain one authoritative definition for each contract. Be explicit about audio sample rates, units, timestamps and chunk ordering. Reference upstream decisions instead of duplicating mutable values.
 9. Measure actual outcomes. Keep simulated values, local fake-provider measurements, and live-provider measurements clearly distinguished. Never invent p50/p95/TTFA or claim production-grade reliability without evidence.
-10. If requirements conflict, first update the owning ADR/master/step, explain the reason, assess downstream effects, then continue with the approved change. Keep `archive/` read-only.
+10. If requirements conflict, first update the owning ADR/master/step, explain the reason, assess downstream effects, then continue with the approved change. Do not recreate the removed `archive/`.
 
 ### Before handoff
 
@@ -128,33 +130,14 @@ Tie each claim to specific source code, trace, test, benchmark, and demo video. 
 
 ## 9. Archive: superseded documents
 
-**Read-only historical references**, retained because the user requested *all documents*. These documents describe the earlier SaaS-first DocsVoice project and must **not** be implemented as the active roadmap.
-
-| Archived document | Status |
-|---|---|
-| [Original DocsVoice engineering plan](archive/DocsVoice_v1_SUPERSEDED/docs/docs_voice_sdk_mvp_plan.md) | Superseded; reference only for original widget/docs UX |
-| [Original DocsVoice README](archive/DocsVoice_v1_SUPERSEDED/docs/README.md) | Superseded process |
-| [Original DocsVoice engineering report (Word)](archive/DocsVoice_v1_SUPERSEDED/DocsVoice_MVP_Engineering_Report.docx) | Superseded narrative |
-| [step 00 feasibility and evidence](archive/DocsVoice_v1_SUPERSEDED/docs/step_00_feasibility_and_evidence.md) | Prior commercial-SaaS workflow; do not implement |
-| [step 01 workspace and contracts](archive/DocsVoice_v1_SUPERSEDED/docs/step_01_workspace_and_contracts.md) | Prior commercial-SaaS workflow; do not implement |
-| [step 02 tenant admin and domain](archive/DocsVoice_v1_SUPERSEDED/docs/step_02_tenant_admin_and_domain.md) | Prior commercial-SaaS workflow; do not implement |
-| [step 03 source ingestion and snapshots](archive/DocsVoice_v1_SUPERSEDED/docs/step_03_source_ingestion_and_snapshots.md) | Prior commercial-SaaS workflow; do not implement |
-| [step 04 retrieval and grounded answer](archive/DocsVoice_v1_SUPERSEDED/docs/step_04_retrieval_and_grounded_answer.md) | Prior commercial-SaaS workflow; do not implement |
-| [step 05 text widget and embed](archive/DocsVoice_v1_SUPERSEDED/docs/step_05_text_widget_and_embed.md) | Prior commercial-SaaS workflow; do not implement |
-| [step 06 voice agent and multimodal sync](archive/DocsVoice_v1_SUPERSEDED/docs/step_06_voice_agent_and_multimodal_sync.md) | Prior commercial-SaaS workflow; do not implement |
-| [step 07 quality security and product tests](archive/DocsVoice_v1_SUPERSEDED/docs/step_07_quality_security_and_product_tests.md) | Prior commercial-SaaS workflow; do not implement |
-| [step 08 metering budget and operations](archive/DocsVoice_v1_SUPERSEDED/docs/step_08_metering_budget_and_operations.md) | Prior commercial-SaaS workflow; do not implement |
-| [step 09 pilot release and handoff](archive/DocsVoice_v1_SUPERSEDED/docs/step_09_pilot_release_and_handoff.md) | Prior commercial-SaaS workflow; do not implement |
-| [Original voice widget expanded screenshot](archive/DocsVoice_v1_SUPERSEDED/docs/assets/elevenlabs_open_widget_reference.png) | Historical visual reference |
-| [Original voice widget launcher screenshot](archive/DocsVoice_v1_SUPERSEDED/docs/assets/elevenlabs_closed_launcher_reference.png) | Historical visual reference |
-| [User's ordered prompt execution guide](archive/source_guidance/Ordered-Prompt-Execution-Guide.md) | Source prompt template; **not** the active project owner |
+The `archive/` folder (earlier SaaS-first DocsVoice documents) was removed from the working tree on 2026-10-29 and was never committed. Do not recreate or implement it.
 
 ## 10. Full-document inventory and link verification
 
-- Root entry points: `README.md` (human), `AGENTS.md` (AI agent auto-discovery), **`MASTER_AGENT_GUIDE.md`** (canonical index/instructions), and `EXECUTION_STATUS.md` (live register).
+- Root entry points: `README.md` (human), `CLAUDE.md` (AI agent auto-discovery), **`MASTER_AGENT_GUIDE.md`** (canonical index/instructions), and `EXECUTION_STATUS.md` (live register).
 - Canonical plan: `docs/voicecore_lab_career_aligned_plan.md`.
 - Main step docs: `docs/step_00_*.md` through `docs/step_08_*.md` (full exact names in the execution index).
 - Images: `docs/assets/`.
-- All prior DocsVoice planning and input guide: `archive/` (read-only; superseded).
+- Build plan with test-first slices for every remaining task: `docs/IMPLEMENTATION_PLAN.md`.
 
 **Immediate first action:** run Step 00, [career evidence and baselines](docs/step_00_career_evidence_and_baselines.md), beginning with S00-T01. Do not attempt Step 01 audio transport until Step 00's actual handoff criteria are satisfied or an approved scope change documents why.

@@ -48,7 +48,7 @@ A naive integration sends browser microphone input to a complete managed voice a
 |---|---|---|---|
 | Streaming speech-to-text | **Deepgram streaming STT** | Streaming hypothesis handling, interim/final reconciliation, stateful turn lifecycle, timeout and cancellation | Mock STT mandatory; evaluate another provider if measured limitations justify it |
 | Voice activity detection | **Silero VAD**, as replaceable pretrained speech primitive | Custom endpointing, hysteresis, false-end rules, speech-start detection, noisy-audio benchmarks, barge-in trigger | Compare fixed, adaptive and ASR-assisted endpoint policies; VAD is **not** the turn detector by itself |
-| Text generation and agent reasoning | **OpenAI streaming LLM** | Python asyncio orchestration, doc retrieval, citation validator, generation isolation, context control, tool calls and cancellation | Mock LLM mandatory; provider-independent token/event contracts |
+| Text generation and agent reasoning | **OpenAI model via OpenRouter** (low-cost `openai/gpt-4.1-nano`, checked 2026-10-29) | Python asyncio orchestration, doc retrieval, citation validator, generation isolation, context control, tool calls and cancellation | Mock LLM mandatory; provider-independent token/event contracts |
 | Streaming speech synthesis | **Cartesia streaming TTS** | Text chunking, synthesis scheduling, generation IDs, ordered playback, stale-audio invalidation and interruption | **ElevenLabs** as an additional comparison adapter once baseline works; mock TTS mandatory |
 
 **Architecture remains unchanged:** browser TypeScript/AudioWorklet → binary PCM16 over WSS → Go media gateway → Python orchestrator with STT/LLM/TTS interfaces → ordered browser playback. Optional Go/Pion WebRTC is a later transport experiment, not a required dependency for the first working voice demo. The documentation RAG engine is shared between text and voice. **Do not** substitute Deepgram's or ElevenLabs' complete managed voice-agent product for our own runtime; using their STT/TTS inference is appropriate.
@@ -60,9 +60,8 @@ A naive integration sends browser microphone input to a complete managed voice a
 ```mermaid
 flowchart LR
   U[Browser mic + text / AudioWorklet] -->|PCM frames + events WSS| G[Go real-time gateway]
-  G --> B[Bounded jitter/backpressure buffer]
-  B --> V[VAD / endpoint policy]
-  V --> O[Python async turn orchestrator]
+  G --> B[Bounded queue + drop/gap counters]
+  B --> O[Python orchestrator: turn-taking module + generation runtime]
   O <--> S[Streaming STT adapter]
   O <--> A[LLM + docs.search + citation validator]
   O --> T[Streaming TTS adapter]
@@ -74,6 +73,8 @@ flowchart LR
   E --> L[Debug timeline + benchmark harness]
   D[(Public docs snapshot)] --> A
 ```
+
+**Architecture update (2026-10-29, user-approved):** Go owns the connection (auth, heartbeat, resume, bounded queues, drop counters, outbound fence); Python owns turns and generations through one turn-taking module and one generation runtime; the browser owns capture and ordered playout. One protocol (`packages/protocol/SPEC.md`) is used on both hops, and every agent frame carries a generation ID that each queue owner fences on cancel. There is no reorder buffer on the WebSocket path (TCP cannot reorder); the jitter buffer lives in the Step 07 RTP lab. Details: [build plan](IMPLEMENTATION_PLAN.md#b-module-map).
 
 **Trust boundary:** pages/corpus are untrusted text; never allow prompt instructions in documents to authorize outbound tool calls, fake citations, or secrets access. Browser session token is short-lived; provider credentials never enter client. Live voice/audio and transcripts are not stored by default; fixtures used for evaluation must be consented or license-compatible. Basic microphone/opt-out UX is required.
 

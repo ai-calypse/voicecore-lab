@@ -26,10 +26,10 @@ This step owns the task-specific implementation choices, contracts and test evid
 
 ### S06-T01 — Trace schema
 
-**Outcome / implementation:** Define trace IDs across client/Go/Python/STT/LLM/TTS, redact speech content by default.  
+**Outcome / implementation:** The trace event schema is defined in `packages/protocol/SPEC.md` during Step 01 (decision 2026-10-29, see [build plan](./IMPLEMENTATION_PLAN.md)); this task completes emitters in every process and the timeline merge, with speech content redacted by default.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** None beyond prerequisites.  
-**Expected artifacts:** `packages/protocol/tracing and services/telemetry` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `packages/protocol/SPEC.md (trace schema), services/agent-core/voicecore/trace.py, harness/timeline.py` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** Trace exemplars reconstruct each turn without retaining raw audio.  
 
@@ -38,7 +38,7 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Outcome / implementation:** Create development timeline with stage bars, microphone/agent speaking states and dropped frames.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** S06-T01.  
-**Expected artifacts:** `apps/lab-ui` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `apps/demo (?lab=1 panel)` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** Reviewer can visually identify bottleneck and an interrupted generation.  
 
@@ -56,7 +56,7 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Outcome / implementation:** Report true time-to-first-audio, user endpoint delay, p50/p95/p99, drop rate and cost/turn.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** S06-T03.  
-**Expected artifacts:** `benchmarks/voice_bench.py` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `harness/bench.py` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** No simulated client/server clocks merged without sync method; raw CSV/JSON included.  
 
@@ -65,7 +65,7 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Outcome / implementation:** Score transcription WER, task correctness, unsupported-answer refusal, cited-source validity and interruptions.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** S06-T04.  
-**Expected artifacts:** `harness/evaluators` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `harness/timeline.py (quality metrics) and reports/quality_eval.md` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** Human audited subset; model-as-judge not treated as sole truth.  
 

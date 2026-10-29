@@ -26,7 +26,7 @@ This step owns the task-specific implementation choices, contracts and test evid
 
 ### S07-T01 — RTP/RTCP technical lab
 
-**Outcome / implementation:** Implement RTP packet inspect/reorder/seq-wrap and RTCP jitter interpretation on fixtures or loopback.  
+**Outcome / implementation:** Implement RTP packet inspect/reorder/seq-wrap and RTCP jitter interpretation on fixtures or loopback, plus the reorder/seq-wrap jitter buffer moved here from S01-T03 (decision 2026-10-29, see [build plan](./IMPLEMENTATION_PLAN.md)).  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** None beyond prerequisites.  
 **Expected artifacts:** `experiments/rtp_lab/` (planned; actual paths may be selected in owner register).  

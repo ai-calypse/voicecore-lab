@@ -29,7 +29,7 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Outcome / implementation:** Use AudioWorklet with microphone consent, mono PCM conversion, deterministic resampling to 16 kHz, and fixed 20-40 ms frames.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** None beyond prerequisites.  
-**Expected artifacts:** `packages/web-sdk/src/audio and fixtures/audio/frame-tests` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `packages/web-sdk/src/capture` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** Tests verify sample rates, endian, silence/clip safety, frame ordering, no audio before consent.  
 
@@ -38,18 +38,18 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Outcome / implementation:** Implement secure WebSocket media transport in Go; versioned header seq/timestamp/stream ID; decode, routing, heartbeat and close.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** S01-T01.  
-**Expected artifacts:** `services/realtime-gateway/ws and packages/protocol` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `packages/protocol (SPEC.md, vectors) and services/realtime-gateway/{protocol,session}` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** Contract tests for partial frame, invalid header, replay/duplicate, stale packet, close.  
 
-### S01-T03 — Jitter and backpressure
+### S01-T03 — Backpressure and counters
 
-**Outcome / implementation:** Implement bounded receive ring, sequence gaps, late frames, queues and overload policy; expose queue depth and drops.  
+**Outcome / implementation:** Implement bounded queues with a drop-oldest overload policy, sequence-gap detection across resume, and duplicate/stale drops; expose queue depth, drops and gaps. No reorder buffer: one WebSocket runs over TCP, so frames cannot arrive out of order; the reorder/seq-wrap jitter buffer moved to S07-T01 (decision 2026-10-29, see [build plan](./IMPLEMENTATION_PLAN.md)).  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** S01-T02.  
-**Expected artifacts:** `services/realtime-gateway/buffer` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `services/realtime-gateway/session (bounded queues, counters)` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
-**Acceptance test:** Injected reorder/drop/saturation are bounded, stable and observable.  
+**Acceptance test:** Injected saturation stays bounded and is counted; duplicate, stale and gap counters are exposed and correct.  
 
 ### S01-T04 — Reconnect and lifecycle
 
@@ -68,6 +68,26 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Expected artifacts:** `benchmarks/transport.md` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** Local and shaped network evidence includes p50/p95 and test conditions.  
+
+**Order inside this step** (decision 2026-10-29, see [build plan](./IMPLEMENTATION_PLAN.md)): S01-T02 protocol slices → S01-T01 → rest of S01-T02 → S01-T03 → S01-T04 → S01-T06 → S01-T07 → S01-T05.
+
+### S01-T06 — Ordered playout (new)
+
+**Outcome / implementation:** Browser playout module: generation-tagged frames, time-based underrun fill, cancel/fence flush, `playout.started/stopped` and `cancel.ack` events, pause/resume.  
+**Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
+**Dependencies:** S01-T02.  
+**Expected artifacts:** `packages/web-sdk/src/playout` (planned; actual paths may be selected in owner register).  
+**Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
+**Acceptance test:** Offline-adapter tests show no sample of a fenced generation is rendered after cancel, and each playout event carries generation and time.  
+
+### S01-T07 — Browser-to-gateway tracer bullet (new)
+
+**Outcome / implementation:** Fake-mic audio from a browser page round-trips through the Go gateway and a scripted fake orchestrator and is played out.  
+**Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
+**Dependencies:** S01-T04, S01-T06.  
+**Expected artifacts:** `services/realtime-gateway/cmd/fakeorch and a Playwright e2e test` (planned; actual paths may be selected in owner register).  
+**Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
+**Acceptance test:** Playwright test is green in CI and the page emits `playout.started`.  
 
 ## Risks, verification and recovery
 
@@ -96,6 +116,8 @@ Require both deterministic tests and controlled real-provider measurements where
 | S01-T03 | Not started | — | — | — |
 | S01-T04 | Not started | — | — | — |
 | S01-T05 | Not started | — | — | — |
+| S01-T06 | Not started | — | — | — |
+| S01-T07 | Not started | — | — | — |
 
 ## Source and artifact change record
 

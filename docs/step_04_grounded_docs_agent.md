@@ -29,7 +29,7 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Outcome / implementation:** Ingest static Markdown and public HTML sitemap with canonical URLs, content hashes and safe parsing; avoid internal URLs.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** None beyond prerequisites.  
-**Expected artifacts:** `services/knowledge/ingest` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `services/agent-core/voicecore/answer (ingest)` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** Fixture runs are deterministic; SSRF and instruction-text tests pass.  
 
@@ -38,7 +38,7 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Outcome / implementation:** Implement lexical + dense retrieval with reciprocal rank fusion, passage metadata and versioned snapshot.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** S04-T01.  
-**Expected artifacts:** `services/knowledge/retrieve` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `services/agent-core/voicecore/answer (index: FTS5 + fastembed + RRF)` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** Golden corpus eval logs Recall@K/MRR plus citations; no ungrounded passages.  
 
@@ -47,7 +47,7 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Outcome / implementation:** Expose docs.search tool with supported/unanswered distinction and exact URL fragment citation IDs.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** S04-T02.  
-**Expected artifacts:** `services/agent-core/tools` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `services/agent-core/voicecore/answer (docs.search tool, citation validator)` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** Tool output cannot invent URL; response schema validated before speaking.  
 
@@ -56,7 +56,7 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Outcome / implementation:** Text and voice turns invoke same answer/tool engine; speech output strips awkward citation syntax.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** S04-T03.  
-**Expected artifacts:** `services/agent-core/dialogue` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `services/agent-core/voicecore/answer (answer(), speechify())` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** Parity tests compare citations and factual claims in text vs voice.  
 

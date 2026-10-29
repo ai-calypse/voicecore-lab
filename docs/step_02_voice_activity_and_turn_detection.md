@@ -33,7 +33,7 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Outcome / implementation:** Integrate a VAD as a replaceable primitive and build voiced/unvoiced segment state machine.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** None beyond prerequisites.  
-**Expected artifacts:** `services/turn-detector/vad` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `services/agent-core/voicecore/turntaking (vad_silero.py, vad_fixture.py)` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** Fixtures cover silence, noisy environment, soft voice and zero speech.  
 
@@ -42,7 +42,7 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Outcome / implementation:** Implement fixed trailing silence, adaptive silence and ASR-assisted endpointing with hysteresis and max utterance.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** S02-T01.  
-**Expected artifacts:** `services/turn-detector/policy` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `services/agent-core/voicecore/turntaking (floor module, policy config)` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** Policies have independent tests for early cutoff, silence timeout and long utterance.  
 
@@ -60,7 +60,7 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Outcome / implementation:** Create annotated speech boundaries, score endpoint delay, early cutoff rate and missed utterance rate.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** S02-T03.  
-**Expected artifacts:** `harness/turn_eval.py and reports/turn_eval.md` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `harness/timeline.py and reports/turn_eval.md` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** Metrics are computed from labeled references, not model opinion.  
 

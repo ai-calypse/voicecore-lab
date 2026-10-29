@@ -29,7 +29,7 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Outcome / implementation:** Trigger interrupt while agent speaks using mic VAD and echo-aware gating; distinguish speech from loudspeaker echo.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** None beyond prerequisites.  
-**Expected artifacts:** `services/agent-core/bargein` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `services/agent-core/voicecore/turntaking (barge_in)` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** Interrupt triggers on synthetic speech but not echo-only reference cases.  
 
@@ -38,7 +38,7 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Outcome / implementation:** Cancel LLM/TTS, invalidate stale generation, clear queued audio, stop output on client with ACK.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** S05-T01.  
-**Expected artifacts:** `services/agent-core/cancel` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `services/agent-core/voicecore/runtime, services/realtime-gateway/session (fence), packages/web-sdk/src/playout` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** Late TTS bytes and late tokens cannot resume a cancelled turn.  
 
@@ -47,7 +47,7 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Outcome / implementation:** Define STT timeout, TTS disconnect, provider 429, client pause, mic revocation, network loss.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** S05-T02.  
-**Expected artifacts:** `services/agent-core/recovery` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `services/agent-core/voicecore/runtime (recovery rules)` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** User gets deterministic recoverable state; reconnected session does not duplicate speech.  
 
@@ -65,7 +65,7 @@ This step owns the task-specific implementation choices, contracts and test evid
 **Outcome / implementation:** Add deterministic latency, packet loss, provider stalls, failure injections via config, not monkeypatching.  
 **Inputs:** This document, [master](./voicecore_lab_career_aligned_plan.md), current upstream records and working code.  
 **Dependencies:** S05-T04.  
-**Expected artifacts:** `harness/chaos` (planned; actual paths may be selected in owner register).  
+**Expected artifacts:** `harness/scenarios/chaos` (planned; actual paths may be selected in owner register).  
 **Edge/failure concerns:** Handle invalid input, task cancellation, empty data and path/session lifecycle where applicable; explicitly mark any scenario that is genuinely not applicable.  
 **Acceptance test:** CI runs injection scenarios with reproducible seeds.  
 
