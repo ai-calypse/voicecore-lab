@@ -1,5 +1,4 @@
 {
-  "budget_usd": 2.0,
   "note": "Local estimate: connection seconds rounded up to whole minutes x list price. Not read from Deepgram billing (key lacks billing:read).",
   "entries": [
     {
@@ -50,7 +49,24 @@
       "request_id": "01a188d9-7364-7251-bc72-2685eb2d0bfd",
       "connected_seconds": 1.41,
       "estimated_usd": 0.075
+    },
+    {
+      "id": "42ae986b0b6b",
+      "pool": "usd",
+      "amount": 0.07341,
+      "label": "aura fixtures 40 questions",
+      "status": "settled",
+      "reserved": 0.0881,
+      "chars": 2447,
+      "provider": "deepgram aura-2"
     }
   ],
-  "total_estimated_usd": 0.525
+  "caps": {
+    "usd": 5.0,
+    "cartesia_credits": 16000
+  },
+  "totals": {
+    "usd": 0.59841,
+    "cartesia_credits": 0
+  }
 }

@@ -1,0 +1,1180 @@
+{
+  "version": 1,
+  "sample_rate": 16000,
+  "format": "wav mono pcm16le",
+  "trim_rule": "first/last 320-sample window with peak >= 500",
+  "padding_ms": [
+    1000,
+    1500
+  ],
+  "seed": 42,
+  "agent_speakers": {
+    "dev": "1272",
+    "holdout": "1089"
+  },
+  "clips": [
+    {
+      "id": "ref_agent_dev_01",
+      "file": "ref/agent_dev_01.wav",
+      "sha256": "d6d0296bab87e049614d1c981a1a609cb938c5a5a434d7049e5cdaad8fb861e8",
+      "split": "ref",
+      "category": "agent_dev",
+      "duration_ms": 4960,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "1272-128104-0010"
+        ],
+        "speaker": "1272",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            0,
+            4960
+          ]
+        ]
+      },
+      "transcript": "near the fire and the ornaments fred brought home from india on the mantel board"
+    },
+    {
+      "id": "ref_agent_dev_02",
+      "file": "ref/agent_dev_02.wav",
+      "sha256": "8dbfa09714b413142eff0fb773964514e1711deaf27c9414e47b84cde115e7eb",
+      "split": "ref",
+      "category": "agent_dev",
+      "duration_ms": 4940,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "1272-141231-0005"
+        ],
+        "speaker": "1272",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            0,
+            4940
+          ]
+        ]
+      },
+      "transcript": "a minute is not a very large measure of time and his body needed every fraction of it"
+    },
+    {
+      "id": "ref_agent_dev_03",
+      "file": "ref/agent_dev_03.wav",
+      "sha256": "bb1be0c21831537b9ddb5b046290af9f1d623a01c0d91d2379178aa1dabfc023",
+      "split": "ref",
+      "category": "agent_dev",
+      "duration_ms": 6000,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "1272-141231-0030"
+        ],
+        "speaker": "1272",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            0,
+            6000
+          ]
+        ]
+      },
+      "transcript": "brion saw something close to panic on his opponent's face when the man finally recognized his error"
+    },
+    {
+      "id": "ref_agent_dev_04",
+      "file": "ref/agent_dev_04.wav",
+      "sha256": "2898820570a751f91f46e811058c81b75afe0b9025747ac3000c1f2f8d8908fd",
+      "split": "ref",
+      "category": "agent_dev",
+      "duration_ms": 6700,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "1272-141231-0012"
+        ],
+        "speaker": "1272",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            0,
+            6700
+          ]
+        ]
+      },
+      "transcript": "i'm here because the matter is of utmost importance and brandd is the one i must see now stand aside"
+    },
+    {
+      "id": "ref_agent_dev_05",
+      "file": "ref/agent_dev_05.wav",
+      "sha256": "d734580f95b13297f2f6c2d60751a428242d2abe937906e46352528349d3b1a7",
+      "split": "ref",
+      "category": "agent_dev",
+      "duration_ms": 6180,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "1272-141231-0029"
+        ],
+        "speaker": "1272",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            0,
+            6180
+          ]
+        ]
+      },
+      "transcript": "he thought it was a last burst of energy he knew how close they both were to exhaustion"
+    },
+    {
+      "id": "ref_agent_holdout_01",
+      "file": "ref/agent_holdout_01.wav",
+      "sha256": "57374205ec967a235a584e00ddcd5b38c3383a582b2d6e237aab5e5a4187287d",
+      "split": "ref",
+      "category": "agent_holdout",
+      "duration_ms": 4780,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "1089-134686-0034"
+        ],
+        "speaker": "1089",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            0,
+            4780
+          ]
+        ]
+      },
+      "transcript": "the rector paused and then shaking his clasped hands before him went on"
+    },
+    {
+      "id": "ref_agent_holdout_02",
+      "file": "ref/agent_holdout_02.wav",
+      "sha256": "c350c7a76e133bc5ae504c613f898353a920dcd3e0048d7d5d593defc51fe938",
+      "split": "ref",
+      "category": "agent_holdout",
+      "duration_ms": 3800,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "1089-134691-0014"
+        ],
+        "speaker": "1089",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            0,
+            3800
+          ]
+        ]
+      },
+      "transcript": "the phrase and the day and the scene harmonized in a chord"
+    },
+    {
+      "id": "ref_agent_holdout_03",
+      "file": "ref/agent_holdout_03.wav",
+      "sha256": "082cead7aa9134b45a531bd977656f854386792a00e31c945b6a432c6d8049ad",
+      "split": "ref",
+      "category": "agent_holdout",
+      "duration_ms": 5340,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "1089-134686-0015"
+        ],
+        "speaker": "1089",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            0,
+            5340
+          ]
+        ]
+      },
+      "transcript": "but the dusk deepening in the schoolroom covered over his thoughts the bell rang"
+    },
+    {
+      "id": "ref_agent_holdout_04",
+      "file": "ref/agent_holdout_04.wav",
+      "sha256": "f89f42e9547ed33d3bd9f018671eb7367d4f12beb4de93b746ce2133d657feca",
+      "split": "ref",
+      "category": "agent_holdout",
+      "duration_ms": 5720,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "1089-134686-0002"
+        ],
+        "speaker": "1089",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            0,
+            5720
+          ]
+        ]
+      },
+      "transcript": "after early nightfall the yellow lamps would light up here and there the squalid quarter of the brothels"
+    },
+    {
+      "id": "ref_agent_holdout_05",
+      "file": "ref/agent_holdout_05.wav",
+      "sha256": "082ef9636888769bfcbf8a24abf79f888de6f1f9695b7a5e7beb61adbf7da0e8",
+      "split": "ref",
+      "category": "agent_holdout",
+      "duration_ms": 7920,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "1089-134691-0016"
+        ],
+        "speaker": "1089",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            0,
+            7920
+          ]
+        ]
+      },
+      "transcript": "they were voyaging across the deserts of the sky a host of nomads on the march voyaging high over ireland westward bound"
+    },
+    {
+      "id": "dev_single_01",
+      "file": "dev/single_01.wav",
+      "sha256": "08413aecfdb841a54394e955d0f9766cd707d8bbe0eb8feb4d17236a30c4dc61",
+      "split": "dev",
+      "category": "single",
+      "duration_ms": 7560,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "2078-142845-0046"
+        ],
+        "speaker": "2078",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            6060
+          ]
+        ],
+        "turn_end_ms": 6060
+      },
+      "transcript": "it is not cultivated in england being principally confined to the east"
+    },
+    {
+      "id": "dev_single_02",
+      "file": "dev/single_02.wav",
+      "sha256": "a0fde6d806c00243033aca7da78af9957b58e239562d5102036cdb1bddc167b6",
+      "split": "dev",
+      "category": "single",
+      "duration_ms": 7840,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "1462-170142-0006"
+        ],
+        "speaker": "1462",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            6340
+          ]
+        ],
+        "turn_end_ms": 6340
+      },
+      "transcript": "she merely brushed his cheek with her lips and put a hand lightly and joyously on either shoulder"
+    },
+    {
+      "id": "dev_single_03",
+      "file": "dev/single_03.wav",
+      "sha256": "4ac2aa7ae7d5f78ffd9f503ad3d61a856d68a2f40cf0f90f250c28d78e653ae8",
+      "split": "dev",
+      "category": "single",
+      "duration_ms": 9680,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "5338-24615-0013"
+        ],
+        "speaker": "5338",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            8180
+          ]
+        ],
+        "turn_end_ms": 8180
+      },
+      "transcript": "the court was spacious well paved and perfectly clean there being probably another entrance behind the stables for removing the litter"
+    },
+    {
+      "id": "dev_single_04",
+      "file": "dev/single_04.wav",
+      "sha256": "523d6b9f2a6f3ddc75cc80fbe711b5379ee3149906d96e83682e43ffd00e1694",
+      "split": "dev",
+      "category": "single",
+      "duration_ms": 11860,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "3752-4943-0007"
+        ],
+        "speaker": "3752",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            10360
+          ]
+        ],
+        "turn_end_ms": 10360
+      },
+      "transcript": "kirkland ghastly pale bleeding with his woollen shirt torn and his blue eyes wide open with terror was clinging to the bars"
+    },
+    {
+      "id": "dev_noisy_10db_01",
+      "file": "dev/noisy_10db_01.wav",
+      "sha256": "d296642a79e5b67012db86f4e5131d6bd8fc70f7d1f77d865ab05229b334faa0",
+      "split": "dev",
+      "category": "noisy_10db",
+      "duration_ms": 6980,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "3170-137482-0019"
+        ],
+        "speaker": "3170",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            5480
+          ]
+        ],
+        "turn_end_ms": 5480
+      },
+      "transcript": "i picked it up and coming up to him just as he was going down the steps i handed it to him",
+      "noise": {
+        "color": "pink",
+        "snr_db": 10,
+        "seed": 42
+      }
+    },
+    {
+      "id": "dev_noisy_10db_02",
+      "file": "dev/noisy_10db_02.wav",
+      "sha256": "2b9217ec767d15fd3b10c6048e313df945f66dfcdedb17d14780b9b37a923231",
+      "split": "dev",
+      "category": "noisy_10db",
+      "duration_ms": 6080,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "2277-149897-0013"
+        ],
+        "speaker": "2277",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            4580
+          ]
+        ],
+        "turn_end_ms": 4580
+      },
+      "transcript": "for relief he arose and joined in conversation with a few friends who were drinking",
+      "noise": {
+        "color": "pink",
+        "snr_db": 10,
+        "seed": 42
+      }
+    },
+    {
+      "id": "dev_noisy_5db_01",
+      "file": "dev/noisy_5db_01.wav",
+      "sha256": "a8681ffed098a9e04a562fc03dc3e61c4f67245800af22d9b62d10505bda7fe5",
+      "split": "dev",
+      "category": "noisy_5db",
+      "duration_ms": 8740,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "2035-152373-0004"
+        ],
+        "speaker": "2035",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            7240
+          ]
+        ],
+        "turn_end_ms": 7240
+      },
+      "transcript": "like the two kings of sparta they reigned jointly dividing between them the labours and cares of state",
+      "noise": {
+        "color": "brown",
+        "snr_db": 5,
+        "seed": 42
+      }
+    },
+    {
+      "id": "dev_noisy_5db_02",
+      "file": "dev/noisy_5db_02.wav",
+      "sha256": "58dfb6561ede5b64571453008d755e1baeee275c8dc3518d3e4755ab1b5cbd1a",
+      "split": "dev",
+      "category": "noisy_5db",
+      "duration_ms": 6880,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "1993-147965-0008"
+        ],
+        "speaker": "1993",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            5380
+          ]
+        ],
+        "turn_end_ms": 5380
+      },
+      "transcript": "he made the sign of the cross over me put on his cap and went off in the dark",
+      "noise": {
+        "color": "brown",
+        "snr_db": 5,
+        "seed": 42
+      }
+    },
+    {
+      "id": "dev_slow_0_8x_01",
+      "file": "dev/slow_0_8x_01.wav",
+      "sha256": "264efc9749cc5b8331dafbb463474afd3dea6c8d1c3f02dfe61f38b7550e7f81",
+      "split": "dev",
+      "category": "slow_0_8x",
+      "duration_ms": 8940,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "652-130737-0001"
+        ],
+        "speaker": "652",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            7440
+          ]
+        ],
+        "turn_end_ms": 7440
+      },
+      "transcript": "with soup and fish serve white wines such as rhein wine sauterne or white burgundy"
+    },
+    {
+      "id": "dev_slow_0_8x_02",
+      "file": "dev/slow_0_8x_02.wav",
+      "sha256": "848733888d633ce7c88e1c1182fc57e83b7f17ad8291200906f79ea7076cbe3c",
+      "split": "dev",
+      "category": "slow_0_8x",
+      "duration_ms": 8100,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "1462-170142-0041"
+        ],
+        "speaker": "1462",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            6600
+          ]
+        ],
+        "turn_end_ms": 6600
+      },
+      "transcript": "she slid to the floor beside him as if she were too tired to sit up any longer"
+    },
+    {
+      "id": "dev_mid_pause_600ms_01",
+      "file": "dev/mid_pause_600ms_01.wav",
+      "sha256": "9a1ecff48c76ecdc5b326f62686dd71ecbdb23dd3b93f5ca015194b9d5740dc7",
+      "split": "dev",
+      "category": "mid_pause_600ms",
+      "duration_ms": 11360,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "1993-147149-0000",
+          "1993-147149-0017"
+        ],
+        "speaker": "1993",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            6560
+          ],
+          [
+            7160,
+            9860
+          ]
+        ],
+        "turn_end_ms": 9860
+      },
+      "transcript": "how infinite the wealth of love and hope garnered in these same tiny treasure houses and oh oh jem don't give way so i cannot bear to see you"
+    },
+    {
+      "id": "dev_mid_pause_600ms_02",
+      "file": "dev/mid_pause_600ms_02.wav",
+      "sha256": "40a418da249ba5068d2fc0b7f83266bdd0749243d3a13a1633a5349a724c5042",
+      "split": "dev",
+      "category": "mid_pause_600ms",
+      "duration_ms": 11860,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "3752-4943-0024",
+          "3752-4944-0062"
+        ],
+        "speaker": "3752",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            6340
+          ],
+          [
+            6940,
+            10360
+          ]
+        ],
+        "turn_end_ms": 10360
+      },
+      "transcript": "just as he reached it however the figure of mister north rose from behind a pile of stones he mixed a teaspoonful of this in a pannikin of water and drank it"
+    },
+    {
+      "id": "dev_interrupt_01",
+      "file": "dev/interrupt_01.wav",
+      "sha256": "e115e5d3cf01d88a39f499a86f6ee293cae54ff57fbcdbda0fe434cd61107bf1",
+      "split": "dev",
+      "category": "interrupt",
+      "duration_ms": 7000,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "1462-170142-0036"
+        ],
+        "speaker": "1462",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1700,
+            4220
+          ]
+        ],
+        "turn_end_ms": 4220,
+        "user_onset_ms": 1700
+      },
+      "transcript": "you ask me to stay away from you because you want me",
+      "playout_ref": {
+        "clip": "ref_agent_dev_01",
+        "offset_ms": 500,
+        "echo_delay_ms": 40,
+        "echo_gain_db": -15
+      }
+    },
+    {
+      "id": "dev_interrupt_02",
+      "file": "dev/interrupt_02.wav",
+      "sha256": "8a629af025cabda07be1a651e407a1662ae3ca08139216ce623e8b63a254add2",
+      "split": "dev",
+      "category": "interrupt",
+      "duration_ms": 8360,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "2035-147961-0011"
+        ],
+        "speaker": "2035",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1700,
+            6860
+          ]
+        ],
+        "turn_end_ms": 6860,
+        "user_onset_ms": 1700
+      },
+      "transcript": "quickly it was covered with bright red spots i thought i had never seen any blood so bright",
+      "playout_ref": {
+        "clip": "ref_agent_dev_02",
+        "offset_ms": 500,
+        "echo_delay_ms": 40,
+        "echo_gain_db": -15
+      }
+    },
+    {
+      "id": "dev_interrupt_03",
+      "file": "dev/interrupt_03.wav",
+      "sha256": "1daa718432838e74d74a65acd6f65679b221445ff3bebc35623b80cd05cb3b11",
+      "split": "dev",
+      "category": "interrupt",
+      "duration_ms": 13460,
+      "source": {
+        "dataset": "LibriSpeech dev-clean",
+        "utterances": [
+          "3081-166546-0077"
+        ],
+        "speaker": "3081",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1700,
+            11960
+          ]
+        ],
+        "turn_end_ms": 11960,
+        "user_onset_ms": 1700
+      },
+      "transcript": "miss clarke started and her sweet face showed a moment's perplexity did i she queried musingly",
+      "playout_ref": {
+        "clip": "ref_agent_dev_03",
+        "offset_ms": 500,
+        "echo_delay_ms": 40,
+        "echo_gain_db": -15
+      }
+    },
+    {
+      "id": "dev_echo_only_01",
+      "file": "dev/echo_only_01.wav",
+      "sha256": "d4723de9c3dfa28e46f3be534ac7636d0369bba2cc598e6dc2e7561facf5a6c2",
+      "split": "dev",
+      "category": "echo_only",
+      "duration_ms": 8740,
+      "source": {
+        "dataset": "derived from ref clip",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": []
+      },
+      "playout_ref": {
+        "clip": "ref_agent_dev_04",
+        "offset_ms": 500,
+        "echo_delay_ms": 40,
+        "echo_gain_db": -15
+      }
+    },
+    {
+      "id": "dev_echo_only_02",
+      "file": "dev/echo_only_02.wav",
+      "sha256": "05e91fbaeb17e490bc0fed0d30eb4f1bba1b65ec777cff6d6e6f88c769ed847e",
+      "split": "dev",
+      "category": "echo_only",
+      "duration_ms": 8220,
+      "source": {
+        "dataset": "derived from ref clip",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": []
+      },
+      "playout_ref": {
+        "clip": "ref_agent_dev_05",
+        "offset_ms": 500,
+        "echo_delay_ms": 40,
+        "echo_gain_db": -15
+      }
+    },
+    {
+      "id": "dev_silence_01",
+      "file": "dev/silence_01.wav",
+      "sha256": "a05e0dcad9e62716baa2d1bd5963c88587604310013538629ebb82d7dc84db97",
+      "split": "dev",
+      "category": "silence",
+      "duration_ms": 10000,
+      "source": {
+        "dataset": "synthetic white noise floor",
+        "seed": 42,
+        "license": "CC0"
+      },
+      "labels": {
+        "speech": []
+      }
+    },
+    {
+      "id": "holdout_single_01",
+      "file": "holdout/single_01.wav",
+      "sha256": "52ef1b083fd54d0ed1d297bbef9b879c8dd225ef09580950d76081edbdfe172f",
+      "split": "holdout",
+      "category": "single",
+      "duration_ms": 8500,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "8455-210777-0053"
+        ],
+        "speaker": "8455",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            7000
+          ]
+        ],
+        "turn_end_ms": 7000
+      },
+      "transcript": "were i to comply with your orders without expressing my own opinion i should seem to have done so willingly hereafter"
+    },
+    {
+      "id": "holdout_single_02",
+      "file": "holdout/single_02.wav",
+      "sha256": "95d37a4aa9d5c3c6dd45d5ad419ffec184d2e2720d7a7f89d91cb46594f23594",
+      "split": "holdout",
+      "category": "single",
+      "duration_ms": 7660,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "7127-75947-0015"
+        ],
+        "speaker": "7127",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            6160
+          ]
+        ],
+        "turn_end_ms": 6160
+      },
+      "transcript": "there cannot be a doubt he received you kindly for in fact you returned without his permission"
+    },
+    {
+      "id": "holdout_single_03",
+      "file": "holdout/single_03.wav",
+      "sha256": "e94fa7ce11f884a1353bd0e924ffd909344af103b0981f227c942feb19c684f8",
+      "split": "holdout",
+      "category": "single",
+      "duration_ms": 10520,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "1320-122617-0019"
+        ],
+        "speaker": "1320",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            9020
+          ]
+        ],
+        "turn_end_ms": 9020
+      },
+      "transcript": "uncas occupied a distant corner in a reclining attitude being rigidly bound both hands and feet by strong and painful withes"
+    },
+    {
+      "id": "holdout_noisy_10db_01",
+      "file": "holdout/noisy_10db_01.wav",
+      "sha256": "4151efdefb91ea43611f9e7cef15650cfa76f5557a44aacda7231f19c3ffbf7a",
+      "split": "holdout",
+      "category": "noisy_10db",
+      "duration_ms": 10100,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "3575-170457-0006"
+        ],
+        "speaker": "3575",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            8600
+          ]
+        ],
+        "turn_end_ms": 8600
+      },
+      "transcript": "her feeble health gave her her yielding manner for she could never oppose any one without gathering up all her strength for the struggle",
+      "noise": {
+        "color": "pink",
+        "snr_db": 10,
+        "seed": 42
+      }
+    },
+    {
+      "id": "holdout_noisy_10db_02",
+      "file": "holdout/noisy_10db_02.wav",
+      "sha256": "5f0a6092d3d964a0c6db61dcf47fab39c96f750a663abf39cc81ef72f5418ea9",
+      "split": "holdout",
+      "category": "noisy_10db",
+      "duration_ms": 8660,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "6829-68769-0015"
+        ],
+        "speaker": "6829",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            7160
+          ]
+        ],
+        "turn_end_ms": 7160
+      },
+      "transcript": "sometimes i'm that yearning for a smoke i'm nearly crazy an i dunno which is worst dyin one way or another",
+      "noise": {
+        "color": "pink",
+        "snr_db": 10,
+        "seed": 42
+      }
+    },
+    {
+      "id": "holdout_noisy_5db_01",
+      "file": "holdout/noisy_5db_01.wav",
+      "sha256": "7397b7694721ae64e159cb9f8c8d7a72e5450a76e10bb8f1349e5e92849a870e",
+      "split": "holdout",
+      "category": "noisy_5db",
+      "duration_ms": 7740,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "908-31957-0007"
+        ],
+        "speaker": "908",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            6240
+          ]
+        ],
+        "turn_end_ms": 6240
+      },
+      "transcript": "could it mean to last a love set pendulous between sorrow and sorrow",
+      "noise": {
+        "color": "brown",
+        "snr_db": 5,
+        "seed": 42
+      }
+    },
+    {
+      "id": "holdout_noisy_5db_02",
+      "file": "holdout/noisy_5db_02.wav",
+      "sha256": "046bb4e28d40c3a2f0d24bd85741b720cb5dcbad83c8b8e17ece9220bd7232fa",
+      "split": "holdout",
+      "category": "noisy_5db",
+      "duration_ms": 15240,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "8224-274381-0010"
+        ],
+        "speaker": "8224",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            13740
+          ]
+        ],
+        "turn_end_ms": 13740
+      },
+      "transcript": "by a quick and unexpected march montrose hastened to innerlochy and presented himself in order of battle before the surprised but not affrightened covenanters",
+      "noise": {
+        "color": "brown",
+        "snr_db": 5,
+        "seed": 42
+      }
+    },
+    {
+      "id": "holdout_slow_0_8x_01",
+      "file": "holdout/slow_0_8x_01.wav",
+      "sha256": "3ff283bfa29669b33e958a3bb5613af8c1f4053adb8a72dd708b570a0cfe1358",
+      "split": "holdout",
+      "category": "slow_0_8x",
+      "duration_ms": 8860,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "1320-122617-0006"
+        ],
+        "speaker": "1320",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            7360
+          ]
+        ],
+        "turn_end_ms": 7360
+      },
+      "transcript": "can these things be returned david breathing more freely as the truth began to dawn upon him"
+    },
+    {
+      "id": "holdout_mid_pause_600ms_01",
+      "file": "holdout/mid_pause_600ms_01.wav",
+      "sha256": "7bcc59d12060ede918ca4fd1e0e41d72258ed280b0b426cbdc7939dc9be3b203",
+      "split": "holdout",
+      "category": "mid_pause_600ms",
+      "duration_ms": 19620,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "4507-16021-0049",
+          "4507-16021-0023"
+        ],
+        "speaker": "4507",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            6380
+          ],
+          [
+            6980,
+            18120
+          ]
+        ],
+        "turn_end_ms": 18120
+      },
+      "transcript": "there is hardly one day out of a hundred which is wholly joyous and sunny the sugar manufacturer who says loaf clarified lumps bastard common burnt this honest manufacturer talks slang"
+    },
+    {
+      "id": "holdout_mid_pause_600ms_02",
+      "file": "holdout/mid_pause_600ms_02.wav",
+      "sha256": "02353e98d7f921e0dd66661ca39d0e28e11f14e416cc60108ec303109aeedab4",
+      "split": "holdout",
+      "category": "mid_pause_600ms",
+      "duration_ms": 13720,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "4970-29093-0022",
+          "4970-29095-0024"
+        ],
+        "speaker": "4970",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1000,
+            6080
+          ],
+          [
+            6680,
+            12220
+          ]
+        ],
+        "turn_end_ms": 12220
+      },
+      "transcript": "he knew his uncle would be glad to hear that he had at last turned his thoughts to a practical matter it has occupied mother a long time to find at the shops the exact shade for her new bonnet"
+    },
+    {
+      "id": "holdout_interrupt_01",
+      "file": "holdout/interrupt_01.wav",
+      "sha256": "31803c0972d0f593db318e78c1f7a65803f5197073259553fbea1dd94e3dba6a",
+      "split": "holdout",
+      "category": "interrupt",
+      "duration_ms": 9360,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "3729-6852-0044"
+        ],
+        "speaker": "3729",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1700,
+            7860
+          ]
+        ],
+        "turn_end_ms": 7860,
+        "user_onset_ms": 1700
+      },
+      "transcript": "i will make you translate them into french and you need not be afraid of my finding you insatiable",
+      "playout_ref": {
+        "clip": "ref_agent_holdout_01",
+        "offset_ms": 500,
+        "echo_delay_ms": 40,
+        "echo_gain_db": -15
+      }
+    },
+    {
+      "id": "holdout_interrupt_02",
+      "file": "holdout/interrupt_02.wav",
+      "sha256": "0e67a131e75d5bfc4c119b449d8556209a9360c8a7e58023467e327c6e3a2163",
+      "split": "holdout",
+      "category": "interrupt",
+      "duration_ms": 7560,
+      "source": {
+        "dataset": "LibriSpeech test-clean",
+        "utterances": [
+          "260-123286-0015"
+        ],
+        "speaker": "260",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": [
+          [
+            1700,
+            6060
+          ]
+        ],
+        "turn_end_ms": 6060,
+        "user_onset_ms": 1700
+      },
+      "transcript": "it must be as wide as the mediterranean or the atlantic and why not",
+      "playout_ref": {
+        "clip": "ref_agent_holdout_02",
+        "offset_ms": 500,
+        "echo_delay_ms": 40,
+        "echo_gain_db": -15
+      }
+    },
+    {
+      "id": "holdout_echo_only_01",
+      "file": "holdout/echo_only_01.wav",
+      "sha256": "a773f10d97cc648c613a30007fc00770f051372b9b26f72ad76ea5cefc894512",
+      "split": "holdout",
+      "category": "echo_only",
+      "duration_ms": 7380,
+      "source": {
+        "dataset": "derived from ref clip",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": []
+      },
+      "playout_ref": {
+        "clip": "ref_agent_holdout_03",
+        "offset_ms": 500,
+        "echo_delay_ms": 40,
+        "echo_gain_db": -15
+      }
+    },
+    {
+      "id": "holdout_echo_only_02",
+      "file": "holdout/echo_only_02.wav",
+      "sha256": "17673bec27525c87e73090cf14b04bd4a9ae7e528f4a61374b772485c1816c9b",
+      "split": "holdout",
+      "category": "echo_only",
+      "duration_ms": 7760,
+      "source": {
+        "dataset": "derived from ref clip",
+        "license": "CC BY 4.0"
+      },
+      "labels": {
+        "speech": []
+      },
+      "playout_ref": {
+        "clip": "ref_agent_holdout_04",
+        "offset_ms": 500,
+        "echo_delay_ms": 40,
+        "echo_gain_db": -15
+      }
+    },
+    {
+      "id": "holdout_silence_01",
+      "file": "holdout/silence_01.wav",
+      "sha256": "995d5a1fe755e263aef3ab98cac2610866925af76d0903d3d4be640bbfc14af5",
+      "split": "holdout",
+      "category": "silence",
+      "duration_ms": 10000,
+      "source": {
+        "dataset": "synthetic white noise floor",
+        "seed": 42,
+        "license": "CC0"
+      },
+      "labels": {
+        "speech": []
+      }
+    }
+  ]
+}

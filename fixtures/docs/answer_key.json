@@ -1,0 +1,636 @@
+{
+  "version": 1,
+  "snapshot": "fixtures/docs/uv",
+  "questions": [
+    {
+      "id": "q01",
+      "split": "dev",
+      "question": "How do I install uv on a Mac or Linux machine?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "getting-started/installation.md",
+          "heading": "Standalone installer"
+        }
+      ],
+      "must_contain": [
+        "curl",
+        "install.sh"
+      ],
+      "answer": "Run the standalone installer with curl, for example curl -LsSf https://astral.sh/uv/install.sh | sh, or use wget if curl is not available."
+    },
+    {
+      "id": "q02",
+      "split": "dev",
+      "question": "Can I buy a paid support contract for uv with guaranteed response times?",
+      "answerable": false,
+      "must_cite": [],
+      "must_contain": [],
+      "answer": "I couldn't find that in the docs.",
+      "absent_terms": [
+        "support contract",
+        "paid support"
+      ]
+    },
+    {
+      "id": "q03",
+      "split": "holdout",
+      "user_record": true,
+      "question": "How do I update uv to the latest version?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "getting-started/installation.md",
+          "heading": "Upgrading uv"
+        }
+      ],
+      "must_contain": [
+        "uv self update"
+      ],
+      "answer": "If uv was installed with the standalone installer, run uv self update; otherwise use your package manager's upgrade command, such as pip install --upgrade uv."
+    },
+    {
+      "id": "q04",
+      "split": "dev",
+      "question": "How do I create a new library project that other people can install?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/projects/init.md",
+          "heading": "Libraries"
+        }
+      ],
+      "must_contain": [
+        "uv init --lib"
+      ],
+      "answer": "Run uv init --lib with the project name, which creates a packaged project with a src layout and a build system so it can be built and distributed."
+    },
+    {
+      "id": "q05",
+      "split": "holdout",
+      "user_record": true,
+      "question": "How do I remove a package from my dev dependencies?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/projects/dependencies.md",
+          "heading": "Removing dependencies"
+        }
+      ],
+      "must_contain": [
+        "uv remove",
+        "--dev"
+      ],
+      "answer": "Run uv remove with the --dev flag and the package name; the --group and --optional flags work the same way for other tables."
+    },
+    {
+      "id": "q06",
+      "split": "dev",
+      "question": "When moving from pip, how do I import my requirements but keep my old pinned versions?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "guides/migration/pip-to-project.md",
+          "heading": "Importing requirements files"
+        }
+      ],
+      "must_contain": [
+        "uv add -r",
+        "constraints"
+      ],
+      "answer": "Run uv add -r requirements.in -c requirements.txt so your previously locked versions are applied as constraints and kept in the new lockfile."
+    },
+    {
+      "id": "q07",
+      "split": "dev",
+      "question": "How do I make uv install every dependency group by default?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/projects/dependencies.md",
+          "heading": "Default groups"
+        }
+      ],
+      "must_contain": [
+        "default-groups",
+        "all"
+      ],
+      "answer": "Set default-groups to \"all\" in the tool.uv section of your project settings; otherwise uv only includes the dev group by default."
+    },
+    {
+      "id": "q08",
+      "split": "holdout",
+      "user_record": true,
+      "question": "How much does uv cost for enterprise teams?",
+      "answerable": false,
+      "must_cite": [],
+      "must_contain": [],
+      "answer": "I couldn't find that in the docs.",
+      "absent_terms": [
+        "enterprise",
+        "pricing"
+      ]
+    },
+    {
+      "id": "q09",
+      "split": "dev",
+      "question": "How can I check that my lock file is up to date without changing it?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/projects/sync.md",
+          "heading": "Checking the lockfile"
+        }
+      ],
+      "must_contain": [
+        "uv lock --check"
+      ],
+      "answer": "Run uv lock --check, which reports whether the lockfile matches the project metadata and is equivalent to the --locked flag on other commands."
+    },
+    {
+      "id": "q10",
+      "split": "holdout",
+      "user_record": true,
+      "question": "How do I upgrade a locked package to a specific version?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/projects/sync.md",
+          "heading": "Upgrading locked package versions"
+        }
+      ],
+      "must_contain": [
+        "upgrade-package"
+      ],
+      "answer": "Run uv lock --upgrade-package with the package name and the version, such as package==version, which changes only that package in the lockfile within the project's constraints."
+    },
+    {
+      "id": "q11",
+      "split": "dev",
+      "question": "Will uv sync remove packages that are not part of my project?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/projects/sync.md",
+          "heading": "Handling of extraneous packages"
+        }
+      ],
+      "must_contain": [
+        "exact",
+        "inexact"
+      ],
+      "answer": "Yes, uv sync performs exact syncing by default and removes packages that are not selected for installation; pass --inexact to keep them."
+    },
+    {
+      "id": "q12",
+      "split": "dev",
+      "question": "How do I add an extra package for just one uv run command?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/projects/run.md",
+          "heading": "Requesting additional dependencies"
+        }
+      ],
+      "must_contain": [
+        "--with"
+      ],
+      "answer": "Use the --with option, for example uv run --with httpx==0.26.0, to include a dependency for that single invocation regardless of the project's requirements."
+    },
+    {
+      "id": "q13",
+      "split": "holdout",
+      "user_record": true,
+      "question": "How do I pin the Python version for my project?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/python-versions.md",
+          "heading": "Python version files"
+        }
+      ],
+      "must_contain": [
+        "uv python pin",
+        ".python-version"
+      ],
+      "answer": "Run uv python pin, which writes a .python-version file that uv uses as the default Python version request."
+    },
+    {
+      "id": "q14",
+      "split": "dev",
+      "question": "Is there a long term support release of uv for companies that upgrade slowly?",
+      "answerable": false,
+      "must_cite": [],
+      "must_contain": [],
+      "answer": "I couldn't find that in the docs.",
+      "absent_terms": [
+        "long term support",
+        "long-term support"
+      ]
+    },
+    {
+      "id": "q15",
+      "split": "holdout",
+      "question": "How do I ask uv for a Python build that has no global interpreter lock?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/python-versions.md",
+          "heading": "Free-threaded Python"
+        }
+      ],
+      "must_contain": [
+        "free-threaded",
+        "3.13t"
+      ],
+      "answer": "Request a free-threaded variant explicitly, for example 3.13t or 3.13+freethreaded, which uv supports for CPython 3.13 and later."
+    },
+    {
+      "id": "q16",
+      "split": "dev",
+      "question": "Where does uvx keep a tool's environment, and does it stick around?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/tools.md",
+          "heading": "Tool environments"
+        }
+      ],
+      "must_contain": [
+        "cache",
+        "disposable"
+      ],
+      "answer": "uvx stores the tool's virtual environment in the uv cache directory and treats it as disposable, so uv cache clean deletes it and it is recreated when needed."
+    },
+    {
+      "id": "q17",
+      "split": "dev",
+      "question": "How do I run a command whose package has a different name, like http from httpie?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "guides/tools.md",
+          "heading": "Commands with different package names"
+        }
+      ],
+      "must_contain": [
+        "--from"
+      ],
+      "answer": "Use the --from option to name the package that provides the command, for example uvx --from httpie http."
+    },
+    {
+      "id": "q18",
+      "split": "holdout",
+      "user_record": true,
+      "question": "How do I reinstall the Python versions that uv manages?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "guides/install-python.md",
+          "heading": "Reinstalling Python"
+        }
+      ],
+      "must_contain": [
+        "uv python install --reinstall"
+      ],
+      "answer": "Run uv python install --reinstall, which reinstalls all previously installed uv-managed Python versions."
+    },
+    {
+      "id": "q19",
+      "split": "dev",
+      "question": "Can uv install and manage Node JS versions as well as Python?",
+      "answerable": false,
+      "must_cite": [],
+      "must_contain": [],
+      "answer": "I couldn't find that in the docs.",
+      "absent_terms": [
+        "node.js",
+        "nodejs"
+      ]
+    },
+    {
+      "id": "q20",
+      "split": "holdout",
+      "user_record": true,
+      "question": "How do I upgrade all of my installed tools at once?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "guides/tools.md",
+          "heading": "Upgrading tools"
+        }
+      ],
+      "must_contain": [
+        "uv tool upgrade --all"
+      ],
+      "answer": "Run uv tool upgrade --all; upgrades respect the version constraints you gave when installing each tool."
+    },
+    {
+      "id": "q21",
+      "split": "dev",
+      "question": "How do I declare dependencies inside a single Python script?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "guides/scripts.md",
+          "heading": "Declaring script dependencies"
+        }
+      ],
+      "must_contain": [
+        "uv add --script",
+        "inline metadata"
+      ],
+      "answer": "Use uv add --script with the script name and packages, which writes an inline metadata block listing the dependencies at the top of the script."
+    },
+    {
+      "id": "q22",
+      "split": "dev",
+      "question": "Should I use a workspace if my packages have conflicting requirements?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/projects/workspaces.md",
+          "heading": "When (not) to use workspaces"
+        }
+      ],
+      "must_contain": [
+        "path dependencies"
+      ],
+      "answer": "No, workspaces are not suited to members with conflicting requirements; define each package as its own project and connect them with path dependencies instead."
+    },
+    {
+      "id": "q23",
+      "split": "holdout",
+      "question": "Can uv install a dependency straight from a Mercurial repository?",
+      "answerable": false,
+      "must_cite": [],
+      "must_contain": [],
+      "answer": "I couldn't find that in the docs.",
+      "absent_terms": [
+        "mercurial"
+      ]
+    },
+    {
+      "id": "q24",
+      "split": "dev",
+      "question": "Will uv pick up the settings I already have configured for pip?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "pip/compatibility.md",
+          "heading": "Configuration files and environment variables"
+        }
+      ],
+      "must_contain": [
+        "pip.conf"
+      ],
+      "answer": "No, uv does not read pip-specific configuration such as pip.conf or PIP_INDEX_URL; it uses its own variables like UV_INDEX_URL and settings in uv.toml or the tool.uv.pip table."
+    },
+    {
+      "id": "q25",
+      "split": "dev",
+      "question": "Does uv have a built-in task runner for project commands, like npm scripts?",
+      "answerable": false,
+      "must_cite": [],
+      "must_contain": [],
+      "answer": "I couldn't find that in the docs.",
+      "absent_terms": [
+        "task runner",
+        "npm"
+      ]
+    },
+    {
+      "id": "q26",
+      "split": "holdout",
+      "user_record": true,
+      "question": "How do I create a virtual environment with uv?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "pip/environments.md",
+          "heading": "Creating a virtual environment"
+        }
+      ],
+      "must_contain": [
+        "uv venv"
+      ],
+      "answer": "Run uv venv, which creates a virtual environment at .venv, or pass a name or a Python version, for example uv venv --python 3.11."
+    },
+    {
+      "id": "q27",
+      "split": "dev",
+      "question": "If a folder has both a uv toml file and a pyproject file, which settings does uv use?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/configuration-files.md",
+          "heading": "Configuration files"
+        }
+      ],
+      "must_contain": [
+        "uv.toml",
+        "precedence"
+      ],
+      "answer": "uv.toml takes precedence, so uv reads configuration from it and ignores the tool.uv section of the pyproject.toml in the same directory."
+    },
+    {
+      "id": "q28",
+      "split": "holdout",
+      "user_record": true,
+      "question": "How do I clear the uv cache?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/cache.md",
+          "heading": "Clearing the cache"
+        }
+      ],
+      "must_contain": [
+        "uv cache clean"
+      ],
+      "answer": "Run uv cache clean to remove all cache entries, or uv cache prune to remove only unused entries."
+    },
+    {
+      "id": "q29",
+      "split": "dev",
+      "question": "How do I make uv put the project environment somewhere other than the default folder?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/projects/config.md",
+          "heading": "Project environment path"
+        }
+      ],
+      "must_contain": [
+        "uv_project_environment"
+      ],
+      "answer": "Set the UV_PROJECT_ENVIRONMENT environment variable to the path you want instead of the default .venv; relative paths are resolved from the workspace root."
+    },
+    {
+      "id": "q30",
+      "split": "dev",
+      "question": "How do I publish my package to PyPI with uv?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "guides/package.md",
+          "heading": "Publishing your package"
+        }
+      ],
+      "must_contain": [
+        "uv publish",
+        "token"
+      ],
+      "answer": "Run uv publish and provide a PyPI token with --token or UV_PUBLISH_TOKEN, or use trusted publishing from GitHub Actions without setting credentials."
+    },
+    {
+      "id": "q31",
+      "split": "holdout",
+      "question": "Can I make uv wait a week before it uses newly released packages?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/resolution.md",
+          "heading": "Dependency cooldowns"
+        }
+      ],
+      "must_contain": [
+        "exclude-newer",
+        "1 week"
+      ],
+      "answer": "Yes, set exclude-newer to a duration such as \"1 week\" to get a dependency cooldown that ignores packages newer than that duration."
+    },
+    {
+      "id": "q32",
+      "split": "dev",
+      "question": "How can I make my Python app start faster inside a Docker container?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "guides/integration/docker.md",
+          "heading": "Compiling bytecode"
+        }
+      ],
+      "must_contain": [
+        "bytecode",
+        "uv_compile_bytecode"
+      ],
+      "answer": "Compile bytecode at install time with --compile-bytecode or by setting UV_COMPILE_BYTECODE=1, which improves startup time at the cost of install time and image size."
+    },
+    {
+      "id": "q33",
+      "split": "holdout",
+      "user_record": true,
+      "question": "Does uv collect telemetry, and can I turn it off?",
+      "answerable": false,
+      "must_cite": [],
+      "must_contain": [],
+      "answer": "I couldn't find that in the docs.",
+      "absent_terms": [
+        "telemetry"
+      ]
+    },
+    {
+      "id": "q34",
+      "split": "dev",
+      "question": "What is the recommended way to install uv in GitHub Actions?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "guides/integration/github.md",
+          "heading": "Installation"
+        }
+      ],
+      "must_contain": [
+        "setup-uv"
+      ],
+      "answer": "Use the official astral-sh/setup-uv action, ideally pinned to a specific uv version with its version input."
+    },
+    {
+      "id": "q35",
+      "split": "dev",
+      "question": "How do I set up uv in Bitbucket Pipelines?",
+      "answerable": false,
+      "must_cite": [],
+      "must_contain": [],
+      "answer": "I couldn't find that in the docs.",
+      "absent_terms": [
+        "bitbucket"
+      ]
+    },
+    {
+      "id": "q36",
+      "split": "holdout",
+      "question": "Can the uv build backend build packages with C or Rust extensions?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/build-backend.md",
+          "heading": "Choosing a build backend"
+        }
+      ],
+      "must_contain": [
+        "pure python"
+      ],
+      "answer": "No, the uv build backend currently only supports pure Python code, so a library with extension modules needs an alternative build backend."
+    },
+    {
+      "id": "q37",
+      "split": "dev",
+      "question": "How can I test my library against the oldest dependency versions it says it supports?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/resolution.md",
+          "heading": "Resolution strategy"
+        }
+      ],
+      "must_contain": [
+        "resolution lowest"
+      ],
+      "answer": "Run your tests with --resolution lowest, or --resolution lowest-direct for direct dependencies only, so uv installs the lowest compatible versions."
+    },
+    {
+      "id": "q38",
+      "split": "dev",
+      "question": "Is there an official uv plugin for PyCharm?",
+      "answerable": false,
+      "must_cite": [],
+      "must_contain": [],
+      "answer": "I couldn't find that in the docs.",
+      "absent_terms": [
+        "pycharm",
+        "jetbrains"
+      ]
+    },
+    {
+      "id": "q39",
+      "split": "holdout",
+      "question": "How do I deploy my uv project to a Kubernetes cluster?",
+      "answerable": false,
+      "must_cite": [],
+      "must_contain": [],
+      "answer": "I couldn't find that in the docs.",
+      "absent_terms": [
+        "kubernetes"
+      ]
+    },
+    {
+      "id": "q40",
+      "split": "dev",
+      "question": "Can uv produce a parts list of my app's dependencies for security auditors?",
+      "answerable": true,
+      "must_cite": [
+        {
+          "file": "concepts/projects/export.md",
+          "heading": "CycloneDX SBOM format"
+        }
+      ],
+      "must_contain": [
+        "cyclonedx",
+        "bill of materials"
+      ],
+      "answer": "Yes, uv export --format cyclonedx1.5 exports the lockfile as a CycloneDX software bill of materials, which is currently a preview feature."
+    }
+  ]
+}

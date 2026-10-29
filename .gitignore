@@ -6,3 +6,4 @@ __pycache__/
 .venv/
 .cache/
 node_modules/
+fixtures/audio/local/

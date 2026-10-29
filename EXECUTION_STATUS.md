@@ -6,7 +6,7 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 
 | Step | Status | Estimated hours (not time logged) | Verified outputs | Blocker / next action |
 |---|---|---:|---|---|
-| [00](docs/step_00_career_evidence_and_baselines.md) | In progress | 12 | S00-T01 requirements matrix; S00-T02 Deepgram hosted baseline (live, measured) | Next: S00-T03 fixtures. Open: intermittent `FAILED_TO_START_LISTENING` (3/7 sessions) |
+| [00](docs/step_00_career_evidence_and_baselines.md) | In progress (handoff pending user actions) | 12 | S00-T01 matrix; S00-T02 baseline (live); S00-T03 fixtures; S00-T04 ADR 0001 | User: record 10 questions, listen to 5 clips, read ADR. Open: intermittent `FAILED_TO_START_LISTENING` (3/7 sessions) |
 | [01](docs/step_01_audio_transport_and_sdk.md) | Not started | 30 | None | Begin step 01 after prerequisites |
 | [02](docs/step_02_voice_activity_and_turn_detection.md) | Not started | 30 | None | Begin step 02 after prerequisites |
 | [03](docs/step_03_streaming_orchestrator.md) | Not started | 38 | None | Begin step 03 after prerequisites |
@@ -23,6 +23,7 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 | 2026-10-29 | S00-T01 | Claude Code (Opus 5.5) | No git repo; requirements matrix (kept private) | Per-role proof count and task-ID existence check: all roles pass, 0 unknown task IDs | — |
 | 2026-10-29 | S00-T02 | Claude Code (Opus 5.5) | `harness/`, `benchmarks/` | Self-test ok. **Live provider** run `20261029T180728Z-a29514`: 8/12 turns (1 of 3 sessions failed setup); voice speech end → first agent audio frame median 1094.8 ms (n=6). 3 runs total, est. spend $0.525 of $2.00 cap | User approved paid use, $2 cap. First audio = frame received, not acoustic playback |
 | 2026-10-29 | Build plan Step 0 (setup) | Claude Code (Opus 5.5) | `docs/IMPLEMENTATION_PLAN.md`, `GLOSSARY.md`, doc sync, `pyproject.toml` (uv workspace), `package.json` + `pnpm-workspace.yaml`, `services/realtime-gateway/go.mod`, `Makefile`, `.github/workflows/ci.yml`, `services/agent-core/voicecore/budget.py` | `make test` → 6 passed (`test_budget.py`); `uv run python harness/baseline_deepgram.py --self-test` → ok; usd pool total $0.525 | Keys for OpenRouter + Cartesia in `.env`; LLM `openai/gpt-4.1-nano` via OpenRouter ($0.10/$0.40 per M tokens, checked 2026-10-29); OpenRouter key has its own $1 limit. uizze skills `ui-taste` + `ios-design` installed at user scope and reviewed (Markdown only). Deviations from plan 0.6–0.8, all lazier: provider deps, Go/e2e CI jobs and `bench`/`fixtures` targets are added with their first use, not up front; harness has no own pyproject (root env + `pythonpath`). |
+| 2026-10-29 | S00-T03, S00-T04 | Claude Code (Opus 5.5) | `fixtures/`, `harness/build_fixtures.py`, `harness/build_local_fixtures.py`, `harness/tests/test_fixtures.py`, `docs/adr/0001-engine-ownership.md` | `uv run pytest harness/tests` → 10 passed; 8/8 manifest mutations caught; byte-identical rebuild; code-review findings fixed | Aura clips local only (terms unconfirmed); usd pool $0.598 of $5.00 |
 
 ## Handoff history
 

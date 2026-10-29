@@ -14,7 +14,13 @@ members = ["services/agent-core"]
 voicecore = { workspace = true }
 
 [dependency-groups]
-dev = ["pytest>=9", "pytest-asyncio>=1.4", "looptime>=0.9", "hypothesis>=6.170"]
+dev = [
+    "pytest>=9",
+    "pytest-asyncio>=1.4",
+    "looptime>=0.9",
+    "hypothesis>=6.170",
+    "numpy>=2.5.4",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["services/agent-core/tests", "harness/tests"]
