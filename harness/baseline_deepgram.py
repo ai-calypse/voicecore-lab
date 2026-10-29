@@ -1,7 +1,3 @@
-# /// script
-# requires-python = ">=3.11"
-# dependencies = ["websockets>=14,<16"]
-# ///
 """S00-T02 hosted control baseline against the Deepgram Voice Agent API.
 
 Comparison only: Deepgram runs STT, LLM and TTS end to end; none of this is our engine.
@@ -11,8 +7,8 @@ measures fixture speech end (voice) or InjectUserMessage send (text) to the firs
 audio frame received by this client, and checks the answer against expected keywords.
 "First audio" means the first binary frame received here, not acoustic playback.
 
-    uv run harness/baseline_deepgram.py --self-test   # offline checks, no network
-    uv run harness/baseline_deepgram.py               # live; spends money, budget-guarded
+    uv run python harness/baseline_deepgram.py --self-test   # offline checks, no network
+    uv run python harness/baseline_deepgram.py               # live; reserves from the shared usd pool
 """
 import argparse
 import asyncio
@@ -31,9 +27,10 @@ import wave
 from datetime import datetime, timezone
 from pathlib import Path
 
+from voicecore import budget
+
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG = ROOT / "harness/config/baseline.json"
-LEDGER = ROOT / "benchmarks/spend_ledger.json"
 RESULTS = ROOT / "benchmarks/baseline_results.json"
 RAW_DIR = ROOT / "benchmarks/raw"
 AUDIO_CACHE = ROOT / ".cache/baseline_audio"  # generated locally with macOS `say`; not committed
@@ -61,30 +58,6 @@ def load_key():
 def session_cost(seconds, cfg):
     minutes = math.ceil(seconds / 60) if cfg["bill_whole_minutes"] else seconds / 60
     return round(minutes * cfg["price_per_minute_usd"], 4)
-
-
-def can_afford(spent, cfg):
-    # Worst case: the session runs until the max_session_seconds hard stop.
-    return round(spent + session_cost(cfg["max_session_seconds"], cfg), 6) <= cfg["budget_usd"]
-
-
-def load_ledger(cfg):
-    if LEDGER.exists():
-        return json.loads(LEDGER.read_text())
-    return {
-        "budget_usd": cfg["budget_usd"],
-        "note": "Local estimate: connection seconds rounded up to whole minutes x list price. "
-                "Not read from Deepgram billing (key lacks billing:read).",
-        "entries": [],
-        "total_estimated_usd": 0.0,
-    }
-
-
-def record_spend(ledger, entry):
-    ledger["entries"].append(entry)
-    ledger["total_estimated_usd"] = round(sum(e["estimated_usd"] for e in ledger["entries"]), 4)
-    LEDGER.parent.mkdir(parents=True, exist_ok=True)
-    LEDGER.write_text(json.dumps(ledger, indent=2) + "\n")
 
 
 # --- scoring and audio ------------------------------------------------------
@@ -298,14 +271,15 @@ def main():
                 "sha256": hashlib.sha256(pcm).hexdigest(), "duration_ms": len(fr) * cfg["frame_ms"],
                 "speech_end_ms": (lv + 1) * cfg["frame_ms"]}}
 
-    ledger = load_ledger(cfg)
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:6]
     started = datetime.now(timezone.utc).isoformat(timespec="seconds")
     trace, sessions, budget_stop = [], [], False
     for i in range(a.sessions or cfg["sessions"]):
-        if not can_afford(ledger["total_estimated_usd"], cfg):
+        try:  # worst case: the session runs until the max_session_seconds hard stop
+            res = budget.reserve("usd", session_cost(cfg["max_session_seconds"], cfg), label=f"baseline {run_id} s{i}")
+        except budget.BudgetExceeded as e:
             budget_stop = True
-            print(f"budget stop: spent ${ledger['total_estimated_usd']} of ${cfg['budget_usd']}")
+            print(f"budget stop: {e}")
             break
         if i:
             # Back-to-back sessions hit FAILED_TO_START_LISTENING in run 20261029T180621Z.
@@ -320,8 +294,8 @@ def main():
         finally:
             secs = round(time.monotonic() - t, 2)
             s["connected_seconds"] = secs
-            record_spend(ledger, {"run_id": run_id, "session": i, "request_id": s["request_id"],
-                                  "connected_seconds": secs, "estimated_usd": session_cost(secs, cfg)})
+            budget.settle(res, session_cost(secs, cfg), run_id=run_id, session=i,
+                          request_id=s["request_id"], connected_seconds=secs)
         print(f"session {i}: {sum(x['success'] for x in s['turns'])}/{len(s['turns'])} turns ok, "
               f"{secs}s, error={s['error']}")
 
@@ -352,22 +326,21 @@ def main():
         "fixtures": {k: v["meta"] for k, v in fx.items()},
         "summary": summarize(sessions, len(cfg["turns"])),
         "sessions": sessions,
-        "budget": {"budget_usd": cfg["budget_usd"], "budget_stop": budget_stop,
-                   "this_run_estimated_usd": round(sum(e["estimated_usd"] for e in ledger["entries"]
-                                                       if e["run_id"] == run_id), 4),
-                   "ledger_total_estimated_usd": ledger["total_estimated_usd"]},
+        "budget": {"pool": "usd", "cap_usd": budget.CAPS["usd"], "budget_stop": budget_stop,
+                   "this_run_estimated_usd": round(sum(e["amount"] for e in json.loads(budget.LEDGER.read_text())["entries"]
+                                                       if e.get("run_id") == run_id), 4),
+                   "pool_total_estimated_usd": budget.total("usd")},
         "raw_trace": str(raw.relative_to(ROOT)),
     }
     RESULTS.write_text(json.dumps(results, indent=2) + "\n")
     print(json.dumps(results["summary"], indent=2))
     print(f"results: {RESULTS.relative_to(ROOT)}  trace: {raw.relative_to(ROOT)}  "
-          f"spent this run: ${results['budget']['this_run_estimated_usd']}  total: ${ledger['total_estimated_usd']}")
+          f"spent this run: ${results['budget']['this_run_estimated_usd']}  usd pool total: ${budget.total('usd')}")
 
 
 def self_test():
-    cfg = {"price_per_minute_usd": 0.075, "bill_whole_minutes": True, "max_session_seconds": 120, "budget_usd": 2.0}
+    cfg = {"price_per_minute_usd": 0.075, "bill_whole_minutes": True}
     assert session_cost(1, cfg) == 0.075 and session_cost(60, cfg) == 0.075 and session_cost(61, cfg) == 0.15
-    assert can_afford(1.85, cfg) and not can_afford(1.851, cfg)  # worst case 2 min = $0.15
     assert matches("PCM16 mono at 16kHz.", [["pcm"], ["16"]])
     assert not matches("PCM at 160 Hz", [["pcm"], ["16"]])
     assert matches("It is written in Go.", [["go"]]) and not matches("It is going well", [["go"]])

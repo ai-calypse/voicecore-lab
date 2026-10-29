@@ -1,0 +1,24 @@
+[project]
+name = "voicecore-lab"
+version = "0.0.0"
+requires-python = ">=3.12"
+dependencies = ["voicecore"]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["services/agent-core"]
+
+[tool.uv.sources]
+voicecore = { workspace = true }
+
+[dependency-groups]
+dev = ["pytest>=9", "pytest-asyncio>=1.4", "looptime>=0.9", "hypothesis>=6.170"]
+
+[tool.pytest.ini_options]
+testpaths = ["services/agent-core/tests", "harness/tests"]
+pythonpath = ["harness"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = ["live: calls a paid provider; needs keys and a budget reservation"]

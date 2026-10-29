@@ -1,7 +1,6 @@
 {
   "_about": "S00-T02 hosted control baseline. Deepgram Voice Agent API does STT, LLM and TTS end to end; comparison only, not our engine.",
   "endpoint": "wss://agent.deepgram.com/v1/agent/converse",
-  "budget_usd": 2.0,
   "price_per_minute_usd": 0.075,
   "price_source": "https://deepgram.com/pricing Voice Agent API, Standard tier, pay as you go, billed on WebSocket connection time; checked 2026-10-29",
   "bill_whole_minutes": true,
