@@ -1,0 +1,38 @@
+{
+  "_about": "S00-T02 hosted control baseline. Deepgram Voice Agent API does STT, LLM and TTS end to end; comparison only, not our engine.",
+  "endpoint": "wss://agent.deepgram.com/v1/agent/converse",
+  "budget_usd": 2.0,
+  "price_per_minute_usd": 0.075,
+  "price_source": "https://deepgram.com/pricing Voice Agent API, Standard tier, pay as you go, billed on WebSocket connection time; checked 2026-10-29",
+  "bill_whole_minutes": true,
+  "max_session_seconds": 120,
+  "turn_timeout_seconds": 20,
+  "sessions": 3,
+  "session_gap_seconds": 5,
+  "frame_ms": 20,
+  "say_voice": "Samantha",
+  "voiced_peak_threshold": 500,
+  "settings": {
+    "type": "Settings",
+    "tags": ["voicecore-lab", "s00-t02-baseline"],
+    "audio": {
+      "input": {"encoding": "linear16", "sample_rate": 16000},
+      "output": {"encoding": "linear16", "sample_rate": 24000, "container": "none"}
+    },
+    "agent": {
+      "language": "en",
+      "listen": {"provider": {"type": "deepgram", "model": "nova-3"}},
+      "think": {
+        "provider": {"type": "open_ai", "model": "gpt-4o-mini", "temperature": 0},
+        "prompt": "You are a voice assistant for the VoiceCore Lab documentation. Answer only from the DOCS below, in one short sentence. If the answer is not in the DOCS, say exactly: I couldn't find that in the docs.\n\nDOCS:\n[transport] The browser sends PCM16 mono audio at 16 kHz over a secure WebSocket in fixed 20 to 40 millisecond frames.\n[gateway] The real-time gateway is written in Go and uses bounded channels for backpressure.\n[barge-in] The barge-in target is audible silence within 250 milliseconds at p95.\n[plan] The plan has nine steps totalling 256 engineering hours."
+      },
+      "speak": {"provider": {"type": "deepgram", "version": "v2", "model": "flux-kit-en"}}
+    }
+  },
+  "turns": [
+    {"id": "voice_audio_format", "mode": "voice", "text": "What audio format and sample rate does the browser send?", "expect": [["pcm"], ["16"]]},
+    {"id": "voice_gateway_language", "mode": "voice", "text": "What language is the real-time gateway written in?", "expect": [["go"]]},
+    {"id": "voice_unsupported", "mode": "voice", "text": "How much does the enterprise plan cost?", "expect": [["couldn't find", "could not find"]]},
+    {"id": "text_barge_in_target", "mode": "text", "text": "What is the barge-in latency target?", "expect": [["250"]]}
+  ]
+}

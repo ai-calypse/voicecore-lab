@@ -1,0 +1,56 @@
+{
+  "budget_usd": 2.0,
+  "note": "Local estimate: connection seconds rounded up to whole minutes x list price. Not read from Deepgram billing (key lacks billing:read).",
+  "entries": [
+    {
+      "run_id": "20261029T180524Z-a0e15d",
+      "session": 0,
+      "request_id": "01a188d6-8dcd-7282-aa5d-ca65947d73b7",
+      "connected_seconds": 30.9,
+      "estimated_usd": 0.075
+    },
+    {
+      "run_id": "20261029T180621Z-662a2e",
+      "session": 0,
+      "request_id": "01a188d7-6c7b-7b22-8aa1-d4dc3ae29d6b",
+      "connected_seconds": 35.72,
+      "estimated_usd": 0.075
+    },
+    {
+      "run_id": "20261029T180621Z-662a2e",
+      "session": 1,
+      "request_id": "01a188d7-f7fe-71b3-9d07-e160da3423b7",
+      "connected_seconds": 0.73,
+      "estimated_usd": 0.075
+    },
+    {
+      "run_id": "20261029T180621Z-662a2e",
+      "session": 2,
+      "request_id": "01a188d7-facc-7d33-a76e-e645e6895634",
+      "connected_seconds": 0.8,
+      "estimated_usd": 0.075
+    },
+    {
+      "run_id": "20261029T180728Z-a29514",
+      "session": 0,
+      "request_id": "01a188d8-719b-7f20-a3bb-25f405ba6fae",
+      "connected_seconds": 28.82,
+      "estimated_usd": 0.075
+    },
+    {
+      "run_id": "20261029T180728Z-a29514",
+      "session": 1,
+      "request_id": "01a188d8-f5b5-76e0-a898-91830957645f",
+      "connected_seconds": 27.17,
+      "estimated_usd": 0.075
+    },
+    {
+      "run_id": "20261029T180728Z-a29514",
+      "session": 2,
+      "request_id": "01a188d9-7364-7251-bc72-2685eb2d0bfd",
+      "connected_seconds": 1.41,
+      "estimated_usd": 0.075
+    }
+  ],
+  "total_estimated_usd": 0.525
+}

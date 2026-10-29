@@ -1,0 +1,280 @@
+{
+  "run_id": "20261029T180728Z-a29514",
+  "started_utc": "2026-10-29T18:07:28+00:00",
+  "task": "S00-T02 hosted control baseline (comparison only)",
+  "source_revision": "59a8c2b56c13a5a52577e4a9317c0db7d53ee029-dirty",
+  "config": {
+    "path": "harness/config/baseline.json",
+    "sha256": "00ddd34e3ca49e1b045d482fc216c7c3d5bfe9c90456b92fe0af20fe5a0dac14"
+  },
+  "provider": {
+    "endpoint": "wss://agent.deepgram.com/v1/agent/converse",
+    "listen": {
+      "type": "deepgram",
+      "model": "nova-3"
+    },
+    "think": {
+      "type": "open_ai",
+      "model": "gpt-4o-mini",
+      "temperature": 0
+    },
+    "speak": {
+      "type": "deepgram",
+      "version": "v2",
+      "model": "flux-kit-en"
+    }
+  },
+  "environment": {
+    "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+    "python": "3.14.7",
+    "websockets": "15.0.1",
+    "network": "unshaped residential WAN; default (US) endpoint; no clock sync needed (single client clock)"
+  },
+  "measurement_notes": [
+    "All times are from one client monotonic clock (time.perf_counter).",
+    "speech_end = send time of the last fixture frame with |sample| >= voiced_peak_threshold, paced in real time at frame_ms.",
+    "first_audio = first binary agent audio frame received by this client; not acoustic playback, no playout buffer.",
+    "Includes uplink and downlink network time. provider_latency_report_s is Deepgram's own report, not our measurement.",
+    "Small sample: min/median/max only; no percentiles claimed."
+  ],
+  "fixtures": {
+    "voice_audio_format": {
+      "text": "What audio format and sample rate does the browser send?",
+      "voice": "Samantha",
+      "generator": "macOS say",
+      "sha256": "9fe25be5433173ffa2a0f9000b1872438e0ce8c36c3566112b969723edbe91f9",
+      "duration_ms": 3160,
+      "speech_end_ms": 3120
+    },
+    "voice_gateway_language": {
+      "text": "What language is the real-time gateway written in?",
+      "voice": "Samantha",
+      "generator": "macOS say",
+      "sha256": "db3abef64a4880d2efe5130572e7cd8bce89a3577ded252a41709d62ea9b7a0e",
+      "duration_ms": 2580,
+      "speech_end_ms": 2540
+    },
+    "voice_unsupported": {
+      "text": "How much does the enterprise plan cost?",
+      "voice": "Samantha",
+      "generator": "macOS say",
+      "sha256": "8893104630d44c3338d463f5b0c2cbc8da72bd4e3688ac49a4232a09f04f3410",
+      "duration_ms": 2320,
+      "speech_end_ms": 2220
+    }
+  },
+  "summary": {
+    "sessions": 3,
+    "sessions_with_error": 1,
+    "planned_turns": 12,
+    "attempted_turns": 8,
+    "successful_turns": 8,
+    "turn_success_rate": 0.667,
+    "voice_speech_end_to_first_audio_ms": {
+      "n": 6,
+      "min": 932.0,
+      "median": 1094.8,
+      "max": 1175.6
+    },
+    "text_inject_to_first_audio_ms": {
+      "n": 2,
+      "min": 968.3,
+      "median": 1016.3,
+      "max": 1064.3
+    },
+    "ws_open_ms": {
+      "n": 3,
+      "min": 248.3,
+      "median": 249.1,
+      "max": 263.8
+    },
+    "welcome_ms": {
+      "n": 3,
+      "min": 248.5,
+      "median": 249.3,
+      "max": 263.9
+    },
+    "settings_applied_ms": {
+      "n": 2,
+      "min": 327.9,
+      "median": 340.8,
+      "max": 353.6
+    }
+  },
+  "sessions": [
+    {
+      "session": 0,
+      "request_id": "01a188d8-719b-7f20-a3bb-25f405ba6fae",
+      "connect_ms": {
+        "ws_open": 248.3,
+        "welcome": 248.5,
+        "settings_applied": 327.9
+      },
+      "turns": [
+        {
+          "id": "voice_audio_format",
+          "mode": "voice",
+          "speech_end_to_first_audio_ms": 1101.8,
+          "provider_latency_report_s": {
+            "stt_latency": 0.06000018119812012,
+            "ttt_token_latency": 0.725635173,
+            "ttt_text_latency": 0.725678056,
+            "tts_latency": 0.069006639,
+            "total_latency": 1.115717372
+          },
+          "user_transcript": "What audio format and sample rate does the browser send?",
+          "assistant_text": "The browser sends PCM16 mono audio at 16 kHz.",
+          "success": true,
+          "failure": null
+        },
+        {
+          "id": "voice_gateway_language",
+          "mode": "voice",
+          "speech_end_to_first_audio_ms": 1115.3,
+          "provider_latency_report_s": {
+            "stt_latency": 0.10000038146972656,
+            "ttt_token_latency": 0.672612866,
+            "ttt_text_latency": 0.67266502,
+            "tts_latency": 0.068298407,
+            "total_latency": 1.089237357
+          },
+          "user_transcript": "What language is the real time gateway written in?",
+          "assistant_text": "The real-time gateway is written in Go.",
+          "success": true,
+          "failure": null
+        },
+        {
+          "id": "voice_unsupported",
+          "mode": "voice",
+          "speech_end_to_first_audio_ms": 932.0,
+          "provider_latency_report_s": {
+            "stt_latency": 0.030000686645507812,
+            "ttt_token_latency": 0.570815893,
+            "ttt_text_latency": 0.570858509,
+            "tts_latency": 0.06948394,
+            "total_latency": 0.987119489
+          },
+          "user_transcript": "How much does the enterprise plan cost?",
+          "assistant_text": "I couldn't find that in the docs.",
+          "success": true,
+          "failure": null
+        },
+        {
+          "id": "text_barge_in_target",
+          "mode": "text",
+          "speech_end_to_first_audio_ms": 1064.3,
+          "provider_latency_report_s": {
+            "ttt_token_latency": 0.928755516,
+            "ttt_text_latency": 0.928814838,
+            "tts_latency": 0.069076916,
+            "total_latency": 0.997893705
+          },
+          "user_transcript": "What is the barge-in latency target?",
+          "assistant_text": "The barge-in target is audible silence within 250 milliseconds at p95.",
+          "success": true,
+          "failure": null
+        }
+      ],
+      "error": null,
+      "connected_seconds": 28.82
+    },
+    {
+      "session": 1,
+      "request_id": "01a188d8-f5b5-76e0-a898-91830957645f",
+      "connect_ms": {
+        "ws_open": 263.8,
+        "welcome": 263.9,
+        "settings_applied": 353.6
+      },
+      "turns": [
+        {
+          "id": "voice_audio_format",
+          "mode": "voice",
+          "speech_end_to_first_audio_ms": 1087.8,
+          "provider_latency_report_s": {
+            "stt_latency": 0.039999961853027344,
+            "ttt_token_latency": 0.723350472,
+            "ttt_text_latency": 0.723385149,
+            "tts_latency": 0.067399637,
+            "total_latency": 1.10053987
+          },
+          "user_transcript": "What audio format and sample rate does the browser send?",
+          "assistant_text": "The browser sends PCM16 mono audio at 16 kHz.",
+          "success": true,
+          "failure": null
+        },
+        {
+          "id": "voice_gateway_language",
+          "mode": "voice",
+          "speech_end_to_first_audio_ms": 1069.2,
+          "provider_latency_report_s": {
+            "stt_latency": 0.06000041961669922,
+            "ttt_token_latency": 0.671817884,
+            "ttt_text_latency": 0.671861555,
+            "tts_latency": 0.067705922,
+            "total_latency": 1.100751438
+          },
+          "user_transcript": "What language is the real time gateway written in?",
+          "assistant_text": "The real-time gateway is written in Go.",
+          "success": true,
+          "failure": null
+        },
+        {
+          "id": "voice_unsupported",
+          "mode": "voice",
+          "speech_end_to_first_audio_ms": 1175.6,
+          "provider_latency_report_s": {
+            "stt_latency": 0.030000686645507812,
+            "ttt_token_latency": 0.785465388,
+            "ttt_text_latency": 0.785540477,
+            "tts_latency": 0.098943619,
+            "total_latency": 1.149433036
+          },
+          "user_transcript": "How much does the enterprise plan cost?",
+          "assistant_text": "I couldn't find that in the docs.",
+          "success": true,
+          "failure": null
+        },
+        {
+          "id": "text_barge_in_target",
+          "mode": "text",
+          "speech_end_to_first_audio_ms": 968.3,
+          "provider_latency_report_s": {
+            "ttt_token_latency": 0.816844298,
+            "ttt_text_latency": 0.816898149,
+            "tts_latency": 0.081727811,
+            "total_latency": 0.898628304
+          },
+          "user_transcript": "What is the barge-in latency target?",
+          "assistant_text": "The barge-in target is audible silence within 250 milliseconds at p95.",
+          "success": true,
+          "failure": null
+        }
+      ],
+      "error": null,
+      "connected_seconds": 27.17
+    },
+    {
+      "session": 2,
+      "request_id": "01a188d9-7364-7251-bc72-2685eb2d0bfd",
+      "connect_ms": {
+        "ws_open": 249.1,
+        "welcome": 249.3
+      },
+      "turns": [],
+      "error": {
+        "type": "Error",
+        "description": "Failed to start listening. Please check your `listen` settings.",
+        "code": "FAILED_TO_START_LISTENING"
+      },
+      "connected_seconds": 1.41
+    }
+  ],
+  "budget": {
+    "budget_usd": 2.0,
+    "budget_stop": false,
+    "this_run_estimated_usd": 0.225,
+    "ledger_total_estimated_usd": 0.525
+  },
+  "raw_trace": "benchmarks/raw/baseline_20261029T180728Z-a29514.jsonl"
+}

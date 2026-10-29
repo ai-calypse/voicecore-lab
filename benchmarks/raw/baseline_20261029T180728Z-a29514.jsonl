@@ -1,0 +1,117 @@
+{"t_ms": 248.29, "session": 0, "kind": "ws_open"}
+{"t_ms": 248.52, "session": 0, "kind": "event", "type": "Welcome", "data": {"request_id": "01a188d8-719b-7f20-a3bb-25f405ba6fae"}}
+{"t_ms": 327.88, "session": 0, "kind": "event", "type": "SettingsApplied", "data": {}}
+{"t_ms": 328.0, "session": 0, "kind": "turn_start", "turn": "voice_audio_format"}
+{"t_ms": 1644.92, "session": 0, "kind": "event", "type": "UserStartedSpeaking", "data": {}}
+{"t_ms": 3449.36, "session": 0, "kind": "speech_end", "turn": "voice_audio_format"}
+{"t_ms": 3756.74, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"stt_latency": 0.06000018119812012}}
+{"t_ms": 3772.79, "session": 0, "kind": "event", "type": "ConversationText", "data": {"role": "user", "content": "What audio format and sample rate does the browser send?", "conversational_behavior": "default"}}
+{"t_ms": 3772.82, "session": 0, "kind": "event", "type": "History", "data": {"role": "user", "content": "What audio format and sample rate does the browser send?", "conversational_behavior": "default"}}
+{"t_ms": 4479.53, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"ttt_token_latency": 0.725635173}}
+{"t_ms": 4491.3, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"ttt_text_latency": 0.725678056}}
+{"t_ms": 4551.18, "session": 0, "kind": "first_audio", "turn": "voice_audio_format", "bytes": 3552}
+{"t_ms": 4551.24, "session": 0, "kind": "event", "type": "ConversationText", "data": {"role": "assistant", "content": "The browser sends PCM16 mono audio at 16 kHz.", "conversational_behavior": "default"}}
+{"t_ms": 4553.45, "session": 0, "kind": "event", "type": "History", "data": {"role": "assistant", "content": "The browser sends PCM16 mono audio at 16 kHz.", "conversational_behavior": "default"}}
+{"t_ms": 4553.48, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"tts_latency": 0.069006639}}
+{"t_ms": 4553.5, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"total_latency": 1.115717372}}
+{"t_ms": 9071.86, "session": 0, "kind": "event", "type": "AgentAudioDone", "data": {}}
+{"t_ms": 9590.02, "session": 0, "kind": "turn_start", "turn": "voice_gateway_language"}
+{"t_ms": 10245.44, "session": 0, "kind": "event", "type": "UserStartedSpeaking", "data": {}}
+{"t_ms": 12128.92, "session": 0, "kind": "speech_end", "turn": "voice_gateway_language"}
+{"t_ms": 12507.89, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"stt_latency": 0.10000038146972656}}
+{"t_ms": 12514.61, "session": 0, "kind": "event", "type": "ConversationText", "data": {"role": "user", "content": "What language is the real time gateway written in?", "conversational_behavior": "default"}}
+{"t_ms": 12514.67, "session": 0, "kind": "event", "type": "History", "data": {"role": "user", "content": "What language is the real time gateway written in?", "conversational_behavior": "default"}}
+{"t_ms": 13174.46, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"ttt_token_latency": 0.672612866}}
+{"t_ms": 13194.18, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"ttt_text_latency": 0.67266502}}
+{"t_ms": 13244.24, "session": 0, "kind": "first_audio", "turn": "voice_gateway_language", "bytes": 3552}
+{"t_ms": 13244.31, "session": 0, "kind": "event", "type": "ConversationText", "data": {"role": "assistant", "content": "The real-time gateway is written in Go.", "conversational_behavior": "default"}}
+{"t_ms": 13254.11, "session": 0, "kind": "event", "type": "History", "data": {"role": "assistant", "content": "The real-time gateway is written in Go.", "conversational_behavior": "default"}}
+{"t_ms": 13254.14, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"tts_latency": 0.068298407}}
+{"t_ms": 13254.16, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"total_latency": 1.089237357}}
+{"t_ms": 15452.35, "session": 0, "kind": "event", "type": "AgentAudioDone", "data": {}}
+{"t_ms": 15969.77, "session": 0, "kind": "turn_start", "turn": "voice_unsupported"}
+{"t_ms": 16405.83, "session": 0, "kind": "event", "type": "UserStartedSpeaking", "data": {}}
+{"t_ms": 18189.5, "session": 0, "kind": "speech_end", "turn": "voice_unsupported"}
+{"t_ms": 18483.43, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"stt_latency": 0.030000686645507812}}
+{"t_ms": 18491.25, "session": 0, "kind": "event", "type": "ConversationText", "data": {"role": "user", "content": "How much does the enterprise plan cost?", "conversational_behavior": "default"}}
+{"t_ms": 18491.29, "session": 0, "kind": "event", "type": "History", "data": {"role": "user", "content": "How much does the enterprise plan cost?", "conversational_behavior": "default"}}
+{"t_ms": 19052.51, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"ttt_token_latency": 0.570815893}}
+{"t_ms": 19053.72, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"ttt_text_latency": 0.570858509}}
+{"t_ms": 19121.54, "session": 0, "kind": "first_audio", "turn": "voice_unsupported", "bytes": 3552}
+{"t_ms": 19121.58, "session": 0, "kind": "event", "type": "ConversationText", "data": {"role": "assistant", "content": "I couldn't find that in the docs.", "conversational_behavior": "default"}}
+{"t_ms": 19133.95, "session": 0, "kind": "event", "type": "History", "data": {"role": "assistant", "content": "I couldn't find that in the docs.", "conversational_behavior": "default"}}
+{"t_ms": 19133.98, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"tts_latency": 0.06948394}}
+{"t_ms": 19134.0, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"total_latency": 0.987119489}}
+{"t_ms": 21013.52, "session": 0, "kind": "event", "type": "AgentAudioDone", "data": {}}
+{"t_ms": 21530.34, "session": 0, "kind": "text_injected", "turn": "text_barge_in_target"}
+{"t_ms": 21598.69, "session": 0, "kind": "event", "type": "UserStartedSpeaking", "data": {}}
+{"t_ms": 21612.39, "session": 0, "kind": "event", "type": "ConversationText", "data": {"role": "user", "content": "What is the barge-in latency target?", "conversational_behavior": "default"}}
+{"t_ms": 21612.43, "session": 0, "kind": "event", "type": "History", "data": {"role": "user", "content": "What is the barge-in latency target?", "conversational_behavior": "default"}}
+{"t_ms": 22523.16, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"ttt_token_latency": 0.928755516}}
+{"t_ms": 22533.06, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"ttt_text_latency": 0.928814838}}
+{"t_ms": 22594.64, "session": 0, "kind": "first_audio", "turn": "text_barge_in_target", "bytes": 3552}
+{"t_ms": 22594.67, "session": 0, "kind": "event", "type": "ConversationText", "data": {"role": "assistant", "content": "The barge-in target is audible silence within 250 milliseconds at p95.", "conversational_behavior": "default"}}
+{"t_ms": 22613.24, "session": 0, "kind": "event", "type": "History", "data": {"role": "assistant", "content": "The barge-in target is audible silence within 250 milliseconds at p95.", "conversational_behavior": "default"}}
+{"t_ms": 22613.26, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"tts_latency": 0.069076916}}
+{"t_ms": 22613.27, "session": 0, "kind": "event", "type": "LatencyReport", "data": {"total_latency": 0.997893705}}
+{"t_ms": 28233.0, "session": 0, "kind": "event", "type": "AgentAudioDone", "data": {}}
+{"t_ms": 263.78, "session": 1, "kind": "ws_open"}
+{"t_ms": 263.94, "session": 1, "kind": "event", "type": "Welcome", "data": {"request_id": "01a188d8-f5b5-76e0-a898-91830957645f"}}
+{"t_ms": 353.61, "session": 1, "kind": "event", "type": "SettingsApplied", "data": {}}
+{"t_ms": 353.7, "session": 1, "kind": "turn_start", "turn": "voice_audio_format"}
+{"t_ms": 1674.9, "session": 1, "kind": "event", "type": "UserStartedSpeaking", "data": {}}
+{"t_ms": 3475.22, "session": 1, "kind": "speech_end", "turn": "voice_audio_format"}
+{"t_ms": 3777.96, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"stt_latency": 0.039999961853027344}}
+{"t_ms": 3779.26, "session": 1, "kind": "event", "type": "ConversationText", "data": {"role": "user", "content": "What audio format and sample rate does the browser send?", "conversational_behavior": "default"}}
+{"t_ms": 3779.29, "session": 1, "kind": "event", "type": "History", "data": {"role": "user", "content": "What audio format and sample rate does the browser send?", "conversational_behavior": "default"}}
+{"t_ms": 4493.53, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"ttt_token_latency": 0.723350472}}
+{"t_ms": 4499.31, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"ttt_text_latency": 0.723385149}}
+{"t_ms": 4562.97, "session": 1, "kind": "first_audio", "turn": "voice_audio_format", "bytes": 3552}
+{"t_ms": 4563.04, "session": 1, "kind": "event", "type": "ConversationText", "data": {"role": "assistant", "content": "The browser sends PCM16 mono audio at 16 kHz.", "conversational_behavior": "default"}}
+{"t_ms": 4579.38, "session": 1, "kind": "event", "type": "History", "data": {"role": "assistant", "content": "The browser sends PCM16 mono audio at 16 kHz.", "conversational_behavior": "default"}}
+{"t_ms": 4579.4, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"tts_latency": 0.067399637}}
+{"t_ms": 4579.42, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"total_latency": 1.10053987}}
+{"t_ms": 7803.26, "session": 1, "kind": "event", "type": "AgentAudioDone", "data": {}}
+{"t_ms": 8315.11, "session": 1, "kind": "turn_start", "turn": "voice_gateway_language"}
+{"t_ms": 9051.93, "session": 1, "kind": "event", "type": "UserStartedSpeaking", "data": {}}
+{"t_ms": 10855.07, "session": 1, "kind": "speech_end", "turn": "voice_gateway_language"}
+{"t_ms": 11188.11, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"stt_latency": 0.06000041961669922}}
+{"t_ms": 11199.99, "session": 1, "kind": "event", "type": "ConversationText", "data": {"role": "user", "content": "What language is the real time gateway written in?", "conversational_behavior": "default"}}
+{"t_ms": 11200.02, "session": 1, "kind": "event", "type": "History", "data": {"role": "user", "content": "What language is the real time gateway written in?", "conversational_behavior": "default"}}
+{"t_ms": 11856.84, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"ttt_token_latency": 0.671817884}}
+{"t_ms": 11860.64, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"ttt_text_latency": 0.671861555}}
+{"t_ms": 11924.22, "session": 1, "kind": "first_audio", "turn": "voice_gateway_language", "bytes": 3552}
+{"t_ms": 11924.29, "session": 1, "kind": "event", "type": "ConversationText", "data": {"role": "assistant", "content": "The real-time gateway is written in Go.", "conversational_behavior": "default"}}
+{"t_ms": 11938.71, "session": 1, "kind": "event", "type": "History", "data": {"role": "assistant", "content": "The real-time gateway is written in Go.", "conversational_behavior": "default"}}
+{"t_ms": 11938.74, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"tts_latency": 0.067705922}}
+{"t_ms": 11938.75, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"total_latency": 1.100751438}}
+{"t_ms": 14605.62, "session": 1, "kind": "event", "type": "AgentAudioDone", "data": {}}
+{"t_ms": 15115.34, "session": 1, "kind": "turn_start", "turn": "voice_unsupported"}
+{"t_ms": 15617.08, "session": 1, "kind": "event", "type": "UserStartedSpeaking", "data": {}}
+{"t_ms": 17335.23, "session": 1, "kind": "speech_end", "turn": "voice_unsupported"}
+{"t_ms": 17628.84, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"stt_latency": 0.030000686645507812}}
+{"t_ms": 17640.41, "session": 1, "kind": "event", "type": "ConversationText", "data": {"role": "user", "content": "How much does the enterprise plan cost?", "conversational_behavior": "default"}}
+{"t_ms": 17640.44, "session": 1, "kind": "event", "type": "History", "data": {"role": "user", "content": "How much does the enterprise plan cost?", "conversational_behavior": "default"}}
+{"t_ms": 18411.36, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"ttt_token_latency": 0.785465388}}
+{"t_ms": 18421.22, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"ttt_text_latency": 0.785540477}}
+{"t_ms": 18510.8, "session": 1, "kind": "first_audio", "turn": "voice_unsupported", "bytes": 3552}
+{"t_ms": 18510.9, "session": 1, "kind": "event", "type": "ConversationText", "data": {"role": "assistant", "content": "I couldn't find that in the docs.", "conversational_behavior": "default"}}
+{"t_ms": 18519.21, "session": 1, "kind": "event", "type": "History", "data": {"role": "assistant", "content": "I couldn't find that in the docs.", "conversational_behavior": "default"}}
+{"t_ms": 18519.24, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"tts_latency": 0.098943619}}
+{"t_ms": 18519.26, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"total_latency": 1.149433036}}
+{"t_ms": 20418.89, "session": 1, "kind": "event", "type": "AgentAudioDone", "data": {}}
+{"t_ms": 20935.23, "session": 1, "kind": "text_injected", "turn": "text_barge_in_target"}
+{"t_ms": 21008.56, "session": 1, "kind": "event", "type": "UserStartedSpeaking", "data": {}}
+{"t_ms": 21020.19, "session": 1, "kind": "event", "type": "ConversationText", "data": {"role": "user", "content": "What is the barge-in latency target?", "conversational_behavior": "default"}}
+{"t_ms": 21020.23, "session": 1, "kind": "event", "type": "History", "data": {"role": "user", "content": "What is the barge-in latency target?", "conversational_behavior": "default"}}
+{"t_ms": 21818.44, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"ttt_token_latency": 0.816844298}}
+{"t_ms": 21820.26, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"ttt_text_latency": 0.816898149}}
+{"t_ms": 21903.48, "session": 1, "kind": "first_audio", "turn": "text_barge_in_target", "bytes": 3552}
+{"t_ms": 21903.54, "session": 1, "kind": "event", "type": "ConversationText", "data": {"role": "assistant", "content": "The barge-in target is audible silence within 250 milliseconds at p95.", "conversational_behavior": "default"}}
+{"t_ms": 21920.45, "session": 1, "kind": "event", "type": "History", "data": {"role": "assistant", "content": "The barge-in target is audible silence within 250 milliseconds at p95.", "conversational_behavior": "default"}}
+{"t_ms": 21920.48, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"tts_latency": 0.081727811}}
+{"t_ms": 21920.49, "session": 1, "kind": "event", "type": "LatencyReport", "data": {"total_latency": 0.898628304}}
+{"t_ms": 26581.09, "session": 1, "kind": "event", "type": "AgentAudioDone", "data": {}}
+{"t_ms": 249.09, "session": 2, "kind": "ws_open"}
+{"t_ms": 249.3, "session": 2, "kind": "event", "type": "Welcome", "data": {"request_id": "01a188d9-7364-7251-bc72-2685eb2d0bfd"}}
+{"t_ms": 1407.32, "session": 2, "kind": "event", "type": "Error", "data": {"description": "Failed to start listening. Please check your `listen` settings.", "code": "FAILED_TO_START_LISTENING"}}

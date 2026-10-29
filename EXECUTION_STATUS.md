@@ -6,7 +6,7 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 
 | Step | Status | Estimated hours (not time logged) | Verified outputs | Blocker / next action |
 |---|---|---:|---|---|
-| [00](docs/step_00_career_evidence_and_baselines.md) | In progress | 12 | S00-T01 requirements matrix | S00-T02 blocked: needs approval for live paid provider use and a hosted baseline choice |
+| [00](docs/step_00_career_evidence_and_baselines.md) | In progress | 12 | S00-T01 requirements matrix; S00-T02 Deepgram hosted baseline (live, measured) | Next: S00-T03 fixtures. Open: intermittent `FAILED_TO_START_LISTENING` (3/7 sessions) |
 | [01](docs/step_01_audio_transport_and_sdk.md) | Not started | 30 | None | Begin step 01 after prerequisites |
 | [02](docs/step_02_voice_activity_and_turn_detection.md) | Not started | 30 | None | Begin step 02 after prerequisites |
 | [03](docs/step_03_streaming_orchestrator.md) | Not started | 38 | None | Begin step 03 after prerequisites |
@@ -21,7 +21,7 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 | Date (UTC) | Step/task | Agent | Commit / paths | Test command and observed result | Blocker / decision |
 |---|---|---|---|---|---|
 | 2026-10-29 | S00-T01 | Claude Code (Opus 5.5) | No git repo; requirements matrix (kept private) | Per-role proof count and task-ID existence check: all roles pass, 0 unknown task IDs | — |
-| 2026-10-29 | S00-T02 | Claude Code (Opus 5.5) | — | Not run | Blocked: live paid usage needs user approval; only `DEEPGRAM_API_KEY` in `.env` |
+| 2026-10-29 | S00-T02 | Claude Code (Opus 5.5) | `harness/`, `benchmarks/` | Self-test ok. **Live provider** run `20261029T180728Z-a29514`: 8/12 turns (1 of 3 sessions failed setup); voice speech end → first agent audio frame median 1094.8 ms (n=6). 3 runs total, est. spend $0.525 of $2.00 cap | User approved paid use, $2 cap. First audio = frame received, not acoustic playback |
 
 ## Handoff history
 

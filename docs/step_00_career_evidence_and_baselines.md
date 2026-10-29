@@ -1,6 +1,6 @@
 # Step 00: Career Evidence And Baselines
 
-**Status:** In progress. S00-T01 done (2026-10-29); S00-T02 blocked on approval for live paid provider use.  
+**Status:** In progress. S00-T01 and S00-T02 done (2026-10-29); S00-T03 next.  
 **Estimated engineering effort:** 12 hours.  
 **Task owner:** Implementation agent; user confirms external paid credentials.  
 
@@ -82,14 +82,22 @@ Require both deterministic tests and controlled real-provider measurements where
 |---|---|---|---|---|
 | Requirements matrix, kept outside the public repository: each role mapped to an owned subsystem, test task and report artifact; uncovered signals listed instead of stretched proofs | S00-T01 | private | — | Done |
 | Provider credentials live only in root `.env` (`DEEPGRAM_API_KEY`, mode 600), ignored by `.gitignore`; never sent to the browser | Master plan security and privacy | `.env`, `.gitignore` | — | Done; no other provider keys yet |
-| Workspace is not a git repository; no commit IDs can be recorded until the user runs `git init` | Master guide §5 step 1 | Repository root | `git status` fails: not a git repository | Open |
+| Git repository created at user request: private `github.com/ai-calypse/voicecore-lab`, branch `main` | Master guide §5 step 1 | Repository root | First commit `59a8c2b` | Done |
+| Hosted control baseline = Deepgram Voice Agent API (`wss://agent.deepgram.com/v1/agent/converse`), Standard tier: listen `deepgram nova-3`, think `open_ai gpt-4o-mini` (temperature 0), speak `deepgram v2 flux-kit-en`; input linear16 16 kHz, output linear16 24 kHz. Verified 2026-10-29 from Deepgram docs (Settings, events, error codes, LLM tiers) and the live `GET /v1/agent/settings/think/models` listing | S00-T02 / master plan provider baseline | `harness/config/baseline.json` | `benchmarks/baseline_results.json` | Done |
+| Paid usage approved by user 2026-10-29 with a $2.00 cap. Guard: before each session, ledger total + worst case (`max_session_seconds` 120 s, rounded up to whole minutes at $0.075/min list price) must stay ≤ $2.00. The key lacks `billing:read`, so the ledger is a conservative local estimate, not Deepgram's billed amount | S00-T02 | `harness/baseline_deepgram.py` (`can_afford`, `session_cost`), `benchmarks/spend_ledger.json` | Ledger total $0.525 after 7 sessions | Done |
+| Config is JSON, not the planned YAML, so the harness needs only the stdlib plus `websockets` (PEP 723 inline deps, run with `uv run`) | S00-T02 | `harness/config/baseline.json` | — | Done |
+| Baseline speech inputs are synthetic macOS `say` (voice Samantha, PCM16 16 kHz), generated into gitignored `.cache/` and identified by SHA-256 in results. Not committed: Apple voice output is licensed for personal non-commercial use; S00-T03 decides the licensed fixture set | S00-T02 / S00-T03 | `.cache/baseline_audio/` | `fixtures` block in `benchmarks/baseline_results.json` | Done; T03 to replace |
+| Measurement definitions: one client monotonic clock; speech end = send time of last fixture frame with peak ≥ 500, real-time paced 20 ms frames; first audio = first binary agent frame received (**not acoustic playback**, no playout buffer); text turn timed from `InjectUserMessage` send; success = `AgentAudioDone` + audio + assistant text matching the keyword key; turn success rate counts turns lost to failed sessions | S00-T02 | `harness/baseline_deepgram.py` | `measurement_notes` in results | Done |
+| After the smoke run, turn 1 question changed to "What audio format and sample rate does the browser send?" because the key required the sample rate the question did not ask for (agent answered "PCM16 mono"). Key unchanged | S00-T02 | `harness/config/baseline.json` | Trace `benchmarks/raw/baseline_20261029T180524Z-a0e15d.jsonl` | Done |
+| `LatencyReport` arrives as one field per message; harness merges them per turn | S00-T02 | `harness/baseline_deepgram.py` receiver | Same trace | Done |
+| 5 s gap between sessions after back-to-back `FAILED_TO_START_LISTENING`; the gap did not remove the failure (see execution record) | S00-T02 | `session_gap_seconds` in config | Runs `…180621Z-662a2e`, `…180728Z-a29514` | Open: root cause unknown |
 
 ## Execution record
 
 | Task ID | Status | Output paths | Test command/results | Blocker |
 |---|---|---|---|---|
 | S00-T01 | Done 2026-10-29 | requirements matrix (kept private) | per-role proof count and task-ID existence check passed | — |
-| S00-T02 | Blocked | — | — | Needs user approval for live paid provider usage and a choice of hosted baseline. Only `DEEPGRAM_API_KEY` is present. |
+| S00-T02 | Done 2026-10-29 (live provider, measured) | `harness/baseline_deepgram.py`, `harness/config/baseline.json`, `benchmarks/baseline_results.json` (latest run only), `benchmarks/raw/baseline_*.jsonl` (all runs), `benchmarks/spend_ledger.json` | `uv run harness/baseline_deepgram.py --self-test` → `self-test ok` (budget, scoring, framing). Live runs, unshaped residential WAN, default US endpoint, macOS 26.5.2, Python 3.12 via uv: **(1)** `…180524Z-a0e15d`, 1 session, 3/4 turns (key mismatch, fixed above). **(2)** `…180621Z-662a2e`, 3 sessions: session 0 4/4, sessions 1–2 `FAILED_TO_START_LISTENING` at setup, back to back. **(3)** `…180728Z-a29514`, 3 sessions, 5 s gap: sessions 0–1 4/4, session 2 `FAILED_TO_START_LISTENING`. Run 3 results: turn success 8/12 = 0.667 (all 8 attempted turns passed; 4 lost to the failed session); voice speech end → first agent audio frame min/median/max 932.0 / 1094.8 / 1175.6 ms (n=6); text inject → first audio 968.3 / 1016.3 / 1064.3 ms (n=2); WS open 248.3 / 249.1 / 263.8 ms (n=3); SettingsApplied 327.9 / 340.8 ms (n=2). Deepgram's own `total_latency` per turn 0.90–1.15 s. Session setup failed in 3 of 7 sessions overall. Small sample: no percentiles claimed | Open finding: intermittent `FAILED_TO_START_LISTENING` (failed request IDs in `benchmarks/spend_ledger.json`); acoustic playback start not measured (headless client) |
 | S00-T03 | Not started | — | — | — |
 | S00-T04 | Not started | — | — | — |
 
@@ -100,6 +108,7 @@ Require both deterministic tests and controlled real-provider measurements where
 | `MASTER_AGENT_GUIDE.md` | sha256 `102cf19eeea4…` | S00-T01 | Consumed as is |
 | `docs/voicecore_lab_career_aligned_plan.md` | sha256 `55abdc31de7d…` | S00-T01 | Consumed as is |
 | `docs/README.md` | sha256 `43a4338f4c9d…` | S00-T01 | Consumed as is |
+| Deepgram Voice Agent docs (Settings, server events, `InjectUserMessage`, `LatencyReport`, error codes, LLM pricing tiers) via Context7 `/websites/developers_deepgram`; `https://deepgram.com/pricing`; live think-models listing | Fetched 2026-10-29 | S00-T02 | Re-verify before Step 03 live adapters |
 | `docs/step_01` … `step_08` (Expected artifacts and acceptance tests) | sha256 `b977e03d20c8…`, `5ef53bea9704…`, `eb723b7c792e…`, `5f0d201d810c…`, `e24eb302694b…`, `67ca6f7a3e74…`, `6596a0e72db5…`, `d741488bad4c…` | S00-T01 | Planned paths copied into matrix; owning steps may change them and must update the matrix |
 
 ## Handoff
