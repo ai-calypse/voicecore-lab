@@ -8,7 +8,7 @@ test-go:
 	cd experiments && go test -race ./...
 
 test-py:
-	uv run pytest -m "not live"
+	uv run pytest -m "not live and not docker"
 
 test-ts:
 	pnpm test

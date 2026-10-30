@@ -38,7 +38,7 @@ jobs:
         with:
           path: .cache/answer_vectors_*.npy
           key: answer-vectors-${{ hashFiles('fixtures/docs/uv/**', 'apps/docs/docs/**', 'services/agent-core/voicecore/answer/ingest.py') }}
-      - run: uv run pytest -m "not live"
+      - run: uv run pytest -m "not live and not docker"
       - run: uv run python harness/baseline_deepgram.py --self-test
 
   ts:

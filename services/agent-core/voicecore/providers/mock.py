@@ -15,20 +15,29 @@ class MockSTT:
     """Emits each scripted event once `t_ms` of audio has been received (audio time, not wall time)."""
 
     def __init__(self, script: list[tuple[int, Partial | Final]] = (), error: ProviderError | None = None,
-                 canned: str | list[str] | None = None):
+                 canned: str | list[str] | None = None, error_after_ms: int | None = None):
         """canned: text returned as a Final on every finalize() (for runs where nobody scripted the words);
-        a list gives one text per finalize, in order."""
+        a list gives one text per finalize, in order.
+        error_after_ms: the connection drops once this much audio was sent, like the live adapter: events() raises
+        a retryable ProviderError, and so does every later send()."""
         self.script = sorted(script, key=lambda x: x[0])
-        self.error, self.canned = error, canned
+        self.error, self.canned, self.error_after_ms = error, canned, error_after_ms
+        self._dropped = False
         self.finalizes = 0
         self.audio_ms = 0
         self._q: asyncio.Queue = asyncio.Queue()
         self._closed = False
 
     async def send(self, pcm: bytes) -> None:
+        if self._dropped:
+            raise ProviderError("retryable", "mock stt: connection dropped")
         if self._closed:
             return
         self.audio_ms += len(pcm) // 32
+        if self.error_after_ms is not None and self.audio_ms >= self.error_after_ms:
+            self._dropped = True
+            self._q.put_nowait(ProviderError("retryable", "mock stt: connection dropped"))
+            return
         while self.script and self.script[0][0] <= self.audio_ms:
             self._q.put_nowait(self.script.pop(0)[1])
 
@@ -42,6 +51,8 @@ class MockSTT:
         if self.error:
             raise self.error
         while (e := await self._q.get()) is not _CLOSED:
+            if isinstance(e, ProviderError):
+                raise e
             yield e
 
     async def close(self) -> None:

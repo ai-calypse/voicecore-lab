@@ -85,3 +85,17 @@ def test_make_live_without_a_reservation_raises():
     for kind in ("stt", "llm", "tts"):
         with pytest.raises(budget.BudgetExceeded):
             make_live(kind, None)
+
+
+# Step 09 (S09-T00): a mock connection drop, shaped like the live adapter's (send and events both fail)
+
+async def test_mock_stt_error_after_ms_raises_retryable_once():
+    stt = MockSTT(canned="unused", error_after_ms=1000)
+    for _ in range(50):  # exactly 1,000 ms of audio
+        await stt.send(SILENCE_20MS)
+    with pytest.raises(ProviderError) as e:
+        await collect(stt.events())
+    assert e.value.kind == "retryable"
+    with pytest.raises(ProviderError) as e2:
+        await stt.send(SILENCE_20MS)  # the stream is dead from now on
+    assert e2.value.kind == "retryable"

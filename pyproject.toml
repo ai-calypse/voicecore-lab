@@ -30,6 +30,9 @@ testpaths = ["services/agent-core/tests", "harness/tests"]
 pythonpath = ["harness"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-markers = ["live: calls a paid provider; needs keys and a budget reservation"]
+markers = [
+    "live: calls a paid provider; needs keys and a budget reservation",
+    "docker: needs Docker (compose stacks, images); runs in its own CI jobs, not in make test",
+]
 timeout = 60
 filterwarnings = ["ignore:There is no current event loop:DeprecationWarning"]

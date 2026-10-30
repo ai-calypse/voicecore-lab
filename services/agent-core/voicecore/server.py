@@ -39,6 +39,16 @@ def mock_providers():
             "tts": MockTTS(), "tts_factory": MockTTS}, []
 
 
+MOCK_BILLED_USD = {"stt": 0.001, "llm": 0.0005, "tts": 0.0002}  # per session; lets tests check ledger maths for free
+
+
+def mock_billed_providers(sid):
+    """Mock providers that still reserve and settle fixed literal amounts, like a live session, at no cost."""
+    providers, _ = mock_providers()
+    res = {k: budget.reserve("usd", v, label=f"mock-billed {k} {sid}") for k, v in MOCK_BILLED_USD.items()}
+    return providers, [lambda r=r, v=v: budget.settle(r, v) for r, v in ((res[k], MOCK_BILLED_USD[k]) for k in res)]
+
+
 class OnDemandTTS:
     """Builds the live TTS stream (and reserves its credits) when the session first speaks, so idle sockets do
     not hold the credit pool (security review 2026-10-30). A refused reservation becomes a fatal TTS error:
@@ -112,7 +122,8 @@ def handler_for(mode: str, trace_dir: Path | None, index: Index, policy: Policy 
     async def handler(ws):  # ponytail: VAD runs inline on the event loop (~0.3 ms per window); move to a thread if sessions x frames saturate one core
         sid = ws.request.path.rsplit("/", 1)[-1]
         try:
-            providers, settle = live_providers(sid, llm_opts, tts) if mode == "live" else mock_providers()
+            providers, settle = (live_providers(sid, llm_opts, tts) if mode == "live"
+                                 else mock_billed_providers(sid) if mode == "mock-billed" else mock_providers())
         except budget.BudgetExceeded as e:
             log.warning("session %s refused: %s", sid, e)
             await ws.send(protocol.event("session.ended", reason="budget"))
@@ -145,7 +156,8 @@ def handler_for(mode: str, trace_dir: Path | None, index: Index, policy: Policy 
 
 async def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--providers", choices=["mock", "live"], default="mock")
+    ap.add_argument("--providers", choices=["mock", "mock-billed", "live"], default="mock",
+                    help="mock-billed: mock providers that reserve and settle small fixed amounts (ledger tests, no spend)")
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--trace-dir", type=Path)
