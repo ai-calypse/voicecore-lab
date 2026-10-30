@@ -70,7 +70,7 @@ A change to the wire protocol (`resume_key`, session id format) updates `package
 
 ## Risks, verification and recovery
 
-- **Money.** Tests must never write the real ledger; that is fixed in S09-T00. E2E must never reach a live orchestrator; that is fixed by the isolated ports and the mock-only guard. Live checks need the user's approval at the step.
+- **Money.** Tests must never write the real ledger; that is fixed in S09-T00. E2E must never reach a live orchestrator: the isolated ports and no server reuse (S09-T00) cover it now, and the mock-only guard joins as globalSetup in S09-T02, once `/healthz` exists. Live checks need the user's approval at the step.
 - **Docs corpus drift.** A fact changed in code must be updated in the docs pages in the same slice, or the assistant cites stale facts.
 - **History rewrite (2026-10-30).** At the user's request, `Co-Authored-By` trailers were removed from every commit and the history was force-pushed. A local backup is in branch `backup/pre-attribution-rewrite` and a bundle. Commit ids cited in step docs were remapped.
 
@@ -88,7 +88,7 @@ A change to the wire protocol (`resume_key`, session id format) updates `package
 | 2026-10-30 | S09-T00 | The ledger path is resolved per call. A root `conftest.py` gives every non-live test a temp ledger. Entries carry `ts` (`budget.now`). | `test_budget.py` (2 new); 129 passed; real ledger unchanged |
 | 2026-10-30 | S09-T00 | memnet: `HTTPClientFrom` / `DialContextFrom`, ECONNREFUSED refusals, `Listener.RefuseNext(n)`. The refusal control lives in memnet, which owns connections; the plan had put it in fakeorch. fakeorch: `/readyz` with `SetReady`, and `Kill()`. | `memnet_test.go`, `fakeorch_test.go` |
 | 2026-10-30 | S09-T00 | `MockSTT(error_after_ms)`; a `docker` pytest marker excluded from `make test` and CI; `--providers mock-billed` | `test_provider_contracts.py`, `test_server.py` |
-| 2026-10-30 | S09-T00 | Demo e2e moved to ports 15173 / 18765 / 18080 / 18766 / 18081 / 18090; docs e2e to 13000. `reuseExistingServer` only in CI. `checkMockOnly` guard, wired as globalSetup in S09-T02. | vitest 3/3; demo e2e 11/11 and docs e2e 2/2, run beside a live stack on the dev ports |
+| 2026-10-30 | S09-T00 | Demo e2e moved to ports 15173 / 18765 / 18080 / 18766 / 18081 / 18090; docs e2e to 13000. Servers never reused (code review: the first version reused them outside CI). `checkMockOnly` guard (5 s timeout, HTTP status checked), wired as globalSetup in S09-T02. | vitest 3/3; demo e2e 11/11 and docs e2e 2/2, run beside a live stack on the dev ports |
 | 2026-10-30 | — | Commit attribution removed from all history (user request); project settings disable it from now on | `.claude/settings.json`; `git log --format=%B \| grep -ci co-authored` = 0 |
 
 ## Execution record

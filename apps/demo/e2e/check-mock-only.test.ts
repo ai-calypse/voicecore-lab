@@ -18,6 +18,15 @@ describe("checkMockOnly (e2e must never reach a live orchestrator)", () => {
     await expect(checkMockOnly("http://127.0.0.1:18766")).resolves.toBeUndefined();
   });
 
+  it("treats a non-JSON or error answer as no orchestrator, and never waits forever", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("Upgrade Required", { status: 426 })));
+    await expect(checkMockOnly("http://127.0.0.1:18766")).rejects.toThrow("no orchestrator at http://127.0.0.1:18766 (HTTP 426)");
+    const seen: (AbortSignal | undefined)[] = [];
+    vi.stubGlobal("fetch", vi.fn(async (_u: string, init?: RequestInit) => { seen.push(init?.signal ?? undefined); return new Response("{}"); }));
+    await checkMockOnly("http://127.0.0.1:18766").catch(() => {});
+    expect(seen[0]).toBeInstanceOf(AbortSignal);
+  });
+
   it("says when nothing answers", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("fetch failed"); }));
     await expect(checkMockOnly("http://127.0.0.1:18766")).rejects.toThrow("no orchestrator at http://127.0.0.1:18766");

@@ -99,3 +99,14 @@ async def test_mock_stt_error_after_ms_raises_retryable_once():
     with pytest.raises(ProviderError) as e2:
         await stt.send(SILENCE_20MS)  # the stream is dead from now on
     assert e2.value.kind == "retryable"
+
+
+async def test_mock_stt_delivers_events_due_before_the_drop():
+    stt = MockSTT([(1000, Final("hi"))], error_after_ms=1000)
+    for _ in range(50):
+        await stt.send(SILENCE_20MS)
+    got = []
+    with pytest.raises(ProviderError):
+        async for e in stt.events():
+            got.append(e)
+    assert [e.text for e in got] == ["hi"]

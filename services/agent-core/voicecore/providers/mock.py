@@ -34,12 +34,11 @@ class MockSTT:
         if self._closed:
             return
         self.audio_ms += len(pcm) // 32
+        while self.script and self.script[0][0] <= self.audio_ms:  # events due by now arrive before any drop
+            self._q.put_nowait(self.script.pop(0)[1])
         if self.error_after_ms is not None and self.audio_ms >= self.error_after_ms:
             self._dropped = True
             self._q.put_nowait(ProviderError("retryable", "mock stt: connection dropped"))
-            return
-        while self.script and self.script[0][0] <= self.audio_ms:
-            self._q.put_nowait(self.script.pop(0)[1])
 
     async def finalize(self) -> None:
         self.finalizes += 1
