@@ -1,7 +1,7 @@
 ---
 title: Providers reference
 sidebar_label: Providers
-description: The STT, LLM and TTS provider contracts, the error kinds, each live adapter (Deepgram, OpenRouter, Cartesia) with its settings and prices, how to switch the LLM, and the mock providers.
+description: The STT, LLM and TTS provider contracts, the error kinds, each live adapter (Deepgram STT and TTS, OpenRouter, Cartesia) with its settings and prices, how to switch the LLM and the TTS, and the mock providers.
 ---
 
 VoiceCore treats speech recognition, the language model and speech synthesis as replaceable providers. The orchestrator talks to each one through a small contract in `services/agent-core/voicecore/providers/base.py`. Live adapters and mock adapters implement the same contracts, so the session runtime cannot tell them apart. This page documents the contracts, every live adapter and the mocks.
@@ -16,7 +16,7 @@ There are three provider contracts, written as Python `Protocol` classes in `pro
 
 Audio is always PCM16 little-endian mono: 16 kHz into the STT, 24 kHz out of the TTS. Those are the same rates as the mic and agent frames of the wire protocol, so no resampling happens in the orchestrator.
 
-Live adapters are only ever built through `make_live(kind, reservation)` in `providers/factory.py`. It refuses to build an adapter without a budget reservation from the right pool: `usd` for STT and LLM, `cartesia_credits` for TTS. So no live adapter can spend outside the budget guard.
+Live adapters are only ever built through `make_live(kind, reservation)` in `providers/factory.py`. It refuses to build an adapter without a budget reservation from the right pool: `usd` for STT, LLM and Deepgram TTS, `cartesia_credits` for Cartesia TTS. So no live adapter can spend outside the budget guard.
 
 ## The STTStream contract
 
@@ -75,8 +75,8 @@ How the session reacts:
 
 - **LLM, rate limited before any answer text:** the session waits 1, 2, then 4 s and tries again. If all retries fail, the agent says it is busy.
 - **LLM, any other failure, or no token for 8 s:** the agent says it is having trouble, or asks the user to repeat after a stall. The turn always ends with an answer.
-- **TTS failure:** the text answer is still delivered. The session retries speech once on a fresh TTS stream, but only if none of that answer was heard yet and the error was not fatal.
-- **STT fatal, such as the 120 s cap:** the agent says voice input has reached its limit; typing still works. There is no STT reconnect.
+- **TTS failure:** the text answer is still delivered. The session retries speech once on a fresh TTS stream, but only if none of that answer was heard yet and the error was not fatal. After a fatal TTS error, such as the per-session character cap, the agent says once, as a text reply, that spoken replies have reached their limit and it will answer in text.
+- **STT fatal, such as the 300 s cap:** the agent says voice input has reached its limit; typing still works. There is no STT reconnect.
 
 ## Deepgram streaming STT adapter
 
@@ -89,11 +89,11 @@ How the session reacts:
 | `interim_results` | true |
 | `punctuate`, `smart_format` | true |
 | `endpointing` | 300 (Deepgram's own; VoiceCore does not rely on it) |
-| `keyterm` | `uv`, `uvx`, `uv sync`, `uv lock`, `pyproject.toml` |
+| `keyterm` | `VoiceCore`, `endpointing`, `barge-in`, `Silero`, `VAD`, `Deepgram`, `Cartesia`, `OpenRouter`, `Cerebras`, `gpt-oss`, `WebSocket`, `WebRTC`, `jitter buffer`, `Docusaurus` |
 
 Punctuation matters: the eager endpoint policy ends a turn on a final that ends in `.`, `?` or `!`.
 
-Cost is counted from the audio sent: $0.0077 per minute (nova-3 streaming, pay as you go, deepgram.com/pricing, checked 2026-10-29). Each session may send at most 120 s of audio (`MAX_AUDIO_S`); past that, `send` raises a fatal error. The session sends only speech: 300 ms before the first voiced frame and 600 ms after the last.
+Cost is counted from the audio sent: $0.0077 per minute (nova-3 streaming, pay as you go, deepgram.com/pricing, checked 2026-10-29). Each session may send at most 300 s of audio (`MAX_AUDIO_S`), which is $0.0385; past that, `send` raises a fatal error. The session sends only speech: 300 ms before the first voiced frame and 600 ms after the last.
 
 ## How the Deepgram adapter uses Finalize, KeepAlive and CloseStream
 
@@ -107,9 +107,9 @@ The Deepgram adapter uses three Deepgram control messages:
 
 ## Why the Deepgram adapter boosts keyterms
 
-The STT adapter sends five keyterms to Deepgram: `uv`, `uvx`, `uv sync`, `uv lock` and `pyproject.toml`. nova-3 supports keyterm prompting, which raises the chance that these words are recognised.
+The STT adapter sends keyterms for the words of the docs the assistant answers from: VoiceCore, endpointing, barge-in, Silero, VAD, the provider names, gpt-oss, WebSocket, WebRTC, jitter buffer and Docusaurus. nova-3 supports keyterm prompting, which raises the chance that these words are recognised.
 
-The reason was measured. In the first live breakdown run (live, n = 10 questions), Deepgram transcribed "uv" wrongly in 5 of 10 questions: as "of", "OV", "u v", and "uv sync" as "OfSync". After adding the keyterms, every question in the next live run that names uv was transcribed with "uv" (`reports/perf.md`, 15 dev docs questions).
+The reason was measured on the earlier corpus, the uv docs, whose keyterms were `uv`, `uvx`, `uv sync`, `uv lock` and `pyproject.toml`. In the first live breakdown run (live, n = 10 questions), Deepgram transcribed "uv" wrongly in 5 of 10 questions: as "of", "OV", "u v", and "uv sync" as "OfSync". After adding the keyterms, every question in the next live run that names uv was transcribed with "uv" (`reports/perf.md`, 15 dev docs questions).
 
 The keyterms are fixed in `PARAMS` in `providers/deepgram_stt.py`. If you point the assistant at docs about another product, add that product's names and commands there. There is no flag for it.
 
@@ -133,7 +133,7 @@ The LLM adapter tracks what each session spends:
 - Otherwise it computes the cost from the token counts and the price table below.
 - A call that ends before its usage report arrives, because it was cancelled or failed, is still billed. The adapter estimates it at about 4 characters per token for the prompt and the text received so far.
 
-Before every call, the adapter checks the cost so far plus this prompt with a worst-case output of `max_tokens` × 4 characters. If that would pass the session's reservation ($0.006 in the server), the call fails as fatal before anything is sent.
+Before every call, the adapter checks the cost so far plus this prompt with a worst-case output of `max_tokens` × 4 characters. If that would pass the session's reservation ($0.02, `LLM_CAP_USD` in the server), the call fails as fatal before anything is sent.
 
 | Model | Input, USD per million tokens | Output, USD per million tokens |
 |---|---:|---:|
@@ -159,9 +159,56 @@ uv run python -m voicecore.server --providers live \
 
 Through the benchmark runner, pass each flag with `--server-arg`. After a model change, re-run the answer eval: [Tune latency](../guides/tune-latency.md) shows how.
 
+## Deepgram Aura-2 streaming TTS adapter
+
+`DeepgramTTS` in `providers/deepgram_tts.py` is the default text-to-speech adapter. It streams speech from Deepgram over one WebSocket per session, `wss://api.deepgram.com/v1/speak`, authenticated with the same `DEEPGRAM_API_KEY` as the STT:
+
+- **Model** `aura-2-thalia-en`.
+- **Output** `linear16` at 24000 Hz, which becomes 20 ms agent frames directly.
+- **Messages** `Speak` carries text and `Flush` asks for its audio. Binary audio follows, then `Flushed`. `Clear` drops buffered text and audio, and Deepgram confirms it with `Cleared`.
+
+Cost is counted per character sent: $0.030 per 1,000 characters (Aura-2 pay as you go, deepgram.com/pricing, checked 2026-10-30), billed in the `usd` pool. Each session may speak at most 4,000 characters (`MAX_CHARS`). The session reserves that worst case, $0.12, when it first speaks, and settles it to the actual use when it ends.
+
+The socket opens at session start through `open_socket()`, which costs nothing. If Deepgram closed the socket while it sat idle, the next `synth` opens it again. If a TTS failure leads to a retry on a second stream, both streams bill the same reservation and share its character cap.
+
+## How the Deepgram TTS adapter tracks generations
+
+Deepgram's speak stream has no context per generation, and its audio frames carry no generation tag. The adapter sends text one generation at a time and keeps the unfinished generations in the order their text was sent. Every audio frame belongs to the oldest unfinished generation.
+
+Flush messages decide when audio starts and when a generation ends:
+
+- After a generation's first chunk, the adapter sends `Speak` then `Flush`, so the first sentence is spoken at once instead of waiting for more text.
+- Middle chunks go out as `Speak` only.
+- After the last chunk, it sends `Speak` then `Flush` again. The `Flushed` that answers this last Flush ends the generation, and the adapter emits its last item with no audio.
+
+A usual answer therefore costs about 2 Flushes. Deepgram allows 20 Flushes per 60 s and 2,000 characters per `Speak`, so longer text is split over several `Speak` messages. A `Warning` or `Error` message from Deepgram is recorded, not raised. If the socket closes while audio is still due, the stream fails with a retryable error, and the session may retry speech once.
+
+## How the Deepgram TTS adapter cancels an answer
+
+Deepgram holds text until a Flush. Text of a cancelled answer that was sent but not flushed would otherwise be spoken together with the next answer. So `DeepgramTTS.cancel(gen)` does three things:
+
+1. It sets its fence to `max(fence, gen)` and removes every generation at or below the fence from its unfinished generations and pending Flushes.
+2. If one of those generations was unfinished and the socket is open, it sends `Clear`, which drops Deepgram's buffered text and audio.
+3. Until Deepgram answers with `Cleared`, it drops every audio frame and ignores `Flushed`, because that audio belongs to cancelled text.
+
+From then on, `audio()` drops every item of a generation at or below the fence, and `synth()` ignores text for one. The orchestrator, the gateway and the browser each check the fence again before anyone could hear late audio. A live contract test checks that a cancelled answer's unflushed text is never spoken with the next answer (`reports/latency_tuning.md`).
+
+## Switch the TTS provider with an orchestrator flag
+
+The `--tts` orchestrator flag picks the text-to-speech provider. It only applies with `--providers live`:
+
+- `--tts deepgram`, the default, uses Deepgram Aura-2. It bills the `usd` pool at $0.030 per 1,000 characters, with at most 4,000 characters per session.
+- `--tts cartesia` uses Cartesia sonic-3.6. It bills the `cartesia_credits` pool at 1 credit per character, with at most 1,500 characters per session, and needs `CARTESIA_API_KEY`.
+
+```bash
+uv run python -m voicecore.server --providers live --tts cartesia
+```
+
+Deepgram became the default on 2026-10-30, because Cartesia's 1,500-character session cap ran out after about 6 spoken answers in a manual session. Both adapters open their socket at session start and reserve their budget only when the session first speaks. TTS first audio was p50 115 ms with Deepgram Aura-2 (live, n = 6) and p50 145 ms with Cartesia sonic-3.6 (live, n = 15), in two separate runs of the same stack.
+
 ## Cartesia streaming TTS adapter
 
-`CartesiaTTS` in `providers/cartesia_tts.py` streams speech from Cartesia over one WebSocket per session, `wss://api.cartesia.ai/tts/websocket` with `cartesia_version=2026-08-14`, authenticated with `CARTESIA_API_KEY`:
+`CartesiaTTS` in `providers/cartesia_tts.py` is the alternative text-to-speech adapter, used with `--tts cartesia`. It streams speech from Cartesia over one WebSocket per session, `wss://api.cartesia.ai/tts/websocket` with `cartesia_version=2026-08-14`, authenticated with `CARTESIA_API_KEY`:
 
 - **Model** `sonic-3.6`, **voice** "Daniel" (id `47c38ca4-5f35-497b-b1a3-415245fb35e1`), language `en`.
 - **Output** raw `pcm_s16le` at 24000 Hz, which becomes 20 ms agent frames directly.
@@ -180,7 +227,7 @@ So `CartesiaTTS.cancel(gen)` does two things:
 
 An error message from Cartesia ends only its own generation: the adapter emits that generation's last item with no audio, records the error, and keeps the socket for later generations. Only a closed socket fails the stream as a whole, as a retryable error.
 
-The orchestrator also checks every audio item against its own fence before framing it, and the gateway and browser fence again. A late Cartesia chunk is therefore dropped in up to four places before anyone could hear it.
+The orchestrator also checks every audio item against its own fence before framing it, and the gateway and browser fence again. With `--tts cartesia`, a late Cartesia chunk is therefore dropped in up to four places before anyone could hear it.
 
 ## Mock providers
 
@@ -190,4 +237,4 @@ The orchestrator also checks every audio item against its own fence before frami
 - **`MockLLM`** plays an `LLMScript`: first token after `first_token_ms` (default 200), then one token every `token_ms` (default 15). The script can also raise an error, stall after N tokens, or emit tool calls.
 - **`MockTTS`** synthesises a 220 Hz tone, 60 ms per character, in 20 ms items, after `first_audio_ms` (default 150). It can play a given audio clip instead, for barge-in scenarios.
 
-With `--providers mock`, the server uses a canned transcript ("how do I install uv?") and one scripted answer with two citations. Because the mock STT returns its final at every pause, mock mode uses fixed 800 ms endpointing. The fake-time benchmark and the CI gate run on these mocks.
+With `--providers mock`, the server uses a canned transcript ("how does eager endpointing work?") and one scripted answer with two citations. Because the mock STT returns its final at every pause, mock mode uses fixed 800 ms endpointing. The fake-time benchmark and the CI gate run on these mocks.

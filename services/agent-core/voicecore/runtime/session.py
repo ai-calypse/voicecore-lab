@@ -26,6 +26,7 @@ SYSTEM = ("You are VoiceCore, a voice assistant for a documentation site. "
 REPROMPT = "Sorry, could you say that again?"
 TROUBLE = "Sorry, I'm having trouble answering right now. Please try again."
 VOICE_LIMIT = "Voice input has reached its limit for this session. You can keep typing your questions."
+VOICE_OFF = "Spoken replies have reached their limit for this session, so I'll answer in text. Close and reopen me to talk again."
 BUSY = "I'm busy right now. Please try again in a moment."
 BACKOFF_S = (1, 2, 4)  # after an HTTP 429 before any answer text
 PAUSE_CANCEL_S = 30  # a generation paused this long on the client is cancelled
@@ -78,6 +79,7 @@ class Session:
         self._stt_open_until = -1  # frame index; only speech (plus pre-roll and hangover) is sent to STT
         self._tts_failed: dict[int, str] = {}  # generation -> error kind
         self._tts_retried: set[int] = set()
+        self._voice_off = False  # told the user that speech hit its session cap
         self._answers: dict[int, str] = {}  # final answer text per generation (for a late TTS retry)
         self._stream: int | None = None  # newest mic stream id
         self._revoked_stream: int | None = None
@@ -346,9 +348,13 @@ class Session:
         """The text answer is already delivered. Retry speech once, else end the generation (no audio will end it)."""
         if g != self.active_gen:
             return
-        if self._tts_failed.get(g) != "fatal" and await self._retry_tts(g, self._answers.get(g, "")):
+        fatal = self._tts_failed.get(g) == "fatal"
+        if not fatal and await self._retry_tts(g, self._answers.get(g, "")):
             return
         self.active_gen, self.state = None, State.LISTENING
+        if fatal and not self._voice_off:  # e.g. the per-session TTS cap: say so once (as text), not silently
+            self._voice_off = True
+            await self.start_generation(self.turn_id or "t0", "", reply=VOICE_OFF)
 
     async def _stream_answer(self, g: int, text: str, speak, sep) -> bool:
         """Streams one answer attempt into speak(). Returns True only for an HTTP 429 before any text (retry it)."""

@@ -67,7 +67,7 @@ The WSS runner, `harness/runner/wss.py`, takes the flags below. The defaults run
 
 ## Run a live latency benchmark
 
-A live run uses Deepgram, OpenRouter and Cartesia, so it spends money from the project budget. Each session reserves its caps in `benchmarks/spend_ledger.json` before it starts. Put your keys in `.env` first.
+A live run uses Deepgram for speech-to-text and speech, and OpenRouter, so it spends money from the project budget. Add `--server-arg=--tts=cartesia` to measure with Cartesia speech instead. Each session reserves its caps in `benchmarks/spend_ledger.json` before it starts. Put your keys in `.env` first.
 
 ```bash
 uv run python harness/runner/wss.py --providers live --sequential --tail 8 \
@@ -75,7 +75,7 @@ uv run python harness/runner/wss.py --providers live --sequential --tail 8 \
 uv run python harness/latency.py benchmarks/raw/<run folder>
 ```
 
-Use `--sequential` for live runs. Clients then run one after another, so you measure one turn at a time and stay inside provider concurrency limits: 2 concurrent TTS streams is the lowest Cartesia tier (Free plan). The live reports used a `--tail` of 8 or 10 seconds. An answer that is still playing when the tail ends has no `playout.stopped` in the log; that happened to 2 of 10 answers in one 10 s run. It does not affect the total, which ends at `playout.started`.
+Use `--sequential` for live runs. Clients then run one after another, so you measure one turn at a time and stay inside provider concurrency limits: with Cartesia, 2 concurrent TTS streams is the lowest tier (Free plan). The live reports used a `--tail` of 8 or 10 seconds. An answer that is still playing when the tail ends has no `playout.stopped` in the log; that happened to 2 of 10 answers in one 10 s run. It does not affect the total, which ends at `playout.started`.
 
 The live default policy is eager endpointing, so you do not need `--policy`. To compare against the old default, add `--policy fixed`. To try another LLM, pass orchestrator flags through `--server-arg`.
 

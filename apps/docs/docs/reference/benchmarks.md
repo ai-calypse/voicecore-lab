@@ -9,7 +9,7 @@ This page collects every headline number VoiceCore has measured, in one place. E
 
 Every number on this page carries a label that says how it was measured:
 
-- **live-provider:** the real stack with Deepgram, OpenRouter and Cartesia.
+- **live-provider:** the real stack with Deepgram STT, OpenRouter and live speech. Speech was Cartesia sonic-3.6 in every live run except the one Deepgram Aura-2 run, which says so.
 - **fake-provider:** mock providers with fixed delays. Everything else is real: Silero VAD, turn-taking, the generation runtime, and for the WSS runs the gateway and the SDK client.
 - **simulated:** a user-space proxy that adds network delay and jitter.
 - **measured offline:** no provider call at the time of measuring, for example retrieval ranking or a replay of recorded STT finals.
@@ -24,18 +24,19 @@ Total latency of a voice turn, end of the user's speech to the first agent sampl
 
 | Configuration | Total p50 / p95 | n | Source |
 |---|---:|---:|---|
-| Current default: eager endpoint, gpt-oss-120b on Cerebras | 841 / 1,520 ms | 15 | `reports/latency_tuning.md` |
-| Current default, hard audio (noisy, slow, mid-sentence pauses) | 841 / 1,218 ms | 12 | `reports/latency_tuning.md` |
+| Current default: eager endpoint, gpt-oss-120b on Cerebras, Deepgram Aura-2 speech | 802 / 1,059 ms | 6 | `reports/latency_tuning.md` |
+| Eager endpoint, gpt-oss-120b on Cerebras, Cartesia sonic-3.6 speech | 841 / 1,520 ms | 15 | `reports/latency_tuning.md` |
+| Same with Cartesia, hard audio (noisy, slow, mid-sentence pauses) | 841 / 1,218 ms | 12 | `reports/latency_tuning.md` |
 | Before tuning: fixed 800 ms endpoint, gpt-4.1-nano | 2,317 / 3,102 ms | 15 | `reports/perf.md` |
 | Before tuning: asr_assisted endpoint, gpt-4.1-nano | 2,259 / 6,817 ms | 15 | `reports/perf.md` |
 | First breakdown, fixed 800 ms, gpt-4.1-nano, no retrieval | 2,073 / 2,472 ms | 10 | `reports/latency_breakdown.md` |
 | Hosted Deepgram Voice Agent, for comparison | 972 ms median | 3 | `reports/latency_breakdown.md` |
 
-The hosted baseline is measured to the first audio frame received, not rendered, with different fixtures and model, so it is not a matched comparison. In the current default run, 13 of 15 turns finished under 1,000 ms.
+The hosted baseline is measured to the first audio frame received, not rendered, with different fixtures and model, so it is not a matched comparison. In the Cartesia run, 13 of 15 turns finished under 1,000 ms; in the Deepgram Aura-2 run, 5 of 6 did.
 
 ## Voice turn stages with live providers
 
-Where the time goes in one live voice turn, per stage, before and after the latency tuning (live-provider, n = 15 each, the same 15 dev docs questions). The before run is `wss_live_fixed_20261030T020448Z`; the after run is `wss_live_eager_20261030T132949Z`. Values come from each run's `latency.json`, summarised in `reports/latency_tuning.md`.
+Where the time goes in one live voice turn, per stage, before and after the latency tuning (live-provider, n = 15 each, the same 15 dev docs questions). The before run is `wss_live_fixed_20261030T020448Z`; the after run is `wss_live_eager_20261030T132949Z`. Values come from each run's `latency.json`, summarised in `reports/latency_tuning.md`. Both runs used Cartesia sonic-3.6 for speech.
 
 | Stage | Before p50 / p95 | After p50 / p95 |
 |---|---:|---:|
@@ -47,6 +48,17 @@ Where the time goes in one live voice turn, per stage, before and after the late
 | Total | 2,317 / 3,102 ms | 841 / 1,520 ms |
 
 The after p95 of the endpoint delay is high because one turn (q17) got no punctuated final and fell back to 800 ms of silence.
+
+## Voice turn latency with Deepgram Aura-2 speech
+
+Text-to-speech switched from Cartesia sonic-3.6 to Deepgram Aura-2 on 2026-10-30. One live run measured the new default on the same stack: headless SDK client, Go gateway, orchestrator, eager endpoint and gpt-oss-120b on Cerebras, with the speech socket opened at session start (live-provider). Source: `reports/latency_tuning.md`.
+
+| Speech provider and run | Total p50 / p95 | TTS first audio p50 / p95 | n |
+|---|---:|---:|---:|
+| Cartesia sonic-3.6, `wss_live_eager_20261030T132949Z` | 841 / 1,520 ms | 145 / 186 ms | 15 |
+| Deepgram Aura-2, `wss_live_eager_deepgram_tts_20261030T153829Z` | 802 / 1,059 ms | 115 / 162 ms | 6 |
+
+The Deepgram run is small. Its questions are about the uv docs, while the assistant now answers from this docs site, so most of its replies were short "not in these docs" answers. The report judges that this does not change the first-audio measurement, but the totals are not a matched comparison. The Cartesia numbers still describe `--tts cartesia`.
 
 ## Voice turn latency with mock providers
 
@@ -180,7 +192,7 @@ With 2 clips per noisy category, those rows are anecdotes. Part of the 10 dB err
 
 ## Cost of live providers
 
-What live voice turns and this project's measurements cost, from the spend ledger `benchmarks/spend_ledger.json` (live-provider). Every paid call reserves from a budget pool before it runs: $5.00 for Deepgram and OpenRouter together, and 16,000 Cartesia credits.
+What live voice turns and this project's measurements cost, from the spend ledger `benchmarks/spend_ledger.json` (live-provider). Every paid call reserves from a budget pool before it runs: $5.00 for Deepgram (speech-to-text and text-to-speech) and OpenRouter together, and 16,000 Cartesia credits for `--tts cartesia`.
 
 | Item | Cost | Source |
 |---|---:|---|
@@ -191,4 +203,4 @@ What live voice turns and this project's measurements cost, from the spend ledge
 | Latency tuning work, all studies and runs | $0.123 and 2,580 credits | `reports/latency_tuning.md` |
 | Project total after the tuning work | $0.95 of the $5.00 cap; 13,692 of 16,000 credits | `reports/latency_tuning.md` |
 
-The STT, TTS and nano per-turn costs come from the 30 live sessions before the latency tuning; they were not re-measured after it. One Cartesia credit is one character of speech, and the tuning work total is the sum of its four items.
+The STT, TTS and nano per-turn costs come from the 30 live sessions before the latency tuning; they were not re-measured after it. One Cartesia credit is one character of speech, and the tuning work total is the sum of its four items. Deepgram Aura-2, the speech default since 2026-10-30, costs $0.030 per 1,000 characters; its per-turn cost has not been measured.

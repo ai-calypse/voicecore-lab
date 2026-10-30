@@ -79,11 +79,11 @@ The keep-alive change has no separate number: its gain is part of the LLM first-
 
 ## Pre-open the TTS socket
 
-The Cartesia WebSocket handshake took 250 to 330 ms, and before tuning it happened at the first answer, inside the user's wait. Now `OnDemandTTS.warm()` in `server.py` calls `cartesia_tts.open_socket()` at session start, and the TTS stream adopts that socket when the session first speaks.
+The Cartesia WebSocket handshake took 250 to 330 ms, and before tuning it happened at the first answer, inside the user's wait. Now `OnDemandTTS.warm()` in `server.py` calls the TTS module's `open_socket()` at session start, and the TTS stream adopts that socket when the session first speaks. Deepgram Aura-2, the speech default since 2026-10-30, uses the same pre-opened socket.
 
-Opening the socket spends nothing, so credits are still reserved only on first speech. That keeps idle sessions from holding the credit pool, as a security review on 2026-10-30 required. If the early open fails, `open_socket` returns nothing and the stream connects on first use as before.
+Opening the socket spends nothing, so the TTS budget is still reserved only on first speech. That keeps idle sessions from holding the pool, as a security review on 2026-10-30 required. If the early open fails, `open_socket` returns nothing and the stream connects on first use as before.
 
-Result: TTS first audio went from p50 456 ms to 145 ms (live, n = 15). That stage starts at the LLM's first token and includes the wait for the first full sentence of the answer.
+Result: TTS first audio went from p50 456 ms to 145 ms with Cartesia (live, n = 15). With Deepgram Aura-2 it was p50 115 ms (live, n = 6). That stage starts at the LLM's first token and includes the wait for the first full sentence of the answer.
 
 ## Choose an endpoint policy from recorded live finals
 
@@ -141,7 +141,7 @@ The two models are comparable within the ±1 noise seen between runs. gpt-oss is
 
 ## Results of the tuning
 
-Same 15 dev docs questions, full stack: headless SDK client, Go gateway, orchestrator, Deepgram, OpenRouter and Cartesia.
+Same 15 dev docs questions, full stack: headless SDK client, Go gateway, orchestrator, Deepgram, OpenRouter and Cartesia sonic-3.6 for speech.
 
 | Run (live) | Total p50 / p95 | Turn end detected p50 | LLM first token p50 | TTS first audio p50 |
 |---|---:|---:|---:|---:|

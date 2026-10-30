@@ -1,7 +1,7 @@
 """Live adapters are only built against a budget reservation, so nothing can spend outside the guard."""
 from voicecore import budget
 
-POOL = {"stt": "usd", "llm": "usd", "tts": "cartesia_credits"}
+POOL = {"stt": "usd", "llm": "usd", "tts": "cartesia_credits", "deepgram_tts": "usd"}  # "tts" is Cartesia
 
 
 def make_live(kind: str, reservation: budget.Reservation | None, **kwargs):
@@ -15,6 +15,10 @@ def make_live(kind: str, reservation: budget.Reservation | None, **kwargs):
         from .openai_compat_llm import OpenAICompatLLM
 
         return OpenAICompatLLM(reservation, **kwargs)
+    if kind == "deepgram_tts":
+        from .deepgram_tts import DeepgramTTS
+
+        return DeepgramTTS(reservation, **kwargs)
     from .cartesia_tts import CartesiaTTS
 
     return CartesiaTTS(reservation, **kwargs)

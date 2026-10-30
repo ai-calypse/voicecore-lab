@@ -13,7 +13,7 @@ A cascaded voice agent chains separate streaming stages, each one feeding the ne
 | VAD and turn-taking | Orchestrator | Silero VAD on every frame, the floor state machine, the echo gate |
 | STT | Deepgram nova-3 | Streaming partial and final transcripts, Finalize at the endpoint |
 | LLM | gpt-oss-120b through OpenRouter | Grounded answer from retrieved docs, streamed as tokens |
-| TTS | Cartesia sonic-3.6 | Audio per sentence, one context per generation |
+| TTS | Deepgram Aura-2 | Audio per sentence, tagged with its generation |
 | Playout | Browser SDK | One queue per generation, fence on cancel, playout events |
 
 ### Capture in the browser
@@ -26,7 +26,7 @@ The orchestrator runs Silero VAD on every 20 ms frame and passes the speech prob
 
 ### Speech to text
 
-The STT stage is Deepgram nova-3 over a streaming WebSocket. It returns interim transcripts while the user speaks and final transcripts for settled stretches of audio. The adapter boosts the project's vocabulary with keyterms such as uv, uvx and uv sync. When the floor reports an endpoint, the session sends Deepgram a Finalize message so the last words come back as a final right away. In the live breakdown run, the transcript was ready p50 0.6 ms after the endpoint (live, n = 10), because Finalize had already returned it. The session waits until there is a final and no interim text is left, for at most 5 s. An empty transcript gets a reprompt: "Sorry, could you say that again?". With the eager policy, Finalize goes out earlier, after 200 ms of silence.
+The STT stage is Deepgram nova-3 over a streaming WebSocket. It returns interim transcripts while the user speaks and final transcripts for settled stretches of audio. The adapter boosts the docs' vocabulary with keyterms such as endpointing, barge-in and Silero. When the floor reports an endpoint, the session sends Deepgram a Finalize message so the last words come back as a final right away. In the live breakdown run, the transcript was ready p50 0.6 ms after the endpoint (live, n = 10), because Finalize had already returned it. The session waits until there is a final and no interim text is left, for at most 5 s. An empty transcript gets a reprompt: "Sorry, could you say that again?". With the eager policy, Finalize goes out earlier, after 200 ms of silence.
 
 ### Language model
 
@@ -34,7 +34,7 @@ Before the LLM sees the question, the answer engine retrieves passages locally. 
 
 ### Text to speech
 
-A chunker cuts the token stream at sentence ends: a `.`, `!` or `?` followed by whitespace, or a newline. TTS can therefore start on the first sentence while the LLM is still writing the rest. Before synthesis, citation markers such as `[1]` are removed, and a raw URL is spoken as "the link in the chat". Cartesia sonic-3.6 synthesizes over one WebSocket with one context per generation. The socket is opened when the session starts, so the first answer does not wait for the handshake. The orchestrator cuts the returned 24 kHz audio into 20 ms frames, stamps each frame with its generation ID and sends it back through the gateway.
+A chunker cuts the token stream at sentence ends: a `.`, `!` or `?` followed by whitespace, or a newline. TTS can therefore start on the first sentence while the LLM is still writing the rest. Before synthesis, citation markers such as `[1]` are removed, and a raw URL is spoken as "the link in the chat". Deepgram Aura-2 synthesizes over one WebSocket, and the adapter assigns its audio to the oldest unfinished generation. Cartesia sonic-3.6, the alternative with `--tts cartesia`, uses one context per generation instead. The socket is opened when the session starts, so the first answer does not wait for the handshake. The orchestrator cuts the returned 24 kHz audio into 20 ms frames, stamps each frame with its generation ID and sends it back through the gateway.
 
 ### Playout in the browser
 
@@ -64,7 +64,7 @@ ADR 0001 splits the system into code written and tested here, and inference boug
 |---|---|
 | Browser SDK: capture, resampling, framing, session client, playout | Streaming STT: Deepgram nova-3 |
 | Wire protocol with golden vectors in TypeScript, Go and Python | LLM: `openai/gpt-oss-120b` via OpenRouter, Cerebras first |
-| Go gateway: auth, heartbeat, resume window, bounded queues, fence | Streaming TTS: Cartesia sonic-3.6 |
+| Go gateway: auth, heartbeat, resume window, bounded queues, fence | Streaming TTS: Deepgram Aura-2, or Cartesia sonic-3.6 |
 | Orchestrator: turn-taking module and generation runtime | VAD model: Silero VAD (ONNX), runs locally |
 | Provider adapters, mocks and the budget guard | Embeddings: a small fastembed ONNX model, runs locally |
 | Answer engine, harness, benchmarks and reports | Hosted baseline only: Deepgram Voice Agent API |

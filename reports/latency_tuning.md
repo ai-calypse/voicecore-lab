@@ -112,3 +112,17 @@ From `benchmarks/spend_ledger.json`: LLM study $0.008, endpoint study (STT) $0.0
 - Speculative LLM calls on partial transcripts would remove most of the remaining 340 ms of endpoint wait, at the cost of more LLM calls; not tried.
 - No repeat runs at different times of day. LLM provider latency moved by 2× between batches before (perf.md), so the p95 should be checked again before it is quoted widely.
 - The browser widget was not measured live here; it uses the same SDK and server path as the headless client.
+
+## Update: Deepgram Aura-2 for speech (2026-10-30)
+
+Cartesia's per-session cap of 1,500 characters (its credit pool) ran out after about 6 spoken answers in a manual session. Text-to-speech now defaults to Deepgram Aura-2 (`aura-2-thalia-en`, $0.030 per 1,000 characters, usd pool, 4,000 characters per session); `--tts cartesia` keeps the old path.
+
+| Run | Total p50 / p95 | TTS first audio p50 / p95 |
+|---|---:|---:|
+| Cartesia sonic-3.6, socket pre-opened (`wss_live_eager_20261030T132949Z`, n = 15) | 841 / 1,520 ms | 145 / 186 ms |
+| Deepgram Aura-2, socket pre-opened (`wss_live_eager_deepgram_tts_20261030T153829Z`, n = 6) | 802 / 1,059 ms | 115 / 162 ms |
+
+The second run is small, and its questions are about the uv docs while the assistant now answers from the VoiceCore docs site. Most of its replies are short "not in these docs" answers, which does not change the first-audio measurement.
+
+Deepgram's stream has no per-generation context. The adapter flushes after a generation's first and last chunks (2 of the allowed 20 Flushes per minute per answer), attributes audio to the oldest unfinished generation, and sends Clear on cancel. A live contract test checks that a cancelled answer's unflushed text is never spoken with the next answer.
+

@@ -1,0 +1,22 @@
+{"t_us":73622,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q09.wav"}
+{"t_us":76944,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-f06c2107fb77ca80","type":"welcome"}
+{"t_us":77086,"process":"headless","type":"mic.start","t0_us":77084}
+{"t_us":1178484,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1934674,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How can I check that"}
+{"t_us":2078307,"process":"headless","dir":"in","t_client_us":2077491,"t_server_us":51316069,"type":"pong"}
+{"t_us":2892394,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How can I check that my lock file is"}
+{"t_us":3927062,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How can I check that my lock file is up to date without"}
+{"t_us":4078854,"process":"headless","dir":"in","t_client_us":4078269,"t_server_us":53316675,"type":"pong"}
+{"t_us":4553531,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How can I check that my lock file is up to date without changing it?"}
+{"t_us":4554407,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How can I check that my lock file is up to date without changing it?"}
+{"t_us":4554778,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":5155432,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":5155894,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that detail in the docs. You might want to look at the “Use live providers” topic for more about the spend guard and its lock handling."}
+{"t_us":5215929,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":6078798,"process":"headless","dir":"in","t_client_us":6078235,"t_server_us":55316694,"type":"pong"}
+{"t_us":8078688,"process":"headless","dir":"in","t_client_us":8077998,"t_server_us":57316504,"type":"pong"}
+{"t_us":10078793,"process":"headless","dir":"in","t_client_us":10078421,"t_server_us":59316771,"type":"pong"}
+{"t_us":12079244,"process":"headless","dir":"in","t_client_us":12078857,"t_server_us":61317201,"type":"pong"}
+{"t_us":13374593,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":13657918,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":13662059,"process":"headless","dir":"in","type":"socket.closed","code":1000}

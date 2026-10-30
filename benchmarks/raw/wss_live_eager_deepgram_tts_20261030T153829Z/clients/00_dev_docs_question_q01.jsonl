@@ -1,0 +1,24 @@
+{"t_us":81766,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q01.wav"}
+{"t_us":85091,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-99f83a809e85827c","type":"welcome"}
+{"t_us":85199,"process":"headless","type":"mic.start","t0_us":85197}
+{"t_us":1227082,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1988521,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I"}
+{"t_us":2086654,"process":"headless","dir":"in","t_client_us":2085941,"t_server_us":3243949,"type":"pong"}
+{"t_us":2959193,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install all"}
+{"t_us":3454380,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install of?"}
+{"t_us":4089903,"process":"headless","dir":"in","t_client_us":4089339,"t_server_us":5247230,"type":"pong"}
+{"t_us":4491140,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install of? On a Mac"}
+{"t_us":5451789,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install of? On a Mac or Linux"}
+{"t_us":6011001,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install of? On a Mac or Linux machine?"}
+{"t_us":6011623,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I install of? On a Mac or Linux machine?"}
+{"t_us":6011852,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6090121,"process":"headless","dir":"in","t_client_us":6089813,"t_server_us":7247622,"type":"pong"}
+{"t_us":6450714,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":6450926,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find a specific answer to that installation question in the docs. You might check the Quickstart section for the general setup steps, or let me know if you’d like help with another topic."}
+{"t_us":6585951,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8089932,"process":"headless","dir":"in","t_client_us":8089526,"t_server_us":9247415,"type":"pong"}
+{"t_us":10089862,"process":"headless","dir":"in","t_client_us":10089384,"t_server_us":11247300,"type":"pong"}
+{"t_us":12090566,"process":"headless","dir":"in","t_client_us":12090054,"t_server_us":13247979,"type":"pong"}
+{"t_us":14090464,"process":"headless","dir":"in","t_client_us":14090142,"t_server_us":15247957,"type":"pong"}
+{"t_us":15145079,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":15149154,"process":"headless","dir":"in","type":"socket.closed","code":1000}

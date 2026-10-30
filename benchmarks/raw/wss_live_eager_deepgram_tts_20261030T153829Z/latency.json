@@ -1,0 +1,92 @@
+{
+  "turns": [
+    {
+      "clip": "dev_docs_question_q01",
+      "generations": 1,
+      "endpoint_delay_ms": 360.0,
+      "stt_settle_ms": 0.2,
+      "llm_first_token_ms": 429.4,
+      "tts_first_audio_ms": 136.2,
+      "total_ms": 940.8,
+      "residual_ms": 14.8
+    },
+    {
+      "clip": "dev_docs_question_q04",
+      "generations": 1,
+      "endpoint_delay_ms": 260.0,
+      "stt_settle_ms": 0.3,
+      "llm_first_token_ms": 234.5,
+      "tts_first_audio_ms": 114.8,
+      "total_ms": 638.2,
+      "residual_ms": 28.3
+    },
+    {
+      "clip": "dev_docs_question_q07",
+      "generations": 1,
+      "endpoint_delay_ms": 320.0,
+      "stt_settle_ms": 0.2,
+      "llm_first_token_ms": 254.7,
+      "tts_first_audio_ms": 162.0,
+      "total_ms": 761.8,
+      "residual_ms": 24.7
+    },
+    {
+      "clip": "dev_docs_question_q09",
+      "generations": 1,
+      "endpoint_delay_ms": 380.0,
+      "stt_settle_ms": 0.3,
+      "llm_first_token_ms": 592.7,
+      "tts_first_audio_ms": 62.1,
+      "total_ms": 1058.8,
+      "residual_ms": 23.4
+    },
+    {
+      "clip": "dev_docs_question_q11",
+      "generations": 1,
+      "endpoint_delay_ms": 300.0,
+      "stt_settle_ms": 0.2,
+      "llm_first_token_ms": 427.4,
+      "tts_first_audio_ms": 58.2,
+      "total_ms": 801.8,
+      "residual_ms": 15.9
+    },
+    {
+      "clip": "dev_docs_question_q12",
+      "generations": 1,
+      "endpoint_delay_ms": 280.0,
+      "stt_settle_ms": 0.2,
+      "llm_first_token_ms": 410.6,
+      "tts_first_audio_ms": 124.1,
+      "total_ms": 840.1,
+      "residual_ms": 24.7
+    }
+  ],
+  "summary": {
+    "total_ms": {
+      "p50": 801.8,
+      "p95": 1058.8
+    },
+    "endpoint_delay_ms": {
+      "p50": 300.0,
+      "p95": 380.0
+    },
+    "stt_settle_ms": {
+      "p50": 0.2,
+      "p95": 0.3
+    },
+    "llm_first_token_ms": {
+      "p50": 410.6,
+      "p95": 592.7
+    },
+    "tts_first_audio_ms": {
+      "p50": 114.8,
+      "p95": 162.0
+    },
+    "residual_ms": {
+      "p50": 23.4,
+      "p95": 28.3
+    },
+    "turns_with_more_than_one_generation": []
+  },
+  "n": 6
+}

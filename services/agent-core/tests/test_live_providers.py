@@ -128,3 +128,55 @@ async def test_tts_bad_key_is_fatal(credits):
     with pytest.raises(ProviderError) as e:
         await tts.synth(1, "hi", last=True)
     assert e.value.kind == "fatal"
+
+
+# Deepgram Aura-2 TTS (default TTS since 2026-10-30), billed in the usd pool
+
+async def _until_last(tts, gen, got):
+    async for a in tts.audio():
+        got.append(a)
+        if a.gen == gen and a.last:
+            return
+
+
+async def test_deepgram_tts_two_chunks_give_audio_tagged_with_their_generation(usd):
+    need("DEEPGRAM_API_KEY")
+    res, spent = usd
+    tts = make_live("deepgram_tts", res)
+    await tts.synth(1, "First sentence.", last=False)
+    await tts.synth(1, " Second one.", last=True)
+    got = []
+    await asyncio.wait_for(_until_last(tts, 1, got), 30)
+    await tts.close()
+    spent.append(tts.cost_usd())
+    assert {a.gen for a in got} == {1} and got[-1].last
+    assert sum(len(a.pcm) for a in got) > 48000  # more than 1 s of 24 kHz PCM16
+
+
+async def test_deepgram_tts_cancel_mid_answer_never_speaks_its_unflushed_text_with_the_next_answer(usd):
+    need("DEEPGRAM_API_KEY")
+    res, spent = usd
+    tts = make_live("deepgram_tts", res)
+    got = []
+    reader = asyncio.create_task(_until_last(tts, 2, got))
+    await tts.synth(1, "A first sentence that starts the answer.", last=False)  # flushed
+    await tts.synth(1, " A second sentence that should never be heard by anyone at all.", last=False)  # buffered only
+    while not got:
+        await asyncio.sleep(0.01)
+    await tts.cancel(1)
+    n = len(got)
+    await tts.synth(2, "Next.", last=True)
+    await asyncio.wait_for(reader, 30)
+    await tts.close()
+    spent.append(tts.cost_usd())
+    after = got[n:]
+    assert all(a.gen == 2 for a in after) and any(a.pcm for a in after)
+    assert sum(len(a.pcm) for a in after) < 48000 * 1.5  # "Next." alone: well under 1.5 s, not the buffered sentence
+
+
+async def test_deepgram_tts_bad_key_is_fatal(usd):
+    res, _ = usd
+    tts = make_live("deepgram_tts", res, key="not-a-key")
+    with pytest.raises(ProviderError) as e:
+        await tts.synth(1, "hi", last=True)
+    assert e.value.kind == "fatal"

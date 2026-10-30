@@ -1,0 +1,23 @@
+{"t_us":72133,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q11.wav"}
+{"t_us":75499,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-eefaf88632a27d75","type":"welcome"}
+{"t_us":75662,"process":"headless","type":"mic.start","t0_us":75659}
+{"t_us":1157410,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1869875,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will love sink"}
+{"t_us":2076887,"process":"headless","dir":"in","t_client_us":2075828,"t_server_us":65209275,"type":"pong"}
+{"t_us":2865190,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will OfSync remove packages"}
+{"t_us":3854463,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will ofSync remove packages that are not"}
+{"t_us":4078328,"process":"headless","dir":"in","t_client_us":4077727,"t_server_us":67210839,"type":"pong"}
+{"t_us":4903238,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will of sync remove packages that are not part of my project?"}
+{"t_us":5125612,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will of sync remove packages that are not part of my project?"}
+{"t_us":5125853,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Will of sync remove packages that are not part of my project?"}
+{"t_us":5125980,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":5555714,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"aa9cb5a32f65","title":"Quickstart > What you need before you start","url":"http://localhost:3000/getting-started/quickstart#what-you-need-before-you-start"}],"gen":1}
+{"t_us":5555856,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"No, running `uv sync` won’t delete any packages that aren’t part of your project; it just installs the orchestrator package (`services/agent‑core`) into the workspace environment. The quickstart docs note that `uv sync` installs the orchestrator but don’t mention any removal of other packages [1]."}
+{"t_us":5617437,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":6079294,"process":"headless","dir":"in","t_client_us":6078595,"t_server_us":69211729,"type":"pong"}
+{"t_us":8078628,"process":"headless","dir":"in","t_client_us":8078092,"t_server_us":71211253,"type":"pong"}
+{"t_us":10079559,"process":"headless","dir":"in","t_client_us":10078893,"t_server_us":73212154,"type":"pong"}
+{"t_us":12079976,"process":"headless","dir":"in","t_client_us":12079415,"t_server_us":75212600,"type":"pong"}
+{"t_us":14080325,"process":"headless","dir":"in","t_client_us":14079676,"t_server_us":77212900,"type":"pong"}
+{"t_us":14315335,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":14317660,"process":"headless","dir":"in","type":"socket.closed","code":1000}

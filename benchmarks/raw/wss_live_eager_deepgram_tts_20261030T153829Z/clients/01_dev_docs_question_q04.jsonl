@@ -1,0 +1,27 @@
+{"t_us":76481,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q04.wav"}
+{"t_us":79563,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-e1f84bec9a99ff22","type":"welcome"}
+{"t_us":79669,"process":"headless","type":"mic.start","t0_us":79667}
+{"t_us":1179317,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1879478,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I"}
+{"t_us":2081026,"process":"headless","dir":"in","t_client_us":2079949,"t_server_us":18621141,"type":"pong"}
+{"t_us":2683251,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create"}
+{"t_us":3678459,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new"}
+{"t_us":4083129,"process":"headless","dir":"in","t_client_us":4082586,"t_server_us":20623492,"type":"pong"}
+{"t_us":4678484,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new library project"}
+{"t_us":5083174,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new library project"}
+{"t_us":6044247,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new library project that other"}
+{"t_us":6082994,"process":"headless","dir":"in","t_client_us":6082461,"t_server_us":22623353,"type":"pong"}
+{"t_us":7033719,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new library project that other people can"}
+{"t_us":7980813,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new library project that other people can install?"}
+{"t_us":7981550,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I create a new library project that other people can install?"}
+{"t_us":7981863,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":8082695,"process":"headless","dir":"in","t_client_us":8082171,"t_server_us":24623136,"type":"pong"}
+{"t_us":8240886,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":8241568,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that information in the VoiceCore documentation. I can help with topics like the quickstart, running the gateway, or adding your own docs if you'd like."}
+{"t_us":8337884,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":10082792,"process":"headless","dir":"in","t_client_us":10082538,"t_server_us":26623362,"type":"pong"}
+{"t_us":12082505,"process":"headless","dir":"in","t_client_us":12081905,"t_server_us":28622918,"type":"pong"}
+{"t_us":14083796,"process":"headless","dir":"in","t_client_us":14082977,"t_server_us":30624211,"type":"pong"}
+{"t_us":16084730,"process":"headless","dir":"in","t_client_us":16083876,"t_server_us":32625057,"type":"pong"}
+{"t_us":17199386,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":17203669,"process":"headless","dir":"in","type":"socket.closed","code":1000}

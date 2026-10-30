@@ -60,7 +60,7 @@ The session keeps two numbers: `gen`, the newest generation id, and `fence`. A g
 
 `Session.cancel(g)` sets `fence = max(fence, g)`, clears the playing state, cancels the LLM task, tells TTS to cancel `g` and sends `agent.cancel` with `gen` downstream.
 
-The Cartesia TTS adapter keeps its own fence too. Cartesia's cancel only stops requests that have not started generating, so the adapter sends the cancel for that generation's context and also drops any audio that still arrives for it. Frames that the session drops as stale are counted in `dropped_stale`.
+Each live TTS adapter keeps its own fence too. The default Deepgram Aura-2 adapter sends `Clear` for an unfinished generation, because its unflushed text would otherwise be spoken with the next answer, and drops audio until Deepgram confirms with `Cleared`. Cartesia's cancel only stops requests that have not started generating, so with `--tts cartesia` the adapter sends the cancel for that generation's context and also drops any audio that still arrives for it. Frames that the session drops as stale are counted in `dropped_stale`.
 
 ## How the gateway fences its send queue
 

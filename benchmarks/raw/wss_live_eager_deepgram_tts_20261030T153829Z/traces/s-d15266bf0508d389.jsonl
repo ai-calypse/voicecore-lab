@@ -1,0 +1,12 @@
+{"trace_id": "s-d15266bf0508d389", "span": "clock", "event": "client_offset", "t_mono_us": 73947582227, "process": "agent-core", "attrs": {"client_to_agent_us": 73947485111}}
+{"trace_id": "s-d15266bf0508d389", "span": "turn", "event": "speech_started", "t_mono_us": 73948662416, "process": "agent-core", "attrs": {"onset_ms": 1040, "capture_end_us": 1177113}}
+{"trace_id": "s-d15266bf0508d389", "span": "clock", "event": "client_offset", "t_mono_us": 73952583583, "process": "agent-core", "attrs": {"client_to_agent_us": 73947484132}}
+{"trace_id": "s-d15266bf0508d389", "span": "stt", "event": "final", "t_mono_us": 73952796026, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-d15266bf0508d389", "span": "turn", "event": "endpoint", "t_mono_us": 73952796174, "process": "agent-core", "attrs": {"reason": "asr", "onset_ms": 1040, "silence_ms": 300, "capture_end_us": 5297113}}
+{"trace_id": "s-d15266bf0508d389", "span": "stt", "event": "turn_text", "t_mono_us": 73952796394, "process": "agent-core", "attrs": {"chars": 59, "waited_ms": 0}}
+{"trace_id": "s-d15266bf0508d389", "span": "llm", "event": "request", "t_mono_us": 73952796788, "process": "agent-core", "attrs": {"attempt": 0}, "generation_id": 1}
+{"trace_id": "s-d15266bf0508d389", "span": "llm", "event": "first_token", "t_mono_us": 73953207431, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-d15266bf0508d389", "span": "tts", "event": "first_audio", "t_mono_us": 73953331524, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-d15266bf0508d389", "span": "playout", "event": "started", "t_mono_us": 73953342805, "process": "agent-core", "attrs": {"t_client_us": 5857202}, "generation_id": 1}
+{"trace_id": "s-d15266bf0508d389", "span": "clock", "event": "client_offset", "t_mono_us": 73957582349, "process": "agent-core", "attrs": {"client_to_agent_us": 73947484132}}
+{"trace_id": "s-d15266bf0508d389", "span": "clock", "event": "client_offset", "t_mono_us": 73962004421, "process": "agent-core", "attrs": {"client_to_agent_us": 73947484082, "final": true}}

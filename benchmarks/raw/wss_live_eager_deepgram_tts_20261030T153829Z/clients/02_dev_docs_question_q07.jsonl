@@ -1,0 +1,23 @@
+{"t_us":77549,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q07.wav"}
+{"t_us":80480,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-ab414da6606fc3bf","type":"welcome"}
+{"t_us":80595,"process":"headless","type":"mic.start","t0_us":80593}
+{"t_us":1481714,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2081064,"process":"headless","dir":"in","t_client_us":2080524,"t_server_us":36111913,"type":"pong"}
+{"t_us":2215599,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I make"}
+{"t_us":3231919,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I make UV install"}
+{"t_us":4085807,"process":"headless","dir":"in","t_client_us":4085296,"t_server_us":38116655,"type":"pong"}
+{"t_us":4232348,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I make UV install every dependent"}
+{"t_us":5244236,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I make UV install every dependency group by the"}
+{"t_us":5746817,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I make UV install every dependency group by default?"}
+{"t_us":5747542,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I make UV install every dependency group by default?"}
+{"t_us":5747773,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6033303,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":6033807,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that information in the provided documentation. You might want to look at the Quickstart or Configuration reference topics for more details on installing dependencies."}
+{"t_us":6085941,"process":"headless","dir":"in","t_client_us":6085230,"t_server_us":40116708,"type":"pong"}
+{"t_us":6182378,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8085799,"process":"headless","dir":"in","t_client_us":8085179,"t_server_us":42116683,"type":"pong"}
+{"t_us":10085446,"process":"headless","dir":"in","t_client_us":10085076,"t_server_us":44116441,"type":"pong"}
+{"t_us":12086126,"process":"headless","dir":"in","t_client_us":12085305,"t_server_us":46116893,"type":"pong"}
+{"t_us":14086624,"process":"headless","dir":"in","t_client_us":14085849,"t_server_us":48117419,"type":"pong"}
+{"t_us":14920124,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":14923416,"process":"headless","dir":"in","type":"socket.closed","code":1000}

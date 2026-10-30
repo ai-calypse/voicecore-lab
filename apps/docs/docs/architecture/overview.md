@@ -12,7 +12,7 @@ VoiceCore runs as three processes, and each one owns one thing:
 - **The Go gateway** owns the connection. `services/realtime-gateway` checks the session token, negotiates the audio format, watches the heartbeat, holds the resume window and keeps bounded queues with drop counters.
 - **The Python orchestrator** owns the conversation. `services/agent-core` decides who holds the floor, runs speech-to-text, the grounded LLM answer and text-to-speech, and tracks generations.
 
-ADR 0001 (`docs/adr/0001-engine-ownership.md`) records this split. The speech and language models are bought, not built: Deepgram nova-3 for streaming speech-to-text, an OpenAI-compatible model through OpenRouter for the answer, and Cartesia sonic-3.6 for speech. Each sits behind an adapter with a mock twin, so the whole stack also runs offline and for free.
+ADR 0001 (`docs/adr/0001-engine-ownership.md`) records this split. The speech and language models are bought, not built: Deepgram nova-3 for streaming speech-to-text, an OpenAI-compatible model through OpenRouter for the answer, and Deepgram Aura-2 for speech, with Cartesia sonic-3.6 as an alternative (`--tts cartesia`). Each sits behind an adapter with a mock twin, so the whole stack also runs offline and for free.
 
 ## Why the connection and the conversation run in separate processes
 
@@ -36,7 +36,7 @@ Because both hops share one format, the gateway forwards frames and events witho
 2. The gateway checks each frame's sequence number, counts duplicates, stale frames and gaps, and queues the frame for the orchestrator.
 3. The orchestrator runs Silero VAD on every frame. Only speech goes to Deepgram, with 300 ms of pre-roll before it and 600 ms of hangover after it. The client gets `user.speech_started`.
 4. The endpoint policy decides the user has finished. With live providers the default is eager: it asks Deepgram to finalize after 200 ms of silence and ends the turn on a punctuated final, or after 800 ms of silence otherwise. Mock mode uses a fixed 800 ms.
-5. The orchestrator retrieves passages locally, then streams a grounded LLM answer. A sentence is released only with a valid citation, and each sentence goes to Cartesia in one context per generation.
+5. The orchestrator retrieves passages locally, then streams a grounded LLM answer. A sentence is released only with a valid citation, and each sentence goes to the TTS provider, Deepgram Aura-2 by default, tagged with its generation.
 6. Agent audio comes back at 24 kHz, is cut into 20 ms frames tagged with the generation, and flows through the gateway to the browser along with `answer.sources` and `agent.text`.
 7. The browser plays the frames in order and reports `playout.started` and `playout.stopped` on its own clock.
 
@@ -48,7 +48,7 @@ Barge-in works because of one rule. Every agent frame carries the `generation_id
 - The gateway sees `agent.cancel` pass through, raises its own fence and purges matching audio from its client-bound queue.
 - The browser playout flushes its queue and answers `cancel.ack` with `played_until_seq`, the last frame it rendered.
 
-The TTS adapter drops late audio of a cancelled generation too, because Cartesia's cancel only stops requests that have not started. Generation IDs rise by one per generation and never repeat, so a fence never has to move down. [Generations and cancellation](../concepts/generations-and-cancellation.md) explains the idea in depth.
+The TTS adapter drops late audio of a cancelled generation too. Deepgram's adapter sends `Clear` and drops audio until Deepgram confirms it; Cartesia's cancel only stops requests that have not started. Generation IDs rise by one per generation and never repeat, so a fence never has to move down. [Generations and cancellation](../concepts/generations-and-cancellation.md) explains the idea in depth.
 
 ## Where session state lives
 

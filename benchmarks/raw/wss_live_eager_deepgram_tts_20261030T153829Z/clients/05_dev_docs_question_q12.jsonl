@@ -1,0 +1,23 @@
+{"t_us":74169,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q12.wav"}
+{"t_us":76996,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-d15266bf0508d389","type":"welcome"}
+{"t_us":77116,"process":"headless","type":"mic.start","t0_us":77113}
+{"t_us":1177847,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1915201,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add"}
+{"t_us":2078079,"process":"headless","dir":"in","t_client_us":2077358,"t_server_us":79791348,"type":"pong"}
+{"t_us":2877042,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package"}
+{"t_us":3883580,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package for just one new"}
+{"t_us":4080366,"process":"headless","dir":"in","t_client_us":4079929,"t_server_us":81793756,"type":"pong"}
+{"t_us":4878909,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package for just one UV run command?"}
+{"t_us":5312121,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package for just one u v run command?"}
+{"t_us":5313350,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I add an extra package for just one u v run command?"}
+{"t_us":5313626,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":5734748,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":5734887,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that detail in the docs. I can help with topics like the Quickstart setup, orchestrator flags, or provider configuration if you'd like."}
+{"t_us":5857202,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":6081130,"process":"headless","dir":"in","t_client_us":6080599,"t_server_us":83794557,"type":"pong"}
+{"t_us":8081072,"process":"headless","dir":"in","t_client_us":8080500,"t_server_us":85794453,"type":"pong"}
+{"t_us":10081601,"process":"headless","dir":"in","t_client_us":10080599,"t_server_us":87794811,"type":"pong"}
+{"t_us":12081717,"process":"headless","dir":"in","t_client_us":12081181,"t_server_us":89795144,"type":"pong"}
+{"t_us":14082163,"process":"headless","dir":"in","t_client_us":14081867,"t_server_us":91795686,"type":"pong"}
+{"t_us":14517284,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":14519957,"process":"headless","dir":"in","type":"socket.closed","code":1000}

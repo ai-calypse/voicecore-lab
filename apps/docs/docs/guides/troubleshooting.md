@@ -54,7 +54,7 @@ Three gateway checks answer with an HTTP status before any WebSocket exists:
 
 ## The session ends with reason budget
 
-This happens only with live providers. Every live session reserves its speech-to-text cap ($0.0154 for 120 s) and its language model cap ($0.006) from the `usd` pool before it starts. If the ledger's total plus those reservations would pass the $5.00 project cap, the orchestrator refuses the session.
+This happens only with live providers. Every live session reserves its speech-to-text cap ($0.0385 for 300 s) and its language model cap ($0.02) from the `usd` pool before it starts. Its text-to-speech cap is reserved later, when it first speaks. If the ledger's total plus those reservations would pass the $5.00 project cap, the orchestrator refuses the session.
 
 What you see:
 
@@ -70,11 +70,11 @@ A live session can also reach one of its own caps while it runs. These caps are 
 
 | Cap | What you notice |
 |---|---|
-| 120 s of speech sent to Deepgram | the agent says "Voice input has reached its limit for this session. You can keep typing your questions." Typed questions still work |
-| $0.006 of language model use | the agent says "Sorry, I'm having trouble answering right now. Please try again." |
-| 1,500 characters of speech | answers keep arriving as text, without audio |
+| 300 s of speech sent to Deepgram | the agent says "Voice input has reached its limit for this session. You can keep typing your questions." Typed questions still work |
+| $0.02 of language model use | the agent says "Sorry, I'm having trouble answering right now. Please try again." |
+| 4,000 characters of speech with Deepgram Aura-2, or 1,500 with Cartesia | the agent says once "Spoken replies have reached their limit for this session, so I'll answer in text. Close and reopen me to talk again." Later answers arrive as text, unless one still fits in the characters left |
 
-A new session gets fresh caps, as long as the project pools still cover them. Close the panel and open it again to start one. The caps live in the adapters: `MAX_AUDIO_S` in `deepgram_stt.py`, `LLM_CAP_USD` in `server.py` and `MAX_CHARS` in `cartesia_tts.py`.
+A new session gets fresh caps, as long as the project pools still cover them. Close the panel and open it again to start one. The caps live in the adapters: `MAX_AUDIO_S` in `deepgram_stt.py`, `LLM_CAP_USD` in `server.py` and `MAX_CHARS` in `deepgram_tts.py` or `cartesia_tts.py`.
 
 ## An answer appears but there is no audio
 
@@ -82,7 +82,7 @@ Check these causes in order:
 
 1. **Mock providers.** Mock text-to-speech plays a 220 Hz tone, not speech. A tone means the audio path works. Start the orchestrator with `--providers live` for speech.
 2. **Text-to-speech failed.** The text answer is always delivered first. If no audio of that answer was heard yet, the orchestrator retries speech once on a fresh stream; otherwise the answer stays text only.
-3. **The speech cap or credit pool ran out.** The session's 1,500 characters are used up, or the `cartesia_credits` pool cannot reserve them. Answers then arrive as text only for the rest of the session.
+3. **The speech cap or its pool ran out.** The session's characters are used up (4,000 with Deepgram Aura-2, 1,500 with Cartesia), or the pool cannot reserve them: `usd` for Deepgram, `cartesia_credits` for Cartesia. The agent says so once, and later answers arrive as text unless one still fits in the characters left.
 4. **The answer was cancelled.** Speaking or typing while the agent plays cancels that generation. Its queued audio is dropped everywhere.
 
 To see which one happened, run the orchestrator with `--trace-dir DIR` and the gateway with `-trace FILE`. Look for `tts` `error` or `retry` events, and for fence events with dropped frames. The gateway's `GET /debug/counters` shows `drops_fenced`.
@@ -119,6 +119,6 @@ The agent says "Sorry, could you say that again?" in two cases:
 Two other replies point at the language model provider:
 
 - "I'm busy right now. Please try again in a moment." means OpenRouter returned HTTP 429 before any answer text, and retries after 1, 2 and 4 s did not help.
-- "Sorry, I'm having trouble answering right now. Please try again." means another provider error, or the session's $0.006 language model cap was reached.
+- "Sorry, I'm having trouble answering right now. Please try again." means another provider error, or the session's $0.02 language model cap was reached.
 
 With mock providers, none of these replies come from a provider. The mock speech-to-text always returns its canned transcript.

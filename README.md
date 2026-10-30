@@ -2,13 +2,13 @@
 
 A real-time voice assistant for a documentation site, built to show the systems work underneath voice AI: browser audio capture and playout, a Go real-time gateway, turn-taking with an echo gate, barge-in that silences the agent, a grounded answer engine, and the tracing and benchmarks that measure all of it.
 
-Speech-to-text, the language model and text-to-speech are bought (Deepgram nova-3, `openai/gpt-oss-120b` on Cerebras via OpenRouter, Cartesia sonic-3.6) through replaceable adapters. Everything between the microphone and the speaker is this repository's code. [ADR 0001](docs/adr/0001-engine-ownership.md) draws that line.
+Speech-to-text, the language model and text-to-speech are bought (Deepgram nova-3, `openai/gpt-oss-120b` on Cerebras via OpenRouter, Deepgram Aura-2; Cartesia sonic-3.6 with `--tts cartesia`) through replaceable adapters. Everything between the microphone and the speaker is this repository's code. [ADR 0001](docs/adr/0001-engine-ownership.md) draws that line.
 
 ```mermaid
 flowchart LR
   B[Browser SDK: AudioWorklet capture, 16 kHz PCM16 frames, ordered playout] <-->|one binary + JSON protocol| G[Go gateway: token, heartbeat, resume, bounded queues, generation fence]
   G <-->|same protocol| O[Python orchestrator: Silero VAD + floor, generation runtime, grounded answers]
-  O <--> P[Deepgram STT / OpenRouter LLM / Cartesia TTS]
+  O <--> P[Deepgram STT / OpenRouter LLM / Deepgram TTS]
 ```
 
 ## Results (labelled; details and commands in each report)
@@ -63,7 +63,7 @@ The docs site ([`apps/docs`](apps/docs)) is the assistant's only source. It is a
 
 Copy `.env.example` to `.env` and fill in the keys, then `uv run python -m voicecore.server --providers live` (or `PROVIDERS=live docker compose up`).
 
-- **Spending is guarded.** Every live session reserves its caps first (STT 120 s of speech, LLM $0.006, TTS 1,500 characters) in `benchmarks/spend_ledger.json`, and [`voicecore/budget.py`](services/agent-core/voicecore/budget.py) refuses anything over the project caps.
+- **Spending is guarded.** Every live session reserves its caps first (STT 300 s of speech, LLM $0.02, TTS 4,000 characters with Deepgram or 1,500 with Cartesia) in `benchmarks/spend_ledger.json`, and [`voicecore/budget.py`](services/agent-core/voicecore/budget.py) refuses anything over the project caps.
 - **Keys stay on the server.** The browser only ever holds a 60 s gateway token.
 
 ## Repository map

@@ -12,7 +12,7 @@ The orchestrator in `services/agent-core/voicecore` owns the conversation. It is
 | `server.py` | WebSocket server, provider setup, the per-session handler |
 | `runtime/session.py` | the generation runtime: turns, generations, fence, recovery |
 | `turntaking/floor.py`, `turntaking/vad_silero.py` | endpoint policies, echo gate, barge-in, Silero VAD |
-| `providers/` | STT, LLM and TTS contracts, mock adapters, live Deepgram, OpenRouter and Cartesia adapters |
+| `providers/` | STT, LLM and TTS contracts, mock adapters, live Deepgram STT and TTS, OpenRouter and Cartesia adapters |
 | `answer/` | docs ingestion, hybrid retrieval, grounded answers |
 | `budget.py` | spend guard and ledger |
 | `trace.py` | trace events |
@@ -37,40 +37,41 @@ Start it with `uv run python -m voicecore.server`. At start the server loads the
 
 | Flag | Default | Meaning |
 |---|---|---|
-| `--providers` | `mock` | `live` uses Deepgram, OpenRouter and Cartesia, and spends money |
+| `--providers` | `mock` | `live` uses Deepgram, OpenRouter and the `--tts` provider, and spends money |
 | `--host`, `--port` | `127.0.0.1`, `8765` | listen address |
 | `--trace-dir` | off | write one trace file per session |
 | `--policy` | `eager` live, `fixed` mock | endpointing: `fixed`, `adaptive`, `asr_assisted` or `eager` |
 | `--llm-model` | `openai/gpt-oss-120b` | OpenRouter model ID |
 | `--llm-provider` | `Cerebras` | OpenRouter provider to try first; `any` lets OpenRouter route |
 | `--llm-reasoning` | `low` | reasoning effort; `none` omits it |
+| `--tts` | `deepgram` | live speech: `deepgram` (Aura-2) or `cartesia` (sonic-3.6) |
 
 Mock mode keeps the fixed policy because the mock STT returns its canned final at every pause, which would end every turn early under eager endpointing. With a different `--llm-model`, the Cerebras pin and the low effort are dropped, but another provider or effort you pass still applies. Messages are limited to 1 MiB.
 
 ## Live providers need a budget reservation
 
-Live adapters cost money, so `providers/factory.py` refuses to build one without a budget reservation from the right pool: `usd` for Deepgram and OpenRouter, `cartesia_credits` for Cartesia. `budget.py` writes each reservation to the ledger `benchmarks/spend_ledger.json` at once, under a file lock, so a crash before settling still counts the worst case against the cap.
+Live adapters cost money, so `providers/factory.py` refuses to build one without a budget reservation from the right pool: `usd` for Deepgram (STT and TTS) and OpenRouter, `cartesia_credits` for Cartesia. `budget.py` writes each reservation to the ledger `benchmarks/spend_ledger.json` at once, under a file lock, so a crash before settling still counts the worst case against the cap.
 
 | Pool | Project cap | Reserved per live session |
 |---|---|---|
-| `usd` | $5.00 | STT: 120 s of audio at $0.0077 per minute; LLM: $0.006 |
-| `cartesia_credits` | 16,000 credits | TTS: 1,500 characters, reserved at the first answer |
+| `usd` | $5.00 | STT: 300 s of audio at $0.0077 per minute; LLM: $0.02; TTS with `--tts deepgram`: 4,000 characters, $0.12, reserved at the first answer |
+| `cartesia_credits` | 16,000 credits | TTS with `--tts cartesia`: 1,500 characters, reserved at the first answer |
 
 The adapters also enforce the per-session caps themselves, and each raises a fatal provider error:
 
-- Deepgram refuses audio past 120 s, and the session says once that voice input has reached its limit; typed questions keep working.
+- Deepgram refuses audio past 300 s, and the session says once that voice input has reached its limit; typed questions keep working.
 - The LLM refuses a call whose worst-case cost would pass the reservation, and the session says it is having trouble answering.
-- Cartesia refuses text past 1,500 characters, and the answer arrives as text only.
+- The TTS adapter refuses text past its cap, 4,000 characters for Deepgram Aura-2 or 1,500 for Cartesia. The answer arrives as text, and the session says once, as a text reply, that spoken replies have reached their limit.
 
 When the session ends, `settle` replaces each reservation with the amount actually used.
 
 ## Why OnDemandTTS waits for the first answer
 
-`OnDemandTTS` in `server.py` wraps the live Cartesia stream so that credits are reserved only when the session first speaks. An idle session that never asks a question does not hold 1,500 credits of the shared pool. A security review on 2026-10-30 asked for this.
+`OnDemandTTS` in `server.py` wraps the live TTS stream, Deepgram or Cartesia, so that its budget is reserved only when the session first speaks. An idle session that never asks a question does not hold $0.12 of the `usd` pool, or 1,500 Cartesia credits. A security review on 2026-10-30 asked for this.
 
-It still opens the socket early. `warm()` opens the Cartesia WebSocket at session start, which costs no credits. On the first `synth()`, the wrapper builds the real `CartesiaTTS` on that already-open socket and reserves the credits at that moment. If the reservation is refused, the error becomes a fatal TTS error and the session answers in text only.
+It still opens the socket early. `warm()` opens the TTS WebSocket at session start, which costs nothing. On the first `synth()`, the wrapper builds the real `DeepgramTTS` or `CartesiaTTS` on that already-open socket and reserves the budget at that moment. If the reservation is refused, the error becomes a fatal TTS error and the session answers in text only.
 
-The same wrapper serves the one TTS retry. The retry stream is a second `OnDemandTTS` that bills the same reservation and gets only what is left of the 1,500-character cap, so a retry can never double the spend.
+The same wrapper serves the one TTS retry. The retry stream is a second `OnDemandTTS` that bills the same reservation and gets only what is left of the session's character cap, so a retry can never double the spend.
 
 ## How provider sockets are opened at session start
 
@@ -78,9 +79,9 @@ The same wrapper serves the one TTS retry. The retry stream is a second `OnDeman
 
 - **Deepgram** opens its streaming WebSocket. Deepgram closes a socket that gets no audio for 10 s, so the adapter sends `KeepAlive` every 4 s while no audio is sent.
 - **OpenRouter** gets a free key-info request, `GET /key`, that opens the HTTPS connection. The process shares one connection pool with a 60 s keep-alive, because the httpx default of 5 s closed it while the user was talking.
-- **Cartesia** opens its WebSocket through `OnDemandTTS.warm()`, without reserving credits.
+- **Text-to-speech**, Deepgram Aura-2 or Cartesia, opens its WebSocket through `OnDemandTTS.warm()`, without reserving budget. If Deepgram closes that socket while it is idle, the next answer opens it again.
 
-The Cartesia change alone moved TTS first audio from p50 456 ms to p50 145 ms (live, n = 15 turns per run, `reports/latency_tuning.md`). A failed warm-up is not fatal. The first real request connects again.
+Pre-opening the Cartesia socket alone moved TTS first audio from p50 456 ms to p50 145 ms (live, n = 15 turns per run, `reports/latency_tuning.md`). With Deepgram Aura-2, also pre-opened, TTS first audio was p50 115 ms (live, n = 6). A failed warm-up is not fatal. The first real request connects again.
 
 ## The Session runtime tasks and queues
 
@@ -143,6 +144,6 @@ The runtime uses these spans: `turn` (speech_started, barge_in, endpoint, contin
 The orchestrator runs the same `Session` code in both modes. Only the providers change.
 
 - **Mock** is the default, `--providers mock`. It costs nothing and needs no keys. The mock STT returns a canned question as a final on every `Finalize`. The mock LLM streams a fixed two-sentence answer, first token after 200 ms. The mock TTS synthesizes a 220 Hz tone, 60 ms per character, with first audio after 150 ms. The mocks are also the fault injector: their scripts add delays, errors and stalls.
-- **Live** is `--providers live`. It uses Deepgram nova-3, `openai/gpt-oss-120b` with Cerebras first through OpenRouter at low reasoning effort, and Cartesia sonic-3.6. It reserves budget per session and defaults to the eager endpoint policy.
+- **Live** is `--providers live`. It uses Deepgram nova-3, `openai/gpt-oss-120b` with Cerebras first through OpenRouter at low reasoning effort, and Deepgram Aura-2 for speech, or Cartesia sonic-3.6 with `--tts cartesia`. It reserves budget per session and defaults to the eager endpoint policy.
 
-A mock result shows mock behaviour only. Through the real gateway with mock providers, 40 concurrent sessions all completed, total p50 1,296 ms and p95 1,305 ms (mock, n = 40 sessions, one laptop). CPU was not profiled. Live concurrency was run only at 2 sessions, the lowest Cartesia plan tier. See [providers](../reference/providers.md).
+A mock result shows mock behaviour only. Through the real gateway with mock providers, 40 concurrent sessions all completed, total p50 1,296 ms and p95 1,305 ms (mock, n = 40 sessions, one laptop). CPU was not profiled. Live concurrency was run only at 2 sessions, with Cartesia speech, the limit of its lowest plan tier. See [providers](../reference/providers.md).

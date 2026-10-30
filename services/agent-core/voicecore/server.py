@@ -3,7 +3,7 @@
     uv run python -m voicecore.server [--providers mock|live] [--port 8765] [--trace-dir DIR]
 
 Mock providers by default. Live providers spend money: each session reserves its caps first
-(STT 120 s, LLM up to $0.006, TTS 1,500 characters) and settles what it actually used.
+(STT 300 s, LLM up to $0.02, TTS 4,000 characters with Deepgram or 1,500 with Cartesia) and settles what it used.
 """
 import argparse
 import asyncio
@@ -18,7 +18,7 @@ from voicecore import budget, protocol
 from voicecore.answer.engine import AnswerEngine
 from voicecore.answer.index import Index
 from voicecore.answer.ingest import docusaurus, ingest
-from voicecore.providers.cartesia_tts import MAX_CHARS, open_socket
+from voicecore.providers import cartesia_tts, deepgram_tts
 from voicecore.providers.deepgram_stt import MAX_AUDIO_S, PRICE_PER_MIN
 from voicecore.providers.base import ProviderError
 from voicecore.providers.factory import make_live
@@ -31,7 +31,7 @@ from voicecore.turntaking.vad_silero import SileroVAD
 log = logging.getLogger("voicecore.server")
 MOCK_ANSWER = "Eager endpointing asks the speech recognizer for a final transcript after 200 ms of silence [1]. A punctuated final ends the turn [2]."
 DOCS_DIR = Path(__file__).resolve().parents[3] / "apps/docs/docs"  # the Docusaurus site the assistant answers from
-LLM_CAP_USD = 0.006  # gpt-oss-120b on Cerebras: about $0.0007 per grounded turn
+LLM_CAP_USD = 0.02  # gpt-oss-120b on Cerebras: about $0.0006 per grounded turn, so about 30 turns a session
 
 
 def mock_providers():
@@ -44,13 +44,13 @@ class OnDemandTTS:
     not hold the credit pool (security review 2026-10-30). A refused reservation becomes a fatal TTS error:
     the session then answers in text only."""
 
-    def __init__(self, make):
-        self._make, self._tts, self._ready, self._ws = make, None, asyncio.Event(), None
+    def __init__(self, make, opener):
+        self._make, self._open, self._tts, self._ready, self._ws = make, opener, None, asyncio.Event(), None
 
     async def warm(self):
-        """Opens the Cartesia socket now (no credits): the handshake took 250-330 ms at the first answer."""
+        """Opens the TTS socket now (free): Cartesia's handshake took 250-330 ms at the first answer."""
         if self._tts is None and self._ws is None:
-            self._ws = await open_socket()
+            self._ws = await self._open()
 
     async def synth(self, gen, text, last):
         if self._tts is None:
@@ -75,35 +75,44 @@ class OnDemandTTS:
             await self._ws.close()
 
 
-def live_providers(sid, llm_opts=None):
+TTS = {  # factory kind, module, budget pool, reservation for MAX_CHARS characters, cost of n characters
+    "deepgram": ("deepgram_tts", deepgram_tts, "usd", round(deepgram_tts.MAX_CHARS * deepgram_tts.PRICE_PER_CHAR, 6),
+                 lambda n: round(n * deepgram_tts.PRICE_PER_CHAR, 6)),
+    "cartesia": ("tts", cartesia_tts, "cartesia_credits", cartesia_tts.MAX_CHARS, lambda n: n),  # 1 credit per character
+}
+
+
+def live_providers(sid, llm_opts=None, tts_name="deepgram"):
     stt_res = budget.reserve("usd", round(MAX_AUDIO_S / 60 * PRICE_PER_MIN, 6), label=f"server stt {sid}")
     llm_res = budget.reserve("usd", LLM_CAP_USD, label=f"server llm {sid}")
+    kind, mod, pool, amount, cost = TTS[tts_name]
     tts = {"res": None, "streams": []}
 
     def new_tts(ws=None):  # a retry opens a second stream; both bill one reservation and share its character cap
         if tts["res"] is None:
             try:
-                tts["res"] = budget.reserve("cartesia_credits", MAX_CHARS, label=f"server tts {sid}")
+                tts["res"] = budget.reserve(pool, amount, label=f"server tts {sid}")
             except budget.BudgetExceeded as e:
                 raise ProviderError("fatal", f"TTS budget: {e}") from None
         used = sum(t.chars for t in tts["streams"])
-        tts["streams"].append(make_live("tts", tts["res"], max_chars=MAX_CHARS - used, ws=ws))
+        tts["streams"].append(make_live(kind, tts["res"], max_chars=mod.MAX_CHARS - used, ws=ws))
         return tts["streams"][-1]
 
-    p = {"stt": make_live("stt", stt_res), "llm": make_live("llm", llm_res, **(llm_opts or {})), "tts": OnDemandTTS(new_tts),
-         "tts_factory": lambda: OnDemandTTS(new_tts)}
+    p = {"stt": make_live("stt", stt_res), "llm": make_live("llm", llm_res, **(llm_opts or {})),
+         "tts": OnDemandTTS(new_tts, mod.open_socket), "tts_factory": lambda: OnDemandTTS(new_tts, mod.open_socket)}
     settle = [lambda: budget.settle(stt_res, p["stt"].cost_usd(), request_id=p["stt"].request_id),
               lambda: budget.settle(llm_res, round(p["llm"].cost_usd, 6), calls=p["llm"].calls),
-              lambda: tts["res"] and budget.settle(tts["res"], sum(t.chars for t in tts["streams"]), streams=len(tts["streams"]))]
+              lambda: tts["res"] and budget.settle(tts["res"], cost(sum(t.chars for t in tts["streams"])),
+                                                   chars=sum(t.chars for t in tts["streams"]), streams=len(tts["streams"]))]
     return p, settle
 
 
 def handler_for(mode: str, trace_dir: Path | None, index: Index, policy: Policy = Policy(), llm_opts: dict | None = None,
-                name: str = "VoiceCore"):
+                name: str = "VoiceCore", tts: str = "deepgram"):
     async def handler(ws):  # ponytail: VAD runs inline on the event loop (~0.3 ms per window); move to a thread if sessions x frames saturate one core
         sid = ws.request.path.rsplit("/", 1)[-1]
         try:
-            providers, settle = live_providers(sid, llm_opts) if mode == "live" else mock_providers()
+            providers, settle = live_providers(sid, llm_opts, tts) if mode == "live" else mock_providers()
         except budget.BudgetExceeded as e:
             log.warning("session %s refused: %s", sid, e)
             await ws.send(protocol.event("session.ended", reason="budget"))
@@ -148,6 +157,7 @@ async def main():
     ap.add_argument("--llm-model", default=None, help="OpenRouter model id (default: openai_compat_llm.MODEL)")
     ap.add_argument("--llm-provider", default=None, help="OpenRouter provider to try first; 'any' lets OpenRouter route")
     ap.add_argument("--llm-reasoning", default=None, help="reasoning effort for reasoning models; 'none' to omit")
+    ap.add_argument("--tts", choices=sorted(TTS), default="deepgram", help="speech synthesis provider (live mode)")
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     SileroVAD()  # load the model now: loading it inside the first session stalls its mic frames
@@ -162,7 +172,7 @@ async def main():
         llm_opts["provider"] = None if args.llm_provider == "any" else args.llm_provider
     if args.llm_reasoning:
         llm_opts["reasoning"] = None if args.llm_reasoning == "none" else args.llm_reasoning
-    async with serve(handler_for(args.providers, args.trace_dir, index, policy, llm_opts), args.host, args.port, max_size=1 << 20) as server:
+    async with serve(handler_for(args.providers, args.trace_dir, index, policy, llm_opts, tts=args.tts), args.host, args.port, max_size=1 << 20) as server:
         log.info("orchestrator listening on ws://%s:%d (%s providers)", args.host, args.port, args.providers)
         await server.serve_forever()
 

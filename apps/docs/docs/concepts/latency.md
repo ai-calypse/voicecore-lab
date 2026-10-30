@@ -23,13 +23,14 @@ The total is split into stages, each measured on one clock. The client clock and
 
 ## Stage breakdown before and after tuning
 
-These runs used the same 15 dev docs questions, spoken by a Deepgram Aura voice. The full stack ran: headless SDK client, Go gateway, orchestrator, then Deepgram, OpenRouter and Cartesia. Every process ran on one Apple M4 laptop, with providers over a residential network. All rows are live; values are p50 unless a p95 is shown. The hard-audio row uses noisy (10 and 5 dB), slowed (0.8×) and paused (600 ms mid-sentence) LibriSpeech clips. The stage medians do not add up to the total median, because each median can come from a different turn.
+These runs used the same 15 dev docs questions, spoken by a Deepgram Aura voice. The full stack ran: headless SDK client, Go gateway, orchestrator, then Deepgram, OpenRouter and, for speech, Cartesia sonic-3.6, except in the Deepgram Aura-2 row. Every process ran on one Apple M4 laptop, with providers over a residential network. All rows are live; values are p50 unless a p95 is shown. The hard-audio row uses noisy (10 and 5 dB), slowed (0.8×) and paused (600 ms mid-sentence) LibriSpeech clips. The Deepgram Aura-2 row is a smaller run on 6 of the questions. The assistant answered them from this docs site, so most replies were short "not in these docs" answers. The stage medians do not add up to the total median, because each median can come from a different turn.
 
 | Run | Total p50 / p95 | Turn end detected | LLM first token p50 / p95 | TTS first audio | Transport and playout |
 |---|---:|---:|---:|---:|---:|
 | Before: fixed 800 ms, gpt-4.1-nano (n = 15) | 2,317 / 3,102 ms | 861 ms | 939 / 1,758 ms | 456 ms | 13 ms |
 | After: eager endpoint, gpt-oss-120b on Cerebras (n = 15) | 841 / 1,520 ms | 340 ms | 340 / 1,013 ms | 145 ms | 26 ms |
 | After, hard audio (n = 12) | 841 / 1,218 ms | 340 ms | 366 / 704 ms | 134 ms | 21 ms |
+| After, Deepgram Aura-2 speech instead of Cartesia (n = 6) | 802 / 1,059 ms | 300 ms | 411 / 593 ms | 115 ms | 23 ms |
 
 ## Where the time went before tuning
 
@@ -49,7 +50,7 @@ Each change targeted one stage, and each stage was re-measured live on the same 
 
 ## Where the remaining time goes
 
-After tuning, the turn is p50 841 ms (live, n = 15), and the endpoint and the LLM share most of it equally. Turn end detection is p50 340 ms and the LLM's first token is p50 340 ms (live, n = 15). TTS first audio is p50 145 ms, and transport and playout start are p50 26 ms (live, n = 15). Most of the remaining endpoint wait is fixed by design. The eager policy hears 200 ms of VAD silence before it sends Finalize. Silero reports the end of speech about 60 ms late (offline fixtures, n = 12), and Deepgram's final arrives about 100 ms after Finalize (live STT, n = 37). Speculative LLM calls on partial transcripts could remove most of that wait at the cost of more LLM calls; that has not been tried. 13 of 15 docs turns finished under 1,000 ms (live, n = 15).
+After tuning, with Cartesia speech, the turn is p50 841 ms (live, n = 15), and the endpoint and the LLM share most of it equally. Turn end detection is p50 340 ms and the LLM's first token is p50 340 ms (live, n = 15). TTS first audio is p50 145 ms with Cartesia, and transport and playout start are p50 26 ms (live, n = 15). With Deepgram Aura-2 speech, the default since 2026-10-30, TTS first audio was p50 115 ms and p95 162 ms, and the total p50 802 ms and p95 1,059 ms (live, n = 6). Most of the remaining endpoint wait is fixed by design. The eager policy hears 200 ms of VAD silence before it sends Finalize. Silero reports the end of speech about 60 ms late (offline fixtures, n = 12), and Deepgram's final arrives about 100 ms after Finalize (live STT, n = 37). Speculative LLM calls on partial transcripts could remove most of that wait at the cost of more LLM calls; that has not been tried. In the Cartesia run, 13 of 15 docs turns finished under 1,000 ms (live, n = 15).
 
 ## What p95 means with small samples
 

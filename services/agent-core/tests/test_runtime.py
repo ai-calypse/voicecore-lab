@@ -8,7 +8,7 @@ from hypothesis import strategies as st
 from runtime_helpers import make, mic
 
 from voicecore import protocol
-from voicecore.providers.base import Audio, Final, Partial
+from voicecore.providers.base import Audio, Final, Partial, ProviderError
 from voicecore.providers.mock import LLMScript, MockLLM, MockSTT, MockTTS
 from voicecore.runtime.session import REPROMPT, State
 from voicecore.turntaking.vad_fixture import FixtureVAD
@@ -229,7 +229,9 @@ async def test_a_tts_failure_still_delivers_the_text_and_frees_the_turn():
     s, out = await make(tts=CappedTTS())
     await s.on_event({"type": "text.input", "text": "hi"})
     await asyncio.sleep(3)
-    assert [e["gen"] for e in out.events("agent.text")] == [1]
+    from voicecore.runtime.session import VOICE_OFF
+
+    assert [(e["gen"], e["text"] == VOICE_OFF) for e in out.events("agent.text")] == [(1, False), (2, True)]  # answer, then the notice
     assert s.active_gen is None and s.state == State.LISTENING
     await s.close()
 
@@ -298,4 +300,17 @@ async def test_speaking_after_the_early_answer_started_playing_is_a_new_question
     await asyncio.sleep(3)
     assert out.events("agent.cancel") == [{"type": "agent.cancel", "gen": 1}]
     assert llm.calls[-1][-1]["content"] == "Stop."
+    await s.close()
+
+
+async def test_when_speech_hits_its_session_cap_the_user_is_told_once_and_answers_continue_as_text():
+    from voicecore.runtime.session import VOICE_OFF
+
+    s, out = await make(tts=CappedTTS(), tts_factory=CappedTTS)
+    await s.on_event({"type": "text.input", "text": "first"})
+    await asyncio.sleep(3)
+    await s.on_event({"type": "text.input", "text": "second"})
+    await asyncio.sleep(3)
+    texts = [e["text"] for e in out.events("agent.text")]
+    assert texts.count(VOICE_OFF) == 1 and len(texts) == 3
     await s.close()

@@ -19,7 +19,7 @@ PARAMS = {"model": "nova-3", "encoding": "linear16", "sample_rate": 16000, "chan
                       "Cerebras", "gpt-oss", "WebSocket", "WebRTC", "jitter buffer", "Docusaurus"]}
 URL = "wss://api.deepgram.com/v1/listen?" + urlencode(PARAMS, doseq=True)
 PRICE_PER_MIN = 0.0077  # nova-3 streaming, pay as you go, deepgram.com/pricing 2026-10-29
-MAX_AUDIO_S = 120  # per-session cap (budget)
+MAX_AUDIO_S = 300  # per-session cap (budget): 5 min of speech, $0.0385
 _CLOSED = object()
 
 

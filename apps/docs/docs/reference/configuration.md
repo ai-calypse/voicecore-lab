@@ -47,7 +47,7 @@ Run the orchestrator with `uv run python -m voicecore.server` from the repositor
 
 | Flag | Default | What it sets |
 |---|---|---|
-| `--providers` | `mock` | `mock` (no keys, no spend) or `live` (Deepgram, OpenRouter, Cartesia; spends money) |
+| `--providers` | `mock` | `mock` (no keys, no spend) or `live` (Deepgram, OpenRouter and the `--tts` provider; spends money) |
 | `--host` | `127.0.0.1` | listen address; the Docker image passes `0.0.0.0` |
 | `--port` | 8765 | listen port for `ws://HOST:PORT/v1/session/{id}` |
 | `--trace-dir` | none (off) | write one trace file per session, `<dir>/<session id>.jsonl` |
@@ -57,8 +57,9 @@ Run the orchestrator with `uv run python -m voicecore.server` from the repositor
 | `--llm-model` | `openai/gpt-oss-120b` | OpenRouter model id |
 | `--llm-provider` | `Cerebras` for the default model | OpenRouter provider to try first; `any` lets OpenRouter route |
 | `--llm-reasoning` | `low` for the default model | reasoning effort; `none` omits it, for models without reasoning |
+| `--tts` | `deepgram` | text-to-speech provider: `deepgram` (Aura-2, `usd` pool) or `cartesia` (sonic-3.6, `cartesia_credits` pool) |
 
-On startup the orchestrator loads the Silero VAD model and builds the docs index before it accepts sessions, so the first session does not stall. The `--llm-*` flags only matter with `--providers live`.
+On startup the orchestrator loads the Silero VAD model and builds the docs index before it accepts sessions, so the first session does not stall. The `--llm-*` and `--tts` flags only matter with `--providers live`. Docker Compose passes no `--tts` flag, so the stack always uses Deepgram for speech.
 
 ## Choosing the endpointing policy
 
@@ -88,9 +89,9 @@ VoiceCore reads the environment variables below. Only the three provider keys ar
 
 | Variable | Read by | Meaning |
 |---|---|---|
-| `DEEPGRAM_API_KEY` | orchestrator | Deepgram key, live mode only |
+| `DEEPGRAM_API_KEY` | orchestrator | Deepgram key for speech-to-text and the default text-to-speech, live mode only |
 | `OPENROUTER_API_KEY` | orchestrator | OpenRouter key, live mode only |
-| `CARTESIA_API_KEY` | orchestrator | Cartesia key, live mode only |
+| `CARTESIA_API_KEY` | orchestrator | Cartesia key, only for `--tts cartesia` |
 | `GATEWAY_SECRET` | gateway | fixed secret for session tokens; otherwise a random secret per gateway process |
 | `VOICECORE_LEDGER` | orchestrator, harness | path of the spend ledger; default `benchmarks/spend_ledger.json` |
 | `PROVIDERS` | docker compose | `mock` (default) or `live`, passed to the orchestrator |
@@ -99,7 +100,7 @@ VoiceCore reads the environment variables below. Only the three provider keys ar
 | `VOICECORE_GATEWAY` | docs site build | gateway URL for this site's widget; default `http://localhost:8080` |
 | `DOCS_URL` | docs site build | the site's public URL; default `http://localhost:3000` |
 
-`.env.example` lists the four that a live setup needs. Copy it to `.env` (it is gitignored) and fill in the keys.
+`.env.example` lists the four that a live setup can use. `CARTESIA_API_KEY` is only needed with `--tts cartesia`. Copy it to `.env` (it is gitignored) and fill in the keys.
 
 ## Where API keys are read from
 
@@ -135,8 +136,8 @@ Every paid provider call is covered by a reservation in the spend ledger, `bench
 
 | Pool | Project cap | Covers | Reserved per session |
 |---|---:|---|---|
-| `usd` | $5.00 | Deepgram and OpenRouter | STT: 120 s of audio × $0.0077 per minute = $0.0154; LLM: $0.006 |
-| `cartesia_credits` | 16,000 credits | Cartesia, 1 credit per character | TTS: 1,500 characters, reserved when the session first speaks |
+| `usd` | $5.00 | Deepgram STT and TTS, OpenRouter | STT: 300 s of audio × $0.0077 per minute = $0.0385; LLM: $0.02; TTS with `--tts deepgram`: 4,000 characters × $0.030 per 1,000 = $0.12, reserved when the session first speaks |
+| `cartesia_credits` | 16,000 credits | Cartesia, 1 credit per character | TTS with `--tts cartesia`: 1,500 characters, reserved when the session first speaks |
 
 When a session ends, each reservation is settled to the amount actually used. The caps are a user decision from 2026-10-29: $5 for the whole project, and 16,000 of the 20,000 Cartesia credits owned. Benchmark scripts reserve from the same pools, for example $0.05 for one `llm_ttft.py` run.
 
@@ -145,6 +146,6 @@ When a session ends, each reservation is settled to the amount actually used. Th
 Each cap fails in a way that keeps the session useful where it can:
 
 - **Project cap at session start:** if the STT or LLM reservation would pass the `usd` cap, the orchestrator refuses the session. It sends `session.ended` with reason `budget` and closes.
-- **Per-session STT cap, 120 s of audio:** the STT reports a fatal error. The agent says "Voice input has reached its limit for this session. You can keep typing your questions." Text questions still work. Only speech is sent to the STT (with 300 ms before and 600 ms after it), so silence does not use up the cap.
-- **Per-session LLM cap, $0.006:** before each call the adapter checks the cost so far plus this prompt with worst-case output. Past the cap, the call fails as fatal, and the agent says it is having trouble answering.
-- **TTS credits:** if the credit reservation is refused, or the 1,500-character cap is reached, TTS fails as fatal and the session answers in text only.
+- **Per-session STT cap, 300 s of audio:** the STT reports a fatal error. The agent says "Voice input has reached its limit for this session. You can keep typing your questions." Text questions still work. Only speech is sent to the STT (with 300 ms before and 600 ms after it), so silence does not use up the cap.
+- **Per-session LLM cap, $0.02:** before each call the adapter checks the cost so far plus this prompt with worst-case output. Past the cap, the call fails as fatal, and the agent says it is having trouble answering.
+- **Per-session TTS cap, 4,000 characters with Deepgram or 1,500 with Cartesia:** if the TTS reservation is refused, or the cap is reached, TTS fails as fatal. The agent says once, as a text reply, "Spoken replies have reached their limit for this session, so I'll answer in text. Close and reopen me to talk again." Later answers arrive as text, unless one still fits in the characters left. Reopening the assistant starts a new session with fresh caps.

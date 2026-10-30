@@ -15,7 +15,7 @@ It runs as three processes that share one wire protocol:
 - the **Go gateway** owns the connection;
 - the **Python orchestrator** owns the conversation.
 
-The voice assistant in the corner of this site is VoiceCore itself. It answers from these pages only and opens the section it cites. With mock providers it needs no keys and spends nothing. With live providers it uses Deepgram for speech-to-text, a language model through OpenRouter, and Cartesia for text-to-speech.
+The voice assistant in the corner of this site is VoiceCore itself. It answers from these pages only and opens the section it cites. With mock providers it needs no keys and spends nothing. With live providers it uses Deepgram for speech-to-text and text-to-speech, and a language model through OpenRouter. Cartesia is an alternative for text-to-speech.
 
 ## What a voice agent is
 
@@ -41,7 +41,7 @@ Speech recognition, the language model and speech synthesis are bought through r
 |---|---|
 | Streaming speech-to-text | Deepgram nova-3 |
 | Language model | `openai/gpt-oss-120b` through OpenRouter, Cerebras first, reasoning effort low |
-| Streaming text-to-speech | Cartesia sonic-3.6, voice "Daniel" |
+| Streaming text-to-speech | Deepgram Aura-2, `aura-2-thalia-en`; Cartesia sonic-3.6 with `--tts cartesia` |
 | Voice activity detection | Silero VAD, runs locally |
 | Embeddings | fastembed small ONNX model, runs locally |
 
