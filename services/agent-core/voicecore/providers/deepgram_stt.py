@@ -1,6 +1,7 @@
 """Deepgram live STT (nova-3) over WebSocket. Interface checked in Context7 /websites/developers_deepgram, 2026-10-29."""
 import asyncio
 import json
+import time
 from urllib.parse import urlencode
 
 from websockets.asyncio.client import connect
@@ -28,6 +29,8 @@ class DeepgramSTT:
         self._closed = False
         self.audio_s = 0.0
         self.request_id = None
+        self._last_send = 0.0
+        self._keepalive = None
 
     def cost_usd(self) -> float:
         return round(self.audio_s / 60 * PRICE_PER_MIN, 6)
@@ -41,6 +44,24 @@ class DeepgramSTT:
             raise ProviderError("retryable", f"deepgram connect: {e}") from None
         self.request_id = self._ws.response.headers.get("dg-request-id")
         self._reader = asyncio.create_task(self._read())
+        self._keepalive = asyncio.create_task(self._keep_alive())
+
+    async def _keep_alive(self):
+        """Deepgram closes a socket that gets no audio for 10 s (NET-0001), e.g. after the mic is revoked."""
+        while True:
+            await asyncio.sleep(4)
+            if time.monotonic() - self._last_send >= 4:
+                try:
+                    await self._ws.send(json.dumps({"type": "KeepAlive"}))
+                except ConnectionClosed:
+                    return
+
+    async def finalize(self) -> None:
+        if self._ws is not None and not self._closed:
+            try:
+                await self._ws.send(json.dumps({"type": "Finalize"}))
+            except ConnectionClosed:
+                pass
 
     async def send(self, pcm: bytes) -> None:
         if self._closed:
@@ -50,6 +71,7 @@ class DeepgramSTT:
         if self._ws is None:
             await self._connect()
         self.audio_s += len(pcm) / 32000
+        self._last_send = time.monotonic()
         try:
             await self._ws.send(pcm)
         except ConnectionClosed as e:
@@ -93,6 +115,7 @@ class DeepgramSTT:
         if self._ws is None:
             self._q.put_nowait(_CLOSED)
             return
+        self._keepalive.cancel()
         try:
             await self._ws.send(json.dumps({"type": "CloseStream"}))  # flush: remaining finals, then Metadata
             await asyncio.wait_for(asyncio.shield(self._reader), 10)

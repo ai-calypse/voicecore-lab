@@ -14,9 +14,11 @@ _CLOSED = object()
 class MockSTT:
     """Emits each scripted event once `t_ms` of audio has been received (audio time, not wall time)."""
 
-    def __init__(self, script: list[tuple[int, Partial | Final]] = (), error: ProviderError | None = None):
+    def __init__(self, script: list[tuple[int, Partial | Final]] = (), error: ProviderError | None = None, canned: str | None = None):
+        """canned: text returned as a Final on every finalize() (for runs where nobody scripted the words)."""
         self.script = sorted(script, key=lambda x: x[0])
-        self.error = error
+        self.error, self.canned = error, canned
+        self.finalizes = 0
         self.audio_ms = 0
         self._q: asyncio.Queue = asyncio.Queue()
         self._closed = False
@@ -27,6 +29,11 @@ class MockSTT:
         self.audio_ms += len(pcm) // 32
         while self.script and self.script[0][0] <= self.audio_ms:
             self._q.put_nowait(self.script.pop(0)[1])
+
+    async def finalize(self) -> None:
+        self.finalizes += 1
+        if self.canned and not self._closed:
+            self._q.put_nowait(Final(self.canned, speech_final=True))
 
     async def events(self):
         if self.error:
@@ -130,3 +137,5 @@ class MockTTS:
         self._jobs.put_nowait(_CLOSED)
         if self._worker is None:
             self._out.put_nowait(_CLOSED)
+        else:
+            await self._worker

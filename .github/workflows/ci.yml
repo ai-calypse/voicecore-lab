@@ -54,5 +54,9 @@ jobs:
         with:
           go-version-file: services/realtime-gateway/go.mod
           cache-dependency-path: services/realtime-gateway/go.sum
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked
       - run: pnpm --filter @voicecore/demo exec playwright install --with-deps chromium
       - run: pnpm --filter @voicecore/demo e2e
