@@ -107,18 +107,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker compose build
-      - run: docker compose up -d
+      - run: docker compose up -d --wait --wait-timeout 300  # every healthcheck green (agent-core /readyz, gateway -probe)
       - uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
       - run: uv sync --locked
       - name: smoke test (token, WebSocket, grounded answer)
         run: |
-          for i in $(seq 1 60); do curl -sf http://localhost:8080/debug/counters >/dev/null && break; sleep 2; done
-          for i in $(seq 1 60); do docker compose logs agent-core | grep -q listening && break; sleep 2; done
+          curl -sf http://localhost:8080/healthz | grep -q '"status":"ok"'
           uv run python harness/smoke.py
           curl -sf http://localhost:5173/embed/voicecore.js >/dev/null
           curl -sf http://localhost:3000/concepts/endpointing | grep -q 'Endpointing'
           curl -sf http://localhost:3000/embed/voicecore.js >/dev/null
+      - name: graceful stop (SIGTERM drains and exits 0)
+        run: |
+          docker compose stop -t 35 agent-core gateway
+          test "$(docker inspect -f '{{.State.ExitCode}}' $(docker compose ps -aq agent-core))" = 0
+          test "$(docker inspect -f '{{.State.ExitCode}}' $(docker compose ps -aq gateway))" = 0
       - if: failure()
         run: docker compose logs

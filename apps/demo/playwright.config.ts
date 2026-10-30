@@ -11,6 +11,7 @@ const fixture = fileURLToPath(new URL("../../fixtures/audio/dev/single_01.wav", 
 export default defineConfig({
   testDir: "e2e",
   testMatch: "**/*.spec.ts", // *.test.ts files there are vitest unit tests
+  globalSetup: "./e2e/global-setup.ts",
   timeout: 30_000,
   use: {
     baseURL: "http://127.0.0.1:15173",
@@ -26,7 +27,7 @@ export default defineConfig({
     { command: "go run ./cmd/gateway -addr 127.0.0.1:18080 -upstream ws://127.0.0.1:18765", cwd: gateway, url: "http://127.0.0.1:18080/debug/counters", reuseExistingServer: false },
     // the real orchestrator with mock providers, behind a second gateway
     // builds the docs index at start: minutes on a cold CI runner without the vector cache
-    { command: "uv run python -m voicecore.server --providers mock --port 18766", cwd: root, port: 18766, reuseExistingServer: false, timeout: 600_000 },
+    { command: "uv run python -m voicecore.server --providers mock --port 18766", cwd: root, url: "http://127.0.0.1:18766/readyz", reuseExistingServer: false, timeout: 600_000 },
     { command: "go run ./cmd/gateway -addr 127.0.0.1:18081 -upstream ws://127.0.0.1:18766", cwd: gateway, url: "http://127.0.0.1:18081/debug/counters", reuseExistingServer: false },
     // Step 07 WebRTC spike (Pion)
     { command: "go run ./cmd/pion-peer -addr 127.0.0.1:18090", cwd: experiments, url: "http://127.0.0.1:18090/stats", reuseExistingServer: false },

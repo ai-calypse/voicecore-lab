@@ -38,6 +38,7 @@ type Config struct {
 	OutCap       int // agent frames buffered towards the client (1500 = 30 s)
 	Log          *slog.Logger
 	Trace        io.Writer // SPEC.md section 5 JSON lines; nil = off
+	Version      string    // reported by /healthz
 
 	// Abuse limits (security review 2026-10-30). Zero means no limit.
 	Hosts            []string      // allowed Host header names (DNS rebinding); empty = any
@@ -51,7 +52,7 @@ type Config struct {
 
 func Defaults(secret []byte, upstream string) Config {
 	return Config{Secret: secret, Upstream: upstream, TokenTTL: 60 * time.Second, HelloTimeout: 5 * time.Second,
-		Heartbeat: 10 * time.Second, ResumeWindow: 10 * time.Second, QueueCap: 50, OutCap: 1500, Log: slog.Default(),
+		Heartbeat: 10 * time.Second, ResumeWindow: 10 * time.Second, QueueCap: 50, OutCap: 1500, Log: slog.Default(), Version: "dev",
 		MaxSessions: 50, MaxSessionsPerIP: 4, MaxSessionAge: 15 * time.Minute, TextMaxChars: 500, MaxQueuedEvents: 256,
 		TokensPerMinute: 10}
 }
@@ -72,6 +73,7 @@ type Server struct {
 	perIP    map[string]int     // live and pending sessions per client IP
 	pending  int                // sessions being dialled
 	tokens   map[string]*bucket // token issuance per client IP
+	draining atomic.Bool        // no new sessions; open ones (and their resumes) continue
 }
 
 // bucket is a token bucket: rate per second, up to burst.
@@ -143,8 +145,22 @@ func New(cfg Config) *Server {
 
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, http.StatusOK, map[string]any{"status": "ok", "version": s.cfg.Version})
+	})
+	mux.HandleFunc("GET /readyz", func(w http.ResponseWriter, r *http.Request) {
+		if s.draining.Load() {
+			writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ready": false, "draining": true})
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"ready": true, "draining": false})
+	})
 	mux.HandleFunc("POST /v1/session", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*") // development only: the token is not bound to a user
+		if s.draining.Load() {
+			http.Error(w, "draining", http.StatusServiceUnavailable)
+			return
+		}
 		ip := clientIP(r.RemoteAddr)
 		s.mu.Lock()
 		if len(s.tokens) > 10_000 { // ponytail: crude reset bounds memory; use an LRU if this ever serves the internet
@@ -294,6 +310,9 @@ func (s *Server) hello(c *websocket.Conn, ip string) (ss *session, resumed bool,
 			return old, true, 0, ""
 		}
 	}
+	if s.draining.Load() { // resumes above still work; new sessions go to another copy
+		return nil, false, websocket.StatusTryAgainLater, "draining"
+	}
 	ss, err = s.newSession(ip)
 	if errors.Is(err, errBusy) {
 		return nil, false, websocket.StatusTryAgainLater, "too many sessions"
@@ -357,4 +376,46 @@ func (s *Server) releaseIP(ip string) {
 	if s.perIP[ip]--; s.perIP[ip] <= 0 {
 		delete(s.perIP, ip)
 	}
+}
+
+// BeginDrain stops taking new sessions; open ones (and their resumes) continue.
+func (s *Server) BeginDrain() { s.draining.Store(true) }
+
+// Drain begins draining, waits up to timeout for open sessions to end, then ends the rest with reason "shutdown".
+func (s *Server) Drain(timeout time.Duration) {
+	s.BeginDrain()
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		s.mu.Lock()
+		n := len(s.sessions) + s.pending
+		s.mu.Unlock()
+		if n == 0 {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	s.Close()
+}
+
+func writeJSON(w http.ResponseWriter, code int, body any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	_ = json.NewEncoder(w).Encode(body)
+}
+
+// Probe GETs url with a 2 s timeout and returns a process exit code: 0 for HTTP 200, 1 otherwise. The gateway image
+// is distroless (no curl), so `gateway -probe URL` is its container healthcheck.
+func Probe(url string) int { return ProbeWith(&http.Client{Timeout: 2 * time.Second}, url) }
+
+// ProbeWith is Probe with a given client (tests use the in-memory network).
+func ProbeWith(c *http.Client, url string) int {
+	resp, err := c.Get(url)
+	if err != nil {
+		return 1
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return 1
+	}
+	return 0
 }

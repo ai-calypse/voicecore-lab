@@ -99,7 +99,7 @@ Apart from resume, the gateway never decides to cancel by itself. It learns canc
 
 ## The debug counters endpoint
 
-`GET /debug/counters` returns one JSON object with counters summed across all sessions since the gateway started. It is the quickest way to see whether the gateway dropped anything during a run. `cmd/wsload` and the WSS runner in `harness/runner/wss.py` read it to report gateway drops and gaps, and Playwright uses it as the gateway's readiness URL. The endpoint has no authentication, but the host allow-list still applies.
+`GET /debug/counters` returns one JSON object with counters summed across all sessions since the gateway started. It is the quickest way to see whether the gateway dropped anything during a run. `cmd/wsload` and the WSS runner in `harness/runner/wss.py` read it to report gateway drops and gaps, The endpoint has no authentication, but the host allow-list still applies.
 
 | Key | Meaning |
 |---|---|
@@ -162,7 +162,7 @@ Run `go run ./cmd/gateway` in `services/realtime-gateway`. Every limit flag acce
 | `-max-sessions-per-ip` | 4 | live sessions per client IP |
 | `-tokens-per-minute` | 10 | session tokens per client IP per minute |
 
-The other values are fixed in `session.Defaults`: token TTL 60 s, hello timeout 5 s, heartbeat 10 s, resume window 10 s, queue caps of 50 and 1,500 frames, session age 15 minutes, 500 text characters and 256 queued events. `GATEWAY_SECRET` sets the token secret. On SIGINT or SIGTERM the gateway ends every session with reason `shutdown`.
+The other values are fixed in `session.Defaults`: token TTL 60 s, hello timeout 5 s, heartbeat 10 s, resume window 10 s, queue caps of 50 and 1,500 frames, session age 15 minutes, 500 text characters and 256 queued events. `GATEWAY_SECRET` sets the token secret.
 
 ## How much latency the gateway adds
 
@@ -175,3 +175,10 @@ The transport benchmark in `benchmarks/transport.md` measures the gateway with `
 | through the gateway | 20 | 1.08 / 1.68 / 2.16 ms |
 
 Both gateway passes together add 0.19 ms at the median (fake-provider, loopback, n = 500 frames), about 0.1 ms per pass. No run dropped a frame or saw a gap. In Go benchmarks, decoding one 20 ms mic frame takes 205.7 ns with one allocation, and encoding one agent frame takes 250.1 ns. Real packet loss was not measured, because it needs kernel shaping with `sudo`.
+
+## How the gateway reports health and shuts down gracefully
+
+`GET /healthz` answers 200 `{"status": "ok", "version": ...}` while the process is alive. `GET /readyz` answers 200 `{"ready": true}`, or 503 `{"ready": false, "draining": true}` once a drain has begun, so a load balancer stops sending new users. The image is distroless, with no curl, so the container healthcheck runs the binary itself: `/gateway -probe http://127.0.0.1:8080/readyz` exits 0 on HTTP 200 and 1 otherwise.
+
+On SIGINT or SIGTERM the gateway drains instead of cutting calls off. New tokens get HTTP 503 and new sessions close with 1013 `draining`, while open sessions keep working, and a client that reconnects within the resume window can still resume. After `-drain` (25 s by default) the remaining sessions end with `session.ended{reason: "shutdown"}`, then the HTTP server shuts down and the process exits 0.
+

@@ -98,3 +98,24 @@ def reserve_all(specs, ledger_path=None) -> list[Reservation]:
         for r in out:
             data["entries"].append({"id": r.id, "pool": r.pool, "amount": r.amount, "label": r.label, "status": "reserved", "ts": now()})
     return out
+
+
+def orphans(older_than_s: float = 3600, ledger_path=None) -> list[dict]:
+    """Reservations still 'reserved' after older_than_s (or from before entries had a ts). Report only: they already
+    count at their full amount, the safe side; settling them by guessing could under-count real spend."""
+    path = ledger_file(ledger_path)
+    entries = json.loads(path.read_text()).get("entries", []) if path.exists() else []
+    cutoff = now() - older_than_s
+    return [e for e in entries if e.get("status") == "reserved" and e.get("ts", 0) < cutoff]
+
+
+if __name__ == "__main__":  # python -m voicecore.budget orphans
+    import sys
+
+    if sys.argv[1:] == ["orphans"]:
+        found = orphans()
+        for e in found:
+            print(f"{e.get('id')}  {e.get('pool')}  {e.get('amount')}  {e.get('label', '')}")
+        print(f"{len(found)} orphaned reservation(s), {round(sum(e.get('amount', 0) for e in found), 6)} counted at full amount")
+    else:
+        sys.exit("usage: python -m voicecore.budget orphans")

@@ -16,6 +16,9 @@ import (
 	"github.com/ai-calypse/voicecore-lab/services/realtime-gateway/session"
 )
 
+// version is set at build time: go build -ldflags "-X main.version=$(git rev-parse --short HEAD)".
+var version = "dev"
+
 func main() {
 	addr := flag.String("addr", "127.0.0.1:8080", "listen address")
 	upstream := flag.String("upstream", "ws://127.0.0.1:8765", "orchestrator base URL")
@@ -25,7 +28,12 @@ func main() {
 	maxSessions := flag.Int("max-sessions", 50, "live sessions in total (0 = no limit)")
 	tokensPerMin := flag.Float64("tokens-per-minute", 10, "session tokens per client IP per minute (0 = no limit)")
 	hosts := flag.String("hosts", "localhost,127.0.0.1,::1", "allowed Host header names, comma separated; empty allows any (blocks DNS rebinding)")
+	probe := flag.String("probe", "", "GET this URL and exit 0 on HTTP 200, else 1 (container healthcheck; the image has no curl)")
+	drain := flag.Duration("drain", 25*time.Second, "on SIGTERM, how long open sessions may finish before they are ended")
 	flag.Parse()
+	if *probe != "" {
+		os.Exit(session.Probe(*probe))
+	}
 
 	secret := []byte(os.Getenv("GATEWAY_SECRET"))
 	if len(secret) == 0 {
@@ -33,6 +41,7 @@ func main() {
 		_, _ = rand.Read(secret)
 	}
 	cfg := session.Defaults(secret, *upstream)
+	cfg.Version = version
 	cfg.Origins = strings.Split(*origins, ",")
 	cfg.MaxSessionsPerIP, cfg.MaxSessions, cfg.TokensPerMinute = *perIP, *maxSessions, *tokensPerMin
 	if *hosts != "" {
@@ -52,14 +61,20 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	done := make(chan struct{})
 	go func() {
+		defer close(done)
 		<-ctx.Done()
-		gw.Close()
-		_ = srv.Shutdown(context.Background())
+		slog.Info("draining", "for", drain.String())
+		gw.Drain(*drain) // new sessions get 503/1013; open ones finish or end with reason "shutdown"
+		sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = srv.Shutdown(sctx)
 	}()
-	slog.Info("gateway listening", "addr", *addr, "upstream", *upstream)
+	slog.Info("gateway listening", "addr", *addr, "upstream", *upstream, "version", version)
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		slog.Error("gateway stopped", "err", err)
 		os.Exit(1)
 	}
+	<-done // ListenAndServe returns as soon as Shutdown starts; wait for the drain and shutdown to finish
 }

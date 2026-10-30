@@ -76,3 +76,14 @@ def test_reserve_all_unknown_pool_writes_nothing(tmp_path):
     with pytest.raises(KeyError):
         budget.reserve_all([("usd", 0.01, "a"), ("nope", 1, "b")], ledger_path=path)
     assert json.loads(path.read_text())["entries"] == []
+
+
+def test_orphans_reports_reserved_older_than_1h_or_without_ts(tmp_path, monkeypatch):
+    monkeypatch.setattr(budget, "now", lambda: 10_000.0)
+    path = ledger_with(tmp_path, [
+        {"id": "a", "pool": "usd", "amount": 0.1, "status": "reserved", "ts": 10_000 - 7200},  # 2 h old
+        {"id": "b", "pool": "usd", "amount": 0.1, "status": "reserved", "ts": 10_000 - 600},   # 10 min old: in use
+        {"id": "c", "pool": "usd", "amount": 0.1, "status": "reserved"},                       # before entries had ts
+        {"id": "d", "pool": "usd", "amount": 0.1, "status": "settled", "ts": 0},
+    ])
+    assert [e["id"] for e in budget.orphans(ledger_path=path)] == ["a", "c"]

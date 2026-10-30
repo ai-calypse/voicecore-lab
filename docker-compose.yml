@@ -11,17 +11,39 @@ services:
     #   HOST_UID=$(id -u) HOST_GID=$(id -g) PROVIDERS=live docker compose up
     user: "${HOST_UID:-10001}:${HOST_GID:-10001}"
     volumes: ["./benchmarks:/app/benchmarks"]
+    init: true  # tini as PID 1, so SIGTERM reaches Python and open sessions drain (PID 1 ignores it otherwise)
+    stop_grace_period: 35s  # the server drains for up to 25 s
+    restart: unless-stopped
+    healthcheck:  # ready = VAD and docs index loaded and not draining
+      test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/readyz', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 90s
   gateway:
     build: services/realtime-gateway
     command: ["-addr", "0.0.0.0:8080", "-upstream", "ws://agent-core:8765", "-origins", "localhost:*,127.0.0.1:*"]
     environment: ["GATEWAY_SECRET=${GATEWAY_SECRET:-}"]
     ports: ["127.0.0.1:8080:8080"]
-    depends_on: [agent-core]
+    stop_grace_period: 35s
+    restart: unless-stopped
+    healthcheck:  # the image is distroless (no curl): the binary probes itself
+      test: ["CMD", "/gateway", "-probe", "http://127.0.0.1:8080/readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      agent-core: { condition: service_healthy }
   demo:
     build: { context: ., dockerfile: apps/demo/Dockerfile }
     ports: ["127.0.0.1:5173:8080"]
+    restart: unless-stopped
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"], interval: 10s, timeout: 3s, retries: 3 }
     depends_on: [gateway]
   docs:
     build: { context: ., dockerfile: apps/docs/Dockerfile }
     ports: ["127.0.0.1:3000:8080"]
+    restart: unless-stopped
+    healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"], interval: 10s, timeout: 3s, retries: 3 }
     depends_on: [gateway]

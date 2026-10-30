@@ -1,6 +1,6 @@
 # Step 09: Production Readiness
 
-**Status:** In progress (started 2026-10-30). Phases 0–1 done; Phase 2 (health and drain) next.
+**Status:** In progress (started 2026-10-30). Phases 0–2 done; Phase 3 (session security) next.
 **Estimated engineering effort:** about 110 hours.
 **Task owner:** Implementation agent. The user decides on deploying, live spend beyond the approved checks, real Turnstile and paging credentials, and key rotation.
 
@@ -91,12 +91,14 @@ A change to the wire protocol (`resume_key`, session id format) updates `package
 | 2026-10-30 | S09-T00 | Demo e2e moved to ports 15173 / 18765 / 18080 / 18766 / 18081 / 18090; docs e2e to 13000. Servers never reused (code review: the first version reused them outside CI). `checkMockOnly` guard (5 s timeout, HTTP status checked), wired as globalSetup in S09-T02. | vitest 3/3; demo e2e 11/11 and docs e2e 2/2, run beside a live stack on the dev ports |
 | 2026-10-30 | S09-T01 | `keys.key` ignores inline comments (after whitespace) and strips quotes; an empty value is unset. `budget.reserve_all`: all-or-nothing; earlier reservations are settled at 0 when a later one is refused (live and billed-mock paths). The gateway forwards an orchestrator's `session.ended` once and ends with its reason. | `test_keys.py`, `test_budget.py`, `test_server.py`, `TestBudgetRefusalReachesClientOnce` (was `[budget error]`) |
 | 2026-10-30 | S09-T01 | Code review changes:<br>• `reserve_all` is atomic (one lock: all or nothing, nothing written on refusal or error).<br>• Keys parser: quotes first; `#` only after whitespace; an empty placeholder does not hide a later line.<br>• `live_providers` settles at 0 if building a provider throws.<br>• Gateway default reason `ended`, capped at 100 bytes.<br>Known edge, not fixed: an orchestrator ending a session while the client is inside its resume window; the client then resumes into nothing. | review on `b83b250`; 136 passed; Go race suite ok |
+| 2026-10-30 | S09-T02 | **Orchestrator:**<br>• `AppState` plus `process_request` routes. `/healthz` returns `{status, providers, version}`. `/readyz` returns 200 only when loaded and not draining.<br>• WebSocket upgrades get 503 while starting or draining.<br>• Serving starts first; models load in a thread.<br>• SIGTERM/SIGINT: drain up to `--drain-s` (25 s), then `session.ended{shutdown}`, settles each budget, exit 0.<br>**Gateway:**<br>• `BeginDrain`/`Drain`: new tokens get 503, new sessions get 1013, resumes are still allowed.<br>• `/healthz`, `/readyz`; `Probe`/`-probe` (distroless healthcheck).<br>• main waits for drain and shutdown; version via ldflags.<br>**Compose:** healthchecks, `init: true`, `stop_grace_period: 35s`, restart policies, gateway `depends_on` agent-core healthy. CI uses `up --wait` and checks a graceful stop (exit 0).<br>**Runners:** the WSS runner and Playwright wait on orchestrator `/readyz`; the mock-only guard is now Playwright's globalSetup.<br>`python -m voicecore.budget orphans` (report only) lists today's 3 pre-`ts` orphans ($0.1785). | `test_server.py` (7, incl. a SIGTERM subprocess exiting 0 in < 5 s); `health_test.go` (5; drain test stable over 5 race runs); manual: gateway SIGTERM exits 0 in 0.02 s with no sessions |
 | 2026-10-30 | — | Commit attribution removed from all history (user request); project settings disable it from now on | `.claude/settings.json`; `git log --format=%B \| grep -ci co-authored` = 0 |
 
 ## Execution record
 
 | Date | Phase | Commands and results |
 |---|---|---|
+| 2026-10-30 | 2 | `make test`: 142 passed (Python), Go race ok, TS ok. `make e2e`: demo 11, docs 2, anchors 339/0. `harness/gate.py`: pass. |
 | 2026-10-30 | 0 | `uv run pytest -m "not live and not docker"`: 131 passed. `go test -race ./...`: ok. `pnpm --filter @voicecore/demo test`: 3 passed. `pnpm --filter @voicecore/demo e2e`: 11 passed. `pnpm --filter @voicecore/docs e2e`: 2 passed. |
 
 ## Source and artifact change record

@@ -8,7 +8,12 @@ Mock providers by default. Live providers spend money: each session reserves its
 import argparse
 import asyncio
 import contextlib
+import json
 import logging
+import os
+import signal
+from dataclasses import dataclass, field
+from http import HTTPStatus
 from pathlib import Path
 
 from websockets.asyncio.server import serve
@@ -122,21 +127,79 @@ def live_providers(sid, llm_opts=None, tts_name="deepgram"):
     return p, settle
 
 
-def handler_for(mode: str, trace_dir: Path | None, index: Index, policy: Policy = Policy(), llm_opts: dict | None = None,
-                name: str = "VoiceCore", tts: str = "deepgram"):
+@dataclass
+class AppState:
+    """What /healthz and /readyz report, and what a drain needs: the open session sockets."""
+    providers: str = "mock"
+    version: str = field(default_factory=lambda: os.environ.get("VOICECORE_VERSION", "dev"))
+    ready: bool = False  # VAD model and docs index loaded
+    draining: bool = False
+    index: Index | None = None
+    sessions: set = field(default_factory=set)
+
+    def drain(self):
+        self.draining = True
+
+    async def shutdown(self, drain_s: float = 25.0):
+        """Stop taking sessions, let open ones finish for up to drain_s, then end the rest with session.ended{shutdown}.
+        Each handler's finally block settles its budget, so this waits for those too."""
+        self.drain()
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + drain_s
+        while self.sessions and loop.time() < deadline:
+            await asyncio.sleep(0.05)
+        for ws in list(self.sessions):
+            with contextlib.suppress(ConnectionClosed):
+                await ws.send(protocol.event("session.ended", reason="shutdown"))
+                await ws.close(1001, "shutdown")
+        deadline = loop.time() + 5
+        while self.sessions and loop.time() < deadline:
+            await asyncio.sleep(0.05)
+
+
+def _json(connection, status, body):
+    r = connection.respond(status, json.dumps(body))
+    r.headers["Content-Type"] = "application/json"
+    return r
+
+
+def http_routes(state: AppState):
+    """websockets process_request hook: health and readiness on the session port, and no WebSocket handshake while
+    starting or draining (HTTP 503 before the upgrade, so the gateway never tells a client 'welcome')."""
+    def process_request(connection, request):
+        if request.path == "/healthz":
+            return _json(connection, HTTPStatus.OK, {"status": "ok", "providers": state.providers, "version": state.version})
+        if request.path == "/readyz":
+            ok = state.ready and not state.draining
+            return _json(connection, HTTPStatus.OK if ok else HTTPStatus.SERVICE_UNAVAILABLE, {"ready": state.ready, "draining": state.draining})
+        if not state.ready or state.draining:
+            return connection.respond(HTTPStatus.SERVICE_UNAVAILABLE, "draining\n" if state.draining else "starting\n")
+        return None
+    return process_request
+
+
+def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Policy = Policy(), llm_opts: dict | None = None,
+                name: str = "VoiceCore", tts: str = "deepgram", make_providers=None):
+    """make_providers(sid) -> (providers, settle callables); defaults by mode. Tests inject their own."""
+    def default_providers(sid):
+        return (live_providers(sid, llm_opts, tts) if mode == "live"
+                else mock_billed_providers(sid) if mode == "mock-billed" else mock_providers())
+
+    make_providers = make_providers or default_providers
+
     async def handler(ws):  # ponytail: VAD runs inline on the event loop (~0.3 ms per window); move to a thread if sessions x frames saturate one core
         sid = ws.request.path.rsplit("/", 1)[-1]
         try:
-            providers, settle = (live_providers(sid, llm_opts, tts) if mode == "live"
-                                 else mock_billed_providers(sid) if mode == "mock-billed" else mock_providers())
+            providers, settle = make_providers(sid)
         except budget.BudgetExceeded as e:
             log.warning("session %s refused: %s", sid, e)
             await ws.send(protocol.event("session.ended", reason="budget"))
             await ws.close()
             return
         sink = JsonlSink(trace_dir / f"{sid}.jsonl") if trace_dir else None
-        engine = AnswerEngine(index, providers["llm"], name=name)
+        engine = AnswerEngine(state.index, providers["llm"], name=name)
         session = Session(sid, send=ws.send, vad=SileroVAD(), policy=policy, tracer=Tracer(sid, sink), answer=engine.stream, **providers)
+        state.sessions.add(ws)
         await session.start()
         try:
             async for m in ws:
@@ -155,6 +218,7 @@ def handler_for(mode: str, trace_dir: Path | None, index: Index, policy: Policy 
             for s in settle:
                 with contextlib.suppress(Exception):
                     s()
+            state.sessions.discard(ws)
 
     return handler
 
@@ -175,11 +239,9 @@ async def main():
     ap.add_argument("--llm-provider", default=None, help="OpenRouter provider to try first; 'any' lets OpenRouter route")
     ap.add_argument("--llm-reasoning", default=None, help="reasoning effort for reasoning models; 'none' to omit")
     ap.add_argument("--tts", choices=sorted(TTS), default="deepgram", help="speech synthesis provider (live mode)")
+    ap.add_argument("--drain-s", type=float, default=25.0, help="on SIGTERM, seconds to let open sessions finish")
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
-    SileroVAD()  # load the model now: loading it inside the first session stalls its mic frames
-    index = Index(ingest(args.docs_dir, site=docusaurus(args.docs_url)))  # vectors are cached under .cache after the first build
-    index.dense("warm up", 1)
     args.policy = args.policy or ("eager" if args.providers == "live" else "fixed")
     policy = Policy("eager", asr_silence_ms=200) if args.policy == "eager" else Policy(args.policy)
     llm_opts = {}
@@ -189,9 +251,26 @@ async def main():
         llm_opts["provider"] = None if args.llm_provider == "any" else args.llm_provider
     if args.llm_reasoning:
         llm_opts["reasoning"] = None if args.llm_reasoning == "none" else args.llm_reasoning
-    async with serve(handler_for(args.providers, args.trace_dir, index, policy, llm_opts, tts=args.tts), args.host, args.port, max_size=1 << 20) as server:
-        log.info("orchestrator listening on ws://%s:%d (%s providers)", args.host, args.port, args.providers)
-        await server.serve_forever()
+    state = AppState(providers=args.providers)
+    handler = handler_for(args.providers, args.trace_dir, state, policy, llm_opts, tts=args.tts)
+    async with serve(handler, args.host, args.port, max_size=1 << 20, process_request=http_routes(state)):
+        log.info("orchestrator listening on ws://%s:%d (%s providers), loading models", args.host, args.port, args.providers)
+
+        def load():  # serving already: /healthz answers and /readyz says 503 until this finishes
+            SileroVAD()  # load the model now: loading it inside the first session stalls its mic frames
+            index = Index(ingest(args.docs_dir, site=docusaurus(args.docs_url)))  # vectors are cached under .cache
+            index.dense("warm up", 1)
+            return index
+
+        state.index = await asyncio.to_thread(load)
+        state.ready = True
+        log.info("orchestrator ready")
+        stop = asyncio.Event()
+        for sig in (signal.SIGTERM, signal.SIGINT):  # PID 1 in a container ignores SIGTERM without a handler
+            asyncio.get_running_loop().add_signal_handler(sig, stop.set)
+        await stop.wait()
+        log.info("draining (up to %.0f s)", args.drain_s)
+        await state.shutdown(args.drain_s)
 
 
 if __name__ == "__main__":

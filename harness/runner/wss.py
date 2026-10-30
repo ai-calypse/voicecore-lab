@@ -23,6 +23,7 @@ from fixtures import MANIFEST, ROOT, load_manifest  # noqa: E402
 
 CLIENT = ROOT / "packages/web-sdk/bin/headless-client.ts"
 COUNTERS_URL = "http://127.0.0.1:8080/debug/counters"  # the gateway start_stack launches
+ORCH_READY_URL = "http://127.0.0.1:8765/readyz"  # 503 until the VAD and docs index are loaded
 GATEWAY = ROOT / "services/realtime-gateway"
 
 
@@ -50,6 +51,7 @@ def start_stack(providers, trace_dir, logs, policy="fixed", server_args=()):
                          stdout=open(logs / "gateway.log", "w"), stderr=subprocess.STDOUT),
     ]
     wait_http(COUNTERS_URL)
+    wait_http(ORCH_READY_URL, timeout=600)  # the orchestrator serves at once but loads models before it takes sessions
     time.sleep(1)  # orchestrator loads the VAD model
     if any(p.poll() is not None for p in procs):  # e.g. a docker stack already holds :8080 and would answer instead
         for p in procs:

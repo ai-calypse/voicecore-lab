@@ -20,6 +20,8 @@ Run the gateway with `go run ./cmd/gateway` from `services/realtime-gateway`, or
 | `-max-sessions` | 50 | live sessions in total; 0 means no limit |
 | `-tokens-per-minute` | 10 | `POST /v1/session` requests per client IP per minute; 0 means no limit |
 | `-hosts` | `localhost,127.0.0.1,::1` | allowed `Host` header names, comma separated; empty allows any |
+| `-drain` | `25s` | on SIGTERM, how long open sessions may finish before they are ended with reason `shutdown` |
+| `-probe` | empty | GET this URL and exit 0 on HTTP 200, else 1; the container healthcheck, since the image has no curl |
 
 The `-hosts` check refuses other host names with HTTP 421, which blocks DNS rebinding. The benchmark runner starts the gateway with `-max-sessions-per-ip 0 -tokens-per-minute 0`, because all its clients share one IP.
 
@@ -47,7 +49,7 @@ Run the orchestrator with `uv run python -m voicecore.server` from the repositor
 
 | Flag | Default | What it sets |
 |---|---|---|
-| `--providers` | `mock` | `mock` (no keys, no spend) or `live` (Deepgram, OpenRouter and the `--tts` provider; spends money) |
+| `--providers` | `mock` | `mock` (no keys, no spend), `mock-billed` (mock providers that reserve and settle small fixed amounts, for ledger tests) or `live` (Deepgram, OpenRouter and the `--tts` provider; spends money) |
 | `--host` | `127.0.0.1` | listen address; the Docker image passes `0.0.0.0` |
 | `--port` | 8765 | listen port for `ws://HOST:PORT/v1/session/{id}` |
 | `--trace-dir` | none (off) | write one trace file per session, `<dir>/<session id>.jsonl` |
@@ -58,8 +60,9 @@ Run the orchestrator with `uv run python -m voicecore.server` from the repositor
 | `--llm-provider` | `Cerebras` for the default model | OpenRouter provider to try first; `any` lets OpenRouter route |
 | `--llm-reasoning` | `low` for the default model | reasoning effort; `none` omits it, for models without reasoning |
 | `--tts` | `deepgram` | text-to-speech provider: `deepgram` (Aura-2, `usd` pool) or `cartesia` (sonic-3.6, `cartesia_credits` pool) |
+| `--drain-s` | 25 | on SIGTERM, seconds open sessions may finish before they are ended with reason `shutdown` |
 
-On startup the orchestrator loads the Silero VAD model and builds the docs index before it accepts sessions, so the first session does not stall. The `--llm-*` and `--tts` flags only matter with `--providers live`. Docker Compose passes no `--tts` flag, so the stack always uses Deepgram for speech.
+On startup the orchestrator starts serving at once, then loads the Silero VAD model and the docs index in a background thread. Until they are loaded, `GET /readyz` answers 503 and a new session's WebSocket upgrade gets HTTP 503, so the first session never stalls. The `--llm-*` and `--tts` flags only matter with `--providers live`. Docker Compose passes no `--tts` flag, so the stack always uses Deepgram for speech.
 
 ## Choosing the endpointing policy
 

@@ -31,6 +31,12 @@ The orchestrator never talks to the browser directly. Every byte comes through t
 
 A closed socket and a decode error both end the loop the same way, so a session always closes and settles its spend. Silero VAD runs inline on the event loop. A `ponytail:` note in the handler marks where it would move to a thread if many sessions saturate one core.
 
+## How the orchestrator reports health and drains
+
+The session port also answers plain HTTP. `GET /healthz` returns 200 `{"status": "ok", "providers": "mock", "version": "dev"}` as long as the process runs; the e2e tests use `providers` to refuse an orchestrator with live (paid) providers. `GET /readyz` returns 200 only once the VAD model and docs index are loaded and no drain has begun, otherwise 503 with `{"ready": ..., "draining": ...}`. While starting or draining, a new session's WebSocket upgrade gets HTTP 503 before the handshake, so the gateway never tells a client `welcome` for a session that cannot run.
+
+SIGTERM or SIGINT starts a drain: new sessions are refused, open ones keep working for up to `--drain-s` (25 s), and any left then get `session.ended{reason: "shutdown"}`. Every session's `finally` block settles its budget, and the process exits 0. In Docker the service runs with `init: true`, because Python as PID 1 would otherwise ignore SIGTERM, and `stop_grace_period: 35s`.
+
 ## Starting the orchestrator and its flags
 
 Start it with `uv run python -m voicecore.server`. At start the server loads the Silero model, because loading it inside the first session stalls that session's mic frames. It also builds the docs index once and warms the embedding model with one query, and every session shares that index.
