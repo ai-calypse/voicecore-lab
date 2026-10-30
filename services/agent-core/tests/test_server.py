@@ -165,6 +165,25 @@ async def test_session_setup_failure_still_settles_the_reservations(small_index)
     assert settled == ["s-x"]
 
 
+async def test_session_and_turn_events(small_index, tmp_path):
+    from voicecore.server import AppState, handler_for, http_routes
+
+    state = AppState(providers="mock", ready=True, index=small_index)
+    async with serve(handler_for("mock", tmp_path, state), "127.0.0.1", 0, process_request=http_routes(state)) as server:
+        async with connect(f"ws://127.0.0.1:{server.sockets[0].getsockname()[1]}/v1/session/s-t") as ws:
+            await ask(ws)
+            await asyncio.sleep(0.5)  # the answer finishes speaking
+            await ws.close(reason="client")  # what the gateway sends when its client leaves
+        await asyncio.sleep(0.2)
+    events = [json.loads(line) for line in (tmp_path / "s-t.jsonl").read_text().splitlines()]
+    assert (events[0]["span"], events[0]["event"]) == ("session", "started")
+    assert (events[-1]["span"], events[-1]["event"], events[-1]["attrs"]) == ("session", "ended", {"reason": "client"})
+    result = next(e for e in events if (e["span"], e["event"]) == ("turn", "result"))
+    assert (result["generation_id"], result["attrs"]) == (1, {"turn_id": "t1", "kind": "text", "result": "answer"})
+    calls = [(e["span"], e["event"]) for e in events if e["event"] in ("request", "connect")]
+    assert ("llm", "request") in calls and ("tts", "request") in calls  # provider-call counters' denominators
+
+
 def free_port():
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
@@ -219,4 +238,40 @@ def test_sigterm_right_after_start_exits_0(tmp_path):
         assert p.wait(timeout=60) == 0
     finally:
         if p.poll() is None:
+            p.kill()
+
+
+@pytest.mark.timeout(180)
+def test_metrics_endpoint_type_lines(tmp_path):
+    """Pins the exported names (exporter suffixes included): the alert rules and dashboards query exactly these."""
+    (tmp_path / "endpointing.md").write_text(DOCS_PAGE)
+    port, mport = free_port(), free_port()
+    p = subprocess.Popen([sys.executable, "-m", "voicecore.server", "--providers", "mock", "--port", str(port),
+                          "--docs-dir", str(tmp_path), "--drain-s", "1", "--metrics-port", str(mport), "--metrics-host", "127.0.0.1"],
+                         env=os.environ.copy(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        deadline = time.time() + 150
+        while time.time() < deadline:
+            try:
+                if http_get(f"http://127.0.0.1:{port}/readyz")[0] == 200:
+                    break
+            except OSError:
+                pass
+            time.sleep(0.5)
+        else:
+            pytest.fail("never ready")
+
+        async def one_turn():
+            async with connect(f"ws://127.0.0.1:{port}/v1/session/s-m") as ws:
+                await ask(ws)
+                await asyncio.sleep(0.5)
+
+        asyncio.run(one_turn())
+        body = urllib.request.urlopen(f"http://127.0.0.1:{mport}/metrics", timeout=5).read().decode()
+        for line in ("# TYPE voicecore_turns_total counter", "# TYPE voicecore_stage_ms histogram",
+                     "# TYPE voicecore_spend_usd gauge", "# TYPE voicecore_provider_calls_total counter"):
+            assert line in body, line
+    finally:
+        p.send_signal(signal.SIGTERM)
+        if p.wait(timeout=10) is None:
             p.kill()

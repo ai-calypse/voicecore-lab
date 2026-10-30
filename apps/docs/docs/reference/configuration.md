@@ -63,6 +63,8 @@ Run the orchestrator with `uv run python -m voicecore.server` from the repositor
 | `--llm-reasoning` | `low` for the default model | reasoning effort; `none` omits it, for models without reasoning |
 | `--tts` | `deepgram` | text-to-speech provider: `deepgram` (Aura-2, `usd` pool) or `cartesia` (sonic-3.6, `cartesia_credits` pool) |
 | `--drain-s` | 25 | on SIGTERM, seconds open sessions may finish before they are ended with reason `shutdown` |
+| `--metrics-port` | 0 (off) | serve Prometheus `/metrics` on this port; docker compose uses 9464 and publishes it on 127.0.0.1 only |
+| `--metrics-host` | `0.0.0.0` | listen address for `/metrics`, so a scraper inside compose can reach it |
 
 On startup the orchestrator starts serving at once, then loads the Silero VAD model and the docs index in a background thread. Until they are loaded, `GET /readyz` answers 503 and a new session's WebSocket upgrade gets HTTP 503, so the first session never stalls. The `--llm-*` and `--tts` flags only matter with `--providers live`. Docker Compose passes no `--tts` flag, so the stack always uses Deepgram for speech.
 

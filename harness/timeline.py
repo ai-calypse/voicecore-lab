@@ -1,5 +1,7 @@
-"""Every reported metric is defined once here (seam 12)."""
+"""Every reported metric is defined once here (seam 12); server-side stages come from voicecore/stages.py."""
 import math
+
+from voicecore import stages
 
 
 def percentile(xs, p):
@@ -35,7 +37,7 @@ def turn_breakdown(client, trace, turn_end_ms):
     total_ms (client clock): labelled end of the user's speech -> first agent sample rendered by the client.
     endpoint_delay_ms (client clock): speech end -> end of the mic frame on which the floor decided.
     stt_settle_ms, llm_first_token_ms, tts_first_audio_ms (orchestrator clock): endpoint -> transcript ready,
-    LLM request -> first token, first token -> first TTS audio.
+    the LLM request that answered -> first token, first token -> first TTS audio (voicecore/stages.py).
     residual_ms (derived): total minus the above: uplink + downlink transport and playout start.
     """
     t0 = next(e["t0_us"] for e in client if e["type"] == "mic.start")
@@ -43,19 +45,13 @@ def turn_breakdown(client, trace, turn_end_ms):
     gen = [e["gen"] for e in client if e["type"] == "agent.generation_started"][-1]  # a merged turn: the generation that answered it
     started = next(e["t_us"] for e in client if e["type"] == "playout.started" and e.get("dir") == "out" and e["gen"] == gen)
 
-    def at(span, event, g=None):
-        return next(e for e in trace if e["span"] == span and e["event"] == event and (g is None or e.get("generation_id") == g))
-
-    def last_before(span, event, t):  # the endpoint and transcript that led to this generation, not an earlier one
-        return [e for e in trace if e["span"] == span and e["event"] == event and e["t_mono_us"] <= t][-1]
-
-    req, ft, fa = at("llm", "request", gen), at("llm", "first_token", gen), at("tts", "first_audio", gen)
-    ep, tt = last_before("turn", "endpoint", req["t_mono_us"]), last_before("stt", "turn_text", req["t_mono_us"])
+    p = stages.for_generation(trace, gen)  # the same pairing rule the live metrics use
+    ep = p["endpoint_to_request"].start
     ms = lambda a, b: None if a is None or b is None else (b - a) / 1000  # noqa: E731
-    b = {"endpoint_delay_ms": ms(speech_end, ep["attrs"].get("capture_end_us")), "stt_settle_ms": ms(ep["t_mono_us"], tt["t_mono_us"]),
-         "llm_first_token_ms": ms(req["t_mono_us"], ft["t_mono_us"]), "tts_first_audio_ms": ms(ft["t_mono_us"], fa["t_mono_us"]),
+    b = {"endpoint_delay_ms": ms(speech_end, ep["attrs"].get("capture_end_us")), "stt_settle_ms": p["stt_settle"].ms,
+         "llm_first_token_ms": p["llm_first_token"].ms, "tts_first_audio_ms": p["tts_first_audio"].ms,
          "total_ms": ms(speech_end, started)}
-    b["residual_ms"] = None if b["endpoint_delay_ms"] is None else b["total_ms"] - b["endpoint_delay_ms"] - ms(ep["t_mono_us"], fa["t_mono_us"])
+    b["residual_ms"] = None if b["endpoint_delay_ms"] is None else b["total_ms"] - b["endpoint_delay_ms"] - p["endpoint_to_first_audio"].ms
     return b
 
 

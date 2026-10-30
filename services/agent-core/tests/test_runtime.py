@@ -191,7 +191,7 @@ async def test_first_agent_frame_logs_trace_span_tts_first_audio_and_frames_are_
     s, out = await make(tracer=Tracer("s-test", events.append))
     await s.on_event({"type": "text.input", "text": "hi"})
     await asyncio.sleep(3)
-    assert [(e["span"], e["event"]) for e in events if e["span"] == "tts"] == [("tts", "first_audio")]
+    assert [(e["span"], e["event"]) for e in events if e["span"] == "tts"] == [("tts", "request"), ("tts", "first_audio")]
     seqs = [f.sequence for f in out.frames()]
     assert seqs == list(range(len(seqs))) and out.frames()[-1].flags == 1
     await s.close()

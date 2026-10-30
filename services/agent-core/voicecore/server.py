@@ -13,6 +13,7 @@ import logging
 import os
 import signal
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from http import HTTPStatus
 from pathlib import Path
@@ -20,7 +21,7 @@ from pathlib import Path
 from websockets.asyncio.server import serve
 from websockets.exceptions import ConnectionClosed
 
-from voicecore import budget, logs, protocol
+from voicecore import budget, logs, metrics, protocol
 from voicecore.answer.engine import AnswerEngine
 from voicecore.answer.index import Index
 from voicecore.answer.ingest import docusaurus, ingest
@@ -137,6 +138,7 @@ class AppState:
     draining: bool = False
     index: Index | None = None
     sessions: set = field(default_factory=set)
+    metrics: Callable[[dict], None] | None = None  # a trace sink that feeds the metrics (main sets it)
 
     def drain(self):
         self.draining = True
@@ -203,14 +205,20 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
             providers, settle = make_providers(sid)
         except budget.BudgetExceeded as e:
             log.warning("session refused: %s", e, extra={"session_id": sid, "reason": "budget"})
+            if state.metrics:
+                Tracer(sid, state.metrics).emit("session", "ended", reason="budget")
             await ws.send(protocol.event("session.ended", reason="budget"))
             await ws.close()
             return
-        started, sink, session = time.monotonic(), None, None
+        started, sink, session, reason = time.monotonic(), None, None, None
+        sinks = [state.metrics] if state.metrics else []
+        tracer = Tracer(sid, lambda e: [s(e) for s in sinks])
         try:  # everything after the reservation: whatever fails, the finally settles it
-            sink = JsonlSink(trace_dir / f"{sid}.jsonl") if trace_dir else None
+            if trace_dir:
+                sinks.append(sink := JsonlSink(trace_dir / f"{sid}.jsonl"))
             engine = AnswerEngine(state.index, providers["llm"], name=name)
-            session = Session(sid, send=ws.send, vad=SileroVAD(), policy=policy, tracer=Tracer(sid, sink), answer=engine.stream, **providers)
+            session = Session(sid, send=ws.send, vad=SileroVAD(), policy=policy, tracer=tracer, answer=engine.stream, **providers)
+            tracer.emit("session", "started")
             await session.start()
             log.info("session started", extra={"session_id": sid})
             async for m in ws:
@@ -223,10 +231,12 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
         except ConnectionClosed as e:
             log.info("session connection closed: %s", e, extra={"session_id": sid})
         except ValueError as e:  # the message may echo client text, so log only its kind
+            reason = "protocol_error"
             log.info("protocol error", extra={"session_id": sid, "kind": type(e).__name__})
         finally:
             if session:
                 await session.close()
+            tracer.emit("session", "ended", reason=reason or end_reason(ws.close_reason, state.draining))
             if sink:
                 sink.close()
             for s in settle:
@@ -235,6 +245,16 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
             log.info("session ended", extra={"session_id": sid, "duration_ms": round((time.monotonic() - started) * 1000)})
 
     return handler
+
+
+END_REASONS = {"client", "expired", "shutdown", "error", "budget", "unavailable"}  # the gateway's close reasons
+
+
+def end_reason(close_reason: str | None, draining: bool) -> str:
+    """Why a session ended, from the gateway's close reason; a bounded set, since it becomes a metric label."""
+    if close_reason in END_REASONS:
+        return close_reason
+    return "shutdown" if draining else "error"
 
 
 async def main():
@@ -254,6 +274,8 @@ async def main():
     ap.add_argument("--llm-reasoning", default=None, help="reasoning effort for reasoning models; 'none' to omit")
     ap.add_argument("--tts", choices=sorted(TTS), default="deepgram", help="speech synthesis provider (live mode)")
     ap.add_argument("--drain-s", type=float, default=25.0, help="on SIGTERM, seconds to let open sessions finish")
+    ap.add_argument("--metrics-port", type=int, default=0, help="Prometheus /metrics port, e.g. 9464 (0 = off); never publish it")
+    ap.add_argument("--metrics-host", default="0.0.0.0", help="listen address for /metrics (the scraper reaches it inside compose)")
     args = ap.parse_args()
     logs.setup()
     args.policy = args.policy or ("eager" if args.providers == "live" else "fixed")
@@ -266,12 +288,16 @@ async def main():
     if args.llm_reasoning:
         llm_opts["reasoning"] = None if args.llm_reasoning == "none" else args.llm_reasoning
     state = AppState(providers=args.providers)
+    if args.metrics_port:
+        state.metrics = metrics.serve_metrics(args.metrics_port, args.metrics_host)
     handler = handler_for(args.providers, args.trace_dir, state, policy, llm_opts, tts=args.tts)
     async with serve(handler, args.host, args.port, max_size=1 << 20, process_request=http_routes(state)):
         log.info("orchestrator listening on ws://%s:%d (%s providers), loading models", args.host, args.port, args.providers)
 
         loop = asyncio.get_running_loop()
         stop = asyncio.Event()
+        if state.metrics:
+            lag = asyncio.ensure_future(state.metrics.sample_loop_lag())  # noqa: F841 (runs until the process exits)
 
         def on_signal():  # first signal: drain; then restore defaults so a second Ctrl-C quits at once
             stop.set()

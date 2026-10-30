@@ -82,6 +82,8 @@ class Session:
         self._stt_open_until = -1  # frame index; only speech (plus pre-roll and hangover) is sent to STT
         self._tts_failed: dict[int, str] = {}  # generation -> error kind
         self._tts_retried: set[int] = set()
+        self._tts_requested: set[int] = set()
+        self._failed: set[int] = set()  # generations whose LLM answer failed (stall, error, busy): turn/result "error"
         self._voice_off = False  # told the user that speech hit its session cap
         self._answers: dict[int, str] = {}  # final answer text per generation (for a late TTS retry)
         self._stream: int | None = None  # newest mic stream id
@@ -103,6 +105,7 @@ class Session:
                 self._tasks.append(asyncio.create_task(p.warm()))
         self._tasks.append(asyncio.create_task(self._tts_reader()))
         if self.stt:
+            self.trace.emit("stt", "connect")
             self._tasks += [asyncio.create_task(self._stt_sender()), asyncio.create_task(self._stt_reader())]
 
     async def close(self):
@@ -172,7 +175,7 @@ class Session:
             self.turn_id = f"t{next(self._turns)}"
             self._carry, self._last_voice_turn = "", None
             self.trace.emit("turn", "text_input", text=e["text"])
-            await self.start_generation(self.turn_id, e["text"])
+            await self.start_generation(self.turn_id, e["text"], kind="text")
         elif t == "playout.started":
             if e["gen"] == self.gen and self.active_gen == e["gen"]:
                 self.playing = (e["gen"], e["t_us"])
@@ -251,7 +254,8 @@ class Session:
             self.state = State.USER_SPEAKING
             await self._event("user.speech_started", turn_id=self.turn_id)
         elif e.kind == "endpoint":
-            self.trace.emit("turn", "endpoint", reason=e.reason, onset_ms=e.onset_ms, silence_ms=e.silence_ms, capture_end_us=capture_end_us)
+            self.trace.emit("turn", "endpoint", turn_id=self.turn_id, reason=e.reason, onset_ms=e.onset_ms, silence_ms=e.silence_ms,
+                            capture_end_us=capture_end_us)
             self.state = State.THINKING
             if self.stt and not self._finalized:  # once per pause is enough
                 await self.stt.finalize()
@@ -268,27 +272,28 @@ class Session:
             return
         text = f"{self._carry} {self.transcript.text()}".strip()
         self._carry = ""
-        self.trace.emit("stt", "turn_text", chars=len(text), waited_ms=round(waited * 1000), text=text)
+        self.trace.emit("stt", "turn_text", turn_id=turn_id, chars=len(text), waited_ms=round(waited * 1000), text=text)
         if text:
             await self._event("transcript.final", turn_id=turn_id, text=text)
-            await self.start_generation(turn_id, text)
+            await self.start_generation(turn_id, text, kind="voice")
             self._last_voice_turn = {"gen": self.gen, "text": text, "t_us": now_us()}
         else:
-            await self.start_generation(turn_id, "", reply=REPROMPT)
+            await self.start_generation(turn_id, "", reply=REPROMPT, kind="voice")
 
     # --- generations -----------------------------------------------------------
 
     def _alive(self, g: int) -> bool:
         return g == self.gen and g > self.fence and self.state != State.ENDED
 
-    async def start_generation(self, turn_id: str, text: str, reply: str | None = None):
+    async def start_generation(self, turn_id: str, text: str, reply: str | None = None, kind: str = "notice"):
+        """kind: voice (an endpointed turn), text (typed) or notice (a reply the session sends by itself)."""
         if self.active_gen is not None:
             await self.cancel(self.active_gen, "superseded")
         self.gen += 1
         g = self.gen
         self.active_gen, self.state = g, State.THINKING
         self.played = {g: bytearray()}
-        self.task = asyncio.create_task(self._generate(g, turn_id, text, reply))
+        self.task = asyncio.create_task(self._generate(g, turn_id, text, reply, kind))
 
     async def cancel(self, g: int, reason: str):
         if g != self.active_gen:
@@ -310,7 +315,7 @@ class Session:
             if isinstance(e, TextDelta):
                 yield e.text
 
-    async def _generate(self, g: int, turn_id: str, text: str, reply: str | None):
+    async def _generate(self, g: int, turn_id: str, text: str, reply: str | None, kind: str = "notice"):
         await self._event("agent.generation_started", turn_id=turn_id, gen=g)
         chunker, said = Chunker(), []
 
@@ -326,13 +331,14 @@ class Session:
             await speak(reply)
         else:
             for attempt, wait in enumerate((*BACKOFF_S, None)):
-                self.trace.emit("llm", "request", gen=g, attempt=attempt)
+                self.trace.emit("llm", "request", gen=g, turn_id=turn_id, attempt=attempt)
                 rate_limited = await self._stream_answer(g, text, speak, sep)
                 if not self._alive(g):
                     return
                 if not rate_limited:
                     break
                 if wait is None:
+                    self._failed.add(g)
                     await speak(BUSY)
                     break
                 self.trace.emit("llm", "backoff", gen=g, wait_s=wait)
@@ -341,6 +347,8 @@ class Session:
         answer = "".join(said).strip()
         if self._alive(g):
             self._answers = {g: answer}
+            result = "reply" if reply is not None else "error" if g in self._failed else "answer"
+            self.trace.emit("turn", "result", gen=g, turn_id=turn_id, kind=kind, result=result)
             await self._event("agent.text", gen=g, text=answer)
             if reply is None:
                 self.history = [*self.history, {"role": "user", "content": text}, {"role": "assistant", "content": answer}][-8:]
@@ -380,15 +388,18 @@ class Session:
                 await speak(item)
         except TimeoutError:
             self.trace.emit("llm", "stall", gen=g, after_s=self.stall_s)
+            self._failed.add(g)
             await speak(sep() + REPROMPT)
         except ProviderError as err:
             self._provider_error("llm", err.kind, gen=g)
             if err.kind == "rate_limited" and first:
                 return True
+            self._failed.add(g)
             await speak(sep() + TROUBLE)
         except Exception as err:  # never leave a turn without an answer and an end
             self.trace.emit("llm", "error", gen=g, kind=type(err).__name__)
             log.exception("answer failed", extra={"session_id": self.sid, "gen": g})  # our bug, not the provider's
+            self._failed.add(g)
             await speak(sep() + TROUBLE)
         finally:
             with contextlib.suppress(Exception):
@@ -418,6 +429,9 @@ class Session:
             return
         spoken = speechify(text)
         if spoken or last:
+            if g not in self._tts_requested:  # one per generation: the denominator of the TTS error ratio
+                self._tts_requested.add(g)
+                self.trace.emit("tts", "request", gen=g)
             try:
                 await self.tts.synth(g, spoken, last)
             except ProviderError as err:

@@ -57,6 +57,21 @@ def test_turn_breakdown_ignores_an_earlier_endpoint_that_started_no_generation()
     assert (b["endpoint_delay_ms"], b["stt_settle_ms"], b["residual_ms"]) == (800.0, 0.5, 200.0)
 
 
+def test_turn_breakdown_measures_first_token_from_the_retry_that_answered():
+    from timeline import turn_breakdown
+
+    client = [{"type": "mic.start", "t0_us": 0}, {"type": "agent.generation_started", "gen": 1, "t_us": 0},
+              {"type": "playout.started", "gen": 1, "dir": "out", "t_us": 6_000_000}]
+    trace = [{"span": "turn", "event": "endpoint", "t_mono_us": 1_000_000, "attrs": {"turn_id": "t1", "capture_end_us": 1_000_000}},
+             {"span": "stt", "event": "turn_text", "t_mono_us": 1_000_000, "attrs": {"turn_id": "t1"}},
+             {"span": "llm", "event": "request", "generation_id": 1, "t_mono_us": 1_000_000, "attrs": {"turn_id": "t1", "attempt": 0}},
+             {"span": "llm", "event": "request", "generation_id": 1, "t_mono_us": 3_000_000, "attrs": {"turn_id": "t1", "attempt": 1}},
+             {"span": "llm", "event": "first_token", "generation_id": 1, "t_mono_us": 3_250_000, "attrs": {}},
+             {"span": "tts", "event": "first_audio", "generation_id": 1, "t_mono_us": 3_400_000, "attrs": {}}]
+    b = turn_breakdown(client, trace, turn_end_ms=1000)
+    assert (b["llm_first_token_ms"], b["tts_first_audio_ms"]) == (250.0, 150.0)  # not 2,250 from the 429'd attempt
+
+
 def test_recall_at_k_and_mrr_on_a_hand_worked_example():
     from timeline import mrr, recall_at_k
 

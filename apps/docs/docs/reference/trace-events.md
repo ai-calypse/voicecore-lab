@@ -33,9 +33,10 @@ The orchestrator (`runtime/session.py`) emits these events in span `turn`, for t
 | `speech_started` | `onset_ms`, `capture_end_us` | the user took the floor while no agent audio was playing |
 | `barge_in` | `onset_ms`, `capture_end_us` | the user took the floor while agent audio was playing, or within 200 ms after it stopped, while the echo gate is on |
 | `continuation` | `generation_id`, `text` | the user resumed within 2.5 s of an endpoint, before the answer was audible; the earlier turn's text is carried into this one |
-| `endpoint` | `reason`, `onset_ms`, `silence_ms`, `capture_end_us` | the floor decided the turn is over |
+| `endpoint` | `turn_id`, `reason`, `onset_ms`, `silence_ms`, `capture_end_us` | the floor decided the turn is over |
 | `text_input` | `text` | a valid typed question arrived |
 | `text_input_rejected` | `kind`, `chars` | a typed question was empty, not a string or over 500 characters |
+| `result` | `generation_id`, `turn_id`, `kind`, `result` | a generation finished and its text was sent. `kind` is `voice`, `text` (typed) or `notice` (a reply the session sent by itself); `result` is `answer`, `reply` (a fixed reply such as a re-prompt) or `error` (the answer failed: a stall, an error or a busy provider) |
 
 `capture_end_us` is on the client's clock: it is the end of the mic frame that triggered the decision, from that frame's `capture_us`. `onset_ms` is the start of the utterance, in milliseconds of audio counted by the floor. `reason` is `silence`, `max_length` or `asr` (a punctuated final). `silence_ms` is the trailing silence the floor waited. Text attributes are dropped unless `include_text` is on.
 
@@ -46,18 +47,43 @@ The orchestrator emits these events in spans `stt`, `llm` and `tts`. They time t
 | Span | Event | Attributes | When |
 |---|---|---|---|
 | `stt` | `final` | `text` | a final transcript arrived from the STT |
-| `stt` | `turn_text` | `chars`, `waited_ms`, `text` | the transcript for the turn is settled; `waited_ms` is how long the session waited for it after the endpoint |
+| `stt` | `turn_text` | `turn_id`, `chars`, `waited_ms`, `text` | the transcript for the turn is settled; `waited_ms` is how long the session waited for it after the endpoint |
+| `stt` | `connect` | none | the session opened its STT stream |
 | `stt` | `error` | `kind` | the STT stream failed |
-| `llm` | `request` | `attempt` | an answer attempt starts; `attempt` counts retries from 0 |
+| `llm` | `request` | `turn_id`, `attempt` | an answer attempt starts; `attempt` counts retries from 0 |
 | `llm` | `first_token` | none | the first answer token arrived |
 | `llm` | `backoff` | `wait_s` | an HTTP 429 before any text; the session waits 1, 2 then 4 s |
 | `llm` | `stall` | `after_s` | no token for 8 s; the agent asks the user to repeat |
 | `llm` | `error` | `kind` | the call failed; `kind` is a provider error kind or an exception name |
+| `tts` | `request` | none | the first text of a generation went to the TTS |
 | `tts` | `first_audio` | none | the first agent audio frame of the generation was sent |
 | `tts` | `retry` | none | one retry of speech on a fresh TTS stream |
 | `tts` | `error` | `kind` | TTS failed for a generation, or for the stream |
 
 The latency columns use three of these: `llm.request` to `llm.first_token` is the LLM first token, `llm.first_token` to `tts.first_audio` is the TTS first audio, and `turn.endpoint` to `stt.turn_text` is the STT settle.
+
+## Orchestrator session events
+
+`server.py` emits two events in span `session` around every session:
+
+| Event | Attributes | When |
+|---|---|---|
+| `started` | none | the session was built and its providers opened |
+| `ended` | `reason` | the gateway closed the session's socket, or the session was refused. `reason` is the gateway's close reason (`client`, `expired`, `shutdown`, `error`, `budget` or `unavailable`), `shutdown` during a drain, `protocol_error` for a malformed message, otherwise `error` |
+
+## How latency stages are paired
+
+`voicecore/stages.py` turns these events into the server-side latency stages, and both the live metrics and the benchmark breakdown in `harness/timeline.py` use it, so a stage means the same thing everywhere:
+
+| Stage | From | To |
+|---|---|---|
+| `stt_settle` | `turn/endpoint` | `stt/turn_text` of the same turn |
+| `endpoint_to_request` | `turn/endpoint` | the generation's first `llm/request` |
+| `llm_first_token` | the generation's latest `llm/request`, the attempt that answered | `llm/first_token` |
+| `tts_first_audio` | `llm/first_token` | `tts/first_audio` |
+| `endpoint_to_first_audio` | `turn/endpoint` | `tts/first_audio` |
+
+Events are paired by `turn_id` and `generation_id`. So a typed question after a voice turn gets no endpoint stages, and a retry after HTTP 429 is timed from the retry. A cancelled generation records nothing after its cancel. Traces recorded before `turn_id` existed pair with the latest endpoint and transcript instead.
 
 ## Orchestrator playout, runtime and clock events
 
