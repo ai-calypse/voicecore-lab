@@ -1,0 +1,43 @@
+# Each alert names a target in docs/ops/slos.md and links its runbook. Tested by tests/alerts_test.yml (promtool).
+groups:
+  - name: voicecore
+    rules:
+      - alert: Watchdog
+        expr: vector(1)
+        labels: { severity: none }
+        annotations: { summary: Always firing, so a silent alert pipeline is noticed, runbook_url: "https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#watchdog" }
+      - alert: OrchestratorDown
+        expr: up{job="agent-core"} == 0
+        for: 1m
+        labels: { severity: critical }
+        annotations: { summary: Prometheus cannot scrape the orchestrator, runbook_url: "https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#orchestratordown" }
+      - alert: GatewayDown
+        expr: up{job="gateway"} == 0
+        for: 1m
+        labels: { severity: critical }
+        annotations: { summary: Prometheus cannot scrape the gateway, runbook_url: "https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#gatewaydown" }
+      - alert: BudgetNearCap
+        expr: voicecore_spend_usd{pool="usd"} > 4.0
+        for: 5m
+        labels: { severity: warning }
+        annotations: { summary: Spend is over 80% of the 5 USD cap, runbook_url: "https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#budgetnearcap" }
+      - alert: StageLatencyHigh
+        expr: histogram_quantile(0.95, sum by (le) (rate(voicecore_stage_ms_bucket{stage="endpoint_to_first_audio"}[5m]))) > 1200
+        for: 10m
+        labels: { severity: warning }
+        annotations: { summary: Server endpoint to first audio p95 is over 1200 ms, runbook_url: "https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#stagelatencyhigh" }
+      - alert: ProviderErrorsHigh
+        expr: sum by (provider) (rate(voicecore_provider_errors_total[5m])) / sum by (provider) (rate(voicecore_provider_calls_total[5m])) > 0.02
+        for: 5m
+        labels: { severity: warning }
+        annotations: { summary: More than 2% of calls to a provider fail, runbook_url: "https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#providererrorshigh" }
+      - alert: EventLoopLagHigh
+        expr: histogram_quantile(0.95, sum by (le) (rate(voicecore_event_loop_lag_ms_bucket[5m]))) > 100
+        for: 5m
+        labels: { severity: warning }
+        annotations: { summary: The orchestrator event loop p95 lag is over 100 ms, runbook_url: "https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#eventlooplaghigh" }
+      - alert: BreakerOpen
+        expr: max by (provider) (voicecore_breaker_state) == 2
+        for: 1m
+        labels: { severity: warning }
+        annotations: { summary: A provider circuit breaker has been open for a minute, runbook_url: "https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#breakeropen" }

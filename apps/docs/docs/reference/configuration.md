@@ -132,18 +132,19 @@ Each session logs `session started` and `session ended`; the gateway's end line 
 
 `docker-compose.yml` runs four services: `agent-core` (the orchestrator), `gateway`, `demo` and `docs`. Mock providers are the default, so it needs no keys and spends nothing:
 
-- `agent-core` is built from `services/agent-core/Dockerfile` and listens on 8765 inside the compose network only.
-- `gateway` is built from `services/realtime-gateway`, published on `127.0.0.1:8080`, and dials `ws://agent-core:8765`.
+- `agent-core` is built from `services/agent-core/Dockerfile` and listens on 8765 inside the compose network only. Its Prometheus `/metrics` is published on `127.0.0.1:9464`.
+- `gateway` is built from `services/realtime-gateway`, published on `127.0.0.1:8080`, and dials `ws://agent-core:8765`. Its admin listener, `/metrics` and `/debug/counters`, is on `127.0.0.1:9091`.
 - `demo` is published on `127.0.0.1:5173`: the demo page and the lab timeline at `/?lab=1`.
 - `docs` is published on `127.0.0.1:3000`: this docs site with the voice assistant.
 
 ```bash
 docker compose up --build                 # mock providers: no keys, no spend
 PROVIDERS=live docker compose up          # live providers, keys from .env
+docker compose --profile monitoring up --build --wait   # adds Prometheus, Alertmanager, Loki, Alloy and Grafana
 HOST_UID=$(id -u) HOST_GID=$(id -g) PROVIDERS=live docker compose up   # Linux
 ```
 
-All ports bind to 127.0.0.1 only. The orchestrator image bakes in the embedding model and the docs vectors for `apps/docs/docs`, so it starts in seconds but the first build takes a few minutes. Live mode writes the shared ledger in `./benchmarks`, mounted into the container; on Linux, run the container as your own user so it can write there.
+The `monitoring` profile adds Prometheus (`127.0.0.1:9090`), Alertmanager (`127.0.0.1:9093`), an alert sink that prints each alert as a log line (`docker compose logs alert-sink`), Loki with 7-day log retention, Alloy to ship the containers' logs, and Grafana with the VoiceCore dashboard (`127.0.0.1:3001`). All ports bind to 127.0.0.1 only. The orchestrator image bakes in the embedding model and the docs vectors for `apps/docs/docs`, so it starts in seconds but the first build takes a few minutes. Live mode writes the shared ledger in `./benchmarks`, mounted into the container; on Linux, run the container as your own user so it can write there.
 
 ## Budget caps for live providers
 

@@ -1,6 +1,6 @@
 module github.com/ai-calypse/voicecore-lab/experiments
 
-go 1.25
+go 1.26.0
 
 require (
 	github.com/ai-calypse/voicecore-lab/services/realtime-gateway v0.0.0
@@ -28,7 +28,7 @@ require (
 	github.com/wlynxg/anet v0.0.5 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/net v0.50.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 )
 

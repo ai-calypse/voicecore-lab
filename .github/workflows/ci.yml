@@ -126,3 +126,19 @@ jobs:
           test "$(docker inspect -f '{{.State.ExitCode}}' $(docker compose ps -aq gateway))" = 0
       - if: failure()
         run: docker compose logs
+
+  monitoring:  # seam 15: rules and routes with promtool/amtool, then a stopped orchestrator pages the alert sink
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: monitoring/check.sh
+      - run: docker compose --profile monitoring config --quiet
+      - run: docker compose --profile monitoring build agent-core gateway
+      - run: docker compose --profile monitoring up -d --wait --wait-timeout 300 agent-core gateway prometheus alertmanager alert-sink loki alloy grafana
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run pytest -m docker harness/tests/test_monitoring.py -p no:randomly
+      - if: failure()
+        run: docker compose --profile monitoring logs

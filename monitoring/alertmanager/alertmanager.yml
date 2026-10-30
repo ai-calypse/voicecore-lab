@@ -1,0 +1,20 @@
+# Every alert goes to the local alert sink (a container that prints one JSON line per alert). To page a person, add a
+# Slack or email receiver here and route severity=critical to it; none is configured, so no credentials live in the repo.
+route:
+  receiver: local-sink
+  group_by: [alertname]
+  group_wait: 30s
+  group_interval: 30s  # the 5-minute default would delay "resolved"
+  repeat_interval: 4h
+  routes:
+    - matchers: [alertname="Watchdog"]
+      receiver: watchdog-sink
+      repeat_interval: 1m  # a heartbeat: its absence means the pipeline is broken
+receivers:
+  - name: local-sink
+    webhook_configs: [{ url: "http://alert-sink:9095/alert", send_resolved: true }]
+  - name: watchdog-sink
+    webhook_configs: [{ url: "http://alert-sink:9095/watchdog", send_resolved: false }]
+inhibit_rules:  # a process that is down explains its latency and error alerts; do not page for those too
+  - source_matchers: [alertname=~"OrchestratorDown|GatewayDown"]
+    target_matchers: [alertname=~"StageLatencyHigh|ProviderErrorsHigh|EventLoopLagHigh|BreakerOpen"]

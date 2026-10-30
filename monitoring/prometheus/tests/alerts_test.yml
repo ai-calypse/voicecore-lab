@@ -1,0 +1,205 @@
+# Generated shape, literal values: each alert fires on its target and stays quiet below it.
+rule_files:
+- ../alerts.yml
+evaluation_interval: 15s
+tests:
+- interval: 15s
+  input_series: []
+  alert_rule_test:
+  - eval_time: 0m
+    alertname: Watchdog
+    exp_alerts:
+    - exp_labels:
+        severity: none
+      exp_annotations:
+        summary: Always firing
+        so a silent alert pipeline is noticed: null
+        runbook_url: https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#watchdog
+- interval: 15s
+  input_series:
+  - series: up{job="agent-core"}
+    values: '0x10'
+  alert_rule_test:
+  - eval_time: 2m
+    alertname: OrchestratorDown
+    exp_alerts:
+    - exp_labels:
+        severity: critical
+        job: agent-core
+      exp_annotations:
+        summary: Prometheus cannot scrape the orchestrator
+        runbook_url: https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#orchestratordown
+- interval: 15s
+  input_series:
+  - series: up{job="agent-core"}
+    values: 1x10
+  alert_rule_test:
+  - eval_time: 2m
+    alertname: OrchestratorDown
+    exp_alerts: []
+- interval: 15s
+  input_series:
+  - series: up{job="gateway"}
+    values: '0x10'
+  alert_rule_test:
+  - eval_time: 2m
+    alertname: GatewayDown
+    exp_alerts:
+    - exp_labels:
+        severity: critical
+        job: gateway
+      exp_annotations:
+        summary: Prometheus cannot scrape the gateway
+        runbook_url: https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#gatewaydown
+- interval: 15s
+  input_series:
+  - series: up{job="gateway"}
+    values: 1x10
+  alert_rule_test:
+  - eval_time: 2m
+    alertname: GatewayDown
+    exp_alerts: []
+- interval: 15s
+  input_series:
+  - series: voicecore_spend_usd{pool="usd"}
+    values: 4.10x40
+  alert_rule_test:
+  - eval_time: 6m
+    alertname: BudgetNearCap
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+        pool: usd
+      exp_annotations:
+        summary: Spend is over 80% of the 5 USD cap
+        runbook_url: https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#budgetnearcap
+- interval: 15s
+  input_series:
+  - series: voicecore_spend_usd{pool="usd"}
+    values: 3.90x40
+  alert_rule_test:
+  - eval_time: 6m
+    alertname: BudgetNearCap
+    exp_alerts: []
+- interval: 15s
+  input_series:
+  - series: voicecore_stage_ms_bucket{stage="endpoint_to_first_audio",le="1000"}
+    values: '0x60'
+  - series: voicecore_stage_ms_bucket{stage="endpoint_to_first_audio",le="1200"}
+    values: '0x60'
+  - series: voicecore_stage_ms_bucket{stage="endpoint_to_first_audio",le="1500"}
+    values: 0+10x60
+  - series: voicecore_stage_ms_bucket{stage="endpoint_to_first_audio",le="+Inf"}
+    values: 0+10x60
+  alert_rule_test:
+  - eval_time: 15m
+    alertname: StageLatencyHigh
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+      exp_annotations:
+        summary: Server endpoint to first audio p95 is over 1200 ms
+        runbook_url: https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#stagelatencyhigh
+- interval: 15s
+  input_series:
+  - series: voicecore_stage_ms_bucket{stage="endpoint_to_first_audio",le="100"}
+    values: 0+10x60
+  - series: voicecore_stage_ms_bucket{stage="endpoint_to_first_audio",le="1000"}
+    values: 0+10x60
+  - series: voicecore_stage_ms_bucket{stage="endpoint_to_first_audio",le="1200"}
+    values: 0+10x60
+  - series: voicecore_stage_ms_bucket{stage="endpoint_to_first_audio",le="+Inf"}
+    values: 0+10x60
+  alert_rule_test:
+  - eval_time: 15m
+    alertname: StageLatencyHigh
+    exp_alerts: []
+- interval: 15s
+  input_series:
+  - series: voicecore_provider_errors_total{provider="llm",kind="retryable"}
+    values: 0+1x60
+  - series: voicecore_provider_calls_total{provider="llm"}
+    values: 0+10x60
+  alert_rule_test:
+  - eval_time: 11m
+    alertname: ProviderErrorsHigh
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+        provider: llm
+      exp_annotations:
+        summary: More than 2% of calls to a provider fail
+        runbook_url: https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#providererrorshigh
+- interval: 15s
+  input_series:
+  - series: voicecore_provider_errors_total{provider="llm",kind="retryable"}
+    values: 0+1x60
+  - series: voicecore_provider_calls_total{provider="llm"}
+    values: 0+100x60
+  alert_rule_test:
+  - eval_time: 11m
+    alertname: ProviderErrorsHigh
+    exp_alerts: []
+- interval: 15s
+  input_series:
+  - series: voicecore_event_loop_lag_ms_bucket{le="50"}
+    values: '0x60'
+  - series: voicecore_event_loop_lag_ms_bucket{le="100"}
+    values: '0x60'
+  - series: voicecore_event_loop_lag_ms_bucket{le="250"}
+    values: 0+10x60
+  - series: voicecore_event_loop_lag_ms_bucket{le="+Inf"}
+    values: 0+10x60
+  alert_rule_test:
+  - eval_time: 11m
+    alertname: EventLoopLagHigh
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+      exp_annotations:
+        summary: The orchestrator event loop p95 lag is over 100 ms
+        runbook_url: https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#eventlooplaghigh
+- interval: 15s
+  input_series:
+  - series: voicecore_event_loop_lag_ms_bucket{le="10"}
+    values: 0+10x60
+  - series: voicecore_event_loop_lag_ms_bucket{le="50"}
+    values: 0+10x60
+  - series: voicecore_event_loop_lag_ms_bucket{le="100"}
+    values: 0+10x60
+  - series: voicecore_event_loop_lag_ms_bucket{le="+Inf"}
+    values: 0+10x60
+  alert_rule_test:
+  - eval_time: 11m
+    alertname: EventLoopLagHigh
+    exp_alerts: []
+- interval: 15s
+  input_series:
+  - series: voicecore_breaker_state{provider="llm"}
+    values: 2x10
+  alert_rule_test:
+  - eval_time: 2m
+    alertname: BreakerOpen
+    exp_alerts:
+    - exp_labels:
+        severity: warning
+        provider: llm
+      exp_annotations:
+        summary: A provider circuit breaker has been open for a minute
+        runbook_url: https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#breakeropen
+- interval: 15s
+  input_series:
+  - series: voicecore_breaker_state{provider="llm"}
+    values: 1x10
+  alert_rule_test:
+  - eval_time: 2m
+    alertname: BreakerOpen
+    exp_alerts: []
+- interval: 15s
+  input_series:
+  - series: voicecore_spend_usd{pool="usd"}
+    values: 4.10x40
+  alert_rule_test:
+  - eval_time: 4m
+    alertname: BudgetNearCap
+    exp_alerts: []
