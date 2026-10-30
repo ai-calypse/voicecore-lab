@@ -68,3 +68,33 @@ func TestHelloRefusalsAreCounted(t *testing.T) {
 		}
 	})
 }
+
+func TestCORSEchoesOnlyAllowedOrigin(t *testing.T) {
+	cfg := Defaults([]byte("k"), "ws://x")
+	cfg.Origins = []string{"localhost:*", "127.0.0.1:*"} // the gateway's -origins default
+	s := New(cfg)
+	h := s.Handler()
+	post := func(origin string) *httptest.ResponseRecorder {
+		req := httptest.NewRequest("POST", "/v1/session", nil)
+		req.Host = "localhost"
+		if origin != "" {
+			req.Header.Set("Origin", origin)
+		}
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+		return w
+	}
+	if w := post("http://localhost:5173"); w.Code != 200 || w.Header().Get("Access-Control-Allow-Origin") != "http://localhost:5173" ||
+		w.Header().Get("Vary") != "Origin" {
+		t.Fatalf("allowed origin: %d %q", w.Code, w.Header())
+	}
+	if w := post("https://evil.example"); w.Code != 403 || w.Header().Get("Access-Control-Allow-Origin") != "" {
+		t.Fatalf("foreign origin: %d %q", w.Code, w.Header())
+	}
+	if w := post(""); w.Code != 200 || w.Header().Get("Access-Control-Allow-Origin") != "" { // curl, the harness
+		t.Fatalf("no origin: %d %q", w.Code, w.Header())
+	}
+	if s.Snapshot()["rejected_origin"] != 1 {
+		t.Fatalf("rejected_origin %d", s.Snapshot()["rejected_origin"])
+	}
+}

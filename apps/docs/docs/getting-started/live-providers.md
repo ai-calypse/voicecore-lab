@@ -110,7 +110,7 @@ The browser talks to the gateway alone. To start a session, the widget asks `POS
 So the most a page visitor can see is a short-lived gateway token. It cannot be used to call a provider, it starts one session at most, and it expires a minute after it was issued.
 
 :::warning
-The token is not bound to a user, and the token endpoint allows any origin. Rate limits and session caps on the gateway bound the abuse, not the token.
+The token is not bound to a user, but the token endpoint answers only the origins in the gateway's `-origins` list. Rate limits, session caps and, when configured, Turnstile bound the abuse, not the token.
 :::
 
 ## Choose a different language model

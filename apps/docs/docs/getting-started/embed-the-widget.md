@@ -100,4 +100,4 @@ cd services/realtime-gateway
 go run ./cmd/gateway -addr 0.0.0.0:8080 -origins "docs.example.com" -hosts "gateway.example.com"
 ```
 
-The token endpoint answers any origin, so a wrong `-origins` value shows up only when the WebSocket fails to open.
+The token endpoint checks the same `-origins` list, so a wrong value shows up at once: the token request gets 403.

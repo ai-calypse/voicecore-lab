@@ -16,6 +16,8 @@ import (
 	"net"
 	"net/http"
 	"net/netip"
+	"net/url"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -72,7 +74,7 @@ type Counters struct {
 	DropsDuplicate, DropsStale, DropsOverload, DropsOverloadOut, DropsFenced, DropsRateLimit, Gaps atomic.Int64
 	TokensIssued, RejectedRateLimit, RejectedHost, RejectedUpgrade, RejectedDraining               atomic.Int64
 	RejectedToken, RejectedBusy, RejectedUpstream                                                  atomic.Int64 // refused at hello
-	RejectedTurnstile                                                                              atomic.Int64
+	RejectedTurnstile, RejectedOrigin                                                              atomic.Int64
 }
 
 type Server struct {
@@ -117,6 +119,20 @@ func clientIP(remoteAddr string) string {
 		return host
 	}
 	return remoteAddr
+}
+
+// originAllowed matches an Origin header's host against the same patterns the WebSocket upgrade uses.
+func (s *Server) originAllowed(origin string) bool {
+	u, err := url.Parse(origin)
+	if err != nil || u.Host == "" {
+		return false
+	}
+	for _, pat := range s.cfg.Origins {
+		if ok, _ := path.Match(strings.ToLower(pat), strings.ToLower(u.Host)); ok {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Server) hostAllowed(host string) bool {
@@ -180,7 +196,15 @@ func (s *Server) Handler() http.Handler {
 		writeJSON(w, http.StatusOK, map[string]any{"ready": true, "draining": false})
 	})
 	mux.HandleFunc("POST /v1/session", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*") // development only: the token is not bound to a user
+		if origin := r.Header.Get("Origin"); origin != "" { // browsers send it; curl and the harness do not
+			if !s.originAllowed(origin) {
+				s.c.RejectedOrigin.Add(1)
+				http.Error(w, "origin not allowed", http.StatusForbidden)
+				return
+			}
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Vary", "Origin")
+		}
 		if s.draining.Load() {
 			s.c.RejectedDraining.Add(1)
 			http.Error(w, "draining", http.StatusServiceUnavailable)
@@ -246,7 +270,7 @@ func (s *Server) Snapshot() map[string]int64 {
 		"tokens_issued": s.c.TokensIssued.Load(), "rejected_ratelimit": s.c.RejectedRateLimit.Load(), "rejected_host": s.c.RejectedHost.Load(),
 		"rejected_upgrade": s.c.RejectedUpgrade.Load(), "rejected_draining": s.c.RejectedDraining.Load(),
 		"rejected_token": s.c.RejectedToken.Load(), "rejected_busy": s.c.RejectedBusy.Load(), "rejected_upstream": s.c.RejectedUpstream.Load(),
-		"rejected_turnstile": s.c.RejectedTurnstile.Load()}
+		"rejected_turnstile": s.c.RejectedTurnstile.Load(), "rejected_origin": s.c.RejectedOrigin.Load()}
 }
 
 // Close ends every session and waits for their goroutines.

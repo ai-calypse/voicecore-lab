@@ -50,7 +50,7 @@ Three gateway checks answer with an HTTP status before any WebSocket exists:
 
 - **421 unknown host.** The request's `Host` header is not on the gateway's `-hosts` list, default `localhost,127.0.0.1,::1`. This blocks DNS rebinding. You see it when you reach the gateway through a LAN address or a custom host name. Add that name to `-hosts`, or pass an empty value to allow any host. The widget shows "Could not connect: token request failed (421)".
 - **429 too many session requests.** One client IP asked `POST /v1/session` for more than 10 tokens in a minute. Wait, then reopen the panel. The widget shows "token request failed (429)".
-- **403 on the WebSocket upgrade.** The page's origin is not on the `-origins` list, default `localhost:*,127.0.0.1:*`. The token request still succeeds, because the token endpoint answers any origin, so only the WebSocket fails and the widget shows "Could not connect: websocket error". Add your site's host to `-origins`.
+- **403 on the token request or the WebSocket upgrade.** The page's origin is not on the `-origins` list, default `localhost:*,127.0.0.1:*`. Both the token endpoint and the WebSocket check it, so the widget cannot start. Add your site's host to `-origins`.
 
 ## The session ends with reason budget
 
