@@ -10,9 +10,12 @@ export type ClientOptions = {
   resumeKey?: string; // from welcome: the proof that the session is ours
   nowUs?: () => number;
   startMic?: typeof startCapture; // injectable for headless clients
+  getToken?: () => Promise<string>; // a fresh token when a resume is refused (the window passed, the token is spent)
+  retryDelaysMs?: number[]; // reconnect attempts after an unexpected close; default 0.5, 1 and 2 s
 };
 
-/** One WebSocket session: hello/welcome, mic frames out, events and agent frames in, clock pings. */
+/** One WebSocket session: hello/welcome, mic frames out, events and agent frames in, clock pings.
+ *  An unexpected close after welcome reconnects (resuming the session) before onEvent sees socket.closed. */
 export class VoiceClient {
   onEvent: (e: Event) => void = () => {};
   onAgentFrame: (f: Frame) => void = () => {};
@@ -29,25 +32,46 @@ export class VoiceClient {
   private pinger?: ReturnType<typeof setInterval>;
   private readonly opts: ClientOptions;
   private readonly nowUs: () => number;
+  private token: string;
+  private closing = false;
+  private reconnecting = false;
 
   constructor(opts: ClientOptions) {
     this.opts = opts;
+    this.token = opts.token;
     this.nowUs = opts.nowUs ?? (() => performance.now() * 1000);
   }
 
   connect(): Promise<Event> {
+    this.closing = false;
+    return this.open();
+  }
+
+  private open(): Promise<Event> {
     return new Promise((resolve, reject) => {
-      const ws = new WebSocket(this.opts.url);
+      // ?resume= lets a load balancer route the reconnect to the gateway copy that owns the session
+      const ws = new WebSocket(this.sessionId ? `${this.opts.url}?resume=${encodeURIComponent(this.sessionId)}` : this.opts.url);
       ws.binaryType = "arraybuffer";
       this.ws = ws;
+      let welcomed = false;
       ws.onopen = () => this.send({
-        type: "hello", version: 1, token: this.opts.token, mic: { rate: 16000, frame_ms: 20 }, playout: { rate: 24000 },
+        type: "hello", version: 1, token: this.token, mic: { rate: 16000, frame_ms: 20 }, playout: { rate: 24000 },
         ...(this.sessionId ?? this.opts.sessionId
           ? { session_id: this.sessionId ?? this.opts.sessionId, resume_key: this.resumeKey ?? this.opts.resumeKey }
           : {}),
       });
       ws.onerror = () => reject(new Error("websocket error"));
-      ws.onclose = (c) => { this.stop(); reject(new Error(`closed ${c.code} ${c.reason}`)); this.onEvent({ type: "socket.closed", code: c.code }); };
+      ws.onclose = (c) => {
+        clearInterval(this.pinger);
+        if (!welcomed) {
+          reject(Object.assign(new Error(`closed ${c.code} ${c.reason}`), { code: c.code }));
+          if (!this.reconnecting) this.ended(c.code);
+        } else if (this.closing || c.code === 1000) {
+          this.ended(c.code);
+        } else {
+          void this.reconnect(c.code);
+        }
+      };
       ws.onmessage = (m: MessageEvent<string | ArrayBuffer>) => {
         if (typeof m.data !== "string") {
           const f = decodeFrame(new Uint8Array(m.data));
@@ -57,6 +81,7 @@ export class VoiceClient {
         const e = decodeEvent(m.data);
         if (e.type === "agent.cancel") this.playout?.cancel(e.gen as number);
         if (e.type === "welcome") {
+          welcomed = true;
           this.sessionId = e.session_id as string;
           this.resumeKey = e.resume_key as string;
           this.pinger = setInterval(() => this.send({ type: "ping", t_client_us: Math.round(this.nowUs()) }), 2000);
@@ -93,8 +118,35 @@ export class VoiceClient {
   }
 
   close(): void {
+    this.closing = true;
     this.stop();
     this.ws?.close(1000);
+  }
+
+  /** The mic keeps capturing across the gap; frames sent while the socket is down are dropped. */
+  private async reconnect(code: number): Promise<void> {
+    this.reconnecting = true;
+    this.onEvent({ type: "socket.reconnecting", code });
+    try {
+      for (const ms of this.opts.retryDelaysMs ?? [500, 1000, 2000]) {
+        await new Promise((r) => setTimeout(r, ms));
+        if (this.closing) return;
+        try {
+          await this.open();
+          return;
+        } catch (e) {
+          if ((e as { code?: number }).code === 4001 && this.opts.getToken) this.token = await this.opts.getToken().catch(() => this.token);
+        }
+      }
+      this.ended(code);
+    } finally {
+      this.reconnecting = false;
+    }
+  }
+
+  private ended(code: number): void {
+    this.stop();
+    this.onEvent({ type: "socket.closed", code });
   }
 
   private stop(): void {

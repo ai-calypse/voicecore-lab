@@ -118,8 +118,16 @@ function mount() {
         break;
       case "agent.cancel": setState("listening", "Listening…"); break;
       case "session.ended": setState("ended", "The session ended. Close and reopen to start again."); break;
+      case "socket.reconnecting": if (client) setState("connecting", "Reconnecting…"); break;
+      case "welcome": if (client) setState("ready", micOn ? "Listening. Ask another question." : "Ready. Tap the mic or type a question."); break;
       case "socket.closed": if (client) setState("ended", "Disconnected. Close and reopen to start again."); break;
     }
+  };
+
+  const newToken = async (): Promise<string> => { // a short-lived token from the gateway; the reconnect asks again if needed
+    const res = await fetch(`${endpoint}/v1/session`, { method: "POST" });
+    if (!res.ok) throw new Error(`token request failed (${res.status})`);
+    return (await res.json()).token;
   };
 
   const connect = () => (connecting ??= (async () => {
@@ -128,13 +136,11 @@ function mount() {
     const stale = () => mine !== epoch;
     try {
       setState("connecting", "Connecting…");
-      const res = await fetch(`${endpoint}/v1/session`, { method: "POST" });
-      if (!res.ok) throw new Error(`token request failed (${res.status})`);
-      const { token } = await res.json();
+      const token = await newToken();
       if (stale()) throw new Error("closed");
       p = await startPlayout((e) => { onEvent(e); c?.send(e); });
       if (stale()) throw new Error("closed");
-      c = new VoiceClient({ url: endpoint.replace(/^http/, "ws") + "/v1/ws", token });
+      c = new VoiceClient({ url: endpoint.replace(/^http/, "ws") + "/v1/ws", token, getToken: newToken });
       c.onEvent = onEvent;
       c.playout = p;
       await c.connect();

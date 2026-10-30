@@ -69,3 +69,21 @@ test("a cited answer asks the host page to open the first cited section, and so 
   expect(await popup).toBeNull(); // the host handled it: no new tab
   expect(await navs()).toHaveLength(2);
 });
+
+test("a dropped connection says Reconnecting…, resumes the session and keeps answering", async ({ page }) => {
+  await page.addInitScript(() => { // keep a handle on the widget's sockets, so the test can cut one
+    const W = window.WebSocket;
+    const sockets: WebSocket[] = ((window as unknown as { sockets: WebSocket[] }).sockets = []);
+    window.WebSocket = class extends W { constructor(u: string | URL, p?: string | string[]) { super(u, p); sockets.push(this); } } as typeof WebSocket;
+  });
+  await page.goto("/embed-test.html");
+  await page.getByRole("button", { name: "Ask the docs" }).click();
+  await expect(page.getByRole("status")).toContainText("Ready", { timeout: 10_000 });
+  await page.evaluate(() => (window as unknown as { sockets: WebSocket[] }).sockets.at(-1)!.close(4000, "test: network dropped"));
+  await expect(page.getByRole("status")).toContainText("Reconnecting");
+  await expect(page.getByRole("status")).toContainText("Ready", { timeout: 10_000 });
+  expect(await page.evaluate(() => (window as unknown as { sockets: WebSocket[] }).sockets.at(-1)!.url)).toMatch(/\?resume=s-gw-[0-9a-f]{16}$/);
+  await page.getByRole("textbox", { name: "Your question" }).fill("How does eager endpointing work?");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(page.locator("li.agent").first()).toContainText("speech recognizer", { timeout: 15_000 });
+});

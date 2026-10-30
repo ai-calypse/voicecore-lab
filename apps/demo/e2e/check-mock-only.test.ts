@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { checkMockOnly } from "./check-mock-only";
+import { checkMockOnly } from "./check-mock-only.ts";
 
 const answer = (body: unknown) => vi.fn(async () => new Response(JSON.stringify(body), { status: 200 }));
 
