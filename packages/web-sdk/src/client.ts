@@ -1,6 +1,7 @@
 import { decodeEvent, encodeEvent, type Event } from "@voicecore/protocol/events";
-import { decodeFrame, encodeFrame, KIND_MIC, type Frame, type FrameInit } from "@voicecore/protocol/frame";
+import { decodeFrame, encodeFrame, FLAG_END_OF_STREAM, KIND_MIC, type Frame, type FrameInit } from "@voicecore/protocol/frame";
 import { startCapture } from "./capture/index.ts";
+import type { PlayoutHandle } from "./playout/worklet-adapter.ts";
 
 export type ClientOptions = {
   url: string;
@@ -14,6 +15,8 @@ export type ClientOptions = {
 export class VoiceClient {
   onEvent: (e: Event) => void = () => {};
   onAgentFrame: (f: Frame) => void = () => {};
+  /** where agent audio goes; agent.cancel is applied to it before onEvent sees the event */
+  playout?: Pick<PlayoutHandle, "push" | "cancel">;
   sessionId?: string;
   /** server clock minus client clock in us, from the last pong (NaN until the first one) */
   offsetUs = NaN;
@@ -41,8 +44,13 @@ export class VoiceClient {
       ws.onerror = () => reject(new Error("websocket error"));
       ws.onclose = (c) => { this.stop(); reject(new Error(`closed ${c.code} ${c.reason}`)); this.onEvent({ type: "socket.closed", code: c.code }); };
       ws.onmessage = (m: MessageEvent<string | ArrayBuffer>) => {
-        if (typeof m.data !== "string") return this.onAgentFrame(decodeFrame(new Uint8Array(m.data)));
+        if (typeof m.data !== "string") {
+          const f = decodeFrame(new Uint8Array(m.data));
+          this.playout?.push(f.generation_id, f.sequence, f.payload, (f.flags & FLAG_END_OF_STREAM) !== 0);
+          return this.onAgentFrame(f);
+        }
         const e = decodeEvent(m.data);
+        if (e.type === "agent.cancel") this.playout?.cancel(e.gen as number);
         if (e.type === "welcome") {
           this.sessionId = e.session_id as string;
           this.pinger = setInterval(() => this.send({ type: "ping", t_client_us: Math.round(this.nowUs()) }), 2000);

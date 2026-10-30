@@ -50,5 +50,9 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/realtime-gateway/go.mod
+          cache-dependency-path: services/realtime-gateway/go.sum
       - run: pnpm --filter @voicecore/demo exec playwright install --with-deps chromium
       - run: pnpm --filter @voicecore/demo e2e
