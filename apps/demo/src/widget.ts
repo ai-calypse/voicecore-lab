@@ -14,6 +14,37 @@ const script = document.currentScript as HTMLScriptElement | null;
 const endpoint = (script?.dataset.endpoint ?? location.origin).replace(/\/$/, "");
 const label = script?.dataset.title ?? "Ask the docs";
 const name = script?.dataset.name ?? "Docs assistant";
+const sitekey = script?.dataset.turnstileSitekey; // data-turnstile-sitekey: ask Cloudflare Turnstile before each new session
+
+type Turnstile = { render(el: HTMLElement, o: Record<string, unknown>): string; remove(id: string): void };
+class HumanCheckFailed extends Error {}
+let turnstileApi: Promise<Turnstile> | null = null;
+const loadTurnstile = () => (turnstileApi ??= new Promise<Turnstile>((resolve, reject) => {
+  const s = document.createElement("script");
+  s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+  s.async = true;
+  s.onload = () => { const t = (window as unknown as { turnstile?: Turnstile }).turnstile; if (t) resolve(t); else reject(new HumanCheckFailed()); };
+  s.onerror = () => { turnstileApi = null; reject(new HumanCheckFailed()); };
+  document.head.append(s);
+}));
+
+/** A Turnstile token. The check renders in the page (not the widget's shadow root) and shows only if it needs the user. */
+async function humanCheck(): Promise<string> {
+  const ts = await loadTurnstile();
+  const box = document.createElement("div");
+  box.style.cssText = "position:fixed;right:24px;bottom:96px;z-index:2147483647";
+  document.body.append(box);
+  let id = "";
+  try {
+    return await new Promise<string>((resolve, reject) => {
+      id = ts.render(box, { sitekey, appearance: "interaction-only", callback: resolve,
+        "error-callback": () => reject(new HumanCheckFailed()), "expired-callback": () => reject(new HumanCheckFailed()) });
+    });
+  } finally {
+    if (id) ts.remove(id);
+    box.remove();
+  }
+}
 
 const ICON = {
   mic: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12h-2Z"/></svg>',
@@ -125,7 +156,10 @@ function mount() {
   };
 
   const newToken = async (): Promise<string> => { // a short-lived token from the gateway; the reconnect asks again if needed
-    const res = await fetch(`${endpoint}/v1/session`, { method: "POST" });
+    // a form body keeps the request a CORS "simple request": no preflight
+    const body = sitekey ? new URLSearchParams({ "cf-turnstile-response": await humanCheck() }) : undefined;
+    const res = await fetch(`${endpoint}/v1/session`, { method: "POST", body });
+    if (res.status === 403 && sitekey) throw new HumanCheckFailed();
     if (!res.ok) throw new Error(`token request failed (${res.status})`);
     return (await res.json()).token;
   };
@@ -153,7 +187,8 @@ function mount() {
       p?.close();
       if (!stale()) {
         connecting = null;
-        setState("error", `Could not connect: ${err instanceof Error ? err.message : err}`);
+        setState("error", err instanceof HumanCheckFailed ? "Couldn't verify you're human. Reload and try again."
+          : `Could not connect: ${err instanceof Error ? err.message : err}`);
       }
       throw err;
     }

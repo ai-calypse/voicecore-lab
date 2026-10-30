@@ -66,6 +66,8 @@ The SDK always sends 20 ms frames because the protocol negotiates it. `hello` de
 
 To resume, the client adds the `session_id` and `resume_key` it was given. `connect()` resolves with the gateway's `welcome`, which carries `session_id`, `resume_key`, `resume_window_ms` and `resumed`. The client keeps both in memory only, so calling `connect()` again on the same object resumes the same session.
 
+The client also reconnects by itself. When the socket closes unexpectedly after `welcome`, `onEvent` sees `socket.reconnecting`, and the client retries after 0.5, 1 and 2 s (`retryDelaysMs`). Each retry goes to `/v1/ws?resume=<session id>`, so a load balancer can send it to the gateway copy that owns the session, and resumes with the key. If a retry is refused with 4001, because the resume window passed and the token is already spent, the client asks the `getToken` option for a fresh one. The microphone keeps capturing across the gap, and frames sent while the socket is down are dropped. Only after three failed attempts does `onEvent` see `socket.closed`, and `close()` never retries.
+
 `startMic()` starts capture and sends frames as they come, under a new stream ID each time. The first stream ID is random, so a new client resuming a session never reuses a stream ID the gateway already saw. `stopMic()` stops capture and sends `mic.revoked`. `close()` closes with code 1000, which ends the session at the gateway.
 
 ## How ping and pong measure the clock offset

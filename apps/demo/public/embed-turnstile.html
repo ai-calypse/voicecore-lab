@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unrelated page with Turnstile</title>
+<style>
+  /* hostile host styles: the widget must not inherit these */
+  * { font-family: "Comic Sans MS", cursive !important; }
+  button { background: magenta; border: 4px dashed lime; }
+  body { margin: 0; padding: 40px; background: #fafafa; }
+</style>
+</head>
+<body>
+<h1>A page that knows nothing about VoiceCore</h1>
+<p>It only adds one script tag.</p>
+<script src="/embed/voicecore.js" data-endpoint="http://127.0.0.1:18081" data-turnstile-sitekey="1x00000000000000000000AA"></script>
+</body>
+</html>

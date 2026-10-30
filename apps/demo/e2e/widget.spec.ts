@@ -87,3 +87,27 @@ test("a dropped connection says Reconnecting…, resumes the session and keeps a
   await page.getByRole("button", { name: "Send" }).click();
   await expect(page.locator("li.agent").first()).toContainText("speech recognizer", { timeout: 15_000 });
 });
+
+// Cloudflare's script, stubbed: the widget renders the check, gets a token (or an error) and posts it with the token request.
+const turnstileStub = (outcome: "pass" | "fail") => `window.turnstile = {
+  render(el, o) { setTimeout(() => ${outcome === "pass" ? 'o.callback("stub-pass-token")' : 'o["error-callback"]("110200")'}, 10); return "w1"; },
+  remove() {}, reset() {} };`;
+
+test("with a Turnstile sitekey the token request carries the human check", async ({ page }) => {
+  await page.route("https://challenges.cloudflare.com/**", (r) => r.fulfill({ contentType: "text/javascript", body: turnstileStub("pass") }));
+  await page.goto("/embed-turnstile.html");
+  const tokenRequest = page.waitForRequest((r) => r.url().endsWith("/v1/session") && r.method() === "POST");
+  await page.getByRole("button", { name: "Ask the docs" }).click();
+  expect((await tokenRequest).postData()).toBe("cf-turnstile-response=stub-pass-token");
+  await expect(page.getByRole("status")).toContainText("Ready", { timeout: 10_000 });
+});
+
+test("a failed human check says so and asks for no token", async ({ page }) => {
+  await page.route("https://challenges.cloudflare.com/**", (r) => r.fulfill({ contentType: "text/javascript", body: turnstileStub("fail") }));
+  let asked = false;
+  page.on("request", (r) => { if (r.url().endsWith("/v1/session")) asked = true; });
+  await page.goto("/embed-turnstile.html");
+  await page.getByRole("button", { name: "Ask the docs" }).click();
+  await expect(page.getByRole("status")).toHaveText("Couldn't verify you're human. Reload and try again.", { timeout: 10_000 });
+  expect(asked).toBe(false);
+});
