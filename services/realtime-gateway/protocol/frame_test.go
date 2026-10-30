@@ -70,3 +70,21 @@ func TestGoldenFrames(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkDecodeFrame(b *testing.B) {
+	raw := Frame{Kind: KindMic, StreamID: 1, Sequence: 7, CaptureUS: 123, Payload: make([]int16, 320)}.Encode()
+	b.ReportAllocs()
+	for b.Loop() {
+		if _, err := DecodeFrame(raw); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkEncodeFrame(b *testing.B) {
+	f := Frame{Kind: KindAgent, StreamID: 1, Sequence: 7, CaptureUS: 123, GenerationID: 3, Payload: make([]int16, 480)}
+	b.ReportAllocs()
+	for b.Loop() {
+		_ = f.Encode()
+	}
+}
