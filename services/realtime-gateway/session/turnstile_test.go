@@ -113,3 +113,22 @@ func TestTurnstileTokenInMultipartForm(t *testing.T) { // fetch(url, {method: "P
 		}
 	})
 }
+
+func TestFailedHumanChecksDoNotSpendTheDailyQuota(t *testing.T) {
+	runCfg(t, false, func(c *Config) {
+		c.TurnstileSecret, c.TurnstileURL, c.SessionsPerIPPerDay, c.TokensPerMinute = "test-turnstile-secret", "http://cf:80/siteverify", 1, 0
+	}, func(t *testing.T, r *rig) {
+		mode := "fail"
+		defer fakeSiteverify(r, &mode)()
+		form := url.Values{"cf-turnstile-response": {"w"}}.Encode()
+		for i := 0; i < 3; i++ {
+			if code, _ := postSession(r, form); code != 403 {
+				t.Fatalf("failed check %d: %d", i, code)
+			}
+		}
+		mode = "pass"
+		if code, _ := postSession(r, form); code != 200 {
+			t.Fatalf("first passed check of the day: %d, want 200 (the quota is 1)", code)
+		}
+	})
+}

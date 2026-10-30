@@ -222,7 +222,7 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
             if sub:  # public deployment: no spend left today, but the docs can still point the way
                 log.info("budget used up, text only: %s", e, extra={"session_id": sid, "reason": "budget"})
                 providers, settle = {"llm": MockLLM(LLMScript(tokens=[])), "tts": MockTTS()}, []  # inert: text_only never calls them
-                text_only = closest_section(state.index)
+                text_only = True
             else:
                 log.warning("session refused: %s", e, extra={"session_id": sid, "reason": "budget"})
                 if state.metrics:
@@ -231,7 +231,7 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
                 await ws.close()
                 return
         else:
-            text_only = None
+            text_only = False
         started, sink, session, reason = time.monotonic(), None, None, None
         sinks = [state.metrics] if state.metrics else []
         tracer = Tracer(sid, lambda e: [s(e) for s in sinks])
@@ -239,8 +239,9 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
             if trace_dir:
                 sinks.append(sink := JsonlSink(trace_dir / f"{sid}.jsonl"))
             engine = AnswerEngine(state.index, providers["llm"], name=name)
+            extract = closest_section(engine.retrieve) if text_only else None
             session = Session(sid, send=ws.send, vad=SileroVAD(), policy=policy, tracer=tracer, answer=engine.stream,
-                              breakers=state.breakers, text_only=text_only, **providers)
+                              breakers=state.breakers, text_only=extract, **providers)
             tracer.emit("session", "started")
             await session.start()
             log.info("session started", extra={"session_id": sid})

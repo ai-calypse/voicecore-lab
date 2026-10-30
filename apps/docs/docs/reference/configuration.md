@@ -19,7 +19,7 @@ Run the gateway with `go run ./cmd/gateway` from `services/realtime-gateway`, or
 | `-max-sessions-per-ip` | 4 | live sessions per client IP; 0 means no limit |
 | `-max-sessions` | 50 | live sessions in total; 0 means no limit |
 | `-tokens-per-minute` | 10 | `POST /v1/session` requests per client IP per minute; 0 means no limit |
-| `-sessions-per-ip-per-day` | 0 (no limit) | session tokens per client IP per UTC day; kept in memory, so a restart resets the count |
+| `-sessions-per-ip-per-day` | 0 (no limit) | session tokens per client IP per UTC day, counted only for requests that passed every other check; kept in memory, so a restart resets the count |
 | `-hosts` | `localhost,127.0.0.1,::1` | allowed `Host` header names, comma separated; empty allows any |
 | `-drain` | `25s` | on SIGTERM, how long open sessions may finish before they are ended with reason `shutdown` |
 | `-probe` | empty | GET this URL and exit 0 on HTTP 200, else 1; the container healthcheck, since the image has no curl |
@@ -163,7 +163,7 @@ Every paid provider call is covered by a reservation in the spend ledger, `bench
 | `cartesia_credits` | 16,000 credits | Cartesia, 1 credit per character | TTS with `--tts cartesia`: 1,500 characters, reserved when the session first speaks |
 | `public` (inside `usd`) | $2.00 in total, $0.50 per UTC day | sessions of an orchestrator started with `--pool public` | the same reservations, counted against both `usd` and `public` |
 
-A public deployment runs the orchestrator with `--pool public`. When a session would pass the public total or today's share, it is not refused. The assistant says "Today's voice demo budget is used up. I can still point you to the right page: ask a question by typing." It ignores the microphone, and answers each typed question with the closest docs section and a link to it, with no paid call at all. The `usd` cap of $5.00 still holds over everything.
+A public deployment runs the orchestrator with `--pool public`. When a session would pass the public total or today's share, it is not refused. The assistant says "Today's voice demo budget is used up. I can still point you to the right page: ask a question by typing." It ignores the microphone, and answers each typed question with the closest docs section and a link to it, with no paid call at all. The `usd` cap of $5.00 still holds over everything. Reservations count in full until their session settles, so the daily share is conservative. About two sessions can be open at once on $0.50 before new visitors get the text answers, even when actual spend is only cents. The public sub-cap counts dollars only: a Cartesia session's credits never count against it.
 
 When a session ends, each reservation is settled to the amount actually used. The caps are a user decision from 2026-10-29: $5 for the whole project, and 16,000 of the 20,000 Cartesia credits owned. Benchmark scripts reserve from the same pools, for example $0.05 for one `llm_ttft.py` run.
 

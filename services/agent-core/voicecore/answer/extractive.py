@@ -1,11 +1,14 @@
 """The free answer, for when the public budget is used up: no model call, just the closest docs section."""
-from voicecore.answer.index import Index
+from collections.abc import Callable
+
+from voicecore.answer.index import Passage
 
 
-def closest_section(index: Index):
-    """question -> (reply, sources): the top retrieval hit, cited the same way the answer engine cites."""
+def closest_section(retrieve: Callable[[str], list[Passage]]):
+    """question -> (reply, sources): the top hit of the answer engine's own retrieval (so flagged and unofficial
+    pages stay out, as they do for the model), cited the same way the engine cites."""
     def answer(question: str) -> tuple[str, list[dict]]:
-        hits = index.search(question, 1)
+        hits = retrieve(question)
         if not hits:
             return "I couldn't find a matching section. Try other words.", []
         h = hits[0]

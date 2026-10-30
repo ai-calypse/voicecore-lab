@@ -234,16 +234,10 @@ func (s *Server) Handler() http.Handler {
 			s.tokens[ip] = b
 		}
 		allowed := s.cfg.TokensPerMinute <= 0 || b.take(time.Now(), s.cfg.TokensPerMinute/60, s.cfg.TokensPerMinute)
-		quota := allowed && s.takeDaily(ip)
 		s.mu.Unlock()
 		if !allowed {
 			s.c.RejectedRateLimit.Add(1)
 			http.Error(w, "too many session requests", http.StatusTooManyRequests)
-			return
-		}
-		if !quota {
-			s.c.RejectedQuota.Add(1)
-			http.Error(w, "daily session limit reached for this address", http.StatusTooManyRequests)
 			return
 		}
 		if s.cfg.TurnstileSecret != "" { // after the rate limit, so nobody can make us hammer siteverify
@@ -251,6 +245,14 @@ func (s *Server) Handler() http.Handler {
 				http.Error(w, msg, code)
 				return
 			}
+		}
+		s.mu.Lock()
+		quota := s.takeDaily(ip) // only a request that passed every check spends the day's quota
+		s.mu.Unlock()
+		if !quota {
+			s.c.RejectedQuota.Add(1)
+			http.Error(w, "daily session limit reached for this address", http.StatusTooManyRequests)
+			return
 		}
 		w.Header().Set("Content-Type", "application/json")
 		s.c.TokensIssued.Add(1)
@@ -267,14 +269,13 @@ func (s *Server) Handler() http.Handler {
 	})
 }
 
-// Snapshot returns the counters, live sessions and queue depths.
 // takeDaily counts one token against this IP's daily quota (caller holds s.mu). A new UTC day starts every count over.
 func (s *Server) takeDaily(ip string) bool {
 	if s.cfg.SessionsPerIPPerDay <= 0 {
 		return true
 	}
-	if day := time.Now().UTC().Unix() / 86_400; day != s.day {
-		s.day, s.daily = day, map[string]int{}
+	if day := time.Now().UTC().Unix() / 86_400; day != s.day || len(s.daily) > 200_000 {
+		s.day, s.daily = day, map[string]int{} // ponytail: crude memory bound, like the token buckets; Redis in Phase 10
 	}
 	if s.daily[ip] >= s.cfg.SessionsPerIPPerDay {
 		return false
@@ -288,6 +289,7 @@ func (s *Server) serveCounters(w http.ResponseWriter, _ *http.Request) {
 	_ = json.NewEncoder(w).Encode(s.Snapshot())
 }
 
+// Snapshot returns the counters, live sessions and queue depths.
 func (s *Server) Snapshot() map[string]int64 {
 	s.mu.Lock()
 	var depth, out int64

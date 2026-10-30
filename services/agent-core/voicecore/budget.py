@@ -51,15 +51,16 @@ def _sum(entries, pool, day=None):
 
 
 def _check(entries, pool, amount, sub, spent):
-    """Raise unless amount fits the pool and, with sub, the sub-cap's total and today's share. spent: running totals."""
+    """Raise unless amount fits the pool and, with sub, the sub-cap's total and today's share. spent: running totals.
+    A sub-cap counts only reservations in its own pool (the public dollars never count Cartesia credits)."""
+    if sub is not None and SUBCAPS[sub]["pool"] != pool:
+        sub = None
     for key, cap, exc in [(pool, CAPS[pool], BudgetExceeded)] + ([] if sub is None else [
             (sub, SUBCAPS[sub]["total"], BudgetExceeded), ((sub, "today"), SUBCAPS[sub]["daily"], DailyCapReached)]):
         if key not in spent:
             spent[key] = _sum(entries, sub, day=int(now() // 86_400)) if isinstance(key, tuple) else _sum(entries, key)
         if round(spent[key] + amount, 6) > cap:
             raise exc(f"{key}: {spent[key]} spent + {amount} requested > cap {cap}")
-    if sub is not None and SUBCAPS[sub]["pool"] != pool:
-        raise BudgetExceeded(f"sub-cap {sub} belongs to pool {SUBCAPS[sub]['pool']}, not {pool}")
     for key in [pool] + ([] if sub is None else [sub, (sub, "today")]):
         spent[key] = round(spent[key] + amount, 6)
 
@@ -121,8 +122,8 @@ def reserve_all(specs, ledger_path=None, sub=None) -> list[Reservation]:
             _check(data["entries"], pool, amount, sub, spent)
             out.append(Reservation(uuid.uuid4().hex[:12], pool, amount, label))
         for r in out:
-            data["entries"].append({"id": r.id, "pool": r.pool, "amount": r.amount, "label": r.label, "status": "reserved", "ts": now(),
-                                    **({"sub": sub} if sub else {})})
+            tag = {"sub": sub} if sub and SUBCAPS[sub]["pool"] == r.pool else {}
+            data["entries"].append({"id": r.id, "pool": r.pool, "amount": r.amount, "label": r.label, "status": "reserved", "ts": now(), **tag})
     return out
 
 

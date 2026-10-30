@@ -136,3 +136,9 @@ def test_public_total_cap_holds_across_days(monkeypatch):
     monkeypatch.setattr(budget, "now", lambda: day + 4 * 86_400)
     with pytest.raises(budget.BudgetExceeded):
         budget.reserve("usd", 0.01, "day 4", sub="public")  # 2.00 is the public total
+
+
+def test_a_sub_cap_counts_only_reservations_in_its_own_pool():
+    r = budget.reserve("cartesia_credits", 1500, "cartesia tts", sub="public")  # credits are not dollars
+    assert (budget.total("cartesia_credits"), budget.total("public")) == (1500, 0.0)
+    budget.settle(r, 0)
