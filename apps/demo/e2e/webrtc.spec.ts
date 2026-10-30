@@ -4,10 +4,10 @@ import { fileURLToPath } from "node:url";
 
 // Step 07: browser mic -> WebRTC (Opus/RTP) -> Pion peer -> rtp jitter buffer. One Pion process, so serial.
 test.describe.configure({ mode: "serial" });
-const stats = async (request: import("@playwright/test").APIRequestContext) => (await request.get("http://127.0.0.1:8090/stats")).json();
+const stats = async (request: import("@playwright/test").APIRequestContext) => (await request.get("http://127.0.0.1:18090/stats")).json();
 
 test("the browser connects to the Pion peer and Opus RTP flows through the jitter buffer", async ({ page, request }) => {
-  await page.goto("http://127.0.0.1:8090/");
+  await page.goto("http://127.0.0.1:18090/");
   await expect.poll(async () => (await stats(request)).webrtc?.stream.packets ?? 0, { timeout: 15_000 }).toBeGreaterThan(100);
   const s = await stats(request);
   const steps = s.steps.map((x: { step: string }) => x.step);
@@ -22,13 +22,13 @@ test("the browser connects to the Pion peer and Opus RTP flows through the jitte
 test("compare WebSocket and WebRTC mic streams on loopback", async ({ page, browser, request }) => {
   test.skip(!process.env.BENCH, "set BENCH=1 to run the transport comparison");
   test.setTimeout(60_000);
-  await page.goto("http://127.0.0.1:8090/");
+  await page.goto("http://127.0.0.1:18090/");
   await page.waitForTimeout(10_000);
   const ws = await browser.newPage();
   await ws.goto("/");
   await ws.evaluate(async () => {
     const w = window as any;
-    const c = new w.voicecore.VoiceClient({ url: "ws://127.0.0.1:8090/ws", token: "n/a" });
+    const c = new w.voicecore.VoiceClient({ url: "ws://127.0.0.1:18090/ws", token: "n/a" });
     await c.connect();
     await c.startMic();
   });

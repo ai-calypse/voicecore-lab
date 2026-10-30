@@ -8,8 +8,8 @@ test("a spoken turn through the gateway and orchestrator gets an answer that pla
     const w = window as any;
     const events: any[] = [];
     w.events = events;
-    const { token } = await (await fetch("http://127.0.0.1:8081/v1/session", { method: "POST" })).json();
-    const c = new w.voicecore.VoiceClient({ url: "ws://127.0.0.1:8081/v1/ws", token });
+    const { token } = await (await fetch("http://127.0.0.1:18081/v1/session", { method: "POST" })).json();
+    const c = new w.voicecore.VoiceClient({ url: "ws://127.0.0.1:18081/v1/ws", token });
     c.playout = await w.voicecore.startPlayout((e: any) => { events.push(e); c.send(e); });
     c.onEvent = (e: any) => events.push(e);
     await c.connect();

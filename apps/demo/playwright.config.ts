@@ -1,6 +1,8 @@
 import { defineConfig } from "@playwright/test";
 import { fileURLToPath } from "node:url";
 
+// Ports 15173 / 1876x / 1808x / 18090 on purpose: never the dev ports (5173, 8765, 8080), where a live
+// orchestrator may be running; reuseExistingServer only in CI.
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const experiments = fileURLToPath(new URL("../../experiments", import.meta.url));
 const gateway = fileURLToPath(new URL("../../services/realtime-gateway", import.meta.url));
@@ -8,9 +10,10 @@ const fixture = fileURLToPath(new URL("../../fixtures/audio/dev/single_01.wav", 
 
 export default defineConfig({
   testDir: "e2e",
+  testMatch: "**/*.spec.ts", // *.test.ts files there are vitest unit tests
   timeout: 30_000,
   use: {
-    baseURL: "http://127.0.0.1:5173",
+    baseURL: "http://127.0.0.1:15173",
     permissions: ["microphone"],
     launchOptions: {
       args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", `--use-file-for-fake-audio-capture=${fixture}%noloop`, "--autoplay-policy=no-user-gesture-required"],
@@ -18,14 +21,14 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],
   webServer: [
-    { command: "pnpm exec vite --host 127.0.0.1 --port 5173 --strictPort", url: "http://127.0.0.1:5173", reuseExistingServer: true },
-    { command: "go run ./cmd/fakeorch -addr 127.0.0.1:8765", cwd: gateway, port: 8765, reuseExistingServer: true },
-    { command: "go run ./cmd/gateway -addr 127.0.0.1:8080 -upstream ws://127.0.0.1:8765", cwd: gateway, url: "http://127.0.0.1:8080/debug/counters", reuseExistingServer: true },
+    { command: "pnpm exec vite --host 127.0.0.1 --port 15173 --strictPort", url: "http://127.0.0.1:15173", env: { VITE_GATEWAY: "http://127.0.0.1:18081" }, reuseExistingServer: !process.env.CI },
+    { command: "go run ./cmd/fakeorch -addr 127.0.0.1:18765", cwd: gateway, port: 18765, reuseExistingServer: !process.env.CI },
+    { command: "go run ./cmd/gateway -addr 127.0.0.1:18080 -upstream ws://127.0.0.1:18765", cwd: gateway, url: "http://127.0.0.1:18080/debug/counters", reuseExistingServer: !process.env.CI },
     // the real orchestrator with mock providers, behind a second gateway
     // builds the docs index at start: minutes on a cold CI runner without the vector cache
-    { command: "uv run python -m voicecore.server --providers mock --port 8766", cwd: root, port: 8766, reuseExistingServer: true, timeout: 600_000 },
-    { command: "go run ./cmd/gateway -addr 127.0.0.1:8081 -upstream ws://127.0.0.1:8766", cwd: gateway, url: "http://127.0.0.1:8081/debug/counters", reuseExistingServer: true },
+    { command: "uv run python -m voicecore.server --providers mock --port 18766", cwd: root, port: 18766, reuseExistingServer: !process.env.CI, timeout: 600_000 },
+    { command: "go run ./cmd/gateway -addr 127.0.0.1:18081 -upstream ws://127.0.0.1:18766", cwd: gateway, url: "http://127.0.0.1:18081/debug/counters", reuseExistingServer: !process.env.CI },
     // Step 07 WebRTC spike (Pion)
-    { command: "go run ./cmd/pion-peer -addr 127.0.0.1:8090", cwd: experiments, url: "http://127.0.0.1:8090/stats", reuseExistingServer: true },
+    { command: "go run ./cmd/pion-peer -addr 127.0.0.1:18090", cwd: experiments, url: "http://127.0.0.1:18090/stats", reuseExistingServer: !process.env.CI },
   ],
 });

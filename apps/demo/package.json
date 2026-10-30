@@ -6,7 +6,8 @@
     "dev": "vite",
     "build": "vite build",
     "build:widget": "vite build -c vite.widget.config.ts",
-    "e2e": "vite build -c vite.widget.config.ts && playwright test"
+    "e2e": "vite build -c vite.widget.config.ts && playwright test",
+    "test": "vitest run"
   },
   "dependencies": {
     "@voicecore/web-sdk": "workspace:*"
@@ -16,6 +17,7 @@
     "@types/ws": "^8.18.2",
     "@voicecore/protocol": "workspace:*",
     "vite": "8.3.5",
-    "ws": "8.22.0"
+    "ws": "8.22.0",
+    "vitest": "5.0.5"
   }
 }
