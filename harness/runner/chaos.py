@@ -54,11 +54,16 @@ def verify(scenario: dict, run: dict) -> list[str]:
     counts = Counter(f'{e["span"]}/{e["event"]}' for e in run["trace"])
     fails = [f"{name}: {k} x{counts[k]}, want {n}" for k, n in exp.get("trace_counts", {}).items() if counts[k] != n]
     texts = [e["text"] for e in run["client"] if e["type"] == "agent.text"]
+    notices = {"busy": BUSY, "reprompt": REPROMPT}
     want = exp.get("reply")
-    if want == "answer" and (not texts or texts[0] in (BUSY, REPROMPT, TROUBLE, VOICE_INPUT_DOWN)):
-        fails.append(f"{name}: replies {texts}, want an answer")
-    elif want in ("busy", "reprompt") and texts != [{"busy": BUSY, "reprompt": REPROMPT}[want]]:
-        fails.append(f"{name}: replies {texts}, want {want}")
+    if want == "answer":  # a real answer: not a notice, and not an answer that ended in a failure notice
+        if not texts or any(texts[0].endswith(n) for n in (BUSY, REPROMPT, TROUBLE, VOICE_INPUT_DOWN)):
+            fails.append(f"{name}: replies {texts}, want an answer")
+    elif want in notices:
+        if texts != [notices[want]]:
+            fails.append(f"{name}: replies {texts}, want {want}")
+    elif want is not None:
+        fails.append(f"{name}: unknown expected reply {want!r}")
     return fails
 
 

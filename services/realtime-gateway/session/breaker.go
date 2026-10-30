@@ -6,7 +6,7 @@ import (
 )
 
 // breaker guards the upstream dial with the orchestrator's rules (voicecore/resilience.py): five failed session
-// dials in a row within 60 s open it; for 30 s new sessions fail fast without dialling; then one dial goes out as
+// dials within 60 s open it, whatever succeeded in between; for 30 s new sessions fail fast without dialling; then one dial goes out as
 // a probe, and its success closes the breaker while its failure opens it again.
 type breaker struct {
 	mu       sync.Mutex
@@ -45,10 +45,13 @@ func (b *breaker) ready() bool {
 	return b.state != "open" || time.Since(b.openedAt) >= breakerOpenFor
 }
 
+// success closes the breaker only from the probe; in the closed state it does not reset the count.
 func (b *breaker) success() {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	b.failures, b.state = nil, "closed"
+	if b.state == "half_open" {
+		b.failures, b.state = nil, "closed"
+	}
 }
 
 func (b *breaker) failure() {

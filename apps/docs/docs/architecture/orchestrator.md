@@ -143,7 +143,7 @@ Every turn ends with an answer and an end, even when a provider fails. Provider 
 
 The TTS retry is skipped after a fatal error, and it never repeats speech the user already heard.
 
-**Circuit breakers.** Each orchestrator process keeps one breaker per provider kind (`stt`, `llm`, `tts`), shared by all its sessions (`voicecore/resilience.py`). Five retryable or rate-limited failures in a row within 60 s open it, and for 30 s every call fails fast. Then one call goes out as a probe. Its success closes the breaker; its failure, or 10 s without an answer, opens it again. A probe cancelled by a barge-in leaves the breaker open, never stuck. Fatal errors, such as a bad key or a session cap, never count. The state is exported as `voicecore_breaker_state` (0 closed, 1 half-open, 2 open) and alerts as `BreakerOpen`.
+**Circuit breakers.** Each orchestrator process keeps one breaker per provider kind (`stt`, `llm`, `tts`), shared by all its sessions (`voicecore/resilience.py`). Five retryable or rate-limited failures within 60 s open it, whatever succeeded in between, and for 30 s every call fails fast. Then one call goes out as a probe. Only the probe's success closes the breaker, so a session still streaming from before an outage cannot. The probe's failure, or 10 s without a verdict, opens it again, and a probe cancelled by a barge-in leaves the breaker open, never stuck. Fatal errors, such as a bad key or a session cap, and VoiceCore's own bugs are no verdict on the provider. The state is exported as `voicecore_breaker_state` (0 closed, 1 half-open, 2 open) and alerts as `BreakerOpen`.
 
 ## How the orchestrator traces a session
 

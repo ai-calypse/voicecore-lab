@@ -32,3 +32,13 @@ def test_stt_drop_and_llm_breaker_scenarios_meet_their_expectations():
     for name in ("stt_drop", "llm_breaker"):
         path = SCENARIOS / f"chaos/{name}.json"
         assert verify(json.loads(path.read_text()), fresh_loop(run_scenario(path))) == []
+
+
+def test_verify_rejects_a_half_answer_and_unknown_expectations():
+    from runner.chaos import verify
+
+    from voicecore.runtime.session import TROUBLE
+
+    run = {"trace": [], "client": [{"type": "agent.text", "text": "Run uv init. " + TROUBLE}]}
+    assert verify({"name": "x", "expect": {"reply": "answer"}}, run) != []
+    assert verify({"name": "x", "expect": {"reply": "buzy"}}, run) != []

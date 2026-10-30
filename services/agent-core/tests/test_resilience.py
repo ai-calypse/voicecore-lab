@@ -112,3 +112,43 @@ async def test_call_records_success_and_failure():
         with pytest.raises(ProviderError):
             await b.call(boom)
     assert b.state == "open"
+
+
+def test_a_success_never_closes_an_open_breaker_or_resets_the_count():
+    c = Clock()
+    b = make(c)
+    for _ in range(4):
+        b.failure()
+    b.success()  # another session's call went through: the 5th failure within 60 s still opens it
+    b.failure()
+    assert b.state == "open"
+    b.success()  # a session still streaming from before the outage
+    assert b.state == "open" and not b.allow()
+
+
+def test_a_half_open_probe_expires_after_10_s_as_a_failure():
+    c = Clock()
+    b = make(c)
+    for _ in range(5):
+        b.failure()
+    c.t = 30.0
+    assert b.allow()  # this session holds the probe and never reports
+    c.t = 39.9
+    assert not b.allow()
+    c.t = 40.0
+    assert not b.allow() and b.state == "open"  # the probe timed out: open for another 30 s
+    c.t = 70.0
+    assert b.allow()
+
+
+def test_record_gives_no_verdict_for_fatal_errors_or_our_bugs():
+    c = Clock()
+    b = make(c)
+    for _ in range(5):
+        b.failure()
+    c.t = 30.0
+    assert b.allow()
+    b.record(ProviderError("fatal", "per-session cap"))  # local, says nothing about the provider
+    assert b.state == "open"  # the probe is released, not counted as a success
+    b.record(None)
+    assert b.state == "open"  # a success outside a probe does not close it

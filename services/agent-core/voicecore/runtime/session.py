@@ -34,7 +34,6 @@ VOICE_OFF = "Spoken replies have reached their limit for this session, so I'll a
 BUSY = "I'm busy right now. Please try again in a moment."
 VOICE_INPUT_DOWN = "Voice input is unavailable right now; you can type your question."
 SPEECH_DOWN = "Spoken replies are unavailable right now, so I'll answer in text."
-COUNTED = ("retryable", "rate_limited")  # provider error kinds that count against a circuit breaker
 
 
 class TurnDeadline(Exception):
@@ -78,6 +77,7 @@ class Session:
         self._since_final: deque[bytes] = deque(maxlen=500)  # audio sent to STT since its last final (10 s), replayed on reconnect
         self._stt_ok = asyncio.Event()  # cleared while a dropped stream is being replaced; the sender waits on it
         self._stt_ok.set()
+        self._stt_lock = asyncio.Lock()
         self._probes: set[str] = set()  # providers whose half-open probe this session holds
         self._voice_input_down = False
         self._speech_down_said = False
@@ -415,13 +415,14 @@ class Session:
                 try:
                     item = await asyncio.wait_for(anext(it), max(0.0, min(self.stall_s, left)))
                 except StopAsyncIteration:
-                    self._breaker("llm", failed=False)
+                    self._verdict("llm", None)
                     return False
                 except TimeoutError:
                     if loop.time() >= deadline:
                         raise TurnDeadline from None
                     raise
                 if not self._alive(g):
+                    self._release("llm")
                     return False
                 if isinstance(item, dict):  # e.g. answer.sources from the answer engine
                     await self._event(**item, gen=g)
@@ -432,12 +433,12 @@ class Session:
                 await speak(item)
         except TurnDeadline:
             self.trace.emit("llm", "deadline", gen=g, after_s=self.turn_deadline_s)
-            self._breaker("llm", failed=True)
+            self._verdict("llm", TimeoutError())
             self._failed.add(g)
             await speak(sep() + TROUBLE)
         except TimeoutError:
             self.trace.emit("llm", "stall", gen=g, after_s=self.stall_s)
-            self._breaker("llm", failed=True)
+            self._verdict("llm", TimeoutError())
             self._failed.add(g)
             await speak(sep() + REPROMPT)
         except ProviderError as err:
@@ -449,7 +450,7 @@ class Session:
         except Exception as err:  # never leave a turn without an answer and an end
             self.trace.emit("llm", "internal_error", gen=g, kind=type(err).__name__)  # not a provider error: our own bug
             log.exception("answer failed", extra={"session_id": self.sid, "gen": g})  # our bug, not the provider's
-            self._breaker("llm", failed=False)
+            self._verdict("llm", err)
             self._failed.add(g)
             await speak(sep() + TROUBLE)
         except asyncio.CancelledError:  # e.g. a barge-in: no verdict on the provider
@@ -536,7 +537,7 @@ class Session:
         self._seq[g] = seq + 1
         if seq == 0:
             self.trace.emit("tts", "first_audio", gen=g)
-            self._breaker("tts", failed=False)
+            self._verdict("tts", None)
             self.state = State.SPEAKING
         self.played.setdefault(g, bytearray()).extend(pcm)
         f = protocol.Frame(protocol.KIND_AGENT, protocol.FLAG_END_OF_STREAM if end else 0, g, seq, now_us(), g,
@@ -546,25 +547,27 @@ class Session:
     # --- STT -------------------------------------------------------------------
 
     async def _stt_sender(self):
-        """Feeds queued speech to STT. On a drop it only waits: the reader owns reconnects, so one drop counts once."""
+        """Feeds queued speech to STT. Waits while a dropped stream is replaced, so replayed audio goes first."""
         while self.stt:
             chunk = await self.stt_q.get()
+            await self._stt_ok.wait()
+            if (stream := self.stt) is None:
+                return
             self._since_final.append(chunk)
             try:
-                await self.stt.send(chunk)
+                await stream.send(chunk)
             except ProviderError as err:
                 if err.kind == "fatal":  # e.g. the per-session STT cap: say so once, text still works
                     self._provider_error("stt", err.kind)
                     await self.start_generation(self.turn_id or "t0", "", reply=VOICE_LIMIT)
                     return
-                self._stt_ok.clear()
-                await self._stt_ok.wait()  # the reader replaced the stream (and replayed this chunk), or gave up
+                await self._stt_dropped(stream, err)
 
     async def _stt_reader(self):
-        while self.stt:
+        while (stream := self.stt) is not None:
             try:
-                async for e in self.stt.events():
-                    self._breaker("stt", failed=False)
+                async for e in stream.events():
+                    self._verdict("stt", None)
                     if isinstance(e, Partial):
                         self.transcript.partial(e.text)
                     elif isinstance(e, Final):
@@ -574,43 +577,63 @@ class Session:
                         for fe in self.floor.transcript_final(e.text):  # asr_assisted: the final itself ends the turn
                             await self._on_floor(fe, capture_end_us=self._last_capture_end_us)
                     await self._event("transcript.partial", turn_id=self.turn_id or "t0", text=self.transcript.text())
-                return  # the stream closed normally
+                async with self._stt_lock:  # a reconnect in progress closed this stream: wait for its replacement
+                    if stream is self.stt:
+                        return  # closed normally, not replaced
             except ProviderError as err:
-                self._provider_error("stt", err.kind)
-                if err.kind == "fatal" or not await self._stt_reconnect():
+                if err.kind == "fatal":
+                    self._provider_error("stt", err.kind)
                     return
+                await self._stt_dropped(stream, err)
 
-    async def _stt_reconnect(self) -> bool:
+    async def _stt_dropped(self, stream: STTStream, err: ProviderError):
+        """Sender and reader both report drops here; the first report for a stream handles it, so it counts once."""
+        async with self._stt_lock:
+            if stream is not self.stt:
+                return  # already replaced (or given up on) by the other task
+            self._provider_error("stt", err.kind)
+            await self._stt_reconnect()
+
+    async def _stt_reconnect(self):
         """One reconnect per session, 0.2 s after a drop. If the turn already ended, its partial becomes final now
         (no 5 s wait and nothing to replay); otherwise the new stream hears the audio since the last final again."""
-        ended = self.state == State.THINKING
-        if ended and self.transcript.pending:
-            self.transcript.final(self.transcript.pending)
-        if ended:
-            self._since_final.clear()
-        with contextlib.suppress(Exception):
-            await self.stt.close()
-        if self._stt_reconnects >= 1 or not self.stt_factory or not self._allow("stt"):
-            self.stt, self._voice_input_down = None, True
-            self._stt_ok.set()  # releases the sender, which stops
-            await self.start_generation(self.turn_id or "t0", "", reply=VOICE_INPUT_DOWN)
-            return False
-        self._stt_reconnects += 1
-        await asyncio.sleep(0.2)
-        self.stt = self.stt_factory()
-        self.trace.emit("stt", "reconnect")
-        self.trace.emit("stt", "connect")
-        if hasattr(self.stt, "warm"):
-            await self.stt.warm()
-        for chunk in list(self._since_final):
-            with contextlib.suppress(ProviderError):  # a failing replay surfaces as the new stream's error
-                await self.stt.send(chunk)
-        self._stt_ok.set()
-        return True
+        self._stt_ok.clear()  # the sender waits: nothing may reach the new stream before the replay
+        try:
+            ended = self.state == State.THINKING
+            if ended and self.transcript.pending:
+                self.transcript.final(self.transcript.pending)
+            if ended:
+                self._since_final.clear()
+            with contextlib.suppress(Exception):
+                await self.stt.close()
+            if self._stt_reconnects >= 1 or not self.stt_factory or not self._allow("stt"):
+                await self._voice_input_gone()
+                return
+            self._stt_reconnects += 1
+            await asyncio.sleep(0.2)
+            self.stt = self.stt_factory()
+            self.trace.emit("stt", "reconnect")
+            self.trace.emit("stt", "connect")
+            try:
+                if hasattr(self.stt, "warm"):
+                    await self.stt.warm()
+                for chunk in list(self._since_final):
+                    await self.stt.send(chunk)
+            except ProviderError as err:  # the new stream is no better: stop at its first error, not 500 retries
+                self._provider_error("stt", err.kind)
+                with contextlib.suppress(Exception):
+                    await self.stt.close()
+                await self._voice_input_gone()
+        finally:
+            self._stt_ok.set()
+
+    async def _voice_input_gone(self):
+        self.stt, self._voice_input_down = None, True
+        await self.start_generation(self.turn_id or "t0", "", reply=VOICE_INPUT_DOWN)
 
     def _provider_error(self, provider: str, kind: str, gen: int | None = None):
         self.trace.emit(provider, "error", gen=gen, kind=kind)
-        self._breaker(provider, failed=kind in COUNTED)  # a fatal error is an answer: the provider is up
+        self._verdict(provider, ProviderError(kind, "reported"))
         extra = {"session_id": self.sid, "provider": provider, "kind": kind}
         log.warning("provider error", extra=extra if gen is None else {**extra, "gen": gen})
 
@@ -626,10 +649,17 @@ class Session:
             self._probes.add(provider)
         return True
 
-    def _breaker(self, provider: str, failed: bool):
-        if b := self.breakers.get(provider):
-            self._probes.discard(provider)
-            b.failure() if failed else b.success()
+    def _verdict(self, provider: str, err: BaseException | None):
+        """Any session's counted failure counts; only the probe holder's success (or no-verdict) moves the breaker."""
+        b = self.breakers.get(provider)
+        if b is None:
+            return
+        holds = provider in self._probes
+        self._probes.discard(provider)
+        if err is not None and Breaker.counts(err):
+            b.failure()
+        elif holds:
+            b.record(err)
 
     def _release(self, provider: str):
         if provider in self._probes:

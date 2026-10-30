@@ -93,3 +93,37 @@ async def test_a_final_on_the_new_stream_is_not_duplicated_by_the_replay():
     heard_with_final, finals = await run([(300, Final("how do I"))])
     assert finals == ["how do I install uv?"]
     assert heard_with_final == heard_without_final - 300  # the 300 ms the first final covered were not replayed
+
+
+class SendDrop(MockSTT):
+    """Only send() fails: events() never reports it (like a connect that fails inside send)."""
+
+    async def send(self, pcm):
+        if self.audio_ms >= 400:
+            raise ProviderError("retryable", "mock stt: connect failed in send")
+        await super().send(pcm)
+
+
+class Dead(MockSTT):
+    async def send(self, pcm):
+        raise ProviderError("retryable", "mock stt: cannot connect")
+
+
+async def test_a_drop_seen_only_by_the_sender_still_reconnects():
+    made = []
+    s, out = await make(stt=SendDrop(), stt_factory=lambda: made.append(MockSTT(canned="how do I install uv?")) or made[-1],
+                        vad=FixtureVAD([[200, 2000]]))
+    await speak(s)
+    await asyncio.sleep(6)
+    await s.close()
+    assert len(made) == 1 and [e["text"] for e in out.events("transcript.final")] == ["how do I install uv?"]
+
+
+async def test_a_reconnect_that_cannot_send_gives_up_once_with_the_notice():
+    made = []
+    s, out = await make(stt=MockSTT(error_after_ms=600), stt_factory=lambda: made.append(Dead()) or made[-1],
+                        vad=FixtureVAD([[200, 2000]]))
+    await speak(s)
+    await asyncio.sleep(2)
+    await s.close()
+    assert len(made) == 1 and [e["text"] for e in out.events("agent.text")] == [VOICE_INPUT_DOWN]
