@@ -1,0 +1,24 @@
+{"t_us":71662,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q16.wav"}
+{"t_us":74509,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-799acbfc693ee316","type":"welcome"}
+{"t_us":74607,"process":"headless","type":"mic.start","t0_us":74604}
+{"t_us":1155790,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2076251,"process":"headless","dir":"in","t_client_us":2075307,"t_server_us":163137735,"type":"pong"}
+{"t_us":2119428,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When it is UVX"}
+{"t_us":3109679,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When it is UVX, keep a tools and"}
+{"t_us":4002506,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Why does UVX keep a tools environment?"}
+{"t_us":4078813,"process":"headless","dir":"in","t_client_us":4078317,"t_server_us":165140481,"type":"pong"}
+{"t_us":5038204,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Why does UVX keep a tools environment? And does it stick"}
+{"t_us":5892337,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Why does UVX keep a tools environment? And does it stick around?"}
+{"t_us":6079793,"process":"headless","dir":"in","t_client_us":6078995,"t_server_us":167141304,"type":"pong"}
+{"t_us":6238768,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Why does UVX keep a tools environment? And does it stick around?"}
+{"t_us":6239431,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":7135746,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"UVX keeps a tools environment to manage and isolate development tools separately. Yes, it usually stays around until you delete or deactivate it."}
+{"t_us":7275575,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8080447,"process":"headless","dir":"in","t_client_us":8079956,"t_server_us":169142234,"type":"pong"}
+{"t_us":10081925,"process":"headless","dir":"in","t_client_us":10081292,"t_server_us":171143636,"type":"pong"}
+{"t_us":12082898,"process":"headless","dir":"in","t_client_us":12082331,"t_server_us":173144620,"type":"pong"}
+{"t_us":14083778,"process":"headless","dir":"in","t_client_us":14083125,"t_server_us":175145398,"type":"pong"}
+{"t_us":16083978,"process":"headless","dir":"in","t_client_us":16083304,"t_server_us":177145679,"type":"pong"}
+{"t_us":16475200,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":16875869,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":16880058,"process":"headless","dir":"in","type":"socket.closed","code":1000}

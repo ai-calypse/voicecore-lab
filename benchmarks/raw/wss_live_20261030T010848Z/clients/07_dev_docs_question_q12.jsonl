@@ -1,0 +1,22 @@
+{"t_us":74181,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q12.wav"}
+{"t_us":77159,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-1c3871fe0d1d3ae4","type":"welcome"}
+{"t_us":77273,"process":"headless","type":"mic.start","t0_us":77270}
+{"t_us":1180250,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2078421,"process":"headless","dir":"in","t_client_us":2077366,"t_server_us":128061530,"type":"pong"}
+{"t_us":2126270,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an"}
+{"t_us":3129842,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package for"}
+{"t_us":4080954,"process":"headless","dir":"in","t_client_us":4080365,"t_server_us":130064250,"type":"pong"}
+{"t_us":4134809,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package for just one new v"}
+{"t_us":5142028,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package for just one u v run command?"}
+{"t_us":5799507,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I add an extra package for just one u v run command?"}
+{"t_us":5800335,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6081368,"process":"headless","dir":"in","t_client_us":6080701,"t_server_us":132064628,"type":"pong"}
+{"t_us":6844911,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"Use the `-p` or `--package` option with the `uv run` command to add a package temporarily. For example: `uv run -p package_name your_script.py`."}
+{"t_us":6979638,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8082137,"process":"headless","dir":"in","t_client_us":8081509,"t_server_us":134065460,"type":"pong"}
+{"t_us":10083470,"process":"headless","dir":"in","t_client_us":10082788,"t_server_us":136066788,"type":"pong"}
+{"t_us":12083924,"process":"headless","dir":"in","t_client_us":12083305,"t_server_us":138067258,"type":"pong"}
+{"t_us":14085553,"process":"headless","dir":"in","t_client_us":14084919,"t_server_us":140068900,"type":"pong"}
+{"t_us":16086379,"process":"headless","dir":"in","t_client_us":16085710,"t_server_us":142069704,"type":"pong"}
+{"t_us":16518196,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":16521688,"process":"headless","dir":"in","type":"socket.closed","code":1000}

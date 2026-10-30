@@ -99,7 +99,7 @@ class Session:
             self.stt_q.put_nowait(f.payload.tobytes())
         prob = self.vad.frame(f.payload) if self.vad else 0.0
         for e in self.floor.frame(prob, power(f.payload), self._played_power(f.capture_us)):
-            await self._on_floor(e)
+            await self._on_floor(e, capture_end_us=f.capture_us + 20_000)
 
     async def on_event(self, e: dict):
         t = e["type"]
@@ -139,17 +139,18 @@ class Session:
         pcm = np.frombuffer(self.played.get(g, b""), "<i2")
         return power(pcm[off : off + 480])
 
-    async def _on_floor(self, e: Event):
+    async def _on_floor(self, e: Event, capture_end_us: int | None = None):
+        """capture_end_us: client-clock time at the end of the frame that triggered e (aligns traces with the client)."""
         if e.kind in ("speech_started", "barge_in"):
             self.turn_id = f"t{next(self._turns)}"
             self.transcript.reset()
-            self.trace.emit("turn", e.kind, onset_ms=e.onset_ms)
+            self.trace.emit("turn", e.kind, onset_ms=e.onset_ms, capture_end_us=capture_end_us)
             if self.active_gen is not None:
                 await self.cancel(self.active_gen, e.kind)
             self.state = State.USER_SPEAKING
             await self._event("user.speech_started", turn_id=self.turn_id)
         elif e.kind == "endpoint":
-            self.trace.emit("turn", "endpoint", reason=e.reason, onset_ms=e.onset_ms)
+            self.trace.emit("turn", "endpoint", reason=e.reason, onset_ms=e.onset_ms, capture_end_us=capture_end_us)
             self.state = State.THINKING
             if self.stt:
                 await self.stt.finalize()

@@ -27,3 +27,30 @@ def endpoint_scores(cases):
             "early_cutoff_rate": early / n, "missed_rate": missed / n,
             "median_ms": percentile(delays, 50) if delays else None,
             "p95_ms": percentile(delays, 95) if delays else None}
+
+
+def turn_breakdown(client, trace, turn_end_ms):
+    """Latency of one voice turn, from a headless-client log and the orchestrator trace of the same session.
+
+    total_ms (client clock): labelled end of the user's speech -> first agent sample rendered by the client.
+    endpoint_delay_ms (client clock): speech end -> end of the mic frame on which the floor decided.
+    stt_settle_ms, llm_first_token_ms, tts_first_audio_ms (orchestrator clock): endpoint -> transcript ready,
+    LLM request -> first token, first token -> first TTS audio.
+    residual_ms (derived): total minus the above: uplink + downlink transport and playout start.
+    """
+    t0 = next(e["t0_us"] for e in client if e["type"] == "mic.start")
+    speech_end = t0 + turn_end_ms * 1000
+    gen = next(e["gen"] for e in client if e["type"] == "agent.generation_started")
+    started = next(e["t_us"] for e in client if e["type"] == "playout.started" and e.get("dir") == "out" and e["gen"] == gen)
+
+    def at(span, event, g=None):
+        return next(e for e in trace if e["span"] == span and e["event"] == event and (g is None or e.get("generation_id") == g))
+
+    ep, tt = at("turn", "endpoint"), at("stt", "turn_text")
+    req, ft, fa = at("llm", "request", gen), at("llm", "first_token", gen), at("tts", "first_audio", gen)
+    ms = lambda a, b: (b - a) / 1000  # noqa: E731
+    b = {"endpoint_delay_ms": ms(speech_end, ep["attrs"]["capture_end_us"]), "stt_settle_ms": ms(ep["t_mono_us"], tt["t_mono_us"]),
+         "llm_first_token_ms": ms(req["t_mono_us"], ft["t_mono_us"]), "tts_first_audio_ms": ms(ft["t_mono_us"], fa["t_mono_us"]),
+         "total_ms": ms(speech_end, started)}
+    b["residual_ms"] = b["total_ms"] - b["endpoint_delay_ms"] - ms(ep["t_mono_us"], fa["t_mono_us"])
+    return b

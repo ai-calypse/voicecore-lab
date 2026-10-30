@@ -1,0 +1,10 @@
+{"trace_id": "s-24ba426f81498591", "span": "turn", "event": "speech_started", "t_mono_us": 50262250119, "process": "agent-core", "attrs": {"onset_ms": 1040, "capture_end_us": 1176370}}
+{"trace_id": "s-24ba426f81498591", "span": "stt", "event": "final", "t_mono_us": 50266184498, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-24ba426f81498591", "span": "stt", "event": "final", "t_mono_us": 50268044904, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-24ba426f81498591", "span": "turn", "event": "endpoint", "t_mono_us": 50268408282, "process": "agent-core", "attrs": {"reason": "silence", "onset_ms": 1040, "capture_end_us": 7336370}}
+{"trace_id": "s-24ba426f81498591", "span": "stt", "event": "turn_text", "t_mono_us": 50268409065, "process": "agent-core", "attrs": {"chars": 72, "waited_ms": 0}}
+{"trace_id": "s-24ba426f81498591", "span": "llm", "event": "request", "t_mono_us": 50268409325, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-24ba426f81498591", "span": "llm", "event": "first_token", "t_mono_us": 50269340232, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-24ba426f81498591", "span": "tts", "event": "first_audio", "t_mono_us": 50269773662, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-24ba426f81498591", "span": "playout", "event": "started", "t_mono_us": 50269791178, "process": "agent-core", "attrs": {"t_client_us": 8717721}, "generation_id": 1}
+{"trace_id": "s-24ba426f81498591", "span": "playout", "event": "stopped", "t_mono_us": 50277668105, "process": "agent-core", "attrs": {"reason": "done", "t_client_us": 16595623}, "generation_id": 1}

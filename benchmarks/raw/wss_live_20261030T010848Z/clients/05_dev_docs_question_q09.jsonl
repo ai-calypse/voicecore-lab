@@ -1,0 +1,22 @@
+{"t_us":73104,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q09.wav"}
+{"t_us":76032,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-34da5333eabcb8f0","type":"welcome"}
+{"t_us":76155,"process":"headless","type":"mic.start","t0_us":76152}
+{"t_us":1178089,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2078547,"process":"headless","dir":"in","t_client_us":2077572,"t_server_us":95592668,"type":"pong"}
+{"t_us":2178311,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How can I check that my"}
+{"t_us":3174567,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How can I check that my lock file is up to"}
+{"t_us":4079607,"process":"headless","dir":"in","t_client_us":4079124,"t_server_us":97593854,"type":"pong"}
+{"t_us":4177453,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How can I check that my lock file is up to date without changing"}
+{"t_us":4727609,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How can I check that my lock file is up to date without changing it?"}
+{"t_us":5059070,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How can I check that my lock file is up to date without changing it?"}
+{"t_us":5059669,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6037898,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"Run `uv lock --check` to verify if your lock file is up to date without making changes."}
+{"t_us":6079820,"process":"headless","dir":"in","t_client_us":6079176,"t_server_us":99594031,"type":"pong"}
+{"t_us":6176929,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8079690,"process":"headless","dir":"in","t_client_us":8079186,"t_server_us":101594012,"type":"pong"}
+{"t_us":10079396,"process":"headless","dir":"in","t_client_us":10078722,"t_server_us":103593649,"type":"pong"}
+{"t_us":10698050,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":12079937,"process":"headless","dir":"in","t_client_us":12079369,"t_server_us":105594201,"type":"pong"}
+{"t_us":14080227,"process":"headless","dir":"in","t_client_us":14079754,"t_server_us":107594522,"type":"pong"}
+{"t_us":15656112,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":15660182,"process":"headless","dir":"in","type":"socket.closed","code":1000}

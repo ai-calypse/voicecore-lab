@@ -1,0 +1,23 @@
+{"t_us":71802,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q11.wav"}
+{"t_us":74652,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-06fb3200fc1e01d1","type":"welcome"}
+{"t_us":74775,"process":"headless","type":"mic.start","t0_us":74771}
+{"t_us":1155812,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2076260,"process":"headless","dir":"in","t_client_us":2075302,"t_server_us":111496292,"type":"pong"}
+{"t_us":2105591,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will of Sync"}
+{"t_us":3110217,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will OfSync remove packages"}
+{"t_us":4077423,"process":"headless","dir":"in","t_client_us":4076925,"t_server_us":113497661,"type":"pong"}
+{"t_us":4119193,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will OfSync remove packages that are not part of"}
+{"t_us":5153422,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will OfSync remove packages that are not part of my project?"}
+{"t_us":5637798,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Will OfSync remove packages that are not part of my project?"}
+{"t_us":5638541,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6078116,"process":"headless","dir":"in","t_client_us":6077371,"t_server_us":115498256,"type":"pong"}
+{"t_us":6579486,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"Yes, Will OfSync remove packages that are not part of your project when you run it."}
+{"t_us":6728614,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8078873,"process":"headless","dir":"in","t_client_us":8078175,"t_server_us":117499116,"type":"pong"}
+{"t_us":10078474,"process":"headless","dir":"in","t_client_us":10077859,"t_server_us":119498754,"type":"pong"}
+{"t_us":11335799,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":12078411,"process":"headless","dir":"in","t_client_us":12077674,"t_server_us":121498523,"type":"pong"}
+{"t_us":14078933,"process":"headless","dir":"in","t_client_us":14078303,"t_server_us":123499187,"type":"pong"}
+{"t_us":16078883,"process":"headless","dir":"in","t_client_us":16078379,"t_server_us":125499175,"type":"pong"}
+{"t_us":16315821,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":16319789,"process":"headless","dir":"in","type":"socket.closed","code":1000}

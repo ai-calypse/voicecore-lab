@@ -51,16 +51,25 @@ def start_stack(providers, trace_dir, logs):
     return procs
 
 
-def run_clients(clips, out_dir, tail_s, text=None):
+def run_clients(clips, out_dir, tail_s, sequential=False):
     out_dir.mkdir(parents=True, exist_ok=True)
     procs = []
     for i, c in enumerate(clips):
         log = out_dir / f"{i:02d}_{c['id']}.jsonl"
         cmd = ["node", str(CLIENT), "--fixture", str(MANIFEST.parent / c["file"]), "--out", str(log), "--tail", str(tail_s)]
         procs.append((log, subprocess.Popen(cmd, cwd=ROOT)))
+        if sequential:
+            procs[-1][1].wait(timeout=600)
     for _, p in procs:
         p.wait(timeout=600)
     return [log for log, _ in procs]
+
+
+def all_clips():
+    """Committed clips plus the local-only docs-question clips when present."""
+    clips = load_manifest()["clips"]
+    local = MANIFEST.parent / "local/manifest.json"
+    return clips + (load_manifest(local)["clips"] if local.exists() else [])
 
 
 def main():
@@ -71,15 +80,16 @@ def main():
     ap.add_argument("--tail", type=float, default=12)
     ap.add_argument("--out", type=Path)
     ap.add_argument("--no-stack", action="store_true")
+    ap.add_argument("--sequential", action="store_true", help="one client at a time (provider concurrency limits)")
     args = ap.parse_args()
     run = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     out = args.out or ROOT / f"benchmarks/raw/wss_{args.providers}_{run}"
     (out / "traces").mkdir(parents=True, exist_ok=True)
-    by_id = {c["id"]: c for c in load_manifest()["clips"]}
+    by_id = {c["id"]: c for c in all_clips()}
     clips = [by_id[c] for c in args.clips for _ in range(args.parallel)]
     procs = [] if args.no_stack else start_stack(args.providers, out / "traces", out)
     try:
-        logs = run_clients(clips, out / "clients", args.tail)
+        logs = run_clients(clips, out / "clients", args.tail, args.sequential)
         if procs:
             (out / "gateway_counters.json").write_text(urllib.request.urlopen("http://127.0.0.1:8080/debug/counters").read().decode())
     finally:

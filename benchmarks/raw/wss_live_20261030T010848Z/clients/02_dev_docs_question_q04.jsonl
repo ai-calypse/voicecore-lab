@@ -1,0 +1,28 @@
+{"t_us":74342,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q04.wav"}
+{"t_us":77616,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-73e07d3ddb6a2940","type":"welcome"}
+{"t_us":77730,"process":"headless","type":"mic.start","t0_us":77728}
+{"t_us":1179826,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2079699,"process":"headless","dir":"in","t_client_us":2078912,"t_server_us":38799781,"type":"pong"}
+{"t_us":2164780,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I"}
+{"t_us":2710875,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create"}
+{"t_us":3708988,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new"}
+{"t_us":4081596,"process":"headless","dir":"in","t_client_us":4081087,"t_server_us":40801722,"type":"pong"}
+{"t_us":4710551,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new library project"}
+{"t_us":5191364,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new library project"}
+{"t_us":6082545,"process":"headless","dir":"in","t_client_us":6081812,"t_server_us":42802540,"type":"pong"}
+{"t_us":6107690,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new library project that other"}
+{"t_us":7115516,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new library project that other people can"}
+{"t_us":8082597,"process":"headless","dir":"in","t_client_us":8082015,"t_server_us":44802758,"type":"pong"}
+{"t_us":8254203,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new library project that other people can install?"}
+{"t_us":8519722,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I create a new library project that other people can install?"}
+{"t_us":8520379,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":9967641,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"Use the `uv new` command to create a new library project, then publish it to a package repository like PyPI so others can install it."}
+{"t_us":10082299,"process":"headless","dir":"in","t_client_us":10081944,"t_server_us":46802598,"type":"pong"}
+{"t_us":10128326,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":12083064,"process":"headless","dir":"in","t_client_us":12082267,"t_server_us":48803124,"type":"pong"}
+{"t_us":14082381,"process":"headless","dir":"in","t_client_us":14081917,"t_server_us":50802595,"type":"pong"}
+{"t_us":16083143,"process":"headless","dir":"in","t_client_us":16082485,"t_server_us":52803297,"type":"pong"}
+{"t_us":17758757,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":18083168,"process":"headless","dir":"in","t_client_us":18082617,"t_server_us":54803317,"type":"pong"}
+{"t_us":19198677,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":19203711,"process":"headless","dir":"in","type":"socket.closed","code":1000}

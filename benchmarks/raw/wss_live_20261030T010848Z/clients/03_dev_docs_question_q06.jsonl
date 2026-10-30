@@ -1,0 +1,29 @@
+{"t_us":72241,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q06.wav"}
+{"t_us":75290,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-ed63c63818ecefaa","type":"welcome"}
+{"t_us":75414,"process":"headless","type":"mic.start","t0_us":75410}
+{"t_us":1155967,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2076579,"process":"headless","dir":"in","t_client_us":2075668,"t_server_us":58249920,"type":"pong"}
+{"t_us":2122812,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from"}
+{"t_us":2978548,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip"}
+{"t_us":3959211,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip how do I"}
+{"t_us":4079010,"process":"headless","dir":"in","t_client_us":4078425,"t_server_us":60252478,"type":"pong"}
+{"t_us":4975581,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip how do I import my"}
+{"t_us":5825308,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip how do I import my requirements?"}
+{"t_us":6079635,"process":"headless","dir":"in","t_client_us":6078883,"t_server_us":62253001,"type":"pong"}
+{"t_us":6810262,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip how do I import my requirements but keep my"}
+{"t_us":7803124,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip how do I import my requirements but keep my old pinned"}
+{"t_us":7949361,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip how do I import my requirements?"}
+{"t_us":7969043,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip how do I import my requirements? But keep my old pinned"}
+{"t_us":8079925,"process":"headless","dir":"in","t_client_us":8079374,"t_server_us":64253458,"type":"pong"}
+{"t_us":8945089,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip how do I import my requirements? But keep my old pinned versions?"}
+{"t_us":9279270,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"When moving from pip how do I import my requirements? But keep my old pinned versions?"}
+{"t_us":9279930,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":10080685,"process":"headless","dir":"in","t_client_us":10080095,"t_server_us":66254211,"type":"pong"}
+{"t_us":10359194,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"You can use `pip freeze > requirements.txt` to save your current pinned versions, then install them with `pip install -r requirements.txt`."}
+{"t_us":10520370,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":12081935,"process":"headless","dir":"in","t_client_us":12081259,"t_server_us":68255493,"type":"pong"}
+{"t_us":14082161,"process":"headless","dir":"in","t_client_us":14081813,"t_server_us":70255828,"type":"pong"}
+{"t_us":16082576,"process":"headless","dir":"in","t_client_us":16081892,"t_server_us":72256111,"type":"pong"}
+{"t_us":18082997,"process":"headless","dir":"in","t_client_us":18082385,"t_server_us":74256456,"type":"pong"}
+{"t_us":19915119,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":19918540,"process":"headless","dir":"in","type":"socket.closed","code":1000}

@@ -1,0 +1,25 @@
+{"t_us":74489,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q01.wav"}
+{"t_us":77782,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-fce330d01e6c849a","type":"welcome"}
+{"t_us":77881,"process":"headless","type":"mic.start","t0_us":77878}
+{"t_us":1220844,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2080254,"process":"headless","dir":"in","t_client_us":2079115,"t_server_us":3190484,"type":"pong"}
+{"t_us":2129649,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install"}
+{"t_us":3156345,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install of?"}
+{"t_us":3476262,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install of?"}
+{"t_us":4081415,"process":"headless","dir":"in","t_client_us":4080925,"t_server_us":5191867,"type":"pong"}
+{"t_us":4415136,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install of on a Mac"}
+{"t_us":5154780,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install of on a Mac or Linux"}
+{"t_us":6081274,"process":"headless","dir":"in","t_client_us":6080538,"t_server_us":7191603,"type":"pong"}
+{"t_us":6151221,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install of on a Mac or Linux machine?"}
+{"t_us":6500687,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I install of on a Mac or Linux machine?"}
+{"t_us":6501167,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":8081322,"process":"headless","dir":"in","t_client_us":8080495,"t_server_us":9191710,"type":"pong"}
+{"t_us":8109333,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":9242113,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"To install uv on Mac or Linux, run `pip install uv` in your terminal. Make sure you have Python and pip installed first."}
+{"t_us":10081702,"process":"headless","dir":"in","t_client_us":10081065,"t_server_us":11192180,"type":"pong"}
+{"t_us":12081799,"process":"headless","dir":"in","t_client_us":12081244,"t_server_us":13192335,"type":"pong"}
+{"t_us":14083179,"process":"headless","dir":"in","t_client_us":14082430,"t_server_us":15193622,"type":"pong"}
+{"t_us":15450221,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":16083355,"process":"headless","dir":"in","t_client_us":16082769,"t_server_us":17193798,"type":"pong"}
+{"t_us":17137637,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":17141699,"process":"headless","dir":"in","type":"socket.closed","code":1000}

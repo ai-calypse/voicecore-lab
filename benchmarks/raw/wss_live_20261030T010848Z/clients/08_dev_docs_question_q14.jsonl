@@ -1,0 +1,26 @@
+{"t_us":77809,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q14.wav"}
+{"t_us":80704,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-59d524c5c5af215a","type":"welcome"}
+{"t_us":80837,"process":"headless","type":"mic.start","t0_us":80834}
+{"t_us":1185144,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2082672,"process":"headless","dir":"in","t_client_us":2081914,"t_server_us":144865429,"type":"pong"}
+{"t_us":2191001,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term"}
+{"t_us":3168487,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release"}
+{"t_us":3713653,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release?"}
+{"t_us":4081896,"process":"headless","dir":"in","t_client_us":4081639,"t_server_us":146864814,"type":"pong"}
+{"t_us":4733320,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release of OV for"}
+{"t_us":5176898,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release of OV for companies"}
+{"t_us":6082598,"process":"headless","dir":"in","t_client_us":6081918,"t_server_us":148865216,"type":"pong"}
+{"t_us":6173513,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release of OV for companies that upgrade"}
+{"t_us":7096100,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release of OV for companies that upgrade slowly?"}
+{"t_us":7404033,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Is there a long term support release of OV for companies that upgrade slowly?"}
+{"t_us":7404625,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":8083379,"process":"headless","dir":"in","t_client_us":8082864,"t_server_us":150866191,"type":"pong"}
+{"t_us":8438295,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"Yes, Ubuntu offers Long Term Support (LTS) releases, including Ubuntu 22.04 LTS, which are supported for five years."}
+{"t_us":8613873,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":10084695,"process":"headless","dir":"in","t_client_us":10084110,"t_server_us":152867511,"type":"pong"}
+{"t_us":12085452,"process":"headless","dir":"in","t_client_us":12084895,"t_server_us":154868282,"type":"pong"}
+{"t_us":14086600,"process":"headless","dir":"in","t_client_us":14085921,"t_server_us":156869379,"type":"pong"}
+{"t_us":16087843,"process":"headless","dir":"in","t_client_us":16087310,"t_server_us":158870686,"type":"pong"}
+{"t_us":17182979,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":18040974,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":18043609,"process":"headless","dir":"in","type":"socket.closed","code":1000}

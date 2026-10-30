@@ -43,8 +43,9 @@ const client = new VoiceClient({
     let stop = false;
     void (async () => {
       const t0 = nowUs(), total = Math.ceil(pcm.length / 320) + tailMs / 20;
+      log({ type: "mic.start", t0_us: t0 }); // capture_us of frame k is t0 + 20,000 k: fixture labels map onto this clock
       for (let seq = 0; seq < total && !stop; seq++) {
-        await sleep((t0 + seq * 20_000 - nowUs()) / 1000);
+        await sleep((t0 + (seq + 1) * 20_000 - nowUs()) / 1000); // a frame leaves when its last sample is captured
         const samples = new Int16Array(320);
         samples.set(pcm.subarray(seq * 320, seq * 320 + 320));
         onFrame({ sequence: seq, capture_us: BigInt(t0 + seq * 20_000), samples });

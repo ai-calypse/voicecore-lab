@@ -1,0 +1,25 @@
+{"t_us":70361,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q07.wav"}
+{"t_us":73302,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-f6c0fe0e8607a56d","type":"welcome"}
+{"t_us":73405,"process":"headless","type":"mic.start","t0_us":73403}
+{"t_us":1475494,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2073846,"process":"headless","dir":"in","t_client_us":2072953,"t_server_us":78395962,"type":"pong"}
+{"t_us":2106514,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I make"}
+{"t_us":3109595,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I make UV install"}
+{"t_us":4077547,"process":"headless","dir":"in","t_client_us":4076961,"t_server_us":80399790,"type":"pong"}
+{"t_us":4110466,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I make UV install every dependent"}
+{"t_us":5118296,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I make UV install every dependent"}
+{"t_us":5208135,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I make UV install every dependent group by default?"}
+{"t_us":5858334,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I make UV install every dependent group by default?"}
+{"t_us":6077141,"process":"headless","dir":"in","t_client_us":6076508,"t_server_us":82399332,"type":"pong"}
+{"t_us":6236676,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I make UV install every dependent group by default?"}
+{"t_us":6237350,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":7339776,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"Use the command `uv install --group all` to install all dependency groups by default."}
+{"t_us":7488061,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8078422,"process":"headless","dir":"in","t_client_us":8077864,"t_server_us":84400697,"type":"pong"}
+{"t_us":10078427,"process":"headless","dir":"in","t_client_us":10077867,"t_server_us":86400728,"type":"pong"}
+{"t_us":12078509,"process":"headless","dir":"in","t_client_us":12077890,"t_server_us":88400771,"type":"pong"}
+{"t_us":12806577,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":14079040,"process":"headless","dir":"in","t_client_us":14078356,"t_server_us":90401298,"type":"pong"}
+{"t_us":16080426,"process":"headless","dir":"in","t_client_us":16079897,"t_server_us":92402695,"type":"pong"}
+{"t_us":16913951,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":16918431,"process":"headless","dir":"in","type":"socket.closed","code":1000}

@@ -1,0 +1,26 @@
+{"t_us":73310,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q02.wav"}
+{"t_us":76270,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-24ba426f81498591","type":"welcome"}
+{"t_us":76373,"process":"headless","type":"mic.start","t0_us":76370}
+{"t_us":1180495,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2077901,"process":"headless","dir":"in","t_client_us":2076850,"t_server_us":20568505,"type":"pong"}
+{"t_us":2107752,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Can I buy a pay"}
+{"t_us":3106403,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Can I buy a paid support"}
+{"t_us":4080051,"process":"headless","dir":"in","t_client_us":4079422,"t_server_us":22570878,"type":"pong"}
+{"t_us":4127522,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Can I buy a paid support contract for Of"}
+{"t_us":5114610,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Can I buy a paid support"}
+{"t_us":5132162,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Can I buy a paid support for Of with guarantee"}
+{"t_us":6079655,"process":"headless","dir":"in","t_client_us":6078937,"t_server_us":24570407,"type":"pong"}
+{"t_us":6127321,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Can I buy a paid support for OV with guaranteed response"}
+{"t_us":6975169,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Can I buy a paid support contract for OV with guaranteed response times?"}
+{"t_us":7338990,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Can I buy a paid support contract for OV with guaranteed response times?"}
+{"t_us":7339680,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":8080437,"process":"headless","dir":"in","t_client_us":8079551,"t_server_us":26571276,"type":"pong"}
+{"t_us":8567165,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"Yes, OV offers paid support contracts with guaranteed response times. Please contact OV sales for specific details."}
+{"t_us":8717721,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":10080677,"process":"headless","dir":"in","t_client_us":10079799,"t_server_us":28571507,"type":"pong"}
+{"t_us":12080893,"process":"headless","dir":"in","t_client_us":12080308,"t_server_us":30571809,"type":"pong"}
+{"t_us":14081333,"process":"headless","dir":"in","t_client_us":14080754,"t_server_us":32572223,"type":"pong"}
+{"t_us":16082666,"process":"headless","dir":"in","t_client_us":16081983,"t_server_us":34573530,"type":"pong"}
+{"t_us":16595623,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":17956235,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":17959339,"process":"headless","dir":"in","type":"socket.closed","code":1000}

@@ -1,0 +1,121 @@
+{
+  "turns": [
+    {
+      "clip": "dev_docs_question_q01",
+      "endpoint_delay_ms": 860.0,
+      "stt_settle_ms": 0.6,
+      "llm_first_token_ms": 1105.5,
+      "tts_first_audio_ms": 501.8,
+      "total_ms": 2471.5,
+      "residual_ms": 3.4
+    },
+    {
+      "clip": "dev_docs_question_q02",
+      "endpoint_delay_ms": 880.0,
+      "stt_settle_ms": 0.8,
+      "llm_first_token_ms": 930.9,
+      "tts_first_audio_ms": 433.4,
+      "total_ms": 2261.4,
+      "residual_ms": 16.0
+    },
+    {
+      "clip": "dev_docs_question_q04",
+      "endpoint_delay_ms": 820.0,
+      "stt_settle_ms": 0.6,
+      "llm_first_token_ms": 812.1,
+      "tts_first_audio_ms": 776.4,
+      "total_ms": 2430.6,
+      "residual_ms": 21.2
+    },
+    {
+      "clip": "dev_docs_question_q06",
+      "endpoint_delay_ms": 860.0,
+      "stt_settle_ms": 0.7,
+      "llm_first_token_ms": 539.6,
+      "tts_first_audio_ms": 682.4,
+      "total_ms": 2105.0,
+      "residual_ms": 22.0
+    },
+    {
+      "clip": "dev_docs_question_q07",
+      "endpoint_delay_ms": 820.0,
+      "stt_settle_ms": 0.5,
+      "llm_first_token_ms": 560.1,
+      "tts_first_audio_ms": 675.3,
+      "total_ms": 2074.7,
+      "residual_ms": 18.4
+    },
+    {
+      "clip": "dev_docs_question_q09",
+      "endpoint_delay_ms": 900.0,
+      "stt_settle_ms": 0.6,
+      "llm_first_token_ms": 483.9,
+      "tts_first_audio_ms": 620.0,
+      "total_ms": 2020.8,
+      "residual_ms": 16.0
+    },
+    {
+      "clip": "dev_docs_question_q11",
+      "endpoint_delay_ms": 820.0,
+      "stt_settle_ms": 0.8,
+      "llm_first_token_ms": 505.8,
+      "tts_first_audio_ms": 571.9,
+      "total_ms": 1913.8,
+      "residual_ms": 15.0
+    },
+    {
+      "clip": "dev_docs_question_q12",
+      "endpoint_delay_ms": 780.0,
+      "stt_settle_ms": 0.6,
+      "llm_first_token_ms": 647.2,
+      "tts_first_audio_ms": 531.8,
+      "total_ms": 1962.4,
+      "residual_ms": 2.6
+    },
+    {
+      "clip": "dev_docs_question_q14",
+      "endpoint_delay_ms": 860.0,
+      "stt_settle_ms": 0.9,
+      "llm_first_token_ms": 613.7,
+      "tts_first_audio_ms": 595.2,
+      "total_ms": 2073.0,
+      "residual_ms": 2.9
+    },
+    {
+      "clip": "dev_docs_question_q16",
+      "endpoint_delay_ms": 860.0,
+      "stt_settle_ms": 0.6,
+      "llm_first_token_ms": 594.6,
+      "tts_first_audio_ms": 427.0,
+      "total_ms": 1901.0,
+      "residual_ms": 18.6
+    }
+  ],
+  "summary": {
+    "total_ms": {
+      "p50": 2073.0,
+      "p95": 2471.5
+    },
+    "endpoint_delay_ms": {
+      "p50": 860.0,
+      "p95": 900.0
+    },
+    "stt_settle_ms": {
+      "p50": 0.6,
+      "p95": 0.9
+    },
+    "llm_first_token_ms": {
+      "p50": 594.6,
+      "p95": 1105.5
+    },
+    "tts_first_audio_ms": {
+      "p50": 571.9,
+      "p95": 776.4
+    },
+    "residual_ms": {
+      "p50": 16.0,
+      "p95": 22.0
+    }
+  },
+  "n": 10
+}

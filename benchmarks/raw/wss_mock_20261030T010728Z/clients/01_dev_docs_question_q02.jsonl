@@ -1,0 +1,19 @@
+{"t_us":72879,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q02.wav"}
+{"t_us":75729,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-b063f357f1b69f2e","type":"welcome"}
+{"t_us":75837,"process":"headless","type":"mic.start","t0_us":75834}
+{"t_us":1158115,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2077708,"process":"headless","dir":"in","t_client_us":2076564,"t_server_us":18712404,"type":"pong"}
+{"t_us":4082081,"process":"headless","dir":"in","t_client_us":4081346,"t_server_us":20716868,"type":"pong"}
+{"t_us":6083157,"process":"headless","dir":"in","t_client_us":6082427,"t_server_us":22717934,"type":"pong"}
+{"t_us":7319647,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"how do I install uv?"}
+{"t_us":7320421,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"how do I install uv?"}
+{"t_us":7320670,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":7771990,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"Install uv with the standalone installer script. Then run uv init to start a project."}
+{"t_us":7792725,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8083346,"process":"headless","dir":"in","t_client_us":8082856,"t_server_us":24718339,"type":"pong"}
+{"t_us":10083610,"process":"headless","dir":"in","t_client_us":10082897,"t_server_us":26718493,"type":"pong"}
+{"t_us":12084926,"process":"headless","dir":"in","t_client_us":12084246,"t_server_us":28719812,"type":"pong"}
+{"t_us":13078206,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":14085020,"process":"headless","dir":"in","t_client_us":14084357,"t_server_us":30719914,"type":"pong"}
+{"t_us":15958051,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":15962230,"process":"headless","dir":"in","type":"socket.closed","code":1000}
