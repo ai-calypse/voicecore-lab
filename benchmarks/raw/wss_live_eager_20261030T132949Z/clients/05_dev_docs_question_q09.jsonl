@@ -1,0 +1,22 @@
+{"t_us":71462,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q09.wav"}
+{"t_us":74292,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-fbccbb3dbca6f96e","type":"welcome"}
+{"t_us":74397,"process":"headless","type":"mic.start","t0_us":74395}
+{"t_us":1176061,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1875723,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How can I check that"}
+{"t_us":2076076,"process":"headless","dir":"in","t_client_us":2075297,"t_server_us":85578477,"type":"pong"}
+{"t_us":2895874,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How can I check that my lock file is"}
+{"t_us":3879584,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How can I check that my lock file is up to date without"}
+{"t_us":4077832,"process":"headless","dir":"in","t_client_us":4077394,"t_server_us":87580327,"type":"pong"}
+{"t_us":4518649,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How can I check that my lock file is up to date without changing it?"}
+{"t_us":4519326,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How can I check that my lock file is up to date without changing it?"}
+{"t_us":4519624,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":4958682,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":2,"id":"76747bf5b35a","title":"Locking and syncing > Checking the lockfile","url":"https://docs.astral.sh/uv/concepts/projects/sync/#checking-the-lockfile"}],"gen":1}
+{"t_us":4959215,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"Run `uv lock --check` to verify the lockfile is up‑to‑date without modifying it [2]. This flag works the same as the `--locked` option on other commands [2]."}
+{"t_us":5095109,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":6078205,"process":"headless","dir":"in","t_client_us":6077703,"t_server_us":89580755,"type":"pong"}
+{"t_us":8078049,"process":"headless","dir":"in","t_client_us":8077606,"t_server_us":91580594,"type":"pong"}
+{"t_us":10077743,"process":"headless","dir":"in","t_client_us":10077171,"t_server_us":93580252,"type":"pong"}
+{"t_us":12078604,"process":"headless","dir":"in","t_client_us":12078311,"t_server_us":95581251,"type":"pong"}
+{"t_us":13015336,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":13653661,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":13657337,"process":"headless","dir":"in","type":"socket.closed","code":1000}

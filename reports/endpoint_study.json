@@ -1,0 +1,187 @@
+{
+  "finalize_ms": 200,
+  "policies": {
+    "fixed_300": {
+      "n": 37,
+      "early": 14,
+      "early_clips": [
+        "dev_docs_question_q04",
+        "dev_docs_question_q06",
+        "dev_docs_question_q14",
+        "dev_docs_question_q16",
+        "dev_docs_question_q17",
+        "dev_docs_question_q19",
+        "dev_docs_question_q25",
+        "dev_docs_question_q37",
+        "dev_single_02",
+        "dev_single_04",
+        "dev_noisy_5db_02",
+        "dev_slow_0_8x_02",
+        "dev_mid_pause_600ms_01",
+        "dev_mid_pause_600ms_02"
+      ],
+      "delay_p50": 360,
+      "delay_p95": 440,
+      "docs_delay_p50": 360
+    },
+    "fixed_400": {
+      "n": 37,
+      "early": 12,
+      "early_clips": [
+        "dev_docs_question_q04",
+        "dev_docs_question_q06",
+        "dev_docs_question_q14",
+        "dev_docs_question_q16",
+        "dev_docs_question_q17",
+        "dev_docs_question_q19",
+        "dev_docs_question_q25",
+        "dev_docs_question_q37",
+        "dev_single_04",
+        "dev_slow_0_8x_02",
+        "dev_mid_pause_600ms_01",
+        "dev_mid_pause_600ms_02"
+      ],
+      "delay_p50": 460,
+      "delay_p95": 540,
+      "docs_delay_p50": 460
+    },
+    "fixed_500": {
+      "n": 37,
+      "early": 6,
+      "early_clips": [
+        "dev_docs_question_q06",
+        "dev_docs_question_q16",
+        "dev_docs_question_q17",
+        "dev_single_04",
+        "dev_mid_pause_600ms_01",
+        "dev_mid_pause_600ms_02"
+      ],
+      "delay_p50": 560,
+      "delay_p95": 640,
+      "docs_delay_p50": 560
+    },
+    "fixed_600": {
+      "n": 37,
+      "early": 3,
+      "early_clips": [
+        "dev_docs_question_q06",
+        "dev_mid_pause_600ms_01",
+        "dev_mid_pause_600ms_02"
+      ],
+      "delay_p50": 660,
+      "delay_p95": 740,
+      "docs_delay_p50": 660
+    },
+    "fixed_800": {
+      "n": 37,
+      "early": 0,
+      "early_clips": [],
+      "delay_p50": 860,
+      "delay_p95": 940,
+      "docs_delay_p50": 860
+    },
+    "eager_200_else_800": {
+      "n": 37,
+      "early": 5,
+      "early_clips": [
+        "dev_docs_question_q06",
+        "dev_docs_question_q17",
+        "dev_docs_question_q37",
+        "dev_single_02",
+        "dev_slow_0_8x_02"
+      ],
+      "delay_p50": 400,
+      "delay_p95": 540,
+      "docs_delay_p50": 380
+    },
+    "eager_250_else_800": {
+      "n": 37,
+      "early": 5,
+      "early_clips": [
+        "dev_docs_question_q06",
+        "dev_docs_question_q17",
+        "dev_docs_question_q37",
+        "dev_single_02",
+        "dev_slow_0_8x_02"
+      ],
+      "delay_p50": 400,
+      "delay_p95": 540,
+      "docs_delay_p50": 380
+    },
+    "eager_300_else_800": {
+      "n": 37,
+      "early": 5,
+      "early_clips": [
+        "dev_docs_question_q06",
+        "dev_docs_question_q17",
+        "dev_docs_question_q37",
+        "dev_single_02",
+        "dev_slow_0_8x_02"
+      ],
+      "delay_p50": 400,
+      "delay_p95": 540,
+      "docs_delay_p50": 380
+    },
+    "eager_400_else_800": {
+      "n": 37,
+      "early": 4,
+      "early_clips": [
+        "dev_docs_question_q06",
+        "dev_docs_question_q17",
+        "dev_docs_question_q37",
+        "dev_slow_0_8x_02"
+      ],
+      "delay_p50": 460,
+      "delay_p95": 540,
+      "docs_delay_p50": 460
+    },
+    "eager_200_else_600": {
+      "n": 37,
+      "early": 7,
+      "early_clips": [
+        "dev_docs_question_q06",
+        "dev_docs_question_q17",
+        "dev_docs_question_q37",
+        "dev_single_02",
+        "dev_slow_0_8x_02",
+        "dev_mid_pause_600ms_01",
+        "dev_mid_pause_600ms_02"
+      ],
+      "delay_p50": 400,
+      "delay_p95": 540,
+      "docs_delay_p50": 380
+    },
+    "eager_250_else_600": {
+      "n": 37,
+      "early": 7,
+      "early_clips": [
+        "dev_docs_question_q06",
+        "dev_docs_question_q17",
+        "dev_docs_question_q37",
+        "dev_single_02",
+        "dev_slow_0_8x_02",
+        "dev_mid_pause_600ms_01",
+        "dev_mid_pause_600ms_02"
+      ],
+      "delay_p50": 400,
+      "delay_p95": 540,
+      "docs_delay_p50": 380
+    },
+    "eager_300_else_600": {
+      "n": 37,
+      "early": 7,
+      "early_clips": [
+        "dev_docs_question_q06",
+        "dev_docs_question_q17",
+        "dev_docs_question_q37",
+        "dev_single_02",
+        "dev_slow_0_8x_02",
+        "dev_mid_pause_600ms_01",
+        "dev_mid_pause_600ms_02"
+      ],
+      "delay_p50": 400,
+      "delay_p95": 540,
+      "docs_delay_p50": 380
+    }
+  }
+}

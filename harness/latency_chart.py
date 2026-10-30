@@ -1,6 +1,6 @@
 """Latency chart for the README (S08-T03): uv run python harness/latency_chart.py
 
-Stage medians of one voice turn (speech end -> first agent audio rendered) from three recorded runs.
+Stage medians of one voice turn (speech end -> first agent audio rendered) from four recorded runs.
 Writes reports/latency_chart_{light,dark}.png. Numbers come from each run's latency.json; the asr_assisted
 first segment is the derived speech end -> LLM request median (reports/perf.md), because its asr-triggered
 endpoints carry no frame time. Stage medians do not add up exactly to the total median printed at the bar end.
@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 from fixtures import ROOT  # noqa: E402
 
 RAW = ROOT / "benchmarks/raw"
-STAGES = ["Turn end detected (endpoint + STT)", "LLM first token", "TTS first audio", "Transport + playout start (10-16 ms)"]
+STAGES = ["Turn end detected (endpoint + STT)", "LLM first token", "TTS first audio", "Transport + playout start (10-26 ms)"]
 # reference categorical palette (dataviz skill), slots 1-4, validated for each surface
 THEMES = {
     "light": {"bg": "#ffffff", "ink": "#1f2328", "muted": "#59636e", "grid": "#d1d9e0", "series": ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"]},
@@ -50,25 +50,30 @@ def stages(run, first=None):
 
 
 ROWS = [
-    ("Live, fixed 800 ms endpoint (n = 15)", *stages("wss_live_fixed_20261030T020448Z")),
-    ("Live, ASR-assisted endpoint (n = 12)", *stages("wss_live_asr_assisted_20261030T020917Z", first=decision_ms("wss_live_asr_assisted_20261030T020917Z"))),
+    ("Now: live, eager endpoint, gpt-oss-120b on Cerebras (n = 15)", *stages("wss_live_eager_20261030T132949Z")),
+    ("Before: live, fixed 800 ms endpoint, gpt-4.1-nano (n = 15)", *stages("wss_live_fixed_20261030T020448Z")),
+    ("Before: live, ASR-assisted endpoint, gpt-4.1-nano (n = 12)", *stages("wss_live_asr_assisted_20261030T020917Z", first=decision_ms("wss_live_asr_assisted_20261030T020917Z"))),
     ("Mock providers, 40 sessions (n = 40)", *stages("wss_mock_fixed_20261030T022315Z")),
 ]
 
 
 def draw(theme: str):
     t = THEMES[theme]
-    fig, ax = plt.subplots(figsize=(10, 3.6), dpi=150)
+    fig, ax = plt.subplots(figsize=(10, 4.4), dpi=150)
     fig.patch.set_facecolor(t["bg"])
     ax.set_facecolor(t["bg"])
     for y, (label, segs, total) in enumerate(ROWS):
         left = 0.0
         for i, ms in enumerate(segs):
             ax.barh(y, ms, left=left, height=0.55, color=t["series"][i], edgecolor=t["bg"], linewidth=2)  # 2px surface gap
-            if ms >= 120:  # direct label only where it fits
+            if ms >= 170:  # direct label only where it fits
                 ax.text(left + ms / 2, y, f"{ms:,.0f}", ha="center", va="center", fontsize=9, color="#ffffff" if i in (0, 1) else "#1f2328")
             left += ms
-        ax.text(left + 40, y, f"{total:,.0f} ms total (p50)", va="center", fontsize=9.5, color=t["ink"])
+        ax.text(left + 40, y, f"{total:,.0f} ms total (p50)", va="center", fontsize=9.5, color=t["ink"],
+                bbox={"facecolor": t["bg"], "edgecolor": "none", "pad": 1.5}, zorder=3)  # sits over the reference line
+    # reference: hosted Deepgram Voice Agent, speech end -> first agent audio byte received (S00-T02, n = 3)
+    ax.axvline(972, color=t["muted"], linewidth=1, linestyle=(0, (4, 3)), zorder=1)
+    ax.text(972 + 25, -0.5, "Deepgram Voice Agent median 972 ms (n = 3)", fontsize=8.5, color=t["muted"], va="center")
     ax.set_yticks(range(len(ROWS)), [r[0] for r in ROWS], color=t["ink"], fontsize=10)
     ax.invert_yaxis()
     ax.set_xlim(0, 3200)

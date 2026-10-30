@@ -14,8 +14,10 @@ _CLOSED = object()
 class MockSTT:
     """Emits each scripted event once `t_ms` of audio has been received (audio time, not wall time)."""
 
-    def __init__(self, script: list[tuple[int, Partial | Final]] = (), error: ProviderError | None = None, canned: str | None = None):
-        """canned: text returned as a Final on every finalize() (for runs where nobody scripted the words)."""
+    def __init__(self, script: list[tuple[int, Partial | Final]] = (), error: ProviderError | None = None,
+                 canned: str | list[str] | None = None):
+        """canned: text returned as a Final on every finalize() (for runs where nobody scripted the words);
+        a list gives one text per finalize, in order."""
         self.script = sorted(script, key=lambda x: x[0])
         self.error, self.canned = error, canned
         self.finalizes = 0
@@ -32,8 +34,9 @@ class MockSTT:
 
     async def finalize(self) -> None:
         self.finalizes += 1
-        if self.canned and not self._closed:
-            self._q.put_nowait(Final(self.canned, speech_final=True))
+        text = self.canned.pop(0) if isinstance(self.canned, list) and self.canned else self.canned
+        if isinstance(text, str) and not self._closed:
+            self._q.put_nowait(Final(text, speech_final=True))
 
     async def events(self):
         if self.error:

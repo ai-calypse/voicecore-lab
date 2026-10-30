@@ -2,7 +2,7 @@
 
 A real-time voice agent for the [uv](https://docs.astral.sh/uv/) documentation, built to show the systems work underneath voice AI: browser audio capture and playout, a Go real-time gateway, turn-taking with an echo gate, barge-in that silences the agent, a grounded answer engine, and the tracing and benchmarks that measure all of it.
 
-Speech-to-text, the language model and text-to-speech are bought (Deepgram nova-3, `openai/gpt-4.1-nano` via OpenRouter, Cartesia sonic-3.6) through replaceable adapters. Everything between the microphone and the speaker is this repository's code. [ADR 0001](docs/adr/0001-engine-ownership.md) draws that line.
+Speech-to-text, the language model and text-to-speech are bought (Deepgram nova-3, `openai/gpt-oss-120b` on Cerebras via OpenRouter, Cartesia sonic-3.6) through replaceable adapters. Everything between the microphone and the speaker is this repository's code. [ADR 0001](docs/adr/0001-engine-ownership.md) draws that line.
 
 ```mermaid
 flowchart LR
@@ -15,22 +15,22 @@ flowchart LR
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="reports/latency_chart_dark.png">
-  <img alt="Stage medians of one voice turn. Live with the fixed 800 ms endpoint: 861 ms to detect the end of the turn, 939 ms LLM first token, 456 ms TTS first audio, 2,317 ms total. Live with ASR-assisted endpointing: 523, 1,289, 406 ms, 2,259 ms total. Mock providers with 40 sessions: 820, 314, 150 ms, 1,296 ms total." src="reports/latency_chart_light.png">
+  <img alt="Stage medians of one voice turn. Now, live with the eager endpoint and gpt-oss-120b on Cerebras: 340 ms to detect the end of the turn, 340 ms LLM first token, 145 ms TTS first audio, 841 ms total. Before, live with the fixed 800 ms endpoint and gpt-4.1-nano: 861, 939, 456 ms, 2,317 ms total. Before, ASR-assisted endpointing: 523, 1,289, 406 ms, 2,259 ms total. Mock providers with 40 sessions: 820, 314, 150 ms, 1,296 ms total. A dashed line marks the hosted Deepgram Voice Agent median, 972 ms." src="reports/latency_chart_light.png">
 </picture>
 
 | What | Result | Label | Source |
 |---|---|---|---|
-| User stops speaking → first agent audio rendered | p50 2,317 ms, p95 3,102 ms (n = 15) | live-provider | [reports/perf.md](reports/perf.md) |
-| …of which endpointing (fixed 800 ms silence) | p50 860 ms | live-provider | [ADR 0002](docs/adr/0002-turn-policy.md) |
+| User stops speaking → first agent audio rendered | p50 841 ms, p95 1,520 ms (n = 15); 2,317 ms before tuning | live-provider | [reports/latency_tuning.md](reports/latency_tuning.md) |
+| …of which detecting the end of the turn (eager endpoint) | p50 340 ms; 6/27 early cutoffs merged before any audio played | live-provider | [ADR 0002](docs/adr/0002-turn-policy.md) |
 | Same path with mock providers | p50 1,320 ms, p95 1,440 ms (n = 216) | fake-provider | [reports/perf.md](reports/perf.md) |
 | Barge-in: user starts talking → agent audio stops | p50 303 ms (8/8 silenced), 0/4 false barge-ins on echo | live-provider | [reports/barge_in.md](reports/barge_in.md) |
 | Gateway overhead per round trip (two passes) | 0.19 ms median | measured, loopback | [benchmarks/transport.md](benchmarks/transport.md) |
-| Grounded answers on held-out questions | refusals 15/15 right, citations 15/15 supporting | live-provider | [reports/docs_eval.md](reports/docs_eval.md) |
-| Adversarial docs (stale, contradicting, injected, unauthorised) | 13/15 pass, 0 leaked claims | live-provider | [reports/docs_eval.md](reports/docs_eval.md) |
+| Grounded answers on held-out questions (gpt-oss-120b) | refusals 14/15 right, citations 12/12 supporting | live-provider | [reports/docs_eval.md](reports/docs_eval.md) |
+| Adversarial docs (stale, contradicting, injected, unauthorised) | 14/15 pass, 0 leaked claims | live-provider | [reports/docs_eval.md](reports/docs_eval.md) |
 | STT word error rate, held-out audio | 6.5 % (n = 25) | live-provider | [reports/quality_eval.md](reports/quality_eval.md) |
 | Concurrent sessions, mock providers | 40/40 complete, p95 1,305 ms, 0 drops | fake-provider | [reports/perf.md](reports/perf.md) |
 
-Samples are small (10–30 live turns per number), so these rank design choices; they are not production rates. The comparison against a hosted voice agent is in [reports/latency_breakdown.md](reports/latency_breakdown.md).
+Samples are small (10–30 live turns per number), so these rank design choices; they are not production rates. The hosted Deepgram Voice Agent measured 972 ms (n = 3, [reports/latency_breakdown.md](reports/latency_breakdown.md)); what closed the gap is in [reports/latency_tuning.md](reports/latency_tuning.md).
 
 ## Quick start (no keys, no spend)
 
@@ -59,7 +59,7 @@ Run the pieces by hand: `go run ./cmd/gateway` (in `services/realtime-gateway`),
 
 Copy `.env.example` to `.env` and fill in the keys, then `uv run python -m voicecore.server --providers live` (or `PROVIDERS=live docker compose up`).
 
-- **Spending is guarded.** Every live session reserves its caps first (STT 120 s of speech, LLM $0.002, TTS 1,500 characters) in `benchmarks/spend_ledger.json`, and [`voicecore/budget.py`](services/agent-core/voicecore/budget.py) refuses anything over the project caps.
+- **Spending is guarded.** Every live session reserves its caps first (STT 120 s of speech, LLM $0.006, TTS 1,500 characters) in `benchmarks/spend_ledger.json`, and [`voicecore/budget.py`](services/agent-core/voicecore/budget.py) refuses anything over the project caps.
 - **Keys stay on the server.** The browser only ever holds a 60 s gateway token.
 
 ## Repository map

@@ -1,0 +1,23 @@
+{"t_us":69423,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q12.wav"}
+{"t_us":72154,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-7640ab2a5580facb","type":"welcome"}
+{"t_us":72258,"process":"headless","type":"mic.start","t0_us":72256}
+{"t_us":1174943,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1909820,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add"}
+{"t_us":2073095,"process":"headless","dir":"in","t_client_us":2071927,"t_server_us":114078219,"type":"pong"}
+{"t_us":2918217,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package"}
+{"t_us":3929049,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package for just one uv"}
+{"t_us":4075974,"process":"headless","dir":"in","t_client_us":4075430,"t_server_us":116081354,"type":"pong"}
+{"t_us":4910233,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package for just one uv run command?"}
+{"t_us":5289814,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package for just one uv run command?"}
+{"t_us":5290229,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I add an extra package for just one uv run command?"}
+{"t_us":5290581,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":5613127,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"984e0e339fc9","title":"Tools > Including additional dependencies","url":"https://docs.astral.sh/uv/concepts/tools/#including-additional-dependencies"}],"gen":1}
+{"t_us":5613637,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"Use `uvx` with the `--with` (or `-w`) option to specify the extra package when you run the tool, e.g. `uvx --with <extra-package> <tool>` [1]."}
+{"t_us":5810734,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":6076810,"process":"headless","dir":"in","t_client_us":6076497,"t_server_us":118082332,"type":"pong"}
+{"t_us":8077813,"process":"headless","dir":"in","t_client_us":8076987,"t_server_us":120083058,"type":"pong"}
+{"t_us":10077069,"process":"headless","dir":"in","t_client_us":10076442,"t_server_us":122082473,"type":"pong"}
+{"t_us":12077336,"process":"headless","dir":"in","t_client_us":12076700,"t_server_us":124082712,"type":"pong"}
+{"t_us":14077486,"process":"headless","dir":"in","t_client_us":14076934,"t_server_us":126082927,"type":"pong"}
+{"t_us":14512309,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":14513749,"process":"headless","dir":"in","type":"socket.closed","code":1000}

@@ -1,0 +1,30 @@
+{"t_us":73773,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/single_03.wav"}
+{"t_us":76591,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-35d9c4f8972c92bb","type":"welcome"}
+{"t_us":76709,"process":"headless","type":"mic.start","t0_us":76707}
+{"t_us":1180063,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1909412,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"The court was spaced"}
+{"t_us":2078059,"process":"headless","dir":"in","t_client_us":2077661,"t_server_us":35259000,"type":"pong"}
+{"t_us":2913971,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"The court was spacious, well paid,"}
+{"t_us":3905361,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"The court was spacious, well paved, and perfectly"}
+{"t_us":4078302,"process":"headless","dir":"in","t_client_us":4078111,"t_server_us":37259349,"type":"pong"}
+{"t_us":4556218,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"The court was spacious, well paved, and perfectly clean."}
+{"t_us":5599725,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"The court was spacious, well paved, and perfectly clean, there being probably"}
+{"t_us":5918525,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"The court was spacious, well paved, and perfectly clean."}
+{"t_us":5923237,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"The court was spacious, well paved, and perfectly clean. There being probably another"}
+{"t_us":6078752,"process":"headless","dir":"in","t_client_us":6078298,"t_server_us":39259656,"type":"pong"}
+{"t_us":6908135,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"The court was spacious, well paved, and perfectly clean. There being probably another entrance behind the"}
+{"t_us":7913395,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"The court was spacious, well paved, and perfectly clean. There being probably another entrance behind the stables for removing"}
+{"t_us":8079448,"process":"headless","dir":"in","t_client_us":8078841,"t_server_us":41260314,"type":"pong"}
+{"t_us":8600470,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"The court was spacious, well paved, and perfectly clean. There being probably another entrance behind the stables for removing the litter."}
+{"t_us":8601050,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"The court was spacious, well paved, and perfectly clean. There being probably another entrance behind the stables for removing the litter."}
+{"t_us":8601328,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":8925218,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":8930415,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that in the docs."}
+{"t_us":9074493,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":10080007,"process":"headless","dir":"in","t_client_us":10079178,"t_server_us":43260830,"type":"pong"}
+{"t_us":10914482,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":12079449,"process":"headless","dir":"in","t_client_us":12078826,"t_server_us":45260280,"type":"pong"}
+{"t_us":14080043,"process":"headless","dir":"in","t_client_us":14079475,"t_server_us":47260970,"type":"pong"}
+{"t_us":16080007,"process":"headless","dir":"in","t_client_us":16079534,"t_server_us":49260924,"type":"pong"}
+{"t_us":17757280,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":17761083,"process":"headless","dir":"in","type":"socket.closed","code":1000}

@@ -245,3 +245,57 @@ async def test_echo_of_the_agent_is_not_sent_to_stt_while_it_plays():
         await asyncio.sleep(0.02)
     assert stt.audio_ms == 0 and s.active_gen == 1
     await s.close()
+
+
+
+# Latency work 2026-10-30: eager endpoint and continuation merge
+
+async def test_eager_policy_finalizes_at_200ms_and_ends_the_turn_on_the_punctuated_final():
+    from voicecore.turntaking.floor import Policy
+
+    stt = MockSTT(canned="How do I install uv?")
+    events = []
+    from voicecore.trace import Tracer
+
+    s, out = await make(stt=stt, vad=FixtureVAD([[200, 1200]]), policy=Policy("eager", asr_silence_ms=200), tracer=Tracer("t", events.append))
+    for k in range(100):
+        await s.on_frame(mic(k))
+        await asyncio.sleep(0.02)
+    endpoint = next(e for e in events if e["event"] == "endpoint")
+    assert stt.finalizes == 1 and endpoint["attrs"]["reason"] == "asr"
+    assert endpoint["attrs"]["capture_end_us"] == 1_400_000  # 200 ms after speech, not 800
+    assert out.events("agent.generation_started")[0]["gen"] == 1
+    await s.close()
+
+
+async def test_speaking_again_right_after_an_early_endpoint_merges_both_parts_into_one_question():
+    from voicecore.turntaking.floor import Policy
+
+    llm = MockLLM(LLMScript(tokens=["Use pip compile."], first_token_ms=1500))
+    stt = MockSTT(canned=["When moving from pip.", "Keep my pins."])
+    s, out = await make(llm=llm, stt=stt, vad=FixtureVAD([[200, 1200], [1800, 2600]]), policy=Policy("eager", asr_silence_ms=200))
+    for k in range(200):
+        await s.on_frame(mic(k))
+        await asyncio.sleep(0.02)
+    await asyncio.sleep(3)
+    assert out.events("agent.cancel") == [{"type": "agent.cancel", "gen": 1}]
+    assert llm.calls[-1][-1]["content"] == "When moving from pip. Keep my pins."
+    assert [e["gen"] for e in out.events("agent.text")] == [2]
+    await s.close()
+
+
+async def test_speaking_after_the_early_answer_started_playing_is_a_new_question_not_a_merge():
+    from voicecore.turntaking.floor import Policy
+
+    llm = MockLLM(LLMScript(tokens=["Use pip compile."], first_token_ms=100))
+    stt = MockSTT(canned=["How do I install uv?", "Stop."])
+    s, out = await make(llm=llm, stt=stt, vad=FixtureVAD([[200, 1200], [2000, 2600]]), policy=Policy("eager", asr_silence_ms=200))
+    for k in range(200):
+        await s.on_frame(mic(k, 8000))  # loud: the user is louder than the agent's echo
+        if k == 90:  # 1.8 s: the client reports that the first answer is audible
+            await s.on_event({"type": "playout.started", "gen": 1, "t_us": mic(k).capture_us})
+        await asyncio.sleep(0.02)
+    await asyncio.sleep(3)
+    assert out.events("agent.cancel") == [{"type": "agent.cancel", "gen": 1}]
+    assert llm.calls[-1][-1]["content"] == "Stop."
+    await s.close()

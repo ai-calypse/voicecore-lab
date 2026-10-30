@@ -18,7 +18,7 @@ from voicecore import budget, protocol
 from voicecore.answer.engine import AnswerEngine
 from voicecore.answer.index import Index
 from voicecore.answer.ingest import ingest
-from voicecore.providers.cartesia_tts import MAX_CHARS
+from voicecore.providers.cartesia_tts import MAX_CHARS, open_socket
 from voicecore.providers.deepgram_stt import MAX_AUDIO_S, PRICE_PER_MIN
 from voicecore.providers.base import ProviderError
 from voicecore.providers.factory import make_live
@@ -31,7 +31,7 @@ from voicecore.turntaking.vad_silero import SileroVAD
 log = logging.getLogger("voicecore.server")
 MOCK_ANSWER = "Install uv with the standalone installer script [1]. Then run uv init to start a project [2]."
 DOCS = Path(__file__).resolve().parents[3] / "fixtures/docs/uv"
-LLM_CAP_USD = 0.002
+LLM_CAP_USD = 0.006  # gpt-oss-120b on Cerebras: about $0.0007 per grounded turn
 
 
 def mock_providers():
@@ -45,11 +45,17 @@ class OnDemandTTS:
     the session then answers in text only."""
 
     def __init__(self, make):
-        self._make, self._tts, self._ready = make, None, asyncio.Event()
+        self._make, self._tts, self._ready, self._ws = make, None, asyncio.Event(), None
+
+    async def warm(self):
+        """Opens the Cartesia socket now (no credits): the handshake took 250-330 ms at the first answer."""
+        if self._tts is None and self._ws is None:
+            self._ws = await open_socket()
 
     async def synth(self, gen, text, last):
         if self._tts is None:
-            self._tts = self._make()
+            ws, self._ws = self._ws, None
+            self._tts = self._make(ws)
             self._ready.set()
         await self._tts.synth(gen, text, last)
 
@@ -65,24 +71,26 @@ class OnDemandTTS:
     async def close(self):
         if self._tts:
             await self._tts.close()
+        elif self._ws is not None:
+            await self._ws.close()
 
 
-def live_providers(sid):
+def live_providers(sid, llm_opts=None):
     stt_res = budget.reserve("usd", round(MAX_AUDIO_S / 60 * PRICE_PER_MIN, 6), label=f"server stt {sid}")
     llm_res = budget.reserve("usd", LLM_CAP_USD, label=f"server llm {sid}")
     tts = {"res": None, "streams": []}
 
-    def new_tts():  # a retry opens a second stream; both bill one reservation and share its character cap
+    def new_tts(ws=None):  # a retry opens a second stream; both bill one reservation and share its character cap
         if tts["res"] is None:
             try:
                 tts["res"] = budget.reserve("cartesia_credits", MAX_CHARS, label=f"server tts {sid}")
             except budget.BudgetExceeded as e:
                 raise ProviderError("fatal", f"TTS budget: {e}") from None
         used = sum(t.chars for t in tts["streams"])
-        tts["streams"].append(make_live("tts", tts["res"], max_chars=MAX_CHARS - used))
+        tts["streams"].append(make_live("tts", tts["res"], max_chars=MAX_CHARS - used, ws=ws))
         return tts["streams"][-1]
 
-    p = {"stt": make_live("stt", stt_res), "llm": make_live("llm", llm_res), "tts": OnDemandTTS(new_tts),
+    p = {"stt": make_live("stt", stt_res), "llm": make_live("llm", llm_res, **(llm_opts or {})), "tts": OnDemandTTS(new_tts),
          "tts_factory": lambda: OnDemandTTS(new_tts)}
     settle = [lambda: budget.settle(stt_res, p["stt"].cost_usd(), request_id=p["stt"].request_id),
               lambda: budget.settle(llm_res, round(p["llm"].cost_usd, 6), calls=p["llm"].calls),
@@ -90,11 +98,11 @@ def live_providers(sid):
     return p, settle
 
 
-def handler_for(mode: str, trace_dir: Path | None, index: Index, policy: Policy = Policy()):
+def handler_for(mode: str, trace_dir: Path | None, index: Index, policy: Policy = Policy(), llm_opts: dict | None = None):
     async def handler(ws):  # ponytail: VAD runs inline on the event loop (~0.3 ms per window); move to a thread if sessions x frames saturate one core
         sid = ws.request.path.rsplit("/", 1)[-1]
         try:
-            providers, settle = live_providers(sid) if mode == "live" else mock_providers()
+            providers, settle = live_providers(sid, llm_opts) if mode == "live" else mock_providers()
         except budget.BudgetExceeded as e:
             log.warning("session %s refused: %s", sid, e)
             await ws.send(protocol.event("session.ended", reason="budget"))
@@ -131,13 +139,27 @@ async def main():
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--trace-dir", type=Path)
-    ap.add_argument("--policy", choices=["fixed", "adaptive", "asr_assisted"], default="fixed", help="endpointing (ADR 0002)")
+    ap.add_argument("--policy", choices=["fixed", "adaptive", "asr_assisted", "eager"], default=None,
+                    help="endpointing (ADR 0002); default eager with live providers, fixed with mocks (the mock STT "
+                         "returns its canned final at every pause, which would end every turn early)")
+    ap.add_argument("--llm-model", default=None, help="OpenRouter model id (default: openai_compat_llm.MODEL)")
+    ap.add_argument("--llm-provider", default=None, help="OpenRouter provider to try first; 'any' lets OpenRouter route")
+    ap.add_argument("--llm-reasoning", default=None, help="reasoning effort for reasoning models; 'none' to omit")
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     SileroVAD()  # load the model now: loading it inside the first session stalls its mic frames
     index = Index(ingest(DOCS))  # docs snapshot; vectors are cached under .cache after the first build
     index.dense("warm up", 1)
-    async with serve(handler_for(args.providers, args.trace_dir, index, Policy(args.policy)), args.host, args.port, max_size=1 << 20) as server:
+    args.policy = args.policy or ("eager" if args.providers == "live" else "fixed")
+    policy = Policy("eager", asr_silence_ms=200) if args.policy == "eager" else Policy(args.policy)
+    llm_opts = {}
+    if args.llm_model:
+        llm_opts["model"] = args.llm_model
+    if args.llm_provider:
+        llm_opts["provider"] = None if args.llm_provider == "any" else args.llm_provider
+    if args.llm_reasoning:
+        llm_opts["reasoning"] = None if args.llm_reasoning == "none" else args.llm_reasoning
+    async with serve(handler_for(args.providers, args.trace_dir, index, policy, llm_opts), args.host, args.port, max_size=1 << 20) as server:
         log.info("orchestrator listening on ws://%s:%d (%s providers)", args.host, args.port, args.providers)
         await server.serve_forever()
 

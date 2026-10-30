@@ -32,20 +32,20 @@ def main(run: Path):
             rows.append({"clip": clip["id"], "generations": gens, "error": f"incomplete turn: {e!r}"})
             continue
         rows.append({"clip": clip["id"], "generations": gens, **{k: None if v is None else round(v, 1) for k, v in b.items()}})
-    ok = [r for r in rows if "error" not in r and r["generations"] == 1]  # a turn answered in two pieces was cut early
+    ok = [r for r in rows if "error" not in r]  # merged turns count, measured to the generation that played
 
     def pct(c, p):
         xs = [r[c] for r in ok if r[c] is not None]
         return percentile(xs, p) if xs else None
 
     summary = {c: {"p50": pct(c, 50), "p95": pct(c, 95)} for c in COLS} if ok else {}
-    summary["split_turns"] = [r["clip"] for r in rows if r.get("generations", 1) > 1]
+    summary["turns_with_more_than_one_generation"] = [r["clip"] for r in rows if r.get("generations", 1) > 1]
     (run / "latency.json").write_text(json.dumps({"turns": rows, "summary": summary, "n": len(ok)}, indent=2) + "\n")
     print("| clip | " + " | ".join(COLS) + " |")
     print("|---|" + "---:|" * len(COLS))
     for r in rows:
         print(f"| {r['clip']} | " + (" | ".join(str(r[c]) for c in COLS) if "error" not in r else r["error"]) + (" | split" if r.get("generations", 1) > 1 else "") + " |")
-    print("split turns:", summary.get("split_turns"))
+    print("turns with >1 generation (merged or split):", summary.get("turns_with_more_than_one_generation"))
     for k in ("p50", "p95") if ok else ():
         print(f"| **{k}** (n={len(ok)}) | " + " | ".join(str(summary[c][k]) for c in COLS) + " |")
 

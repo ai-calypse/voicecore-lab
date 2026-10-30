@@ -21,6 +21,8 @@ Command: `uv run python harness/bench.py` → [`perf_fake.json`](perf_fake.json)
 
 ## Live providers (`live-provider`, n = 30)
 
+> **Superseded for the live default** by [latency_tuning.md](latency_tuning.md): eager endpoint + gpt-oss-120b on Cerebras + pre-opened TTS socket, total p50 841 ms / p95 1,520 ms on the same 15 questions. The runs below are the before state.
+
 Command: `uv run python harness/runner/wss.py --providers live --policy fixed|asr_assisted --sequential --tail 10 --clips <15 dev docs questions>`, then `harness/latency.py`.
 
 - **Path:** headless SDK client → Go gateway → orchestrator → Deepgram nova-3 (with keyterms), gpt-4.1-nano via OpenRouter, Cartesia sonic-3.6.

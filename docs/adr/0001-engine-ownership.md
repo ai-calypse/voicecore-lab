@@ -23,7 +23,7 @@ Used through replaceable adapters, never claimed as our work:
 | Capability | Provider / model | Notes |
 |---|---|---|
 | Streaming STT | Deepgram nova-3 streaming, `Finalize` at our endpoint, keyterms for uv vocabulary (confirmed 2026-10-30; $0.0077/min) | `DEEPGRAM_API_KEY`; per-session cap 120 s |
-| LLM | OpenAI `openai/gpt-4.1-nano` via OpenRouter's OpenAI-compatible API | cheapest non-reasoning OpenAI model with streaming + tools on 2026-10-29 ($0.10 / $0.40 per M tokens) |
+| LLM | OpenAI `openai/gpt-oss-120b` via OpenRouter's OpenAI-compatible API, provider Cerebras first, reasoning effort low | since 2026-10-30, for latency: first token p50 300 ms against 574 ms ([latency_tuning.md](../../reports/latency_tuning.md)); $0.35 / $0.75 per M tokens. Before: `openai/gpt-4.1-nano`, the cheapest non-reasoning OpenAI model with streaming + tools on 2026-10-29 ($0.10 / $0.40) |
 | Streaming TTS | Cartesia `sonic-3.6`, voice "Daniel" (`47c38ca4…`), WebSocket API version 2026-08-14, one context per generation (confirmed 2026-10-30) | 1 credit per character; 20,000 owned, plan uses ≤ 16,000; per-session cap 1,500; Cartesia allows 2–5 concurrent TTS requests depending on plan |
 | VAD model | Silero VAD (ONNX) | runs locally |
 | Embeddings | fastembed small ONNX model | runs locally, no API cost |

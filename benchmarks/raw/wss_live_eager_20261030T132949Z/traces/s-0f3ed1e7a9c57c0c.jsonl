@@ -1,0 +1,15 @@
+{"trace_id": "s-0f3ed1e7a9c57c0c", "span": "clock", "event": "client_offset", "t_mono_us": 66276045811, "process": "agent-core", "attrs": {"client_to_agent_us": 66275952332}}
+{"trace_id": "s-0f3ed1e7a9c57c0c", "span": "turn", "event": "speech_started", "t_mono_us": 66277122365, "process": "agent-core", "attrs": {"onset_ms": 1040, "capture_end_us": 1173477}}
+{"trace_id": "s-0f3ed1e7a9c57c0c", "span": "stt", "event": "final", "t_mono_us": 66279489016, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-0f3ed1e7a9c57c0c", "span": "clock", "event": "client_offset", "t_mono_us": 66281041247, "process": "agent-core", "attrs": {"client_to_agent_us": 66275946802}}
+{"trace_id": "s-0f3ed1e7a9c57c0c", "span": "stt", "event": "final", "t_mono_us": 66282831138, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-0f3ed1e7a9c57c0c", "span": "turn", "event": "endpoint", "t_mono_us": 66282831327, "process": "agent-core", "attrs": {"reason": "asr", "onset_ms": 1040, "silence_ms": 280, "capture_end_us": 6873477}}
+{"trace_id": "s-0f3ed1e7a9c57c0c", "span": "stt", "event": "turn_text", "t_mono_us": 66282831655, "process": "agent-core", "attrs": {"chars": 77, "waited_ms": 0}}
+{"trace_id": "s-0f3ed1e7a9c57c0c", "span": "llm", "event": "request", "t_mono_us": 66282832026, "process": "agent-core", "attrs": {"attempt": 0}, "generation_id": 1}
+{"trace_id": "s-0f3ed1e7a9c57c0c", "span": "llm", "event": "first_token", "t_mono_us": 66283216289, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-0f3ed1e7a9c57c0c", "span": "tts", "event": "first_audio", "t_mono_us": 66283364674, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-0f3ed1e7a9c57c0c", "span": "playout", "event": "started", "t_mono_us": 66283382347, "process": "agent-core", "attrs": {"t_client_us": 7432902}, "generation_id": 1}
+{"trace_id": "s-0f3ed1e7a9c57c0c", "span": "playout", "event": "stopped", "t_mono_us": 66285384023, "process": "agent-core", "attrs": {"reason": "done", "t_client_us": 9434959}, "generation_id": 1}
+{"trace_id": "s-0f3ed1e7a9c57c0c", "span": "clock", "event": "client_offset", "t_mono_us": 66286041725, "process": "agent-core", "attrs": {"client_to_agent_us": 66275946772}}
+{"trace_id": "s-0f3ed1e7a9c57c0c", "span": "clock", "event": "client_offset", "t_mono_us": 66291041305, "process": "agent-core", "attrs": {"client_to_agent_us": 66275946772}}
+{"trace_id": "s-0f3ed1e7a9c57c0c", "span": "clock", "event": "client_offset", "t_mono_us": 66291984970, "process": "agent-core", "attrs": {"client_to_agent_us": 66275946772, "final": true}}

@@ -1,0 +1,27 @@
+{"t_us":70778,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q19.wav"}
+{"t_us":73678,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-6b08a132a9362011","type":"welcome"}
+{"t_us":73782,"process":"headless","type":"mic.start","t0_us":73780}
+{"t_us":1175067,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1909398,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Denovan"}
+{"t_us":2075358,"process":"headless","dir":"in","t_client_us":2074419,"t_server_us":179454380,"type":"pong"}
+{"t_us":2924255,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Do novice stall and"}
+{"t_us":3816825,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Do not install and manage"}
+{"t_us":4076726,"process":"headless","dir":"in","t_client_us":4076114,"t_server_us":181455869,"type":"pong"}
+{"t_us":4773191,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Do not install and manage Node. Js"}
+{"t_us":5809276,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Do not install and manage Node. Js versions"}
+{"t_us":6077221,"process":"headless","dir":"in","t_client_us":6076454,"t_server_us":183456226,"type":"pong"}
+{"t_us":6781578,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Do not install and manage Node. Js versions as well as"}
+{"t_us":7586723,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Do not install and manage Node. Js versions as well as Python."}
+{"t_us":7587241,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Do not install and manage Node. Js versions as well as Python."}
+{"t_us":7587674,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":7904508,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":7905989,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that in the docs."}
+{"t_us":8035685,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8077452,"process":"headless","dir":"in","t_client_us":8077085,"t_server_us":185456700,"type":"pong"}
+{"t_us":9956715,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":10078017,"process":"headless","dir":"in","t_client_us":10077374,"t_server_us":187457197,"type":"pong"}
+{"t_us":12077462,"process":"headless","dir":"in","t_client_us":12076833,"t_server_us":189456641,"type":"pong"}
+{"t_us":14077999,"process":"headless","dir":"in","t_client_us":14077208,"t_server_us":191457110,"type":"pong"}
+{"t_us":16078113,"process":"headless","dir":"in","t_client_us":16077124,"t_server_us":193457000,"type":"pong"}
+{"t_us":16754391,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":16758139,"process":"headless","dir":"in","type":"socket.closed","code":1000}

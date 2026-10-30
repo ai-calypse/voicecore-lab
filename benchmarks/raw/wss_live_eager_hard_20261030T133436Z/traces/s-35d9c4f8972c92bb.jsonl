@@ -1,0 +1,15 @@
+{"trace_id": "s-35d9c4f8972c92bb", "span": "clock", "event": "client_offset", "t_mono_us": 66469208275, "process": "agent-core", "attrs": {"client_to_agent_us": 66469111565}}
+{"trace_id": "s-35d9c4f8972c92bb", "span": "turn", "event": "speech_started", "t_mono_us": 66470290795, "process": "agent-core", "attrs": {"onset_ms": 1040, "capture_end_us": 1176707}}
+{"trace_id": "s-35d9c4f8972c92bb", "span": "clock", "event": "client_offset", "t_mono_us": 66474209061, "process": "agent-core", "attrs": {"client_to_agent_us": 66469110759}}
+{"trace_id": "s-35d9c4f8972c92bb", "span": "stt", "event": "final", "t_mono_us": 66475029463, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-35d9c4f8972c92bb", "span": "stt", "event": "final", "t_mono_us": 66477711490, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-35d9c4f8972c92bb", "span": "turn", "event": "endpoint", "t_mono_us": 66477711649, "process": "agent-core", "attrs": {"reason": "asr", "onset_ms": 1040, "silence_ms": 300, "capture_end_us": 8596707}}
+{"trace_id": "s-35d9c4f8972c92bb", "span": "stt", "event": "turn_text", "t_mono_us": 66477711832, "process": "agent-core", "attrs": {"chars": 138, "waited_ms": 0}}
+{"trace_id": "s-35d9c4f8972c92bb", "span": "llm", "event": "request", "t_mono_us": 66477712011, "process": "agent-core", "attrs": {"attempt": 0}, "generation_id": 1}
+{"trace_id": "s-35d9c4f8972c92bb", "span": "llm", "event": "first_token", "t_mono_us": 66478036257, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-35d9c4f8972c92bb", "span": "tts", "event": "first_audio", "t_mono_us": 66478169779, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-35d9c4f8972c92bb", "span": "playout", "event": "started", "t_mono_us": 66478188272, "process": "agent-core", "attrs": {"t_client_us": 9074493}, "generation_id": 1}
+{"trace_id": "s-35d9c4f8972c92bb", "span": "clock", "event": "client_offset", "t_mono_us": 66479208948, "process": "agent-core", "attrs": {"client_to_agent_us": 66469110759}}
+{"trace_id": "s-35d9c4f8972c92bb", "span": "playout", "event": "stopped", "t_mono_us": 66480039314, "process": "agent-core", "attrs": {"reason": "done", "t_client_us": 10914482}, "generation_id": 1}
+{"trace_id": "s-35d9c4f8972c92bb", "span": "clock", "event": "client_offset", "t_mono_us": 66484207538, "process": "agent-core", "attrs": {"client_to_agent_us": 66469110538}}
+{"trace_id": "s-35d9c4f8972c92bb", "span": "clock", "event": "client_offset", "t_mono_us": 66486872047, "process": "agent-core", "attrs": {"client_to_agent_us": 66469110538, "final": true}}

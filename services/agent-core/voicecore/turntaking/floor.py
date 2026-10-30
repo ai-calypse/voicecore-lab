@@ -22,20 +22,21 @@ def power(pcm: np.ndarray) -> float:
 
 @dataclass(frozen=True)
 class Policy:
-    kind: str = "fixed"  # fixed | adaptive | asr_assisted (default chosen in docs/adr/0002-turn-policy.md)
+    kind: str = "fixed"  # fixed | adaptive | asr_assisted | eager (default chosen in docs/adr/0002-turn-policy.md)
     silence_ms: int = 800  # fixed policy
     adaptive_ms: tuple[int, int, int] = (400, 700, 1000)  # silence after < 1 s, 1-3 s, > 3 s of speech
     threshold: float = 0.5
     min_speech_ms: int = 60
     max_utterance_ms: int = 15000
     asr_silence_ms: int = 300
+    finalize_ms: int = 200  # eager: ask the STT to finalize after this much silence (Session sends Finalize)
     playout_threshold_boost: float = 0.2
     playout_min_speech_ms: int = 160
     echo_gate_db: float = -6.0
     echo_tail_ms: int = 200  # the gate stays on this long after playout stops (echo delay + room)
 
     def silence_for(self, speech_ms: int) -> int:
-        if self.kind == "fixed":
+        if self.kind in ("fixed", "eager"):  # eager falls back to the fixed silence when no punctuated final comes
             return self.silence_ms
         short, mid, long = self.adaptive_ms
         return short if speech_ms < 1000 else mid if speech_ms <= 3000 else long
@@ -93,13 +94,14 @@ class Floor:
             return []
         if voiced:
             self.silence_start = None
+            self.final = ""  # only a final that arrives during this pause may end the turn early
         elif self.silence_start is None:
             self.silence_start = start
         if self.t - self.onset >= p.max_utterance_ms:
             return self._end("max_length")
         if self.silence_start is not None:
             silence = self.t - self.silence_start
-            if p.kind == "asr_assisted" and self._punctuated() and silence >= p.asr_silence_ms:
+            if p.kind in ("asr_assisted", "eager") and self._punctuated() and silence >= p.asr_silence_ms:
                 return self._end("asr")
             if silence >= p.silence_for(self.silence_start - self.onset):
                 return self._end("silence")
@@ -111,9 +113,13 @@ class Floor:
             return []
         self.final = text
         p = self.policy
-        if p.kind == "asr_assisted" and self._punctuated() and self.silence_start is not None and self.t - self.silence_start >= p.asr_silence_ms:
+        if p.kind in ("asr_assisted", "eager") and self._punctuated() and self.silence_start is not None and self.t - self.silence_start >= p.asr_silence_ms:
             return self._end("asr")
         return []
+
+    def silence_ms(self) -> int:
+        """Silence so far inside the current utterance (0 while speaking or when nobody holds the floor)."""
+        return self.t - self.silence_start if self.onset is not None and self.silence_start is not None else 0
 
     def echo_gated(self) -> bool:
         """True while the echo gate is on: the agent is playing, or its echo tail may still be audible."""

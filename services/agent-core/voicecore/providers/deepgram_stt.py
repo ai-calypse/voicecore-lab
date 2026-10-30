@@ -57,6 +57,14 @@ class DeepgramSTT:
                 except ConnectionClosed:
                     return
 
+    async def warm(self) -> None:
+        """Open the socket before the user speaks (the handshake took ~250 ms); KeepAlive holds it."""
+        if self._ws is None and not self._closed:
+            try:
+                await self._connect()
+            except ProviderError:
+                pass  # the first send retries
+
     async def finalize(self) -> None:
         if self._ws is not None and not self._closed:
             try:

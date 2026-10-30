@@ -1,0 +1,26 @@
+{"t_us":70443,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q14.wav"}
+{"t_us":73351,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-0f3ed1e7a9c57c0c","type":"welcome"}
+{"t_us":73480,"process":"headless","type":"mic.start","t0_us":73477}
+{"t_us":1175649,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1924053,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long"}
+{"t_us":2074936,"process":"headless","dir":"in","t_client_us":2074010,"t_server_us":128842931,"type":"pong"}
+{"t_us":2898589,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support relief"}
+{"t_us":3551895,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release"}
+{"t_us":4076881,"process":"headless","dir":"in","t_client_us":4076472,"t_server_us":130845155,"type":"pong"}
+{"t_us":4508679,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release of uv for"}
+{"t_us":5511871,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release of uv for companies that"}
+{"t_us":6078160,"process":"headless","dir":"in","t_client_us":6077768,"t_server_us":132846438,"type":"pong"}
+{"t_us":6515296,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release of uv for companies that upgrade slowly?"}
+{"t_us":6884663,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release of uv for companies that upgrade slowly?"}
+{"t_us":6885367,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Is there a long term support release of uv for companies that upgrade slowly?"}
+{"t_us":6885575,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":7269090,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":7271016,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that in the docs."}
+{"t_us":7432902,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8078441,"process":"headless","dir":"in","t_client_us":8077710,"t_server_us":134846650,"type":"pong"}
+{"t_us":9434959,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":10080117,"process":"headless","dir":"in","t_client_us":10079022,"t_server_us":136848346,"type":"pong"}
+{"t_us":12079654,"process":"headless","dir":"in","t_client_us":12078976,"t_server_us":138847864,"type":"pong"}
+{"t_us":14079908,"process":"headless","dir":"in","t_client_us":14079183,"t_server_us":140848171,"type":"pong"}
+{"t_us":16033670,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":16037959,"process":"headless","dir":"in","type":"socket.closed","code":1000}

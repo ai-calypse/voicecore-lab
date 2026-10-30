@@ -40,7 +40,7 @@ def turn_breakdown(client, trace, turn_end_ms):
     """
     t0 = next(e["t0_us"] for e in client if e["type"] == "mic.start")
     speech_end = t0 + turn_end_ms * 1000
-    gen = next(e["gen"] for e in client if e["type"] == "agent.generation_started")
+    gen = [e["gen"] for e in client if e["type"] == "agent.generation_started"][-1]  # a merged turn: the generation that answered it
     started = next(e["t_us"] for e in client if e["type"] == "playout.started" and e.get("dir") == "out" and e["gen"] == gen)
 
     def at(span, event, g=None):

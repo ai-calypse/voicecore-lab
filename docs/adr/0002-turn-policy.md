@@ -1,6 +1,6 @@
 # ADR 0002: Default turn-taking policy
 
-**Status:** Accepted, 2026-10-30; confirmed with live STT 2026-10-30 (see Live check). **Task:** S02-T05. **Owner module:** `services/agent-core/voicecore/turntaking/floor.py`.
+**Status:** Accepted, 2026-10-30; confirmed with live STT 2026-10-30 (see Live check). **Amended 2026-10-30:** with live providers the default is now `eager` (see the last section); fixed 800 ms stays the default with mock providers and in the CI gate. **Task:** S02-T05. **Owner module:** `services/agent-core/voicecore/turntaking/floor.py`.
 
 ## Decision
 
@@ -53,3 +53,25 @@ The same 15 dev docs questions were run through the full stack twice with live D
 - **asr_assisted:** p50 523 ms (about 340 ms sooner), but 3 / 15 questions were cut at an internal pause, because Deepgram punctuated mid-question.
 
 The default stays fixed 800 ms. A gate that needs both punctuation and a longer silence (for example 600 ms) is the next thing to try if latency matters more than the occasional split.
+
+## Amendment: eager endpoint for live providers (2026-10-30)
+
+**Decision:** with live providers the orchestrator uses `Policy("eager", asr_silence_ms=200)`:
+
+- send Deepgram `Finalize` once VAD has heard 200 ms of silence;
+- end the turn when a final ending in `.`, `?` or `!` arrives with at least 200 ms of silence;
+- otherwise end it after 800 ms, as before.
+
+**Continuation merge:** when the user speaks again within 2.5 s of an endpoint and before the answer is audible, the session cancels that answer and answers the joined text once.
+
+**Evidence** ([`reports/latency_tuning.md`](../../reports/latency_tuning.md)):
+
+- **Replayed live Deepgram finals, 37 dev clips:** decision p50 400 ms against 860 ms for fixed 800, with 5 / 37 early cutoffs.
+- **Full stack:** 6 of 27 live turns hit an early cutoff. All 6 were merged before any audio played, and each was answered from the complete question.
+- **Speed:** turn end detected p50 340 ms against 861 ms.
+
+**Why the earlier objection no longer holds:** `asr_assisted` lost because an early cutoff produced two answers to two halves. With the merge, an early cutoff costs one extra LLM call instead.
+
+**Remaining risk:** if the user's pause is longer than about 800 ms (endpoint + LLM + TTS), the half-question answer starts playing. The continuation is then a barge-in and a new question, without the first half.
+
+**Mock mode keeps fixed 800 ms.** The mock STT returns its canned final at every pause, which would end every turn early.

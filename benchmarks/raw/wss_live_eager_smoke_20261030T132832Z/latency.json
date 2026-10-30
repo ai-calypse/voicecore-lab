@@ -1,0 +1,54 @@
+{
+  "turns": [
+    {
+      "clip": "dev_docs_question_q01",
+      "generations": 2,
+      "endpoint_delay_ms": 340.0,
+      "stt_settle_ms": 0.3,
+      "llm_first_token_ms": 336.4,
+      "tts_first_audio_ms": 161.0,
+      "total_ms": 859.3,
+      "residual_ms": 21.3
+    },
+    {
+      "clip": "dev_docs_question_q02",
+      "generations": 1,
+      "endpoint_delay_ms": 360.0,
+      "stt_settle_ms": 0.3,
+      "llm_first_token_ms": 255.7,
+      "tts_first_audio_ms": 131.7,
+      "total_ms": 757.2,
+      "residual_ms": 9.2
+    }
+  ],
+  "summary": {
+    "total_ms": {
+      "p50": 757.2,
+      "p95": 859.3
+    },
+    "endpoint_delay_ms": {
+      "p50": 340.0,
+      "p95": 360.0
+    },
+    "stt_settle_ms": {
+      "p50": 0.3,
+      "p95": 0.3
+    },
+    "llm_first_token_ms": {
+      "p50": 255.7,
+      "p95": 336.4
+    },
+    "tts_first_audio_ms": {
+      "p50": 131.7,
+      "p95": 161.0
+    },
+    "residual_ms": {
+      "p50": 9.2,
+      "p95": 21.3
+    },
+    "turns_with_more_than_one_generation": [
+      "dev_docs_question_q01"
+    ]
+  },
+  "n": 2
+}

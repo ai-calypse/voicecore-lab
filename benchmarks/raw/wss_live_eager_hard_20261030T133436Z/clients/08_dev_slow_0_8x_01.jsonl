@@ -1,0 +1,29 @@
+{"t_us":82942,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/slow_0_8x_01.wav"}
+{"t_us":85758,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-5e22c34230fc31ea","type":"welcome"}
+{"t_us":85859,"process":"headless","type":"mic.start","t0_us":85857}
+{"t_us":1189397,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1884522,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"With soup and"}
+{"t_us":2086342,"process":"headless","dir":"in","t_client_us":2085432,"t_server_us":135605512,"type":"pong"}
+{"t_us":2870613,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"With soup and fish, serve"}
+{"t_us":3916655,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"With soup and fish, serve white wines."}
+{"t_us":4089747,"process":"headless","dir":"in","t_client_us":4088939,"t_server_us":137608928,"type":"pong"}
+{"t_us":4888231,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"With soup and fish, serve white wines such as Ryan"}
+{"t_us":5614714,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"With soup and fish, serve white wines such as Ryan wine,"}
+{"t_us":5893352,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"With soup and fish, serve white wines such as Ryan wine"}
+{"t_us":6089491,"process":"headless","dir":"in","t_client_us":6089030,"t_server_us":139608841,"type":"pong"}
+{"t_us":6197368,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"With soup and fish, serve white wines such as Ryan wine Sauternes,"}
+{"t_us":7188030,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"With soup and fish, serve white wines such as Ryan wine sautein, or white"}
+{"t_us":7871987,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"With soup and fish, serve white wines such as Ryan wine sauteurne, or white burgundy."}
+{"t_us":7872395,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"With soup and fish, serve white wines such as Ryan wine sauteurne, or white burgundy."}
+{"t_us":7872553,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":8089841,"process":"headless","dir":"in","t_client_us":8089263,"t_server_us":141609178,"type":"pong"}
+{"t_us":8263045,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":8269664,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that in the docs."}
+{"t_us":8406284,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":10084284,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":10089795,"process":"headless","dir":"in","t_client_us":10089479,"t_server_us":143609231,"type":"pong"}
+{"t_us":12090130,"process":"headless","dir":"in","t_client_us":12089397,"t_server_us":145609272,"type":"pong"}
+{"t_us":14090515,"process":"headless","dir":"in","t_client_us":14089950,"t_server_us":147609852,"type":"pong"}
+{"t_us":16091580,"process":"headless","dir":"in","t_client_us":16091010,"t_server_us":149610920,"type":"pong"}
+{"t_us":17026346,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":17029729,"process":"headless","dir":"in","type":"socket.closed","code":1000}

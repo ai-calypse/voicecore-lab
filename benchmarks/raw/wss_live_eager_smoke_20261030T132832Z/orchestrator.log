@@ -1,0 +1,40 @@
+2026-10-30 09:28:32,527 INFO websockets.server server listening on 127.0.0.1:8765
+2026-10-30 09:28:32,528 INFO voicecore.server orchestrator listening on ws://127.0.0.1:8765 (live providers)
+2026-10-30 09:28:33,553 INFO websockets.server connection open
+2026-10-30 09:28:33,828 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:28:39,696 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:28:48,617 INFO websockets.server connection closed
+2026-10-30 09:28:48,949 INFO websockets.server connection open
+2026-10-30 09:28:48,974 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:28:55,913 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:29:04,833 INFO websockets.server connection closed
+2026-10-30 09:29:05,082 INFO websockets.server server closing
+2026-10-30 09:29:05,083 INFO websockets.server server closed
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.14/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.14/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/services/agent-core/voicecore/server.py", line 158, in main
+    await server.serve_forever()
+  File "/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/.venv/lib/python3.12/site-packages/websockets/asyncio/server.py", line 405, in serve_forever
+    await self.wait_closed()
+  File "/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/.venv/lib/python3.12/site-packages/websockets/asyncio/server.py", line 439, in wait_closed
+    await asyncio.shield(self.handlers_waiter)
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/services/agent-core/voicecore/server.py", line 162, in <module>
+    asyncio.run(main())
+  File "/opt/homebrew/Cellar/python@3.12/3.12.14/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.14/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 123, in run
+    raise KeyboardInterrupt()
+KeyboardInterrupt

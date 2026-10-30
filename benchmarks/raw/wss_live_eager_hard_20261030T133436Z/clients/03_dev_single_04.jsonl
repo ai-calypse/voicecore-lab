@@ -1,0 +1,32 @@
+{"t_us":75853,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/single_04.wav"}
+{"t_us":78874,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-4d5d6a6eaa8b765f","type":"welcome"}
+{"t_us":79024,"process":"headless","type":"mic.start","t0_us":79021}
+{"t_us":1221630,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1947252,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Kirkland,"}
+{"t_us":2080244,"process":"headless","dir":"in","t_client_us":2079177,"t_server_us":53300780,"type":"pong"}
+{"t_us":2941790,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Kirkland, gas leak"}
+{"t_us":3945198,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Kirkland, ghastly pale, bleeding,"}
+{"t_us":4081758,"process":"headless","dir":"in","t_client_us":4081277,"t_server_us":55302499,"type":"pong"}
+{"t_us":4238257,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Kirkland, ghastly pale, bleeding,"}
+{"t_us":5212937,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Kirkland, ghastly pale, bleeding, with his woolen"}
+{"t_us":6081394,"process":"headless","dir":"in","t_client_us":6080690,"t_server_us":57302004,"type":"pong"}
+{"t_us":6251872,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Kirkland, ghastly pale, bleeding, with his woolen shirt torn"}
+{"t_us":7228848,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Kirkland, ghastly pale, bleeding, with his woolen shirt torn and his blue eye"}
+{"t_us":8081435,"process":"headless","dir":"in","t_client_us":8080798,"t_server_us":59302122,"type":"pong"}
+{"t_us":8224073,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Kirkland, ghastly pale, bleeding, with his woolen shirt torn and his blue eyes wide open with"}
+{"t_us":8988535,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Kirkland, ghastly pale, bleeding, with his woolen shirt torn and his blue eyes wide open with terror,"}
+{"t_us":9955121,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Kirkland, ghastly pale, bleeding, with his woolen shirt torn and his blue eyes wide open with terror, was clinging to the"}
+{"t_us":10081293,"process":"headless","dir":"in","t_client_us":10080684,"t_server_us":61302001,"type":"pong"}
+{"t_us":10802698,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Kirkland, ghastly pale, bleeding, with his woolen shirt torn and his blue eyes wide open with terror, was clinging to the bars."}
+{"t_us":10803120,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Kirkland, ghastly pale, bleeding, with his woolen shirt torn and his blue eyes wide open with terror, was clinging to the bars."}
+{"t_us":10803425,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":11506938,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":11511774,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that in the docs."}
+{"t_us":11656602,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":12082067,"process":"headless","dir":"in","t_client_us":12081395,"t_server_us":63302771,"type":"pong"}
+{"t_us":13500400,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":14081883,"process":"headless","dir":"in","t_client_us":14081478,"t_server_us":65302705,"type":"pong"}
+{"t_us":16082664,"process":"headless","dir":"in","t_client_us":16082365,"t_server_us":67303532,"type":"pong"}
+{"t_us":18081946,"process":"headless","dir":"in","t_client_us":18081658,"t_server_us":69302851,"type":"pong"}
+{"t_us":19939388,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":19943718,"process":"headless","dir":"in","type":"socket.closed","code":1000}

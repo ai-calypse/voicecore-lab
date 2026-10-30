@@ -24,12 +24,15 @@ _CLOSED = object()
 
 class CartesiaTTS:
     def __init__(self, reservation, key: str | None = None, voice: str = VOICE, model: str = MODEL, url: str = URL,
-                 max_chars: int = MAX_CHARS):
+                 max_chars: int = MAX_CHARS, ws=None):
+        """ws: an already open socket (opened by open_socket before the first answer: the handshake took 250-330 ms)."""
         self.reservation, self.voice, self.model, self.url, self.max_chars = reservation, voice, model, url, max_chars
         self._key = key or keys.key("CARTESIA_API_KEY") or ""
-        self._ws = None
+        self._ws = ws
         self._reader = None
         self._out: asyncio.Queue = asyncio.Queue()
+        if ws is not None:
+            self._reader = asyncio.create_task(self._read())
         self._fence = 0  # generations <= fence were cancelled
         self._lock = asyncio.Lock()
         self.chars = 0
@@ -102,3 +105,11 @@ class CartesiaTTS:
             return
         await self._ws.close()
         await self._reader
+
+
+async def open_socket(key: str | None = None, url: str = URL):
+    """Connects ahead of use without spending anything; pass the result to CartesiaTTS(ws=...)."""
+    try:
+        return await connect(url, additional_headers={"X-API-Key": key or keys.key("CARTESIA_API_KEY") or ""}, open_timeout=5)
+    except (InvalidStatus, OSError, TimeoutError):
+        return None

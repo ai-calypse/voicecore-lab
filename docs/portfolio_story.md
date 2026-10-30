@@ -23,15 +23,15 @@ Hosted voice-agent products hide the hard part: when to start talking, how to st
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="../reports/latency_chart_dark.png">
-  <img alt="Stage medians of one voice turn: live fixed endpoint 861 ms turn end, 939 LLM, 456 TTS, total 2,317 ms; live ASR-assisted 523, 1,289, 406, total 2,259 ms; mock providers 820, 314, 150, total 1,296 ms" src="../reports/latency_chart_light.png">
+  <img alt="Stage medians of one voice turn: now, live eager endpoint with gpt-oss-120b on Cerebras, 340 ms turn end, 340 LLM, 145 TTS, total 841 ms; before, live fixed endpoint 861, 939, 456, total 2,317 ms; live ASR-assisted 523, 1,289, 406, total 2,259 ms; mock providers 820, 314, 150, total 1,296 ms; dashed line at the Deepgram Voice Agent median, 972 ms" src="../reports/latency_chart_light.png">
 </picture>
 
-- **Live** (`live-provider`, n = 15): user stops speaking → first agent audio, p50 2,317 ms / p95 3,102 ms. The two biggest slices are the 860 ms endpoint and the LLM's first token through OpenRouter, median 0.8–1.3 s between batches.
-- **Hosted baseline** (Deepgram Voice Agent, n = 3, not matched conditions): 972 ms to the first audio frame. The [breakdown](../reports/latency_breakdown.md) shows the gap is endpointing policy and the LLM hop, not the transport, which adds about 16 ms.
+- **Live** (`live-provider`, n = 15): user stops speaking → first agent audio, **p50 841 ms / p95 1,520 ms**, down from 2,317 ms. [What changed](../reports/latency_tuning.md): an eager endpoint that merges early cutoffs (861 → 340 ms), gpt-oss-120b on Cerebras (LLM first token 939 → 340 ms) and a TTS socket opened before the first answer (456 → 145 ms).
+- **Hosted baseline** (Deepgram Voice Agent, n = 3, not matched conditions): 972 ms to the first audio frame. The [breakdown](../reports/latency_breakdown.md) of the before state showed the gap was endpointing policy and the LLM hop, not the transport, which adds about 16 ms.
 - **Barge-in** (live): 8/8 interruptions silenced, median 303 ms from speech onset; 0/4 false barge-ins after the fix in [write-up 1](writeups/01-false-barge-ins.md).
-- **Answers** (live, holdout): refusal decisions 15/15, citations supporting 15/15. Adversarial: 13/15, with no adversarial claim in any answer.
+- **Answers** (live, holdout, gpt-oss-120b): refusal decisions 14/15, citations supporting 12/12. Adversarial: 14/15, with no adversarial claim in any answer. gpt-4.1-nano scored 15/15, 15/15 and 13/15 ([docs_eval.md](../reports/docs_eval.md)).
 - **Load** (`fake-provider`): 40 concurrent sessions through the real gateway and orchestrator, p95 1,305 ms, 0 drops.
-- **Budget:** the whole project ran on less than $1 of the $5 cap and about 11,000 Cartesia credits. A guard refused any spend outside a reservation.
+- **Budget:** the whole project ran on less than $1 of the $5 cap and about 13,700 Cartesia credits. A guard refused any spend outside a reservation.
 
 ## Things that went wrong (and what they taught me)
 

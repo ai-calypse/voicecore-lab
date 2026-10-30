@@ -1,0 +1,32 @@
+{"t_us":72963,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/slow_0_8x_02.wav"}
+{"t_us":75834,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-6279d27faee22651","type":"welcome"}
+{"t_us":75951,"process":"headless","type":"mic.start","t0_us":75949}
+{"t_us":1239637,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1964395,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"She slid"}
+{"t_us":2081660,"process":"headless","dir":"in","t_client_us":2080607,"t_server_us":152877526,"type":"pong"}
+{"t_us":2991638,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"She slid to the floor beside"}
+{"t_us":3682680,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"She slid to the floor beside him."}
+{"t_us":3683551,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"She slid to the floor beside him."}
+{"t_us":3684028,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":3879890,"process":"headless","dir":"out","type":"cancel.ack","gen":1,"played_until_seq":-1}
+{"t_us":3880693,"process":"headless","dir":"in","type":"agent.cancel","gen":1}
+{"t_us":3881124,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t2"}
+{"t_us":4081096,"process":"headless","dir":"in","t_client_us":4080652,"t_server_us":154877214,"type":"pong"}
+{"t_us":4673842,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"As if she were too"}
+{"t_us":5663909,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"As if she were too tired to sit"}
+{"t_us":6081095,"process":"headless","dir":"in","t_client_us":6080304,"t_server_us":156877042,"type":"pong"}
+{"t_us":6687432,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"As if she were too tired to sit up any longer."}
+{"t_us":7050174,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"As if she were too tired to sit up any longer."}
+{"t_us":7051050,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t2","text":"She slid to the floor beside him. As if she were too tired to sit up any longer."}
+{"t_us":7051320,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t2","gen":2}
+{"t_us":7425637,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":2}
+{"t_us":7429516,"process":"headless","dir":"in","type":"agent.text","gen":2,"text":"I couldn't find that in the docs."}
+{"t_us":7576856,"process":"headless","dir":"out","type":"playout.started","gen":2}
+{"t_us":8081874,"process":"headless","dir":"in","t_client_us":8081160,"t_server_us":158877928,"type":"pong"}
+{"t_us":9335254,"process":"headless","dir":"out","type":"playout.stopped","gen":2,"reason":"done"}
+{"t_us":10082311,"process":"headless","dir":"in","t_client_us":10081715,"t_server_us":160878350,"type":"pong"}
+{"t_us":12083383,"process":"headless","dir":"in","t_client_us":12082607,"t_server_us":162879396,"type":"pong"}
+{"t_us":14083762,"process":"headless","dir":"in","t_client_us":14082841,"t_server_us":164879558,"type":"pong"}
+{"t_us":16084320,"process":"headless","dir":"in","t_client_us":16083385,"t_server_us":166880278,"type":"pong"}
+{"t_us":16177291,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":16181276,"process":"headless","dir":"in","type":"socket.closed","code":1000}

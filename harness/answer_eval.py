@@ -22,8 +22,12 @@ DOCS = ROOT / "fixtures/docs/uv"
 ADV = ROOT / "fixtures/docs/adversarial"
 
 
+def _norm(s):  # gpt-oss writes "free‑threaded" with U+2011; "pure-Python" should match "pure python"
+    return re.sub(r"[-\u2010-\u2015]", " ", s.lower())
+
+
 def has(text, term):
-    return term.lower() in text.lower()
+    return _norm(term) in _norm(text)
 
 
 async def ask(engine, question):

@@ -1,0 +1,29 @@
+{"t_us":72951,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/noisy_5db_01.wav"}
+{"t_us":75780,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-406a5b8965d63498","type":"welcome"}
+{"t_us":75899,"process":"headless","type":"mic.start","t0_us":75897}
+{"t_us":1178611,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1906302,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Like the two king"}
+{"t_us":2076905,"process":"headless","dir":"in","t_client_us":2075971,"t_server_us":103257736,"type":"pong"}
+{"t_us":2813458,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Like the two kings of Sparta, they"}
+{"t_us":3813801,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Like the two kings of Sparta, they ran jointly"}
+{"t_us":4075720,"process":"headless","dir":"in","t_client_us":4075372,"t_server_us":105256777,"type":"pong"}
+{"t_us":4860591,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Like the two kings of Sparta, they ran jointly, dividing"}
+{"t_us":5812087,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Like the two kings of Sparta, they ran jointly, dividing between them the"}
+{"t_us":5912984,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Like the two kings of Sparta, they ran jointly"}
+{"t_us":5931980,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Like the two kings of Sparta, they ran jointly dividing between them the"}
+{"t_us":6077024,"process":"headless","dir":"in","t_client_us":6075835,"t_server_us":107257809,"type":"pong"}
+{"t_us":6902538,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Like the two kings of Sparta, they ran jointly dividing between them the laborers and cares"}
+{"t_us":7666561,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Like the two kings of Sparta, they ran jointly dividing between them the laborers and cares of state."}
+{"t_us":7667300,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Like the two kings of Sparta, they ran jointly dividing between them the laborers and cares of state."}
+{"t_us":7667629,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":8030286,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":8035704,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that in the docs."}
+{"t_us":8076477,"process":"headless","dir":"in","t_client_us":8075845,"t_server_us":109257461,"type":"pong"}
+{"t_us":8174145,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":9933415,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":10075826,"process":"headless","dir":"in","t_client_us":10075526,"t_server_us":111256976,"type":"pong"}
+{"t_us":12076282,"process":"headless","dir":"in","t_client_us":12075628,"t_server_us":113257253,"type":"pong"}
+{"t_us":14076220,"process":"headless","dir":"in","t_client_us":14075877,"t_server_us":115257357,"type":"pong"}
+{"t_us":16076792,"process":"headless","dir":"in","t_client_us":16076207,"t_server_us":117257775,"type":"pong"}
+{"t_us":16816178,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":16819210,"process":"headless","dir":"in","type":"socket.closed","code":1000}

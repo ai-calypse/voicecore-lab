@@ -1,0 +1,26 @@
+{"t_us":72584,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/noisy_5db_02.wav"}
+{"t_us":75444,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-52ab00fc60fdec09","type":"welcome"}
+{"t_us":75566,"process":"headless","type":"mic.start","t0_us":75563}
+{"t_us":1178103,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1874519,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"He made the sign of"}
+{"t_us":2077066,"process":"headless","dir":"in","t_client_us":2075970,"t_server_us":120350441,"type":"pong"}
+{"t_us":2896902,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"He made the sign of the cross over me,"}
+{"t_us":3241724,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"He made the sign of the cross over me,"}
+{"t_us":4078515,"process":"headless","dir":"in","t_client_us":4078073,"t_server_us":122352139,"type":"pong"}
+{"t_us":4226541,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"He made the sign of the cross over me, put on his cap,"}
+{"t_us":4387987,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"He made the sign of the cross over me, put on his cap,"}
+{"t_us":5390111,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"He made the sign of the cross over me, put on his cap, and went off in the dark."}
+{"t_us":5823173,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"He made the sign of the cross over me, put on his cap, and went off in the dark."}
+{"t_us":5823981,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"He made the sign of the cross over me, put on his cap, and went off in the dark."}
+{"t_us":5824258,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6079249,"process":"headless","dir":"in","t_client_us":6078545,"t_server_us":124352779,"type":"pong"}
+{"t_us":6224644,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":6230523,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that in the docs."}
+{"t_us":6374566,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8078920,"process":"headless","dir":"in","t_client_us":8078238,"t_server_us":126352468,"type":"pong"}
+{"t_us":8136136,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":10078378,"process":"headless","dir":"in","t_client_us":10077898,"t_server_us":128352043,"type":"pong"}
+{"t_us":12078711,"process":"headless","dir":"in","t_client_us":12078206,"t_server_us":130352334,"type":"pong"}
+{"t_us":14078639,"process":"headless","dir":"in","t_client_us":14078186,"t_server_us":132352326,"type":"pong"}
+{"t_us":14954987,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":14958230,"process":"headless","dir":"in","type":"socket.closed","code":1000}

@@ -1,5 +1,7 @@
 # Latency breakdown (S03-T06)
 
+> Before state. The gap to the hosted baseline was closed afterwards: p50 841 ms against 972 ms, see [latency_tuning.md](latency_tuning.md).
+
 **Date:** 2026-10-30 UTC. **Label:** `live-provider`, n = 10 turns. Small sample: medians and nearest-rank p95 only, not production rates.
 **Raw:** [`benchmarks/raw/wss_live_20261030T010848Z/`](../benchmarks/raw/wss_live_20261030T010848Z/) (client logs, orchestrator traces, gateway counters, `latency.json`).
 **Command:** `uv run python harness/runner/wss.py --providers live --sequential --tail 10 --clips dev_docs_question_q01 … q16`, then `uv run python harness/latency.py <run>`.

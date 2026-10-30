@@ -104,7 +104,7 @@ class Result:
 
 
 class AnswerEngine:
-    def __init__(self, index: Index, llm: LLM, k: int = 5, max_tokens: int = 80, official_only: bool = True):
+    def __init__(self, index: Index, llm: LLM, k: int = 5, max_tokens: int = 200, official_only: bool = True):  # gpt-oss counts reasoning tokens here
         self.index, self.llm, self.k, self.max_tokens, self.official_only = index, llm, k, max_tokens, official_only
         self.last: Result | None = None
 

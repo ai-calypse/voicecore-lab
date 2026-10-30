@@ -30,6 +30,7 @@ BUSY = "I'm busy right now. Please try again in a moment."
 BACKOFF_S = (1, 2, 4)  # after an HTTP 429 before any answer text
 PAUSE_CANCEL_S = 30  # a generation paused this long on the client is cancelled
 TEXT_MAX_CHARS = 500  # same limit as the gateway
+MERGE_WINDOW_US = 2_500_000  # the user speaking again this soon after we ended their turn continues that turn
 PREROLL_FRAMES, STT_HANGOVER_FRAMES = 15, 30  # STT hears 300 ms before speech and 600 ms after the last voiced frame
 FRAME_BYTES = 960  # 20 ms at 24 kHz, PCM16
 
@@ -83,12 +84,18 @@ class Session:
         self._pause_timer: asyncio.Task | None = None
         self._min_lag_us: int | None = None  # min (arrival - capture end) of mic frames: client->agent clock offset
         self._last_capture_end_us: int | None = None
+        self._last_voice_turn: dict | None = None  # {"gen", "text", "t_us"} of the newest turn ended by an endpoint
+        self._carry = ""  # text of a turn the user turned out to be still speaking (continuation merge)
+        self._finalized = False  # Finalize already sent during the current pause
         self.dropped_stale = 0
         self._tasks: list[asyncio.Task] = []
 
     # --- lifecycle -------------------------------------------------------------
 
     async def start(self):
+        for p in (self.stt, self.llm, self.tts):  # open provider connections now, not on the user's first turn
+            if hasattr(p, "warm"):
+                self._tasks.append(asyncio.create_task(p.warm()))
         self._tasks.append(asyncio.create_task(self._tts_reader()))
         if self.stt:
             self._tasks += [asyncio.create_task(self._stt_sender()), asyncio.create_task(self._stt_reader())]
@@ -125,6 +132,11 @@ class Session:
             self._to_stt(f.payload.tobytes(), prob)
         for e in self.floor.frame(prob, power(f.payload), self._played_power(f.capture_us)):
             await self._on_floor(e, capture_end_us=f.capture_us + 20_000)
+        if self.stt and self.floor.policy.kind == "eager" and self.floor.silence_ms() == self.floor.policy.finalize_ms:
+            self._finalized = True
+            await self.stt.finalize()  # ask for the final now: a punctuated one ends the turn without the full silence
+        elif self.floor.silence_ms() == 0:
+            self._finalized = False
 
     def _to_stt(self, pcm: bytes, prob: float):
         """Speech goes to STT, silence does not: STT is billed per second and capped per session.
@@ -153,6 +165,7 @@ class Session:
                 self.trace.emit("turn", "text_input_rejected", kind=type(text).__name__, chars=len(text) if isinstance(text, str) else None)
                 return
             self.turn_id = f"t{next(self._turns)}"
+            self._carry, self._last_voice_turn = "", None
             self.trace.emit("turn", "text_input", text=e["text"])
             await self.start_generation(self.turn_id, e["text"])
         elif t == "playout.started":
@@ -222,6 +235,12 @@ class Session:
             self.turn_id = f"t{next(self._turns)}"
             self.transcript.reset()
             self.trace.emit("turn", e.kind, onset_ms=e.onset_ms, capture_end_us=capture_end_us)
+            last = self._last_voice_turn
+            if last and last["gen"] == self.active_gen and self.playing is None and now_us() - last["t_us"] <= MERGE_WINDOW_US:
+                # We ended the turn too early (a pause inside one question): answer both parts together. Once the
+                # answer is audible, new speech reacts to it (a barge-in), so it is a new question.
+                self._carry = last["text"]
+                self.trace.emit("turn", "continuation", gen=last["gen"], text=last["text"])
             if self.active_gen is not None:
                 await self.cancel(self.active_gen, e.kind)
             self.state = State.USER_SPEAKING
@@ -229,7 +248,7 @@ class Session:
         elif e.kind == "endpoint":
             self.trace.emit("turn", "endpoint", reason=e.reason, onset_ms=e.onset_ms, silence_ms=e.silence_ms, capture_end_us=capture_end_us)
             self.state = State.THINKING
-            if self.stt:
+            if self.stt and not self._finalized:  # once per pause is enough
                 await self.stt.finalize()
             self._tasks = [t for t in self._tasks if not t.done()]
             self._tasks.append(asyncio.create_task(self._after_endpoint(self.turn_id)))
@@ -242,11 +261,13 @@ class Session:
             waited += 0.02
         if turn_id != self.turn_id:  # the user started again meanwhile
             return
-        text = self.transcript.text()
+        text = f"{self._carry} {self.transcript.text()}".strip()
+        self._carry = ""
         self.trace.emit("stt", "turn_text", chars=len(text), waited_ms=round(waited * 1000), text=text)
         if text:
             await self._event("transcript.final", turn_id=turn_id, text=text)
             await self.start_generation(turn_id, text)
+            self._last_voice_turn = {"gen": self.gen, "text": text, "t_us": now_us()}
         else:
             await self.start_generation(turn_id, "", reply=REPROMPT)
 

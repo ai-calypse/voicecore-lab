@@ -1,0 +1,24 @@
+{"t_us":76538,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/single_01.wav"}
+{"t_us":79813,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-04c32231d3cae520","type":"welcome"}
+{"t_us":79931,"process":"headless","type":"mic.start","t0_us":79929}
+{"t_us":1661519,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2080750,"process":"headless","dir":"in","t_client_us":2080374,"t_server_us":3187699,"type":"pong"}
+{"t_us":2389854,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"It is not"}
+{"t_us":3382365,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"It is not cultivated in"}
+{"t_us":4084159,"process":"headless","dir":"in","t_client_us":4083223,"t_server_us":5190715,"type":"pong"}
+{"t_us":4399091,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"It is not cultivated in England being"}
+{"t_us":5405275,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"It is not cultivated in England being principally confined"}
+{"t_us":6084587,"process":"headless","dir":"in","t_client_us":6083645,"t_server_us":7191362,"type":"pong"}
+{"t_us":6420353,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"It is not cultivated in England being principally confined to the East."}
+{"t_us":6421362,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"It is not cultivated in England being principally confined to the East."}
+{"t_us":6421628,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6817660,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":6823085,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that in the docs."}
+{"t_us":6980749,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8085359,"process":"headless","dir":"in","t_client_us":8084427,"t_server_us":9192260,"type":"pong"}
+{"t_us":8737656,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":10086167,"process":"headless","dir":"in","t_client_us":10085183,"t_server_us":11192982,"type":"pong"}
+{"t_us":12085559,"process":"headless","dir":"in","t_client_us":12085137,"t_server_us":13192495,"type":"pong"}
+{"t_us":14086251,"process":"headless","dir":"in","t_client_us":14085617,"t_server_us":15193127,"type":"pong"}
+{"t_us":15639843,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":15642438,"process":"headless","dir":"in","type":"socket.closed","code":1000}

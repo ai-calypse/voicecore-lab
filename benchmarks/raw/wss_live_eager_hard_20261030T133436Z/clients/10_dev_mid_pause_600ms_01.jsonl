@@ -1,0 +1,36 @@
+{"t_us":74245,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/mid_pause_600ms_01.wav"}
+{"t_us":77118,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-593aa19c2710a696","type":"welcome"}
+{"t_us":77231,"process":"headless","type":"mic.start","t0_us":77228}
+{"t_us":1337627,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2032039,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How infinite the"}
+{"t_us":2079025,"process":"headless","dir":"in","t_client_us":2078162,"t_server_us":169310754,"type":"pong"}
+{"t_us":3028870,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How infinite the wealth of love and"}
+{"t_us":4032873,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How infinite the wealth of love and hope garnered in these"}
+{"t_us":4081286,"process":"headless","dir":"in","t_client_us":4080448,"t_server_us":171312907,"type":"pong"}
+{"t_us":5038191,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How infinite the wealth of love and hope garnered in these same tiny"}
+{"t_us":6044079,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How infinite the wealth of love and hope garnered in these same tiny treasure houses."}
+{"t_us":6081806,"process":"headless","dir":"in","t_client_us":6081000,"t_server_us":173313424,"type":"pong"}
+{"t_us":6179055,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How infinite the wealth of love and hope garnered in these same tiny treasure houses."}
+{"t_us":6179731,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6399045,"process":"headless","dir":"out","type":"cancel.ack","gen":1,"played_until_seq":-1}
+{"t_us":6399515,"process":"headless","dir":"in","type":"agent.cancel","gen":1}
+{"t_us":6399778,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t2"}
+{"t_us":6915067,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And"}
+{"t_us":7905797,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And gem,"}
+{"t_us":8081357,"process":"headless","dir":"in","t_client_us":8080840,"t_server_us":175313222,"type":"pong"}
+{"t_us":8921584,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And Gem, don't give way so."}
+{"t_us":9925036,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And Oh, gem, don't give way so. I cannot bear to see"}
+{"t_us":10081694,"process":"headless","dir":"in","t_client_us":10081349,"t_server_us":177313580,"type":"pong"}
+{"t_us":10253159,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And Oh, Jem, don't give way so. I cannot bear to see you."}
+{"t_us":10253488,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t2","text":"How infinite the wealth of love and hope garnered in these same tiny treasure houses. And Oh, Jem, don't give way so. I cannot bear to see you."}
+{"t_us":10253763,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t2","gen":2}
+{"t_us":10644914,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":2}
+{"t_us":10647741,"process":"headless","dir":"in","type":"agent.text","gen":2,"text":"I couldn't find that in the docs."}
+{"t_us":10777025,"process":"headless","dir":"out","type":"playout.started","gen":2}
+{"t_us":12082593,"process":"headless","dir":"in","t_client_us":12081975,"t_server_us":179314400,"type":"pong"}
+{"t_us":12617015,"process":"headless","dir":"out","type":"playout.stopped","gen":2,"reason":"done"}
+{"t_us":14083381,"process":"headless","dir":"in","t_client_us":14082811,"t_server_us":181315172,"type":"pong"}
+{"t_us":16083760,"process":"headless","dir":"in","t_client_us":16083188,"t_server_us":183315576,"type":"pong"}
+{"t_us":18083718,"process":"headless","dir":"in","t_client_us":18083470,"t_server_us":185315687,"type":"pong"}
+{"t_us":19437457,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":19441439,"process":"headless","dir":"in","type":"socket.closed","code":1000}

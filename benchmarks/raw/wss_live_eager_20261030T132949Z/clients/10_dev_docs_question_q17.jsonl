@@ -1,0 +1,35 @@
+{"t_us":72257,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q17.wav"}
+{"t_us":75171,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-4c01ffb35cdc68ba","type":"welcome"}
+{"t_us":75276,"process":"headless","type":"mic.start","t0_us":75274}
+{"t_us":1216985,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1943440,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I"}
+{"t_us":2076471,"process":"headless","dir":"in","t_client_us":2075935,"t_server_us":160277986,"type":"pong"}
+{"t_us":2948700,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I run a command"}
+{"t_us":3939984,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I run a command whose package"}
+{"t_us":4079717,"process":"headless","dir":"in","t_client_us":4079340,"t_server_us":162281269,"type":"pong"}
+{"t_us":4942926,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I run a command whose package has a different"}
+{"t_us":5750335,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I run a command whose package has a different name?"}
+{"t_us":5751323,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I run a command whose package has a different name?"}
+{"t_us":5751567,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6037966,"process":"headless","dir":"out","type":"cancel.ack","gen":1,"played_until_seq":-1}
+{"t_us":6038427,"process":"headless","dir":"in","type":"agent.cancel","gen":1}
+{"t_us":6038762,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t2"}
+{"t_us":6080454,"process":"headless","dir":"in","t_client_us":6079880,"t_server_us":164281941,"type":"pong"}
+{"t_us":6676860,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"Like"}
+{"t_us":7641842,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"Like http"}
+{"t_us":8080938,"process":"headless","dir":"in","t_client_us":8080268,"t_server_us":166282407,"type":"pong"}
+{"t_us":8388331,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"Like HTTP"}
+{"t_us":9360959,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"Like HTTP from HTTP"}
+{"t_us":9753465,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"Like HTTP from HTTP"}
+{"t_us":10081307,"process":"headless","dir":"in","t_client_us":10080658,"t_server_us":168282806,"type":"pong"}
+{"t_us":10238048,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t2","text":"How do I run a command whose package has a different name? Like HTTP from HTTP"}
+{"t_us":10238536,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t2","gen":2}
+{"t_us":10601701,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"d6ea3e4e83c8","title":"Using tools > Commands with different package names","url":"https://docs.astral.sh/uv/guides/tools/#commands-with-different-package-names"}],"gen":2}
+{"t_us":10602521,"process":"headless","dir":"in","type":"agent.text","gen":2,"text":"Use `uvx --from <package> <command>` to run a command when the package name differs, e.g., `uvx --from httpie http` [1]."}
+{"t_us":10757522,"process":"headless","dir":"out","type":"playout.started","gen":2}
+{"t_us":12081686,"process":"headless","dir":"in","t_client_us":12081143,"t_server_us":170283230,"type":"pong"}
+{"t_us":14082674,"process":"headless","dir":"in","t_client_us":14081899,"t_server_us":172284153,"type":"pong"}
+{"t_us":16082922,"process":"headless","dir":"in","t_client_us":16082281,"t_server_us":174284426,"type":"pong"}
+{"t_us":18083821,"process":"headless","dir":"in","t_client_us":18083153,"t_server_us":176285306,"type":"pong"}
+{"t_us":18915982,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":18919604,"process":"headless","dir":"in","type":"socket.closed","code":1000}

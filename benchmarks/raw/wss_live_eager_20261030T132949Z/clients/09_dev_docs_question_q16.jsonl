@@ -1,0 +1,24 @@
+{"t_us":71758,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q16.wav"}
+{"t_us":74846,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-fd41d009a2c3d0fa","type":"welcome"}
+{"t_us":74973,"process":"headless","type":"mic.start","t0_us":74971}
+{"t_us":1155679,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1920960,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When it is uvx,"}
+{"t_us":2076347,"process":"headless","dir":"in","t_client_us":2075470,"t_server_us":145115657,"type":"pong"}
+{"t_us":2891436,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When it is uvx, keep a tools"}
+{"t_us":3885517,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When it is uvx keep a tools environment,"}
+{"t_us":4077610,"process":"headless","dir":"in","t_client_us":4077278,"t_server_us":147117140,"type":"pong"}
+{"t_us":4864880,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When it is uvx keep a tools environment, and does it stick"}
+{"t_us":5742542,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When it is uvx keep a tools environment, and does it stick around?"}
+{"t_us":5742931,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"When it is uvx keep a tools environment, and does it stick around?"}
+{"t_us":5743120,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6078031,"process":"headless","dir":"in","t_client_us":6077450,"t_server_us":149117469,"type":"pong"}
+{"t_us":6214068,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":6219718,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that in the docs."}
+{"t_us":6353543,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8078130,"process":"headless","dir":"in","t_client_us":8077798,"t_server_us":151117721,"type":"pong"}
+{"t_us":8195206,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":10079294,"process":"headless","dir":"in","t_client_us":10078408,"t_server_us":153118684,"type":"pong"}
+{"t_us":12080243,"process":"headless","dir":"in","t_client_us":12079581,"t_server_us":155119663,"type":"pong"}
+{"t_us":14080991,"process":"headless","dir":"in","t_client_us":14080219,"t_server_us":157120391,"type":"pong"}
+{"t_us":14875323,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":14879639,"process":"headless","dir":"in","type":"socket.closed","code":1000}

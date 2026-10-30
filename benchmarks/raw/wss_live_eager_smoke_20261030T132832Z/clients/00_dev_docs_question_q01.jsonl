@@ -1,0 +1,29 @@
+{"t_us":75878,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q01.wav"}
+{"t_us":79155,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-dbe214b511070693","type":"welcome"}
+{"t_us":79268,"process":"headless","type":"mic.start","t0_us":79266}
+{"t_us":1221513,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1942688,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I"}
+{"t_us":2080210,"process":"headless","dir":"in","t_client_us":2079356,"t_server_us":3186839,"type":"pong"}
+{"t_us":2949454,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install uv?"}
+{"t_us":3432866,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install of?"}
+{"t_us":3433708,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I install of?"}
+{"t_us":3433955,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":3480670,"process":"headless","dir":"out","type":"cancel.ack","gen":1,"played_until_seq":-1}
+{"t_us":3480825,"process":"headless","dir":"in","type":"agent.cancel","gen":1}
+{"t_us":3480901,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t2"}
+{"t_us":4081543,"process":"headless","dir":"in","t_client_us":4081147,"t_server_us":5188374,"type":"pong"}
+{"t_us":4449451,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"On a Mac"}
+{"t_us":5452902,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"On a Mac or Linux"}
+{"t_us":5998989,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"On a Mac or Linux machine?"}
+{"t_us":5999436,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t2","text":"How do I install of? On a Mac or Linux machine?"}
+{"t_us":5999829,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t2","gen":2}
+{"t_us":6081525,"process":"headless","dir":"in","t_client_us":6081136,"t_server_us":7188412,"type":"pong"}
+{"t_us":6340908,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":4,"id":"084a260874c9","title":"Installing uv > Standalone installer","url":"https://docs.astral.sh/uv/getting-started/installation/#standalone-installer"}],"gen":2}
+{"t_us":6341409,"process":"headless","dir":"in","type":"agent.text","gen":2,"text":"On macOS or Linux, download the installer script with `curl` and pipe it to `sh` (or use `wget` if curl isn’t available) — `curl -LsSf | sh` or `wget -qO- | sh` [4]."}
+{"t_us":6498560,"process":"headless","dir":"out","type":"playout.started","gen":2}
+{"t_us":8081896,"process":"headless","dir":"in","t_client_us":8081252,"t_server_us":9188665,"type":"pong"}
+{"t_us":10082733,"process":"headless","dir":"in","t_client_us":10082011,"t_server_us":11189473,"type":"pong"}
+{"t_us":12083357,"process":"headless","dir":"in","t_client_us":12082438,"t_server_us":13189932,"type":"pong"}
+{"t_us":14082887,"process":"headless","dir":"in","t_client_us":14082182,"t_server_us":15189680,"type":"pong"}
+{"t_us":15139859,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":15142804,"process":"headless","dir":"in","type":"socket.closed","code":1000}

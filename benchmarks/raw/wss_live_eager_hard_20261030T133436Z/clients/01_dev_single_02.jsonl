@@ -1,0 +1,31 @@
+{"t_us":82303,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/single_02.wav"}
+{"t_us":86233,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-e44f82bfa5d2b6fe","type":"welcome"}
+{"t_us":86381,"process":"headless","type":"mic.start","t0_us":86379}
+{"t_us":1248297,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1973097,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"She merely brushed"}
+{"t_us":2086952,"process":"headless","dir":"in","t_client_us":2086246,"t_server_us":19102416,"type":"pong"}
+{"t_us":2974638,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"She merely brushed his cheek with her"}
+{"t_us":3596292,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"She merely brushed his cheek with her lips."}
+{"t_us":3597057,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"She merely brushed his cheek with her lips."}
+{"t_us":3597358,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":3648581,"process":"headless","dir":"out","type":"cancel.ack","gen":1,"played_until_seq":-1}
+{"t_us":3648793,"process":"headless","dir":"in","type":"agent.cancel","gen":1}
+{"t_us":3648868,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t2"}
+{"t_us":4088866,"process":"headless","dir":"in","t_client_us":4088446,"t_server_us":21104427,"type":"pong"}
+{"t_us":4537924,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And put a hand"}
+{"t_us":5566260,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And put a hand lightly and joyously"}
+{"t_us":6088996,"process":"headless","dir":"in","t_client_us":6088239,"t_server_us":23104397,"type":"pong"}
+{"t_us":6577645,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And put a hand lightly and joyously on either shoulder."}
+{"t_us":6746568,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And put a hand lightly and joyously on either shoulder."}
+{"t_us":6747157,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t2","text":"She merely brushed his cheek with her lips. And put a hand lightly and joyously on either shoulder."}
+{"t_us":6747411,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t2","gen":2}
+{"t_us":7112614,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":2}
+{"t_us":7117300,"process":"headless","dir":"in","type":"agent.text","gen":2,"text":"I couldn't find that in the docs."}
+{"t_us":7245690,"process":"headless","dir":"out","type":"playout.started","gen":2}
+{"t_us":8088231,"process":"headless","dir":"in","t_client_us":8087996,"t_server_us":25103907,"type":"pong"}
+{"t_us":9082385,"process":"headless","dir":"out","type":"playout.stopped","gen":2,"reason":"done"}
+{"t_us":10089770,"process":"headless","dir":"in","t_client_us":10088987,"t_server_us":27105166,"type":"pong"}
+{"t_us":12090161,"process":"headless","dir":"in","t_client_us":12089448,"t_server_us":29105586,"type":"pong"}
+{"t_us":14089528,"process":"headless","dir":"in","t_client_us":14089028,"t_server_us":31105065,"type":"pong"}
+{"t_us":15926668,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":15929574,"process":"headless","dir":"in","type":"socket.closed","code":1000}

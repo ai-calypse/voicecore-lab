@@ -1,0 +1,94 @@
+2026-10-30 09:29:49,871 INFO websockets.server server listening on 127.0.0.1:8765
+2026-10-30 09:29:49,871 INFO voicecore.server orchestrator listening on ws://127.0.0.1:8765 (live providers)
+2026-10-30 09:29:50,860 INFO websockets.server connection open
+2026-10-30 09:29:51,156 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:29:57,039 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:30:05,923 INFO websockets.server connection closed
+2026-10-30 09:30:06,242 INFO websockets.server connection open
+2026-10-30 09:30:06,265 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:30:13,216 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:30:22,124 INFO websockets.server connection closed
+2026-10-30 09:30:22,443 INFO websockets.server connection open
+2026-10-30 09:30:22,475 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:30:30,625 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:30:39,567 INFO websockets.server connection closed
+2026-10-30 09:30:39,893 INFO websockets.server connection open
+2026-10-30 09:30:39,919 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:30:45,971 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:30:48,818 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:30:57,736 INFO websockets.server connection closed
+2026-10-30 09:30:58,086 INFO websockets.server connection open
+2026-10-30 09:30:58,114 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:31:03,963 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:31:12,930 INFO websockets.server connection closed
+2026-10-30 09:31:13,244 INFO websockets.server connection open
+2026-10-30 09:31:13,271 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:31:18,097 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:31:26,827 INFO websockets.server connection closed
+2026-10-30 09:31:27,185 INFO websockets.server connection open
+2026-10-30 09:31:27,217 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:31:32,408 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:31:41,430 INFO websockets.server connection closed
+2026-10-30 09:31:41,745 INFO websockets.server connection open
+2026-10-30 09:31:41,776 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:31:47,202 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:31:56,187 INFO websockets.server connection closed
+2026-10-30 09:31:56,509 INFO websockets.server connection open
+2026-10-30 09:31:56,537 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:32:03,598 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:32:12,474 INFO websockets.server connection closed
+2026-10-30 09:32:12,782 INFO websockets.server connection open
+2026-10-30 09:32:12,809 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:32:18,799 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:32:27,587 INFO websockets.server connection closed
+2026-10-30 09:32:27,945 INFO websockets.server connection open
+2026-10-30 09:32:27,981 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:32:33,884 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:32:38,442 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:32:46,789 INFO websockets.server connection closed
+2026-10-30 09:32:47,122 INFO websockets.server connection open
+2026-10-30 09:32:47,145 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:32:54,878 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:33:03,806 INFO websockets.server connection closed
+2026-10-30 09:33:04,135 INFO websockets.server connection open
+2026-10-30 09:33:04,176 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:33:09,715 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:33:18,337 INFO websockets.server connection closed
+2026-10-30 09:33:18,660 INFO websockets.server connection open
+2026-10-30 09:33:18,700 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:33:25,030 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:33:33,963 INFO websockets.server connection closed
+2026-10-30 09:33:34,280 INFO websockets.server connection open
+2026-10-30 09:33:34,301 INFO httpx HTTP Request: GET https://openrouter.ai/api/v1/key "HTTP/1.1 200 OK"
+2026-10-30 09:33:38,839 INFO httpx HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+2026-10-30 09:33:47,743 INFO websockets.server connection closed
+2026-10-30 09:33:47,964 INFO websockets.server server closing
+2026-10-30 09:33:47,995 INFO websockets.server server closed
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.14/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.14/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/services/agent-core/voicecore/server.py", line 158, in main
+    await server.serve_forever()
+  File "/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/.venv/lib/python3.12/site-packages/websockets/asyncio/server.py", line 405, in serve_forever
+    await self.wait_closed()
+  File "/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/.venv/lib/python3.12/site-packages/websockets/asyncio/server.py", line 439, in wait_closed
+    await asyncio.shield(self.handlers_waiter)
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/services/agent-core/voicecore/server.py", line 162, in <module>
+    asyncio.run(main())
+  File "/opt/homebrew/Cellar/python@3.12/3.12.14/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.14/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 123, in run
+    raise KeyboardInterrupt()
+KeyboardInterrupt

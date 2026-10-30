@@ -64,11 +64,11 @@ async def test_llm_text_then_done_within_max_tokens(usd):
     need("OPENROUTER_API_KEY")
     res, spent = usd
     llm = make_live("llm", res)
-    events = [e async for e in llm.stream([{"role": "user", "content": "Count from 1 to 200, separated by spaces."}], max_tokens=80)]
+    events = [e async for e in llm.stream([{"role": "user", "content": "Count from 1 to 200, separated by spaces."}], max_tokens=200)]
     spent.append(llm.cost_usd)
     assert isinstance(events[-1], Done)
     assert any(isinstance(e, TextDelta) for e in events)
-    assert 0 < events[-1].usage["output_tokens"] <= 80
+    assert 0 < events[-1].usage["output_tokens"] <= 200  # gpt-oss counts its reasoning tokens here too
 
 
 async def test_llm_bad_key_is_fatal(usd):

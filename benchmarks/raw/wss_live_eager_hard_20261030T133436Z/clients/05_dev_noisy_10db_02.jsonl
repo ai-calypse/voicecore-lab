@@ -1,0 +1,24 @@
+{"t_us":67917,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/noisy_10db_02.wav"}
+{"t_us":70759,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-16bb9e5a14186931","type":"welcome"}
+{"t_us":70887,"process":"headless","type":"mic.start","t0_us":70884}
+{"t_us":1171409,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1862012,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"For relief, he ever"}
+{"t_us":2071781,"process":"headless","dir":"in","t_client_us":2071082,"t_server_us":88822160,"type":"pong"}
+{"t_us":2856893,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"For relief, he arose and joined in the"}
+{"t_us":3602197,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"For relief, he arose and joined in the conversation with a"}
+{"t_us":4074543,"process":"headless","dir":"in","t_client_us":4074028,"t_server_us":90824997,"type":"pong"}
+{"t_us":4108774,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"For relief, he arose and joined in the conversation with a few friends"}
+{"t_us":5051419,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"For relief, he arose and joined in the conversation with a few friends who were drinking."}
+{"t_us":5051858,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"For relief, he arose and joined in the conversation with a few friends who were drinking."}
+{"t_us":5052007,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":5335466,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":5341250,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that in the docs."}
+{"t_us":5468337,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":6075025,"process":"headless","dir":"in","t_client_us":6074568,"t_server_us":92825516,"type":"pong"}
+{"t_us":7228309,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":8074611,"process":"headless","dir":"in","t_client_us":8074074,"t_server_us":94825114,"type":"pong"}
+{"t_us":10075628,"process":"headless","dir":"in","t_client_us":10074886,"t_server_us":96826022,"type":"pong"}
+{"t_us":12076135,"process":"headless","dir":"in","t_client_us":12075477,"t_server_us":98826584,"type":"pong"}
+{"t_us":14075812,"process":"headless","dir":"in","t_client_us":14075384,"t_server_us":100826364,"type":"pong"}
+{"t_us":14151439,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":14156326,"process":"headless","dir":"in","type":"socket.closed","code":1000}

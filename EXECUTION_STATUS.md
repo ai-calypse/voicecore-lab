@@ -32,6 +32,7 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 | 2026-10-30 | S06-T01..T06 | Claude Code (Opus 5.5) | `harness/{timeline,session_timeline,bench,gate,wer_eval,lab_sample}.py`, `apps/demo/src/lab.*`, gateway trace, `reports/{perf,quality_eval}.md` | `make test` + `make e2e` (4) pass; evals gate pass on main, fail on proof branch | usd $0.82, credits 10,877 |
 | 2026-10-30 | S07-T01..T05 | Claude Code (Opus 5.5) | `experiments/`, `apps/demo/e2e/webrtc.spec.ts`, `docs/{media_internals,telephony_extension}.md` | `make test-go` (incl. experiments) + Playwright webrtc pass; BENCH comparison run once | — |
 | 2026-10-30 | S08-T01..T04 | Claude Code (Opus 5.5) | `apps/demo/src/widget.*`, `docker-compose.yml`, Dockerfiles, `harness/smoke.py`, `docs/{architecture,portfolio_story,video_script}.md`, `docs/writeups/` | `make test`, `make e2e` (10), CI incl. `compose` job pass; code review (07–08) fixed | Spend: usd $0.82 / $5, credits 10,877 / 16,000 |
+| 2026-10-30 | Latency tuning (user request after Step 08) | Claude Code (Opus 5.5) | `voicecore/{turntaking/floor.py,runtime/session.py,providers/*,server.py}`, `harness/{llm_ttft,endpoint_study,latency_chart}.py`, `reports/latency_tuning.md`, ADR 0002 amendment | `uv run pytest -m 'not live'` pass; live LLM contracts pass; live voice turn p50 2,317 → 841 ms (n = 15), hard audio p50 841 ms (n = 12); answer eval rerun on gpt-oss-120b | Live default: eager endpoint + gpt-oss-120b on Cerebras. Spend: usd $0.95 / $5, credits 13,692 / 16,000 |
 
 ## Handoff history
 

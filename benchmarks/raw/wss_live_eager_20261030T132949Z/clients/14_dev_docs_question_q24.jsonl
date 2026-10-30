@@ -1,0 +1,22 @@
+{"t_us":80150,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q24.wav"}
+{"t_us":83241,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-0cebbb199035ae0c","type":"welcome"}
+{"t_us":83357,"process":"headless","type":"mic.start","t0_us":83355}
+{"t_us":1186101,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1907290,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will you all pick up"}
+{"t_us":2085507,"process":"headless","dir":"in","t_client_us":2084081,"t_server_us":226612550,"type":"pong"}
+{"t_us":2932025,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will you all pick up the settings I already"}
+{"t_us":3923734,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will you all pick up the settings I already have configured for"}
+{"t_us":4086851,"process":"headless","dir":"in","t_client_us":4086174,"t_server_us":228614250,"type":"pong"}
+{"t_us":4359012,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will you all pick up the settings I already have configured for PIP?"}
+{"t_us":4359223,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Will you all pick up the settings I already have configured for PIP?"}
+{"t_us":4359462,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":4869693,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"12358de0019b","title":"Compatibility with pip and pip-tools > Configuration files and environment variables","url":"https://docs.astral.sh/uv/pip/compatibility/#configuration-files-and-environment-variables"}],"gen":1}
+{"t_us":4870262,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"No—uv ignores pip’s configuration files and environment variables, using its own settings instead [1]."}
+{"t_us":5024109,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":6087609,"process":"headless","dir":"in","t_client_us":6086968,"t_server_us":230615159,"type":"pong"}
+{"t_us":8088470,"process":"headless","dir":"in","t_client_us":8087340,"t_server_us":232615887,"type":"pong"}
+{"t_us":10088627,"process":"headless","dir":"in","t_client_us":10087505,"t_server_us":234616056,"type":"pong"}
+{"t_us":11180868,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":12088717,"process":"headless","dir":"in","t_client_us":12087820,"t_server_us":236616186,"type":"pong"}
+{"t_us":13543249,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":13547090,"process":"headless","dir":"in","type":"socket.closed","code":1000}

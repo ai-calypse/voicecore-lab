@@ -37,12 +37,12 @@ def wait_http(url, timeout=60):
     raise TimeoutError(url)
 
 
-def start_stack(providers, trace_dir, logs, policy="fixed"):
+def start_stack(providers, trace_dir, logs, policy="fixed", server_args=()):
     go = shutil.which("go")
     binary = ROOT / ".cache/bin/gateway"  # never inside the run folder: that folder is committed evidence
     subprocess.run([go, "build", "-o", str(binary), "./cmd/gateway"], cwd=GATEWAY, check=True)
     procs = [
-        subprocess.Popen([sys.executable, "-m", "voicecore.server", "--providers", providers, "--trace-dir", str(trace_dir), "--policy", policy],
+        subprocess.Popen([sys.executable, "-m", "voicecore.server", "--providers", providers, "--trace-dir", str(trace_dir), "--policy", policy, *server_args],
                          cwd=ROOT, stdout=open(logs / "orchestrator.log", "w"), stderr=subprocess.STDOUT),
         # all benchmark clients share one IP: lift the per-IP abuse limits for this local run only
         subprocess.Popen([str(binary), "-addr", "127.0.0.1:8080", "-upstream", "ws://127.0.0.1:8765", "-trace", str(logs / "gateway_trace.jsonl"),
@@ -51,6 +51,10 @@ def start_stack(providers, trace_dir, logs, policy="fixed"):
     ]
     wait_http(COUNTERS_URL)
     time.sleep(1)  # orchestrator loads the VAD model
+    if any(p.poll() is not None for p in procs):  # e.g. a docker stack already holds :8080 and would answer instead
+        for p in procs:
+            p.kill()
+        sys.exit(f"stack failed to start: see {logs}/gateway.log and orchestrator.log")
     return procs
 
 
@@ -84,14 +88,17 @@ def main():
     ap.add_argument("--out", type=Path)
     ap.add_argument("--no-stack", action="store_true")
     ap.add_argument("--sequential", action="store_true", help="one client at a time (provider concurrency limits)")
-    ap.add_argument("--policy", default="fixed", choices=["fixed", "adaptive", "asr_assisted"])
+    ap.add_argument("--policy", choices=["fixed", "adaptive", "asr_assisted", "eager"], help="default: the orchestrator's (eager live, fixed mock)")
+    ap.add_argument("--server-arg", action="append", default=[], help="extra orchestrator flag, e.g. --server-arg=--llm-model=openai/gpt-4.1-nano")
+    ap.add_argument("--label", default="", help="suffix for the run folder")
     args = ap.parse_args()
     run = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    out = args.out or ROOT / f"benchmarks/raw/wss_{args.providers}_{args.policy}_{run}"
+    args.policy = args.policy or ("eager" if args.providers == "live" else "fixed")
+    out = args.out or ROOT / f"benchmarks/raw/wss_{args.providers}_{args.policy}{'_' + args.label if args.label else ''}_{run}"
     (out / "traces").mkdir(parents=True, exist_ok=True)
     by_id = {c["id"]: c for c in all_clips()}
     clips = [by_id[c] for c in args.clips for _ in range(args.parallel)]
-    procs = [] if args.no_stack else start_stack(args.providers, out / "traces", out, args.policy)
+    procs = [] if args.no_stack else start_stack(args.providers, out / "traces", out, args.policy, args.server_arg)
     try:
         logs = run_clients(clips, out / "clients", args.tail, args.sequential)
         if procs:

@@ -1,0 +1,435 @@
+{
+  "run_id": "20261030T131151Z",
+  "configs": {
+    "gpt-4.1-nano (current)": {
+      "ok": 6,
+      "n": 6,
+      "first_token_ms": {
+        "p50": 574,
+        "max": 2061
+      },
+      "first_sentence_ms": {
+        "p50": 791,
+        "max": 2691
+      },
+      "total_ms": {
+        "p50": 815,
+        "max": 2792
+      },
+      "reasoning_tokens": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "rows": [
+        {
+          "first_token_ms": 2061,
+          "first_sentence_ms": 2691,
+          "total_ms": 2792,
+          "text": "You can install uv on a Mac using MacPorts with the command `$ sudo port install uv`, or on Linux using MacPorts if applicable [2].",
+          "in": 1219,
+          "out": 31,
+          "cost": 0.0001343,
+          "reasoning": 0
+        },
+        {
+          "first_token_ms": 434,
+          "first_sentence_ms": 593,
+          "total_ms": 620,
+          "text": "You can check if your lockfile is up-to-date by passing the `--check` flag to `uv lock`, which will verify if the lockfile matches the project metadata [2].",
+          "in": 1191,
+          "out": 39,
+          "cost": 0.0001347,
+          "reasoning": 0
+        },
+        {
+          "first_token_ms": 443,
+          "first_sentence_ms": 733,
+          "total_ms": 742,
+          "text": "You can include extras in the `--from` option to run a tool with extras, like `mypy[faster-cache,reports]`, during a `uvx` command, but for `uv run`, the documentation does not specify a way to add extras directly for just one run [2].",
+          "in": 1397,
+          "out": 62,
+          "cost": 0.0001645,
+          "reasoning": 0
+        },
+        {
+          "first_token_ms": 1804,
+          "first_sentence_ms": 1970,
+          "total_ms": 2075,
+          "text": "By default, `uv sync` performs \"exact\" syncing, which means it will remove any packages that are not selected for installation [1].",
+          "in": 1299,
+          "out": 30,
+          "cost": 0.0001419,
+          "reasoning": 0
+        },
+        {
+          "first_token_ms": 574,
+          "first_sentence_ms": 791,
+          "total_ms": 815,
+          "text": "You can declare dependencies inside a script using inline metadata, which is added at the top of the script with a `script` section using TOML format, and then use `uv add --script` to declare them [1].",
+          "in": 1297,
+          "out": 47,
+          "cost": 0.0001485,
+          "reasoning": 0
+        },
+        {
+          "first_token_ms": 930,
+          "first_sentence_ms": 1599,
+          "total_ms": 1646,
+          "text": "You can set the `default-groups` to `\"all\"` in your `pyproject.toml` file to make uv include all dependency groups by default [1].",
+          "in": 1492,
+          "out": 35,
+          "cost": 0.0001632,
+          "reasoning": 0
+        }
+      ]
+    },
+    "gpt-oss-120b Cerebras low": {
+      "ok": 6,
+      "n": 6,
+      "first_token_ms": {
+        "p50": 300,
+        "max": 514
+      },
+      "first_sentence_ms": {
+        "p50": 314,
+        "max": 538
+      },
+      "total_ms": {
+        "p50": 331,
+        "max": 552
+      },
+      "reasoning_tokens": [
+        46,
+        66,
+        77,
+        31,
+        38,
+        58
+      ],
+      "rows": [
+        {
+          "first_token_ms": 256,
+          "first_sentence_ms": 275,
+          "total_ms": 283,
+          "text": "On macOS you can install uv via MacPorts with `sudo port install uv`\u202f[2].  \nThe docs don\u2019t provide a Linux installation method\u202f[I couldn't find that in the docs].",
+          "in": 1282,
+          "out": 96,
+          "cost": 0.0005207,
+          "reasoning": 46
+        },
+        {
+          "first_token_ms": 296,
+          "first_sentence_ms": 296,
+          "total_ms": 329,
+          "text": "Run\u202f`uv lock\u202f--check` to verify the lockfile is up\u2011to\u2011date without modifying it\u202f[2]. This flag works the same as the\u202f`--locked`\u202foption on other commands\u202f[2].",
+          "in": 1254,
+          "out": 124,
+          "cost": 0.0005319,
+          "reasoning": 66
+        },
+        {
+          "first_token_ms": 514,
+          "first_sentence_ms": 538,
+          "total_ms": 552,
+          "text": "Use\u202f`uvx` with the `--with` (or `-w`) option to specify the extra package when you run the tool, e.g.\u202f`uvx --with <extra-package> <tool>`\u202f[1]. This adds the package only for that invocation.",
+          "in": 1460,
+          "out": 146,
+          "cost": 0.0006205,
+          "reasoning": 77
+        },
+        {
+          "first_token_ms": 317,
+          "first_sentence_ms": 317,
+          "total_ms": 343,
+          "text": "Yes\u2014by default `uv sync` does exact syncing and will remove any packages that aren\u2019t selected for installation\u202f[1]. Use the `--inexact` flag if you want to keep extraneous packages\u202f[1].",
+          "in": 1362,
+          "out": 87,
+          "cost": 0.00054195,
+          "reasoning": 31
+        },
+        {
+          "first_token_ms": 330,
+          "first_sentence_ms": 347,
+          "total_ms": 387,
+          "text": "You add an inline `# /// script` block at the top of the file listing a `dependencies` array, which uv can create for you with `uv add --script <script> <packages>`\u202f[1]. This metadata lets uv install the needed packages automatically when you run the script\u202f[2].",
+          "in": 1360,
+          "out": 111,
+          "cost": 0.00055925,
+          "reasoning": 38
+        },
+        {
+          "first_token_ms": 300,
+          "first_sentence_ms": 314,
+          "total_ms": 331,
+          "text": "Set `default-groups = \"all\"` in the `[tool.uv]` section of your\u202f`pyproject.toml` to have uv include every dependency group by default [1].",
+          "in": 1555,
+          "out": 107,
+          "cost": 0.0006245,
+          "reasoning": 58
+        }
+      ]
+    },
+    "gpt-oss-120b Groq low": {
+      "ok": 6,
+      "n": 6,
+      "first_token_ms": {
+        "p50": 451,
+        "max": 744
+      },
+      "first_sentence_ms": {
+        "p50": 505,
+        "max": 792
+      },
+      "total_ms": {
+        "p50": 565,
+        "max": 813
+      },
+      "reasoning_tokens": [
+        39,
+        19,
+        56,
+        34,
+        32,
+        57
+      ],
+      "rows": [
+        {
+          "first_token_ms": 744,
+          "first_sentence_ms": 779,
+          "total_ms": 813,
+          "text": "On macOS you can install uv with MacPorts using `sudo port install uv`\u202f[2].  \nI couldn\u2019t find that in the docs for Linux.",
+          "in": 1282,
+          "out": 81,
+          "cost": 0.0002409,
+          "reasoning": 39
+        },
+        {
+          "first_token_ms": 709,
+          "first_sentence_ms": 792,
+          "total_ms": 800,
+          "text": "Run `uv lock --check` to verify the lockfile is up\u2011to\u2011date without modifying it; this behaves like the `--locked` flag on other commands [2].",
+          "in": 1254,
+          "out": 65,
+          "cost": 0.0002271,
+          "reasoning": 19
+        },
+        {
+          "first_token_ms": 523,
+          "first_sentence_ms": 558,
+          "total_ms": 634,
+          "text": "Use\u202f`uvx` with the\u202f`--with` (or `-w`) option to include the extra package only for that execution, e.g.\u202f`uvx --with <extra\u2011package> <tool>`\u202f[1].",
+          "in": 1460,
+          "out": 116,
+          "cost": 0.0002886,
+          "reasoning": 56
+        },
+        {
+          "first_token_ms": 451,
+          "first_sentence_ms": 504,
+          "total_ms": 557,
+          "text": "Yes, `uv sync` performs exact syncing by default, so it will remove any packages that aren\u2019t selected for installation\u202f[1]. You can keep those extra packages by adding the `--inexact` flag\u202f[1].",
+          "in": 1362,
+          "out": 90,
+          "cost": 0.0002583,
+          "reasoning": 34
+        },
+        {
+          "first_token_ms": 397,
+          "first_sentence_ms": 505,
+          "total_ms": 565,
+          "text": "Add a `# /// script` block at the top of the file containing a `dependencies` list in TOML format, then run `uv add --script <script> <packages>` to have uv insert that block for you\u202f[1]. This inline metadata lets uv know which packages to install when the script is run\u202f[2].",
+          "in": 1360,
+          "out": 110,
+          "cost": 0.00027,
+          "reasoning": 32
+        },
+        {
+          "first_token_ms": 421,
+          "first_sentence_ms": 429,
+          "total_ms": 505,
+          "text": "Set `tool.uv.default-groups = \"all\"` in your\u202f`pyproject.toml` to have uv include every dependency group by default\u30101\u3011.",
+          "in": 1555,
+          "out": 100,
+          "cost": 0.00029325,
+          "reasoning": 57
+        }
+      ]
+    },
+    "gpt-oss-120b BaseTen low": {
+      "ok": 6,
+      "n": 6,
+      "first_token_ms": {
+        "p50": 508,
+        "max": 579
+      },
+      "first_sentence_ms": {
+        "p50": 579,
+        "max": 718
+      },
+      "total_ms": {
+        "p50": 675,
+        "max": 822
+      },
+      "reasoning_tokens": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "rows": [
+        {
+          "first_token_ms": 460,
+          "first_sentence_ms": 551,
+          "total_ms": 675,
+          "text": "On macOS you can install uv via MacPorts with `sudo port install uv`\u202f[2].  \nThe docs don\u2019t provide a Linux installation method\u202f[I couldn't find that in the docs].",
+          "in": 1286,
+          "out": 78,
+          "cost": 0.0001676,
+          "reasoning": 0
+        },
+        {
+          "first_token_ms": 532,
+          "first_sentence_ms": 718,
+          "total_ms": 754,
+          "text": "Run `uv lock --check` to verify the lockfile is up\u2011to\u2011date without modifying it; this behaves like the `--locked` flag on other commands. [2]",
+          "in": 1258,
+          "out": 61,
+          "cost": 0.0001563,
+          "reasoning": 0
+        },
+        {
+          "first_token_ms": 554,
+          "first_sentence_ms": 579,
+          "total_ms": 591,
+          "text": "I couldn't find that in the docs.",
+          "in": 1464,
+          "out": 55,
+          "cost": 0.0001739,
+          "reasoning": 0
+        },
+        {
+          "first_token_ms": 391,
+          "first_sentence_ms": 495,
+          "total_ms": 517,
+          "text": "Yes, `uv sync` performs exact syncing by default and will remove any packages that aren\u2019t selected for installation\u202f[1].",
+          "in": 1366,
+          "out": 55,
+          "cost": 0.0001641,
+          "reasoning": 0
+        },
+        {
+          "first_token_ms": 508,
+          "first_sentence_ms": 709,
+          "total_ms": 822,
+          "text": "Use `uv add --script <script\u2011name>` followed by the package specs to insert a `# /// script` block with a `dependencies` list at the top of the file\u30101\u3011. This inline metadata lets\u202fuv\u202finstall those packages automatically when you run the script with `uv run`\u30102\u3011.",
+          "in": 1364,
+          "out": 113,
+          "cost": 0.0001929,
+          "reasoning": 0
+        },
+        {
+          "first_token_ms": 579,
+          "first_sentence_ms": 579,
+          "total_ms": 750,
+          "text": "Set `tool.uv.default-groups = \"all\"` in your\u202f`pyproject.toml` to have uv include every dependency group by default\u202f[1].",
+          "in": 1559,
+          "out": 96,
+          "cost": 0.0002039,
+          "reasoning": 0
+        }
+      ]
+    },
+    "gpt-oss-20b Groq low": {
+      "ok": 6,
+      "n": 6,
+      "first_token_ms": {
+        "p50": 514,
+        "max": 754
+      },
+      "first_sentence_ms": {
+        "p50": 538,
+        "max": 768
+      },
+      "total_ms": {
+        "p50": 577,
+        "max": 798
+      },
+      "reasoning_tokens": [
+        44,
+        43,
+        77,
+        22,
+        14,
+        54
+      ],
+      "rows": [
+        {
+          "first_token_ms": 559,
+          "first_sentence_ms": 583,
+          "total_ms": 601,
+          "text": "You can install uv on macOS using MacPorts: `sudo port install uv`\u202f[2]. I couldn't find a Linux installation method in the docs.",
+          "in": 1282,
+          "out": 85,
+          "cost": 0.00012165,
+          "reasoning": 44
+        },
+        {
+          "first_token_ms": 754,
+          "first_sentence_ms": 768,
+          "total_ms": 798,
+          "text": "Use the `--check` flag with `uv lock`:  \n\n`uv lock --check` will verify that the lockfile matches the current project metadata without modifying it. [2]",
+          "in": 1254,
+          "out": 89,
+          "cost": 0.00012075,
+          "reasoning": 43
+        },
+        {
+          "first_token_ms": 339,
+          "first_sentence_ms": 353,
+          "total_ms": 359,
+          "text": "I couldn't find that in the docs.",
+          "in": 1460,
+          "out": 94,
+          "cost": 0.0001377,
+          "reasoning": 77
+        },
+        {
+          "first_token_ms": 424,
+          "first_sentence_ms": 494,
+          "total_ms": 543,
+          "text": "Yes \u2013 by default `uv sync` performs an \u201cexact\u201d sync and will delete any packages that aren\u2019t listed in your project\u2019s lockfile or `pyproject.toml` [1]. If you want to keep those extra packages, run it with the `--inexact` flag [1].",
+          "in": 1362,
+          "out": 92,
+          "cost": 0.00012975,
+          "reasoning": 22
+        },
+        {
+          "first_token_ms": 514,
+          "first_sentence_ms": 600,
+          "total_ms": 632,
+          "text": "You can declare dependencies directly in the script by adding an inline metadata block at the top, for example:\n\n```python\n# /// script\n# dependencies = [\n#   \"requests<3\",\n#   \"rich\",\n# ]\n# ///\n```\n\nThen run the script with `uv run example.py`, and uv will automatically create an isolated environment with those packages installed. [1]",
+          "in": 1360,
+          "out": 100,
+          "cost": 0.000132,
+          "reasoning": 14
+        },
+        {
+          "first_token_ms": 519,
+          "first_sentence_ms": 538,
+          "total_ms": 577,
+          "text": "Set the `default-groups` option to `\"all\"` in your `pyproject.toml` so that uv will include every group when syncing or running. This is shown in the docs as `default-groups = \"all\"` [1].",
+          "in": 1555,
+          "out": 113,
+          "cost": 0.000150525,
+          "reasoning": 54
+        }
+      ]
+    }
+  }
+}

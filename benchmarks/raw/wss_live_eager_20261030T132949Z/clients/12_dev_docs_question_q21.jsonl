@@ -1,0 +1,23 @@
+{"t_us":78351,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q21.wav"}
+{"t_us":81195,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-246eb7a962e44e3c","type":"welcome"}
+{"t_us":81319,"process":"headless","type":"mic.start","t0_us":81317}
+{"t_us":1184381,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1915891,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I declare"}
+{"t_us":2081247,"process":"headless","dir":"in","t_client_us":2080844,"t_server_us":196466556,"type":"pong"}
+{"t_us":2926057,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I declare dependencies"}
+{"t_us":3914238,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I declare dependencies inside a single"}
+{"t_us":4080738,"process":"headless","dir":"in","t_client_us":4080540,"t_server_us":198466079,"type":"pong"}
+{"t_us":4927164,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I declare dependencies inside a single Python script?"}
+{"t_us":5136381,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I declare dependencies inside a single Python script?"}
+{"t_us":5136587,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I declare dependencies inside a single Python script?"}
+{"t_us":5136796,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6081411,"process":"headless","dir":"in","t_client_us":6081015,"t_server_us":200466678,"type":"pong"}
+{"t_us":6172542,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"c7e7b0355ffe","title":"Running scripts > Declaring script dependencies","url":"https://docs.astral.sh/uv/guides/scripts/#declaring-script-dependencies"},{"n":2,"id":"e130000f063c","title":"uv > Scripts","url":"https://docs.astral.sh/uv/#scripts"}],"gen":1}
+{"t_us":6172911,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"You add an inline `# /// script` block at the top of the file listing a `dependencies` array, which uv can create for you with `uv add --script <script> <packages>` [1]. This metadata lets uv install the needed packages automatically when you run the script [2]."}
+{"t_us":6300790,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8082149,"process":"headless","dir":"in","t_client_us":8081418,"t_server_us":202467319,"type":"pong"}
+{"t_us":10082095,"process":"headless","dir":"in","t_client_us":10081589,"t_server_us":204467262,"type":"pong"}
+{"t_us":12081728,"process":"headless","dir":"in","t_client_us":12081407,"t_server_us":206467024,"type":"pong"}
+{"t_us":14082090,"process":"headless","dir":"in","t_client_us":14081778,"t_server_us":208467404,"type":"pong"}
+{"t_us":14280568,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":14283177,"process":"headless","dir":"in","type":"socket.closed","code":1000}

@@ -1,0 +1,23 @@
+{"t_us":73166,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q07.wav"}
+{"t_us":76251,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-75902b6888395ea8","type":"welcome"}
+{"t_us":76380,"process":"headless","type":"mic.start","t0_us":76378}
+{"t_us":1477893,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2077325,"process":"headless","dir":"in","t_client_us":2076483,"t_server_us":70420142,"type":"pong"}
+{"t_us":2202918,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I make"}
+{"t_us":3212830,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I make uv install"}
+{"t_us":4078921,"process":"headless","dir":"in","t_client_us":4078377,"t_server_us":72421852,"type":"pong"}
+{"t_us":4217065,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I make uv install every dependent"}
+{"t_us":5215900,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I make uv install every dependency group by the"}
+{"t_us":5739097,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I make uv install every dependency group by default?"}
+{"t_us":5739897,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I make uv install every dependency group by default?"}
+{"t_us":5740138,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6078105,"process":"headless","dir":"in","t_client_us":6077821,"t_server_us":74421176,"type":"pong"}
+{"t_us":6080750,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"8ab0c80d0121","title":"Managing dependencies > Default groups","url":"https://docs.astral.sh/uv/concepts/projects/dependencies/#default-groups"}],"gen":1}
+{"t_us":6080875,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"Set `default-groups = \"all\"` in the `[tool.uv]` section of your `pyproject.toml` to have uv include every dependency group by default [1]."}
+{"t_us":6236301,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8078329,"process":"headless","dir":"in","t_client_us":8077679,"t_server_us":76421256,"type":"pong"}
+{"t_us":10079315,"process":"headless","dir":"in","t_client_us":10078813,"t_server_us":78422318,"type":"pong"}
+{"t_us":12079467,"process":"headless","dir":"in","t_client_us":12079270,"t_server_us":80422598,"type":"pong"}
+{"t_us":14080050,"process":"headless","dir":"in","t_client_us":14079500,"t_server_us":82423030,"type":"pong"}
+{"t_us":14916677,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":14920422,"process":"headless","dir":"in","type":"socket.closed","code":1000}

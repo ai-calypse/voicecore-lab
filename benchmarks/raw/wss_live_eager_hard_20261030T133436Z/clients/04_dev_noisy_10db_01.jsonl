@@ -1,0 +1,29 @@
+{"t_us":72007,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/noisy_10db_01.wav"}
+{"t_us":75026,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-85c4311541bea14d","type":"welcome"}
+{"t_us":75141,"process":"headless","type":"mic.start","t0_us":75139}
+{"t_us":1156829,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":1879922,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"I picked it up."}
+{"t_us":1957930,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"I picked it up."}
+{"t_us":2076144,"process":"headless","dir":"in","t_client_us":2075016,"t_server_us":73515947,"type":"pong"}
+{"t_us":3003536,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"I picked it up and coming up to him to"}
+{"t_us":3977917,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"I picked it up and coming up to him just as he was going down"}
+{"t_us":4077452,"process":"headless","dir":"in","t_client_us":4076911,"t_server_us":75517524,"type":"pong"}
+{"t_us":4695295,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"I picked it up, and coming up to him just as he was going down the steps, I"}
+{"t_us":5696493,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"I picked it up, and coming up to him just as he was going down the steps, I handed it to him."}
+{"t_us":5847618,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"I picked it up, and coming up to him just as he was going down the steps, I handed it to him."}
+{"t_us":5904092,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"I picked it up, and coming up to him just as he was going down the steps, I"}
+{"t_us":5922640,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"I picked it up, and coming up to him just as he was going down the steps, I it to him."}
+{"t_us":6068211,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"I picked it up, and coming up to him just as he was going down the steps, I it to him."}
+{"t_us":6068557,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"I picked it up, and coming up to him just as he was going down the steps, I it to him."}
+{"t_us":6068983,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6077619,"process":"headless","dir":"in","t_client_us":6077293,"t_server_us":77517803,"type":"pong"}
+{"t_us":6360138,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":6364412,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that in the docs."}
+{"t_us":6493876,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8078406,"process":"headless","dir":"in","t_client_us":8077588,"t_server_us":79518395,"type":"pong"}
+{"t_us":8335707,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":10079116,"process":"headless","dir":"in","t_client_us":10078467,"t_server_us":81519212,"type":"pong"}
+{"t_us":12079468,"process":"headless","dir":"in","t_client_us":12078991,"t_server_us":83519582,"type":"pong"}
+{"t_us":14079547,"process":"headless","dir":"in","t_client_us":14079009,"t_server_us":85519662,"type":"pong"}
+{"t_us":15055682,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":15059711,"process":"headless","dir":"in","type":"socket.closed","code":1000}
