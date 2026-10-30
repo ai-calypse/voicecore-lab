@@ -42,6 +42,8 @@ for i = 0, n - 1 do
   local id = ARGV[b]
   local s = ''
   if ARGV[b + 5] == '1' then s = sub end
+  -- ponytail: entries never expire (the money record, as in the file ledger): about 0.5 KiB per session in Redis
+  -- memory with no bound. Expire settled entries after some months, keeping the totals, if that ever matters.
   redis.call('HSET', p .. 'entry:' .. id, 'pool', ARGV[b + 1], 'amount', ARGV[b + 2], 'label', ARGV[b + 4],
              'status', 'reserved', 'ts', ts, 'sub', s, 'day', day)
   redis.call('ZADD', p .. 'reserved', ts, id)

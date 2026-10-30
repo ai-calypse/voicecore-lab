@@ -13,7 +13,6 @@ type breaker struct {
 	state    string // closed, half_open or open
 	failures []time.Time
 	openedAt time.Time
-	opens    int64
 }
 
 const (
@@ -82,7 +81,6 @@ func (b *breaker) release() {
 
 func (b *breaker) open(now time.Time) {
 	b.failures, b.state, b.openedAt = nil, "open", now
-	b.opens++
 }
 
 // gauge is the state as the metric reports it, the same scale as voicecore_breaker_state.

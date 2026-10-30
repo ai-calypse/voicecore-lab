@@ -46,7 +46,7 @@
 
 **Failure choices:**
 
-- **Ledger or nonces unreachable: fail closed.** New sessions are refused (orchestrator `BudgetUnavailable`, gateway 1013). Letting spend through blind, or a reused token in, is worse than a refused session.
+- **Ledger or nonces unreachable: fail closed.** New sessions are refused (orchestrator `BudgetUnavailable`: `session.ended{error}`, logged with reason `ledger_unavailable`, even in the public pool, where a used-up budget would give text-only answers; gateway 1013). Letting spend through blind, or a reused token in, is worse than a refused session.
 - **Quota store unreachable: fail open, with a warning log.** Turnstile, the token bucket and the dollar caps still bound spend.
 
 **Measured ceilings (`fake-provider`, one laptop running clients and servers; [reports/load.md](../../reports/load.md)):**

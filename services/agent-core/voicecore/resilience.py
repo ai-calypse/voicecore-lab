@@ -7,20 +7,13 @@ breaker; its failure, or no verdict within probe_timeout_s, opens it again. Only
 a session still streaming from before an outage must not. Only retryable and rate_limited provider errors and
 timeouts count. A fatal error (a bad key, a session cap) or a bug of ours is no verdict on the provider.
 """
-import asyncio
 import time
 from collections import deque
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 
 from voicecore.providers.base import ProviderError
 
 STATES = {"closed": 0, "half_open": 1, "open": 2}  # the breaker-state gauge's values
-
-
-class BreakerOpen(Exception):
-    def __init__(self, provider: str):
-        super().__init__(f"{provider} circuit breaker is open")
-        self.provider = provider
 
 
 class Breaker:
@@ -80,23 +73,6 @@ class Breaker:
         """A probe ended without an answer either way (e.g. a barge-in cancelled it): back to open, never stuck."""
         if self.state == "half_open":
             self._open(self.clock())
-
-    async def call(self, fn: Callable[[], Awaitable], probe_timeout_s: float = 10):
-        """Run one provider call through the breaker. Raises BreakerOpen without calling when it is open."""
-        if not self.allow():
-            raise BreakerOpen(self.provider)
-        probe = self.state == "half_open"
-        try:
-            result = await (asyncio.wait_for(fn(), probe_timeout_s) if probe else fn())
-        except asyncio.CancelledError:
-            if probe:
-                self.release()
-            raise
-        except Exception as err:
-            self.record(err)
-            raise
-        self.record(None)
-        return result
 
     def _open(self, now: float):
         self._failures.clear()

@@ -114,6 +114,8 @@ def live_providers(sid, llm_opts=None, tts_name="deepgram", sub=None):
         stt_streams.append(make_live("stt", stt_res, max_audio_s=MAX_AUDIO_S - sum(t.audio_s for t in stt_streams)))
         return stt_streams[-1]
 
+    # ponytail: the first answer's TTS reservation runs on the event loop; with a Redis ledger that is down it can
+    # stall every session up to 1 s once per 5 s (budget_redis.DOWN_FOR_S). Build it in a thread if that matters.
     def new_tts(ws=None):  # a retry opens a second stream; both bill one reservation and share its character cap
         if tts["res"] is None:
             try:
@@ -129,7 +131,10 @@ def live_providers(sid, llm_opts=None, tts_name="deepgram", sub=None):
              "tts": OnDemandTTS(new_tts, mod.open_socket), "tts_factory": lambda: OnDemandTTS(new_tts, mod.open_socket)}
     except Exception:  # nothing was used: release the reservations instead of leaving them counting
         for r in (stt_res, llm_res):
-            budget.settle(r, 0)
+            try:
+                budget.settle(r, 0)
+            except Exception:  # left reserved: over-counts (the safe side) and `budget orphans` lists it
+                log.warning("could not release a reservation", extra={"session_id": sid, "reason": "ledger"})
         raise
     settle = [lambda: budget.settle(stt_res, round(sum(t.cost_usd() for t in stt_streams), 6),
                                     request_ids=[t.request_id for t in stt_streams], streams=len(stt_streams)),
@@ -217,7 +222,14 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
 
     async def serve_session(ws, sid):
         try:
-            providers, settle = make_providers(sid)
+            providers, settle = await asyncio.to_thread(make_providers, sid)  # a slow ledger must not stall the loop
+        except budget.BudgetUnavailable as e:  # an outage, not a used-up budget: never "come back tomorrow"
+            log.warning("session refused: %s", e, extra={"session_id": sid, "reason": "ledger_unavailable"})
+            if state.metrics:
+                Tracer(sid, state.metrics).emit("session", "ended", reason="error")
+            await ws.send(protocol.event("session.ended", reason="error"))
+            await ws.close()
+            return
         except budget.BudgetExceeded as e:
             if sub:  # public deployment: no spend left today, but the docs can still point the way
                 log.info("budget used up, text only: %s", e, extra={"session_id": sid, "reason": "budget"})

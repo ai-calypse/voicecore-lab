@@ -437,7 +437,7 @@ func (s *Server) hello(c *websocket.Conn, ip string) (ss *session, resumed bool,
 		s.mu.Lock()
 		old := s.sessions[h.SessionID]
 		s.mu.Unlock()
-		if old != nil && hmac.Equal([]byte(h.ResumeKey), []byte(old.resumeKey)) && old.claim() {
+		if old != nil && hmac.Equal([]byte(h.ResumeKey), []byte(old.resumeKey)) && old.takeOver() {
 			return old, true, 0, ""
 		}
 	}

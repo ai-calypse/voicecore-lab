@@ -332,3 +332,61 @@ def test_prod_refuses_a_ledger_on_the_image_filesystem(tmp_path):
     assert prod_problems(str(tmp_path / "missing" / "x.json"), root="/nonexistent-root") == [
         f"ledger folder does not exist: {tmp_path / 'missing'}"]
     assert prod_problems("redis://redis:6379/0") == []
+
+
+async def test_a_ledger_outage_ends_a_public_session_with_error_not_text_only(small_index):
+    """Redis down or never seeded is not "today's budget is used up": no text-only notice, an error end."""
+    from voicecore.server import AppState, handler_for, http_routes
+
+    def down(sid):
+        raise budget.BudgetUnavailable("ledger unreachable: ConnectionError")
+
+    state = AppState(providers="live", ready=True, index=small_index)
+    async with serve(handler_for("live", None, state, make_providers=down, pool="public"), "127.0.0.1", 0,
+                     process_request=http_routes(state)) as server:
+        async with connect(f"ws://127.0.0.1:{server.sockets[0].getsockname()[1]}/v1/session/s-u") as ws:
+            events = [json.loads(m) async for m in ws if isinstance(m, str)]
+    assert events == [{"type": "session.ended", "reason": "error"}]
+
+
+async def test_reservations_are_made_off_the_event_loop(small_index):
+    """A slow ledger (flock, or Redis timing out) must not freeze every other session's audio."""
+    import threading
+
+    from voicecore.server import AppState, mock_providers
+
+    threads = []
+
+    def make(sid):
+        threads.append(threading.get_ident())
+        return mock_providers()
+
+    state = AppState(providers="mock", ready=True, index=small_index)
+    async with running(state, make) as addr:
+        async with connect(f"ws://{addr}/v1/session/s-l") as ws:
+            await ask(ws)
+    assert threads and threads[0] != threading.get_ident()
+
+
+def test_a_failed_release_never_skips_the_next_or_hides_the_cause(monkeypatch):
+    import pytest
+
+    from voicecore import server
+
+    released = []
+
+    def settle(r, amount, **meta):
+        released.append(r.label)
+        if len(released) == 1:
+            raise budget.BudgetUnavailable("ledger unreachable")
+
+    def make_live(kind, res, **kw):
+        if kind == "llm":
+            raise RuntimeError("llm setup failed")
+        return type("S", (), {"audio_s": 0})()
+
+    monkeypatch.setattr(budget, "settle", settle)
+    monkeypatch.setattr(server, "make_live", make_live)
+    with pytest.raises(RuntimeError, match="llm setup failed"):
+        server.live_providers("s-c")
+    assert released == ["server stt s-c", "server llm s-c"]

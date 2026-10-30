@@ -18,6 +18,7 @@ One Fly app, `voicecore`, from [`deploy/fly/`](../../deploy/fly/): one machine (
   - the orchestrator refuses a ledger on the image's own filesystem, so a cold start could never reset the caps;
   - the gateway refuses a missing `GATEWAY_SECRET` or `TURNSTILE_SECRET`, local origins or hosts, broad origin patterns, or missing trusted proxies.
 - **Public spend.** `POOL=public`: spend counts against the public sub-cap ($2.00 in total, $0.50 a day). Over it, visitors get text answers that point to the docs, with no paid call.
+- **Limits kept in memory.** With one machine and no Redis, the per-IP daily quota (20 sessions) and the list of used tokens live in the gateway's memory. Fly stops an idle machine, and the next start begins with both empty: a visitor can get another 20 sessions after each restart, and a token minted just before a restart can be used once more from the same address within its 60 s. Turnstile, the per-IP token rate and the dollar caps (kept on the volume) still bound spend. To keep the quota across restarts, add Redis and `-redis-url` (see scaling below).
 
 Tested locally by `harness/tests/test_fly_image.py` (`make fly-image-test`):
 - the image boots and answers a smoke question;

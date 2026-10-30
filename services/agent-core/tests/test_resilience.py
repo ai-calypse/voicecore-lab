@@ -1,13 +1,9 @@
 """Circuit breaker rules (Step 09 Phase 6). Pure: the clock is injected, so these run in no time."""
 import asyncio
 
-import pytest
 
 from voicecore.providers.base import ProviderError
 from voicecore.resilience import Breaker
-
-pytestmark = pytest.mark.looptime  # the async tests wait 10-60 s of fake time
-
 
 class Clock:
     def __init__(self):
@@ -63,54 +59,24 @@ def test_only_retryable_rate_limited_and_timeouts_count():
     assert not Breaker.counts(ProviderError("fatal", "bad key")) and not Breaker.counts(KeyError("bug"))
 
 
-async def test_cancelled_half_open_probe_releases_the_breaker():
+def test_a_cancelled_half_open_probe_releases_the_breaker():
     c = Clock()
     b = make(c)
     for _ in range(5):
         b.failure()
     c.t = 30.0
-
-    async def slow():
-        await asyncio.sleep(60)
-
-    task = asyncio.create_task(b.call(slow))
-    await asyncio.sleep(0)
-    task.cancel()  # a barge-in cancels the probe
-    with pytest.raises(asyncio.CancelledError):
-        await task
+    assert b.allow()  # the probe goes out
+    b.record(asyncio.CancelledError())  # a barge-in cancels it: no verdict
     assert b.state == "open"  # not stuck half-open with no probe running
     c.t = 60.0
     assert b.allow()
 
 
-async def test_probe_timeout_counts_as_failure():
-    c = Clock()
-    b = make(c)
-    for _ in range(5):
-        b.failure()
-    c.t = 30.0
-
-    async def hang():
-        await asyncio.sleep(60)
-
-    with pytest.raises(TimeoutError):
-        await b.call(hang, probe_timeout_s=10)
-    assert b.state == "open"
-
-
-async def test_call_records_success_and_failure():
+def test_record_gives_each_outcome_its_verdict():
     b = make(Clock())
-
-    async def ok():
-        return 7
-
-    async def boom():
-        raise ProviderError("retryable", "503")
-
-    assert await b.call(ok) == 7
+    b.record(ProviderError("fatal", "bad key"))  # our problem, not the provider's: no verdict
     for _ in range(5):
-        with pytest.raises(ProviderError):
-            await b.call(boom)
+        b.record(ProviderError("retryable", "503"))
     assert b.state == "open"
 
 

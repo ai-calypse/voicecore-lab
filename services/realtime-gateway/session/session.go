@@ -56,6 +56,28 @@ func (ss *session) claim() bool {
 	return true
 }
 
+// takeOver claims the session for a resume that proved ownership (resume_key). A dropped network often closes
+// nothing, so the old socket can still look attached until the heartbeat notices: drop it (no close handshake,
+// the peer is gone) and claim the session once its attach has detached. False if that takes over a second.
+func (ss *session) takeOver() bool {
+	for range 50 {
+		if ss.claim() {
+			return true
+		}
+		ss.mu.Lock()
+		c, ended := ss.client, ss.ended
+		ss.mu.Unlock()
+		if ended {
+			return false
+		}
+		if c != nil {
+			_ = c.CloseNow()
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	return false
+}
+
 // attach runs one client connection until it ends, then either ends the session or starts the resume window.
 func (ss *session) attach(c *websocket.Conn, resumed bool) {
 	ss.mu.Lock()

@@ -79,6 +79,22 @@ func TestSpentTokenPlusRightResumeKeyResumes(t *testing.T) {
 	})
 }
 
+// A dropped network often closes nothing: the old socket still looks attached until the heartbeat (10 s) notices.
+// The key proves ownership, so the resume takes the session over instead of starting a new one.
+func TestResumeTakesOverAConnectionThatStillLooksAttached(t *testing.T) {
+	run(t, false, func(t *testing.T, r *rig) {
+		tok := r.token()
+		c := r.connect(map[string]any{"token": tok}, nil)
+		id, key, _ := welcomeOf(c)
+		r.upstream()
+		id2, _, resumed := welcomeOf(r.connect(map[string]any{"token": tok, "session_id": id, "resume_key": key}, nil))
+		if id2 != id || !resumed {
+			t.Fatalf("resume while the old socket is still attached: id %s resumed %v", id2, resumed)
+		}
+		_ = c.ws.CloseNow()
+	})
+}
+
 func TestTokenBoundToClientIP(t *testing.T) {
 	run(t, false, func(t *testing.T, r *rig) {
 		alice, mallory := r.net.HTTPClientFrom("198.51.100.7:5000"), r.net.HTTPClientFrom("203.0.113.5:6000")
