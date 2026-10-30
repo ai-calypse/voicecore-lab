@@ -34,8 +34,10 @@ func (s *Server) AdminHandler() http.Handler {
 	counter("gateway_tokens_issued_total", "session tokens issued", "", s.c.TokensIssued.Load)
 	reg.MustRegister(prometheus.NewGaugeFunc(prometheus.GaugeOpts{Name: "gateway_sessions", Help: "live sessions"},
 		func() float64 { return float64(s.Snapshot()["sessions"]) }))
-	reg.MustRegister(prometheus.NewGaugeFunc(prometheus.GaugeOpts{Name: "gateway_breaker_state", Help: "upstream dial breaker: 0 closed, 1 half-open, 2 open",
-		ConstLabels: prometheus.Labels{"provider": "upstream"}}, func() float64 { return s.upstream.gauge() }))
+	for _, u := range s.ups {
+		reg.MustRegister(prometheus.NewGaugeFunc(prometheus.GaugeOpts{Name: "gateway_breaker_state", Help: "upstream dial breaker: 0 closed, 1 half-open, 2 open",
+			ConstLabels: prometheus.Labels{"provider": "upstream", "target": u.url}}, u.br.gauge))
+	}
 
 	mux := http.NewServeMux()
 	mux.Handle("GET /metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))

@@ -20,6 +20,7 @@ var clientEvents = map[string]bool{"ping": true, "text.input": true, "mic.revoke
 type session struct {
 	id        string
 	started   time.Time // for the session-ended log line
+	up0       *upstream // the orchestrator this session lives on, for life
 	resumeKey string    // 32 random bytes, hex; given only to the client in welcome, required to resume
 	ip        string
 	ageTimer  *time.Timer
@@ -307,6 +308,9 @@ func (ss *session) finish(reason string, tell bool) {
 	ss.srv.mu.Lock()
 	ss.srv.releaseIP(ss.ip)
 	delete(ss.srv.sessions, ss.id)
+	if ss.up0 != nil {
+		ss.up0.sessions--
+	}
 	ss.srv.mu.Unlock()
 	ss.srv.trace(ss.id, "session_ended", 0, map[string]any{"reason": reason})
 	ss.srv.cfg.Log.Info("session ended", "session_id", ss.id, "reason", reason, "duration_ms", time.Since(ss.started).Milliseconds())

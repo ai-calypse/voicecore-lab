@@ -13,7 +13,8 @@ Run the gateway with `go run ./cmd/gateway` from `services/realtime-gateway`, or
 | Flag | Default | What it sets |
 |---|---|---|
 | `-addr` | `127.0.0.1:8080` | listen address for HTTP and the client WebSocket |
-| `-upstream` | `ws://127.0.0.1:8765` | orchestrator base URL; each session dials `<upstream>/v1/session/<session id>` |
+| `-upstream` | `ws://127.0.0.1:8765` | orchestrator base URL, or several separated by commas. Each new session goes to the orchestrator with the fewest of this gateway's sessions (ties take turns), skipping one that answers 503 or whose breaker is open, and stays there for life. It dials `<upstream>/v1/session/<session id>` |
+| `-redis-url` | empty (this process's memory) | shared store for used token nonces and daily quotas, which several gateway copies need. If it is down, new sessions are refused (1013) and quotas are skipped with a warning |
 | `-origins` | `localhost:*,127.0.0.1:*` | allowed browser origins for the WebSocket, comma separated |
 | `-trace` | empty (off) | append trace events, as JSON lines, to this file |
 | `-max-sessions-per-ip` | 4 | live sessions per client IP; 0 means no limit |

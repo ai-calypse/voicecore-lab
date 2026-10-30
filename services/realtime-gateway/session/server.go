@@ -18,6 +18,7 @@ import (
 	"net/netip"
 	"net/url"
 	"path"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -31,7 +32,7 @@ import (
 
 type Config struct {
 	Secret       []byte
-	Upstream     string       // orchestrator base URL, e.g. ws://127.0.0.1:8765
+	Upstream     string       // orchestrator base URL(s), comma separated, e.g. ws://orch-1:8765,ws://orch-2:8765
 	HTTPClient   *http.Client // dials the orchestrator; nil means http.DefaultClient
 	Origins      []string     // allowed browser origins for the WebSocket (coder/websocket patterns)
 	TokenTTL     time.Duration
@@ -93,7 +94,8 @@ type Server struct {
 	pending  int                // sessions being dialled
 	tokens   map[string]*bucket // token issuance per client IP
 	draining atomic.Bool        // no new sessions; open ones (and their resumes) continue
-	upstream *breaker           // the orchestrator dial's circuit breaker
+	ups      []*upstream        // the orchestrators, each with its own breaker
+	rot      int                // rotates the start among upstreams with equal load
 }
 
 // bucket is a token bucket: rate per second, up to burst.
@@ -178,6 +180,13 @@ func (s *Server) trace(sid, event string, gen uint32, attrs map[string]any) {
 	s.traceMu.Unlock()
 }
 
+// upstream is one orchestrator. sessions counts this gateway's live sessions on it (guarded by Server.mu).
+type upstream struct {
+	url      string
+	br       *breaker
+	sessions int
+}
+
 func New(cfg Config) *Server {
 	if cfg.Store == nil {
 		cfg.Store = newMemStore()
@@ -188,8 +197,13 @@ func New(cfg Config) *Server {
 	if cfg.CopyID == "" {
 		cfg.CopyID = "gw"
 	}
-	return &Server{cfg: cfg, start: time.Now(), sessions: map[string]*session{}, perIP: map[string]int{}, tokens: map[string]*bucket{},
-		upstream: newBreaker()}
+	srv := &Server{cfg: cfg, start: time.Now(), sessions: map[string]*session{}, perIP: map[string]int{}, tokens: map[string]*bucket{}}
+	for _, u := range strings.Split(cfg.Upstream, ",") {
+		if u = strings.TrimSpace(u); u != "" {
+			srv.ups = append(srv.ups, &upstream{url: u, br: newBreaker()})
+		}
+	}
+	return srv
 }
 
 func (s *Server) Handler() http.Handler {
@@ -202,7 +216,7 @@ func (s *Server) Handler() http.Handler {
 			writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ready": false, "draining": true})
 			return
 		}
-		if !s.upstream.ready() {
+		if !s.anyUpstreamReady() {
 			writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ready": false, "draining": false, "upstream": "open"})
 			return
 		}
@@ -490,35 +504,29 @@ func (s *Server) newSession(ip string) (*session, error) {
 	sid := "s-" + s.cfg.CopyID + "-" + hex.EncodeToString(id)
 	key := make([]byte, 32)
 	_, _ = rand.Read(key)
-	if !s.upstream.allow() {
-		return nil, errUpstreamOpen
-	}
-	dial := func() (*websocket.Conn, *http.Response, error) {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) // bounds the handshake only
-		defer cancel()
-		return websocket.Dial(ctx, s.cfg.Upstream+"/v1/session/"+sid, &websocket.DialOptions{HTTPClient: s.cfg.HTTPClient})
-	}
-	up, resp, err := dial()
-	if err != nil && errors.Is(err, syscall.ECONNREFUSED) { // refused: nothing reached the orchestrator, so one retry is safe
-		time.Sleep(300 * time.Millisecond) // (a timed-out dial may have reserved budget there: never retried)
-		up, resp, err = dial()
-	}
-	if err != nil {
-		if resp != nil && resp.StatusCode == http.StatusServiceUnavailable { // starting or draining: retry shortly
-			s.upstream.release()
-			return nil, errUpstreamNotReady
+	var up *websocket.Conn
+	var chosen *upstream
+	var err error = errUpstreamOpen // every breaker open: nothing was dialled
+	for _, u := range s.candidates() {
+		if !u.br.allow() {
+			continue
 		}
-		s.upstream.failure()
-		return nil, fmt.Errorf("dial %s: %w", s.cfg.Upstream, err)
+		if up, err = s.dial(u, sid); err == nil {
+			chosen = u
+			break
+		}
 	}
-	s.upstream.success()
+	if chosen == nil {
+		return nil, err
+	}
 	up.SetReadLimit(1 << 20)
 	upCtx, cancelUp := context.WithCancel(context.Background())
-	ss := &session{id: sid, resumeKey: hex.EncodeToString(key), ip: ip, srv: s, up: up, upCtx: upCtx, cancelUp: cancelUp, claimed: true, started: time.Now(),
+	ss := &session{up0: chosen, id: sid, resumeKey: hex.EncodeToString(key), ip: ip, srv: s, up: up, upCtx: upCtx, cancelUp: cancelUp, claimed: true, started: time.Now(),
 		upq: newQueue(s.cfg.QueueCap, &s.c.DropsOverload, s.cfg.MaxQueuedEvents), outq: newQueue(s.cfg.OutCap, &s.c.DropsOverloadOut, 0),
 		lastSeq: map[uint32]uint32{}, revoked: map[uint32]bool{}}
 	s.mu.Lock()
 	s.sessions[sid] = ss
+	chosen.sessions++
 	registered = true
 	s.mu.Unlock()
 	s.cfg.Log.Info("session started", "session_id", sid)
@@ -533,6 +541,54 @@ func (s *Server) newSession(ip string) (*session, error) {
 }
 
 // releaseIP gives back one session slot of ip; the caller holds s.mu.
+// candidates orders the upstreams for a new session: fewest of this gateway's sessions first, ties rotated.
+func (s *Server) candidates() []*upstream {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	n := len(s.ups)
+	out := make([]*upstream, n)
+	for i := range out {
+		out[i] = s.ups[(s.rot+i)%n]
+	}
+	s.rot++
+	sort.SliceStable(out, func(a, b int) bool { return out[a].sessions < out[b].sessions })
+	return out
+}
+
+// dial opens a session on one upstream. A refused dial is retried once after 300 ms: nothing reached the
+// orchestrator, so nothing was reserved. A timed-out dial is never retried (it may have reserved budget there).
+func (s *Server) dial(u *upstream, sid string) (*websocket.Conn, error) {
+	dial := func() (*websocket.Conn, *http.Response, error) {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) // bounds the handshake only
+		defer cancel()
+		return websocket.Dial(ctx, u.url+"/v1/session/"+sid, &websocket.DialOptions{HTTPClient: s.cfg.HTTPClient})
+	}
+	up, resp, err := dial()
+	if err != nil && errors.Is(err, syscall.ECONNREFUSED) {
+		time.Sleep(300 * time.Millisecond)
+		up, resp, err = dial()
+	}
+	if err != nil {
+		if resp != nil && resp.StatusCode == http.StatusServiceUnavailable { // starting or draining: try another one
+			u.br.release()
+			return nil, errUpstreamNotReady
+		}
+		u.br.failure()
+		return nil, fmt.Errorf("dial %s: %w", u.url, err)
+	}
+	u.br.success()
+	return up, nil
+}
+
+func (s *Server) anyUpstreamReady() bool {
+	for _, u := range s.ups {
+		if u.br.ready() {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *Server) releaseIP(ip string) {
 	if s.perIP[ip]--; s.perIP[ip] <= 0 {
 		delete(s.perIP, ip)
