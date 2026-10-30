@@ -61,6 +61,33 @@ func TestResumeWithin10sKeepsSessionAndTellsUpstreamClientResumed(t *testing.T) 
 	})
 }
 
+func TestResumeDropsAudioQueuedWhileAway(t *testing.T) {
+	run(t, false, func(t *testing.T, r *rig) {
+		c := r.connect(nil, nil)
+		var id string
+		_ = c.next("welcome").Get("session_id", &id)
+		oc := r.upstream()
+		_ = c.ws.CloseNow()
+		synctest.Wait()
+		for s := range uint32(3) { // gen 3 keeps streaming while the client is away
+			_ = oc.WS.Write(context.Background(), websocket.MessageBinary,
+				(protocol.Frame{Kind: protocol.KindAgent, StreamID: 3, Sequence: s, GenerationID: 3, Payload: make([]int16, 480)}).Encode())
+		}
+		synctest.Wait()
+		c2 := r.connect(map[string]any{"session_id": id}, nil)
+		c2.next("welcome")
+		_ = oc.WS.Write(context.Background(), websocket.MessageBinary,
+			(protocol.Frame{Kind: protocol.KindAgent, StreamID: 4, GenerationID: 4, Payload: make([]int16, 480)}).Encode())
+		synctest.Wait()
+		if len(c2.frames) != 1 || (<-c2.frames).GenerationID != 4 {
+			t.Fatal("resumed client got audio queued for the old generation")
+		}
+		if n := r.counters()["drops_fenced"]; n != 3 {
+			t.Fatalf("drops_fenced %d", n)
+		}
+	})
+}
+
 func TestResumeAfter10sStartsNewSession(t *testing.T) {
 	run(t, false, func(t *testing.T, r *rig) {
 		c := r.connect(nil, nil)

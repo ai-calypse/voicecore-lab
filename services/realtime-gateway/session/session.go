@@ -29,6 +29,7 @@ type session struct {
 	claimed     bool            // a connection owns or is attaching to this session
 	ended       bool
 	fence       uint32
+	lastGen     uint32 // newest agent generation seen from upstream
 	lastSeq     map[uint32]uint32 // per mic stream
 	revoked     map[uint32]bool
 	resumeTimer *time.Timer
@@ -65,6 +66,13 @@ func (ss *session) attach(c *websocket.Conn, resumed bool) {
 	end := false
 	if c.Write(context.Background(), websocket.MessageText, welcome) == nil {
 		if resumed {
+			// The orchestrator will cancel the live generation; fence it here too so audio queued
+			// while the client was away is not played on the new connection.
+			ss.mu.Lock()
+			ss.fence = max(ss.fence, ss.lastGen)
+			fence := ss.fence
+			ss.mu.Unlock()
+			ss.srv.c.DropsFenced.Add(int64(ss.outq.purge(fence)))
 			ss.upq.push(item{data: protocol.NewEvent("client.resumed", nil)})
 		}
 		ctx, stop := context.WithCancel(context.Background())
@@ -101,7 +109,7 @@ func (ss *session) readClient(c *websocket.Conn) bool {
 		watchdog.Reset(hb)
 		if typ == websocket.MessageBinary {
 			f, err := protocol.DecodeFrame(b)
-			if err != nil || f.Kind != protocol.KindMic {
+			if err != nil || f.Kind != protocol.KindMic || len(f.Payload) != 320 || f.GenerationID != 0 {
 				_ = c.Close(statusInvalidFrame, "invalid frame")
 				return true
 			}
@@ -172,6 +180,7 @@ func (ss *session) writeClient(ctx context.Context, c *websocket.Conn) {
 		err := c.Write(wctx, it.typ(), it.data)
 		cancel()
 		if err != nil {
+			ss.outq.pushFront(it) // keep it for a resumed connection
 			return
 		}
 	}
@@ -205,6 +214,7 @@ func (ss *session) readUpstream() {
 			}
 			ss.mu.Lock()
 			fenced := f.GenerationID <= ss.fence
+			ss.lastGen = max(ss.lastGen, f.GenerationID)
 			ss.mu.Unlock()
 			if fenced {
 				ss.srv.c.DropsFenced.Add(1)

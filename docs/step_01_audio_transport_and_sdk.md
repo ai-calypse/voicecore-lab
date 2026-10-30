@@ -1,6 +1,6 @@
 # Step 01: Audio Transport And Sdk
 
-**Status:** Complete (2026-10-30). All 7 tasks done with fake-provider evidence; shaped-network loss profile waits on the user (needs sudo).  
+**Status:** Complete except one blocked item (2026-10-30). S01-T01–T04, T06, T07 done; S01-T05 done for local and simulated delay/jitter, but the kernel packet-loss profile is blocked: it needs `sudo`, which only the user can run (`benchmarks/README.md`).  
 **Estimated engineering effort:** 30 hours.  
 **Task owner:** Implementation agent; user confirms external paid credentials.  
 
@@ -122,7 +122,7 @@ Require both deterministic tests and controlled real-provider measurements where
 | S01-T02 | Done 2026-10-29 | `packages/protocol/`, `services/realtime-gateway/{protocol,session,internal,cmd}` | Golden vectors pass in vitest, `go test`, pytest. `FuzzDecodeFrame` 20 s locally (7.4 M execs, no crash; 30 s in CI). Session: valid hello → welcome; invalid header and truncated frame → 1007; non-hello first → 1008; duplicate and stale counted; 10 frames forwarded in order; heartbeat close at exactly 10 s; clean close releases the session | Fuzz name is `FuzzDecodeFrame` (Go requires the `Fuzz` prefix), not `TestFrameFuzzNeverPanics` |
 | S01-T03 | Done 2026-10-29 | `session/session.go` (`queue`, `acceptMic`) | 100 frames into a stalled upstream: `drops_overload` 49, depth 50, upstream later receives 0 and 50–99. Counters JSON exact. Gap after resume = 3 | — |
 | S01-T04 | Done 2026-10-29 | `session/` | Expired and forged tokens → 4001; 48 kHz hello → 4002; resume at 9 s keeps the session and sends `client.resumed` upstream without a second upstream socket; resume at 11 s starts a new session; mic revoke drops later frames of that stream, keeps text and new streams; fence: 4 queued + 1 late gen-1 frames dropped, gen 2 delivered; no goroutines left after stop/expire/resume (`go test -race`, goleak) | — |
-| S01-T05 | Done 2026-10-30 (local + simulated) | `services/realtime-gateway/cmd/wsload`, `benchmarks/transport.md`, `benchmarks/raw/transport_20261030T003218Z.jsonl` | Gateway adds 0.19 ms median RTT (two passes, 1 stream); 20 streams RTT p50/p95/p99 1.08/1.68/2.16 ms; 0 drops, 0 gaps; decode 205.7 ns + 1 alloc per frame | Real loss profile needs `sudo` (user) |
+| S01-T05 | Partial 2026-10-30: local + simulated done; loss profile blocked (user, sudo) | `services/realtime-gateway/cmd/wsload`, `benchmarks/transport.md`, `benchmarks/raw/transport_20261030T003218Z.jsonl` | Gateway adds 0.19 ms median RTT (two passes, 1 stream); 20 streams RTT p50/p95/p99 1.08/1.68/2.16 ms; 0 drops, 0 gaps; decode 205.7 ns + 1 alloc per frame | Real loss profile needs `sudo` (user) |
 | S01-T06 | Done 2026-10-29 | `packages/web-sdk/src/playout/` | 6 offline-adapter tests: started time, 100 ms underrun, cancel flush + ack, cancel before start, gen 2 after cancel, pause/resume | — |
 | S01-T07 | Done 2026-10-29 | `cmd/fakeorch`, `apps/demo/e2e/tracer.spec.ts`, CI `e2e` job | Playwright: page → gateway → fakeorch echo → page playout emits `playout.started{gen:1}`; gateway counters show 0 drops | — |
 
@@ -130,6 +130,7 @@ Require both deterministic tests and controlled real-provider measurements where
 
 | Consumed artifact | Revision or hash | Affected task(s) | Revalidation decision |
 |---|---|---|---|
+| Code review (medium, `eb7ee6e..1f99bdc`), 10 findings, all fixed: client resume used the wrong session id; new clients reused stream ids on resume; audio queued while away played after resume; mic frame size/gen not enforced; capture AudioContext not resumed; popped item lost on write error; `cancel.ack` after a finished generation said -1; sequential shutdown; outbound drops shared the mic counter; S01-T05 over-claimed | review 2026-10-30 | S01-T01..T06 | New tests: `TestMicFrameNot20msClosesWith1007`, `TestResumeDropsAudioQueuedWhileAway`, playout ack after finish |
 | `docs/IMPLEMENTATION_PLAN.md` Step 01 | as of `317bf09` | all | Followed; deviations recorded above |
 | `fixtures/audio/dev/single_01.wav` | sha256 in `fixtures/audio/manifest.json` | S01-T01 | fake mic input |
 | coder/websocket docs (Context7 `/coder/websocket`, v1.8.12 docs; module v1.8.14) | fetched 2026-10-29 | S01-T02..T04 | `CloseStatus`, `CloseRead`, `Dial` with `HTTPClient` |

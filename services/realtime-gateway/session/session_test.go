@@ -55,6 +55,17 @@ func TestTruncatedFrameClosesWith1007(t *testing.T) {
 	})
 }
 
+func TestMicFrameNot20msClosesWith1007(t *testing.T) {
+	run(t, false, func(t *testing.T, r *rig) {
+		c := r.connect(nil, nil)
+		c.next("welcome")
+		_ = c.ws.Write(context.Background(), websocket.MessageBinary, (protocol.Frame{Kind: protocol.KindMic, Payload: make([]int16, 16000)}).Encode())
+		if s := c.closeStatus(); s != 1007 {
+			t.Fatalf("close %d", s)
+		}
+	})
+}
+
 func TestFirstMessageNotHelloClosesWith1008(t *testing.T) {
 	run(t, false, func(t *testing.T, r *rig) {
 		ws, _, _ := websocket.Dial(context.Background(), "ws://gw:80/v1/ws", &websocket.DialOptions{HTTPClient: r.http})
@@ -205,7 +216,7 @@ func TestQueueDepthAndCountersExposed(t *testing.T) {
 		}
 		synctest.Wait()
 		want := map[string]int64{"sessions": 1, "depth": 11, "depth_out": 0, "drops_duplicate": 1, "drops_stale": 0,
-			"drops_overload": 0, "drops_fenced": 0, "gaps": 2}
+			"drops_overload": 0, "drops_overload_out": 0, "drops_fenced": 0, "gaps": 2}
 		if got := r.counters(); !reflect.DeepEqual(got, want) {
 			t.Fatalf("counters %v", got)
 		}

@@ -63,6 +63,15 @@ test("cancel before any sample was rendered acks with played_until_seq -1 and no
   expect(events).toEqual([{ type: "cancel.ack", gen: 1, played_until_seq: -1 }]);
 });
 
+test("cancel after a generation finished acks the last played frame", () => {
+  p.push(1, 0, frame(1000), false);
+  p.push(1, 1, frame(1000), true);
+  tick();
+  tick();
+  p.cancel(1);
+  expect(events.at(-1)).toEqual({ type: "cancel.ack", gen: 1, played_until_seq: 1 });
+});
+
 test("gen 2 plays after cancel(1)", () => {
   p.push(1, 0, frame(1000), false);
   tick();

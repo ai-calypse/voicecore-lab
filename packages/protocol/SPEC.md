@@ -23,7 +23,7 @@ Transport: one WebSocket per session per hop. Audio goes in **binary** messages 
 
 A frame is **invalid** when: it is shorter than 28 bytes; `version` ≠ 1; `kind` is not 1 or 2; or the payload length ≠ `samples × 2`. A receiver closes the WebSocket with code **1007** on an invalid frame.
 
-Mic frames in a session are 20 ms (320 samples at 16 kHz); this is negotiated in `hello` and checked by the gateway, not by the codec.
+Mic frames in a session are 20 ms (320 samples at 16 kHz) with `generation_id` 0; this is negotiated in `hello` and checked by the gateway (1007 otherwise), not by the codec.
 
 ## 2. Control events
 
@@ -86,9 +86,9 @@ Every agent frame carries `generation_id`. When generation `g` is cancelled, eac
 - `POST /v1/session` returns `{token}`: an HMAC-SHA256 token valid for 60 s (development only).
 - The first message must be `hello` within 5 s. Bad or expired token → 4001. `version` ≠ 1, mic rate ≠ 16000, `frame_ms` ≠ 20 or playout rate ≠ 24000 → 4002.
 - Mic frames per stream: `sequence` equal to the last one → dropped, counted `drops_duplicate`; lower → dropped, counted `drops_stale`; higher than last + 1 → forwarded, the missing count is added to `gaps`.
-- The upstream queue holds at most 50 frames (1 s); when full the oldest frame is dropped and counted `drops_overload`.
+- The upstream queue holds at most 50 frames (1 s); when full the oldest frame is dropped and counted `drops_overload`. The client-bound queue holds at most 1,500 agent frames (30 s); overflow is counted `drops_overload_out`.
 - No message from the client for 10 s → close 4003.
-- Resume: a `hello` with the `session_id` of a disconnected session within 10 s keeps the session (and its upstream connection) and sends `client.resumed` upstream; later, a new session starts.
+- Resume: a `hello` with the `session_id` of a disconnected session within 10 s keeps the session (and its upstream connection), fences the newest agent generation (audio queued while the client was away is dropped) and sends `client.resumed` upstream; later, a new session starts. Clients pick a random first `stream_id` so a resumed session never sees a reused stream.
 - `GET /debug/counters` returns the counters and queue depth as JSON.
 
 ## 5. Trace event

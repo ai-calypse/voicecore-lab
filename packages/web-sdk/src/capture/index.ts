@@ -15,6 +15,7 @@ export async function startCapture(onFrame: (f: MicFrame) => void, nowUs = () =>
     audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
   });
   const ctx = new AudioContext();
+  await ctx.resume(); // the user gesture may have expired while the permission prompt was open
   const url = URL.createObjectURL(new Blob([WORKLET], { type: "text/javascript" }));
   await ctx.audioWorklet.addModule(url);
   URL.revokeObjectURL(url);

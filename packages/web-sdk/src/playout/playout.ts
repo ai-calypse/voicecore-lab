@@ -17,6 +17,7 @@ export class Playout {
   private fence = 0;
   private gen = 0; // generation being played; 0 = none
   private playedSeq = -1; // last frame of `gen` with at least one rendered sample
+  private finished = { gen: 0, seq: -1 }; // the last generation that played to its end
   private paused = false;
   private opts: PlayoutOptions;
 
@@ -32,7 +33,7 @@ export class Playout {
   cancel(gen: number): void {
     this.fence = Math.max(this.fence, gen);
     this.queue = this.queue.filter((c) => c.gen > this.fence);
-    let played = -1;
+    let played = gen === this.finished.gen ? this.finished.seq : -1;
     if (this.gen !== 0 && this.gen <= this.fence) {
       played = this.gen === gen ? this.playedSeq : -1;
       this.opts.emit({ type: "playout.stopped", gen: this.gen, reason: "cancel", t_us: this.opts.nowUs() });
@@ -71,6 +72,7 @@ export class Playout {
       if (c.offset === c.samples.length) {
         this.queue.shift();
         if (c.end) {
+          this.finished = { gen: c.gen, seq: c.seq };
           this.opts.emit({ type: "playout.stopped", gen: c.gen, reason: "done", t_us: at(i) });
           this.gen = 0;
         }

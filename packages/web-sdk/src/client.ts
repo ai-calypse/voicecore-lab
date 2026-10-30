@@ -21,7 +21,8 @@ export class VoiceClient {
   /** server clock minus client clock in us, from the last pong (NaN until the first one) */
   offsetUs = NaN;
   private ws?: WebSocket;
-  private streamId = 0;
+  // random start so a new client resuming a session never reuses a stream id the gateway already saw
+  private streamId = crypto.getRandomValues(new Uint32Array(1))[0]!;
   private stopCapture?: () => void;
   private pinger?: ReturnType<typeof setInterval>;
   private readonly opts: ClientOptions;
@@ -39,7 +40,7 @@ export class VoiceClient {
       this.ws = ws;
       ws.onopen = () => this.send({
         type: "hello", version: 1, token: this.opts.token, mic: { rate: 16000, frame_ms: 20 }, playout: { rate: 24000 },
-        ...(this.opts.sessionId ? { session_id: this.opts.sessionId } : {}),
+        ...(this.sessionId ?? this.opts.sessionId ? { session_id: this.sessionId ?? this.opts.sessionId } : {}),
       });
       ws.onerror = () => reject(new Error("websocket error"));
       ws.onclose = (c) => { this.stop(); reject(new Error(`closed ${c.code} ${c.reason}`)); this.onEvent({ type: "socket.closed", code: c.code }); };
@@ -74,7 +75,7 @@ export class VoiceClient {
 
   /** Starts the microphone (asks for consent). Frames flow only after this resolves. */
   async startMic(): Promise<void> {
-    const stream_id = ++this.streamId;
+    const stream_id = (this.streamId = (this.streamId + 1) >>> 0);
     this.stopCapture = await (this.opts.startMic ?? startCapture)((f) =>
       this.sendFrame({ kind: KIND_MIC, flags: 0, stream_id, sequence: f.sequence, capture_us: f.capture_us, generation_id: 0, payload: f.samples }),
     this.nowUs);

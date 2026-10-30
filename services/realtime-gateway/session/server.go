@@ -43,7 +43,7 @@ func Defaults(secret []byte, upstream string) Config {
 
 // Counters are totals across sessions, exposed at GET /debug/counters.
 type Counters struct {
-	DropsDuplicate, DropsStale, DropsOverload, DropsFenced, Gaps atomic.Int64
+	DropsDuplicate, DropsStale, DropsOverload, DropsOverloadOut, DropsFenced, Gaps atomic.Int64
 }
 
 type Server struct {
@@ -89,7 +89,7 @@ func (s *Server) Snapshot() map[string]int64 {
 	s.mu.Unlock()
 	return map[string]int64{"sessions": n, "depth": depth, "depth_out": out,
 		"drops_duplicate": s.c.DropsDuplicate.Load(), "drops_stale": s.c.DropsStale.Load(),
-		"drops_overload": s.c.DropsOverload.Load(), "drops_fenced": s.c.DropsFenced.Load(), "gaps": s.c.Gaps.Load()}
+		"drops_overload": s.c.DropsOverload.Load(), "drops_overload_out": s.c.DropsOverloadOut.Load(), "drops_fenced": s.c.DropsFenced.Load(), "gaps": s.c.Gaps.Load()}
 }
 
 // Close ends every session and waits for their goroutines.
@@ -100,9 +100,11 @@ func (s *Server) Close() {
 		all = append(all, ss)
 	}
 	s.mu.Unlock()
-	for _, ss := range all {
-		ss.end("shutdown")
+	var ended sync.WaitGroup
+	for _, ss := range all { // in parallel: each end waits up to 5 s for an upstream close handshake
+		ended.Go(func() { ss.end("shutdown") })
 	}
+	ended.Wait()
 	s.wg.Wait()
 }
 
@@ -210,7 +212,7 @@ func (s *Server) newSession() (*session, error) {
 	up.SetReadLimit(1 << 20)
 	upCtx, cancelUp := context.WithCancel(context.Background())
 	ss := &session{id: sid, srv: s, up: up, upCtx: upCtx, cancelUp: cancelUp, claimed: true,
-		upq: newQueue(s.cfg.QueueCap, &s.c.DropsOverload), outq: newQueue(s.cfg.OutCap, &s.c.DropsOverload),
+		upq: newQueue(s.cfg.QueueCap, &s.c.DropsOverload), outq: newQueue(s.cfg.OutCap, &s.c.DropsOverloadOut),
 		lastSeq: map[uint32]uint32{}, revoked: map[uint32]bool{}}
 	s.mu.Lock()
 	s.sessions[sid] = ss

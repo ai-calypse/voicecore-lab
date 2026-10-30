@@ -7,7 +7,7 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 | Step | Status | Estimated hours (not time logged) | Verified outputs | Blocker / next action |
 |---|---|---:|---|---|
 | [00](docs/step_00_career_evidence_and_baselines.md) | Complete | 12 | S00-T01 matrix; S00-T02 baseline (live); S00-T03 fixtures; S00-T04 ADR 0001 | Open: intermittent `FAILED_TO_START_LISTENING` (3/7 sessions), investigated before Step 03 adapters |
-| [01](docs/step_01_audio_transport_and_sdk.md) | Complete | 30 | Protocol + 3 codecs, browser capture, Go gateway, playout, tracer bullet, transport benchmark (fake-provider) | Open: dummynet loss profile needs the user (sudo) |
+| [01](docs/step_01_audio_transport_and_sdk.md) | Complete except S01-T05 loss profile (blocked) | 30 | Protocol + 3 codecs, browser capture, Go gateway, playout, tracer bullet, transport benchmark local + simulated (fake-provider) | Blocked: dummynet packet-loss profile needs the user (sudo) |
 | [02](docs/step_02_voice_activity_and_turn_detection.md) | Not started | 30 | None | Begin step 02 after prerequisites |
 | [03](docs/step_03_streaming_orchestrator.md) | Not started | 38 | None | Begin step 03 after prerequisites |
 | [04](docs/step_04_grounded_docs_agent.md) | Not started | 25 | None | Begin step 04 after prerequisites |
@@ -31,5 +31,6 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 | Date (UTC) | Completed step | Approved handoff evidence | Next step permitted |
 |---|---|---|---|
 | 2026-10-29 | 00 | Registers filled; `make test` 16 passed; CI green on `eb7ee6e`; code-review findings fixed. User declined own-voice recordings and waived listen/read checks | 01 |
+| 2026-10-30 | 01 (one blocked item) | Registers filled; `make test` + `make e2e` pass; CI green; code review (medium) 10 findings fixed. Open: S01-T05 loss profile needs sudo (user). User asked to complete all steps, so Step 02 proceeds; `/improve-codebase-architecture` and `/thermo-nuclear-code-quality-review` are user-run and not yet run | 02 |
 
 **Planning update (2026-10-28):** Documented initial STT/VAD/LLM/TTS provider recommendations in the master plan. No live integration, verification, measurements, or step completion is implied.
