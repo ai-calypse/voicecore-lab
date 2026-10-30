@@ -1,0 +1,20 @@
+{"t_us":75700,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/slow_0_8x_01.wav"}
+{"t_us":78577,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-16d0151f51578cdb","type":"welcome"}
+{"t_us":78704,"process":"headless","type":"mic.start","t0_us":78702}
+{"t_us":80520,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":1075779,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"58525611f5ba","title":"Features > Projects","url":"https://docs.astral.sh/uv/getting-started/features/#projects"}],"gen":1}
+{"t_us":1076801,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"To start a new project with uv, use the command `uv init`, and to add a dependency, use `uv add` with the dependency name, e.g., `uv add <dependency>` [1]."}
+{"t_us":1227548,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":1229036,"process":"headless","type":"user.onset","onset_us":3398702}
+{"t_us":2079965,"process":"headless","dir":"in","t_client_us":2079371,"t_server_us":40207491,"type":"pong"}
+{"t_us":2487521,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new"}
+{"t_us":3303082,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new project with uv,"}
+{"t_us":3466497,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new project with uv, you"}
+{"t_us":3640640,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"cancel"}
+{"t_us":3641361,"process":"headless","dir":"out","type":"cancel.ack","gen":1,"played_until_seq":117}
+{"t_us":3641622,"process":"headless","dir":"in","type":"agent.cancel","gen":1}
+{"t_us":3641855,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t2"}
+{"t_us":4084010,"process":"headless","dir":"in","t_client_us":4083432,"t_server_us":42211530,"type":"pong"}
+{"t_us":4424271,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"To start a new project with uv, use With soup and fix."}
+{"t_us":5141261,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":5144803,"process":"headless","dir":"in","type":"socket.closed","code":1000}

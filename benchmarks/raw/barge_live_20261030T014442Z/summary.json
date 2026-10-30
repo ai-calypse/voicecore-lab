@@ -1,0 +1,22 @@
+{
+  "summary": {
+    "interrupts": 1,
+    "silenced": 1,
+    "silence_p50": 703.7,
+    "silence_p95": 703.7,
+    "listening_p50": 704.8,
+    "false_barge_ins": "0/0"
+  },
+  "rows": [
+    {
+      "script": 0,
+      "kind": "interrupt",
+      "user": "dev_single_01",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 703.7,
+      "interrupt_to_listening_ms": 704.8,
+      "played": true
+    }
+  ]
+}

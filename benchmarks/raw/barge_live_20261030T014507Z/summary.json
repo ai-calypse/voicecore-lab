@@ -1,0 +1,198 @@
+{
+  "summary": {
+    "interrupts": 15,
+    "silenced": 15,
+    "silence_p50": 283.7,
+    "silence_p95": 1403.8,
+    "listening_p50": 285.0,
+    "false_barge_ins": "4/4"
+  },
+  "rows": [
+    {
+      "script": 0,
+      "kind": "interrupt",
+      "user": "dev_single_01",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 702.2,
+      "interrupt_to_listening_ms": 703.7,
+      "played": true
+    },
+    {
+      "script": 1,
+      "kind": "interrupt",
+      "user": "dev_single_02",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 283.7,
+      "interrupt_to_listening_ms": 285.0,
+      "played": true
+    },
+    {
+      "script": 2,
+      "kind": "interrupt",
+      "user": "dev_single_03",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 341.2,
+      "interrupt_to_listening_ms": 341.7,
+      "played": true
+    },
+    {
+      "script": 3,
+      "kind": "interrupt",
+      "user": "dev_single_04",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 1403.8,
+      "interrupt_to_listening_ms": 1405.0,
+      "played": true
+    },
+    {
+      "script": 4,
+      "kind": "interrupt",
+      "user": "dev_noisy_10db_01",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 223.1,
+      "interrupt_to_listening_ms": 224.3,
+      "played": true
+    },
+    {
+      "script": 5,
+      "kind": "interrupt",
+      "user": "dev_noisy_10db_02",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 202.9,
+      "interrupt_to_listening_ms": 204.2,
+      "played": true
+    },
+    {
+      "script": 6,
+      "kind": "interrupt",
+      "user": "dev_slow_0_8x_01",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 241.9,
+      "interrupt_to_listening_ms": 243.2,
+      "played": true
+    },
+    {
+      "script": 7,
+      "kind": "interrupt",
+      "user": "dev_slow_0_8x_02",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 663.7,
+      "interrupt_to_listening_ms": 665.2,
+      "played": true
+    },
+    {
+      "script": 8,
+      "kind": "interrupt",
+      "user": "dev_single_01",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 723.1,
+      "interrupt_to_listening_ms": 724.3,
+      "played": true
+    },
+    {
+      "script": 9,
+      "kind": "interrupt",
+      "user": "dev_single_02",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 303.6,
+      "interrupt_to_listening_ms": 304.7,
+      "played": true
+    },
+    {
+      "script": 10,
+      "kind": "interrupt",
+      "user": "dev_single_03",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 203.3,
+      "interrupt_to_listening_ms": 204.7,
+      "played": true
+    },
+    {
+      "script": 11,
+      "kind": "interrupt",
+      "user": "dev_single_04",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 1343.6,
+      "interrupt_to_listening_ms": 1344.7,
+      "played": true
+    },
+    {
+      "script": 12,
+      "kind": "interrupt",
+      "user": "dev_noisy_10db_01",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 204.0,
+      "interrupt_to_listening_ms": 205.4,
+      "played": true
+    },
+    {
+      "script": 13,
+      "kind": "interrupt",
+      "user": "dev_noisy_10db_02",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 203.9,
+      "interrupt_to_listening_ms": 205.2,
+      "played": true
+    },
+    {
+      "script": 14,
+      "kind": "interrupt",
+      "user": "dev_slow_0_8x_01",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 223.2,
+      "interrupt_to_listening_ms": 224.4,
+      "played": true
+    },
+    {
+      "script": 15,
+      "kind": "echo_only",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": null,
+      "interrupt_to_listening_ms": null,
+      "played": true
+    },
+    {
+      "script": 16,
+      "kind": "echo_only",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": null,
+      "interrupt_to_listening_ms": null,
+      "played": true
+    },
+    {
+      "script": 17,
+      "kind": "echo_only",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": null,
+      "interrupt_to_listening_ms": null,
+      "played": true
+    },
+    {
+      "script": 18,
+      "kind": "echo_only",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": null,
+      "interrupt_to_listening_ms": null,
+      "played": true
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "stall_and_429",
+  "description": "First LLM call gets HTTP 429, the retry stalls after 2 tokens (8 s timeout -> reprompt); TTS and token delays are random from the seed.",
+  "seed": 42,
+  "clip": "dev_single_02",
+  "llm_calls": [
+    {"error": "rate_limited"},
+    {"stall_after": 2}
+  ],
+  "llm_first_token_ms": [100, 1500],
+  "llm_token_ms": [5, 60],
+  "tts_first_audio_ms": [80, 500]
+}

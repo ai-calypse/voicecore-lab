@@ -8,7 +8,7 @@ from runner.inprocess import run_clip
 
 from voicecore.providers.base import ProviderError
 from voicecore.providers.mock import LLMScript, MockLLM, MockTTS
-from voicecore.runtime.session import REPROMPT, TROUBLE
+from voicecore.runtime.session import BUSY, REPROMPT
 from voicecore.turntaking.vad_fixture import FixtureVAD
 
 pytestmark = pytest.mark.looptime
@@ -39,7 +39,7 @@ async def test_20_sessions_with_random_delays_and_errors_all_finish_their_turn_w
         assert r["state"] == "ended"
         assert r["stt_drops"] == 0 and r["stt_queue_max"] == 50
     texts = [e["text"] for r in results for e in r["client"] if e["type"] == "agent.text"]
-    assert TROUBLE in texts and any(REPROMPT in t for t in texts)  # the injected 429s and stalls really happened
+    assert BUSY in texts and any(REPROMPT in t for t in texts)  # the injected 429s (after 1/2/4 s backoff) and stalls really happened
     longest = max(c["duration_ms"] for c in picked) / 1000
     assert elapsed < longest + 30  # every turn finished within 30 s of fake time after the longest clip
     assert [t for t in asyncio.all_tasks() if t is not asyncio.current_task()] == []

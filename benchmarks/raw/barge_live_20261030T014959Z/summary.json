@@ -1,0 +1,92 @@
+{
+  "summary": {
+    "interrupts": 8,
+    "silenced": 8,
+    "silence_p50": 302.8,
+    "silence_p95": 1364.0,
+    "listening_p50": 304.4,
+    "false_barge_ins": "0/0"
+  },
+  "rows": [
+    {
+      "script": 0,
+      "kind": "interrupt",
+      "user": "dev_single_01",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 702.2,
+      "interrupt_to_listening_ms": 703.6,
+      "played": true
+    },
+    {
+      "script": 1,
+      "kind": "interrupt",
+      "user": "dev_single_02",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 302.8,
+      "interrupt_to_listening_ms": 304.4,
+      "played": true
+    },
+    {
+      "script": 2,
+      "kind": "interrupt",
+      "user": "dev_single_03",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 345.6,
+      "interrupt_to_listening_ms": 347.2,
+      "played": true
+    },
+    {
+      "script": 3,
+      "kind": "interrupt",
+      "user": "dev_single_04",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 1364.0,
+      "interrupt_to_listening_ms": 1365.5,
+      "played": true
+    },
+    {
+      "script": 4,
+      "kind": "interrupt",
+      "user": "dev_noisy_10db_01",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 201.3,
+      "interrupt_to_listening_ms": 201.8,
+      "played": true
+    },
+    {
+      "script": 5,
+      "kind": "interrupt",
+      "user": "dev_noisy_10db_02",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 182.2,
+      "interrupt_to_listening_ms": 183.8,
+      "played": true
+    },
+    {
+      "script": 6,
+      "kind": "interrupt",
+      "user": "dev_slow_0_8x_01",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 264.4,
+      "interrupt_to_listening_ms": 265.7,
+      "played": true
+    },
+    {
+      "script": 7,
+      "kind": "interrupt",
+      "user": "dev_slow_0_8x_02",
+      "cancelled": true,
+      "stopped": "cancel",
+      "interrupt_to_silence_ms": 621.9,
+      "interrupt_to_listening_ms": 623.1,
+      "played": true
+    }
+  ]
+}

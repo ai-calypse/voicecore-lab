@@ -23,8 +23,9 @@ _CLOSED = object()
 
 
 class CartesiaTTS:
-    def __init__(self, reservation, key: str | None = None, voice: str = VOICE, model: str = MODEL, url: str = URL):
-        self.reservation, self.voice, self.model, self.url = reservation, voice, model, url
+    def __init__(self, reservation, key: str | None = None, voice: str = VOICE, model: str = MODEL, url: str = URL,
+                 max_chars: int = MAX_CHARS):
+        self.reservation, self.voice, self.model, self.url, self.max_chars = reservation, voice, model, url, max_chars
         self._key = key or keys.key("CARTESIA_API_KEY") or ""
         self._ws = None
         self._reader = None
@@ -46,8 +47,8 @@ class CartesiaTTS:
     async def synth(self, gen: int, text: str, last: bool) -> None:
         if gen <= self._fence:
             return
-        if self.chars + len(text) > MAX_CHARS:
-            raise ProviderError("fatal", f"per-session TTS cap of {MAX_CHARS} characters reached")
+        if self.chars + len(text) > self.max_chars:
+            raise ProviderError("fatal", f"per-session TTS cap of {self.max_chars} characters reached")
         async with self._lock:
             if self._ws is None:
                 await self._connect()

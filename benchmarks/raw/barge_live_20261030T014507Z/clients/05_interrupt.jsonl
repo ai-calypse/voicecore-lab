@@ -1,0 +1,19 @@
+{"t_us":74554,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/noisy_10db_02.wav"}
+{"t_us":77363,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-803d5438771c453d","type":"welcome"}
+{"t_us":77473,"process":"headless","type":"mic.start","t0_us":77471}
+{"t_us":79213,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":1490344,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"58525611f5ba","title":"Features > Projects","url":"https://docs.astral.sh/uv/getting-started/features/#projects"}],"gen":1}
+{"t_us":1491370,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"To start a new project with uv, use the command `uv init`, and to add a dependency, use `uv add` with the dependency name, e.g., `uv add <dependency>` [1]."}
+{"t_us":1632124,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":1633077,"process":"headless","type":"user.onset","onset_us":3797471}
+{"t_us":2078023,"process":"headless","dir":"in","t_client_us":2077332,"t_server_us":34432545,"type":"pong"}
+{"t_us":2922476,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new"}
+{"t_us":3733272,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new project with uv,"}
+{"t_us":4000346,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"cancel"}
+{"t_us":4001063,"process":"headless","dir":"out","type":"cancel.ack","gen":1,"played_until_seq":114}
+{"t_us":4001373,"process":"headless","dir":"in","type":"agent.cancel","gen":1}
+{"t_us":4001683,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t2"}
+{"t_us":4082086,"process":"headless","dir":"in","t_client_us":4081563,"t_server_us":36436744,"type":"pong"}
+{"t_us":4656962,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"To start a new project with uv... We're released here"}
+{"t_us":5501732,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":5506216,"process":"headless","dir":"in","type":"socket.closed","code":1000}

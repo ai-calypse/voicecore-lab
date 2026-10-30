@@ -1,0 +1,18 @@
+{"t_us":76630,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/single_04.wav"}
+{"t_us":79549,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-d5484cae1fb69bcc","type":"welcome"}
+{"t_us":79656,"process":"headless","type":"mic.start","t0_us":79654}
+{"t_us":82142,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":1362312,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"58525611f5ba","title":"Features > Projects","url":"https://docs.astral.sh/uv/getting-started/features/#projects"}],"gen":1}
+{"t_us":1363304,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"To start a new project with uv, use the command `uv init`, and to add a dependency, use `uv add` with the dependency name, e.g., `uv add <dependency>` [1]."}
+{"t_us":1518761,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":1520279,"process":"headless","type":"user.onset","onset_us":3679654}
+{"t_us":2081402,"process":"headless","dir":"in","t_client_us":2080729,"t_server_us":21748443,"type":"pong"}
+{"t_us":4083869,"process":"headless","dir":"in","t_client_us":4083344,"t_server_us":23751040,"type":"pong"}
+{"t_us":5043651,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"cancel"}
+{"t_us":5044529,"process":"headless","dir":"out","type":"cancel.ack","gen":1,"played_until_seq":176}
+{"t_us":5044920,"process":"headless","dir":"in","type":"agent.cancel","gen":1}
+{"t_us":5045167,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t2"}
+{"t_us":6041372,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"Ghastly pale"}
+{"t_us":6084753,"process":"headless","dir":"in","t_client_us":6084176,"t_server_us":25751909,"type":"pong"}
+{"t_us":6546047,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":6550319,"process":"headless","dir":"in","type":"socket.closed","code":1000}

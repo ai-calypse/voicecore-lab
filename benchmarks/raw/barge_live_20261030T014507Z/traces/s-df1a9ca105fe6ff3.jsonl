@@ -1,0 +1,9 @@
+{"trace_id": "s-df1a9ca105fe6ff3", "span": "turn", "event": "text_input", "t_mono_us": 52482325174, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-df1a9ca105fe6ff3", "span": "llm", "event": "request", "t_mono_us": 52482325233, "process": "agent-core", "attrs": {"attempt": 0}, "generation_id": 1}
+{"trace_id": "s-df1a9ca105fe6ff3", "span": "llm", "event": "first_token", "t_mono_us": 52483028677, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-df1a9ca105fe6ff3", "span": "tts", "event": "first_audio", "t_mono_us": 52483417492, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-df1a9ca105fe6ff3", "span": "playout", "event": "started", "t_mono_us": 52483426304, "process": "agent-core", "attrs": {"t_client_us": 1178881}, "generation_id": 1}
+{"trace_id": "s-df1a9ca105fe6ff3", "span": "turn", "event": "barge_in", "t_mono_us": 52485804931, "process": "agent-core", "attrs": {"onset_ms": 3320, "capture_end_us": 3556518}}
+{"trace_id": "s-df1a9ca105fe6ff3", "span": "runtime", "event": "cancel", "t_mono_us": 52485805506, "process": "agent-core", "attrs": {"reason": "barge_in"}, "generation_id": 1}
+{"trace_id": "s-df1a9ca105fe6ff3", "span": "playout", "event": "stopped", "t_mono_us": 52485807606, "process": "agent-core", "attrs": {"reason": "cancel", "t_client_us": 3559844}, "generation_id": 1}
+{"trace_id": "s-df1a9ca105fe6ff3", "span": "playout", "event": "cancel_ack", "t_mono_us": 52485807894, "process": "agent-core", "attrs": {"played_until_seq": 115}, "generation_id": 1}

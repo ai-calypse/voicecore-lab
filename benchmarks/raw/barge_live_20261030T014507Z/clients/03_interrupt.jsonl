@@ -1,0 +1,23 @@
+{"t_us":75410,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/single_04.wav"}
+{"t_us":78826,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-2f7800f04dac4112","type":"welcome"}
+{"t_us":78935,"process":"headless","type":"mic.start","t0_us":78934}
+{"t_us":80667,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":1077503,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"58525611f5ba","title":"Features > Projects","url":"https://docs.astral.sh/uv/getting-started/features/#projects"}],"gen":1}
+{"t_us":1078903,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"To start a new project with uv, use the command `uv init`, and to add a dependency, use `uv add` with the dependency name, e.g., `uv add <dependency>` [1]."}
+{"t_us":1225404,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":1226611,"process":"headless","type":"user.onset","onset_us":3398934}
+{"t_us":2079198,"process":"headless","dir":"in","t_client_us":2078524,"t_server_us":22535154,"type":"pong"}
+{"t_us":2500156,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new"}
+{"t_us":3308537,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new project with uv,"}
+{"t_us":4082158,"process":"headless","dir":"in","t_client_us":4081646,"t_server_us":24538215,"type":"pong"}
+{"t_us":4221480,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new project with uv, use the command"}
+{"t_us":4802765,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"cancel"}
+{"t_us":4803452,"process":"headless","dir":"out","type":"cancel.ack","gen":1,"played_until_seq":173}
+{"t_us":4803731,"process":"headless","dir":"in","type":"agent.cancel","gen":1}
+{"t_us":4803924,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t2"}
+{"t_us":5248177,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"To start a new project with uv, use the command uv Gas leak"}
+{"t_us":6082343,"process":"headless","dir":"in","t_client_us":6081665,"t_server_us":26538354,"type":"pong"}
+{"t_us":6236341,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"To start a new project with uv, use the command"}
+{"t_us":6259538,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"To start a new project with uv, use the command uv. Ghastly pale bleeding"}
+{"t_us":6303899,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":6307788,"process":"headless","dir":"in","type":"socket.closed","code":1000}

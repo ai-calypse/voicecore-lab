@@ -33,7 +33,7 @@ LLM_CAP_USD = 0.002
 
 def mock_providers():
     return {"stt": MockSTT(canned="how do I install uv?"), "llm": MockLLM(LLMScript(tokens=[w + " " for w in MOCK_ANSWER.split()])),
-            "tts": MockTTS()}, []
+            "tts": MockTTS(), "tts_factory": MockTTS}, []
 
 
 def live_providers(sid):
@@ -45,10 +45,16 @@ def live_providers(sid):
         budget.settle(stt_res, 0.0)
         budget.settle(llm_res, 0.0)
         raise
-    p = {"stt": make_live("stt", stt_res), "llm": make_live("llm", llm_res), "tts": make_live("tts", tts_res)}
+    tts_streams = []
+
+    def new_tts():  # the session may open a second stream for its one TTS retry; both bill the same reservation
+        tts_streams.append(make_live("tts", tts_res, max_chars=1500 - sum(t.chars for t in tts_streams)))
+        return tts_streams[-1]
+
+    p = {"stt": make_live("stt", stt_res), "llm": make_live("llm", llm_res), "tts": new_tts(), "tts_factory": new_tts}
     settle = [lambda: budget.settle(stt_res, p["stt"].cost_usd(), request_id=p["stt"].request_id),
               lambda: budget.settle(llm_res, round(p["llm"].cost_usd, 6), calls=p["llm"].calls),
-              lambda: budget.settle(tts_res, p["tts"].chars)]
+              lambda: budget.settle(tts_res, sum(t.chars for t in tts_streams), streams=len(tts_streams))]
     return p, settle
 
 

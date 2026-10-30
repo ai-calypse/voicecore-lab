@@ -1,0 +1,38 @@
+{"t_us":74286,"process":"headless","type":"client.start","fixture":null}
+{"t_us":77256,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-9ca213c5a47a6942","type":"welcome"}
+{"t_us":77373,"process":"headless","type":"mic.start","t0_us":77371}
+{"t_us":79517,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":1344943,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"58525611f5ba","title":"Features > Projects","url":"https://docs.astral.sh/uv/getting-started/features/#projects"}],"gen":1}
+{"t_us":1345764,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"To start a new project with uv, use the command `uv init`, and to add a dependency, use `uv add` with the dependency name, e.g., `uv add <dependency>` [1]."}
+{"t_us":1480009,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":2078520,"process":"headless","dir":"in","t_client_us":2077582,"t_server_us":134051837,"type":"pong"}
+{"t_us":2561288,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new"}
+{"t_us":3413450,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new project with uv,"}
+{"t_us":4081600,"process":"headless","dir":"in","t_client_us":4080985,"t_server_us":136055067,"type":"pong"}
+{"t_us":4411793,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new project with uv, use the command"}
+{"t_us":5400367,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new project with uv, use the command uv init."}
+{"t_us":6082844,"process":"headless","dir":"in","t_client_us":6082091,"t_server_us":138056306,"type":"pong"}
+{"t_us":6404332,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new project with uv, use the command uv init."}
+{"t_us":6741875,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new project with uv, use the command uv init. And to add a"}
+{"t_us":7221978,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"cancel"}
+{"t_us":7222709,"process":"headless","dir":"out","type":"cancel.ack","gen":1,"played_until_seq":274}
+{"t_us":7223003,"process":"headless","dir":"in","type":"agent.cancel","gen":1}
+{"t_us":7223239,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t2"}
+{"t_us":7753431,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And to add a dependency,"}
+{"t_us":8083171,"process":"headless","dir":"in","t_client_us":8082342,"t_server_us":140056636,"type":"pong"}
+{"t_us":8101300,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t2","text":"And to add a dependency,"}
+{"t_us":8101760,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t2","gen":2}
+{"t_us":9090985,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":2,"id":"693387022506","title":"Managing dependencies > Adding dependencies","url":"https://docs.astral.sh/uv/concepts/projects/dependencies/#adding-dependencies"}],"gen":2}
+{"t_us":9091924,"process":"headless","dir":"in","type":"agent.text","gen":2,"text":"You can add a dependency by running `uv add <dependency_name>`, which will include it in your `pyproject.toml` and update the lockfile [2]."}
+{"t_us":9257752,"process":"headless","dir":"out","type":"playout.started","gen":2}
+{"t_us":9572377,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And to add a dependency, you"}
+{"t_us":10082782,"process":"headless","dir":"in","t_client_us":10081944,"t_server_us":142056172,"type":"pong"}
+{"t_us":10559395,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And to add a dependency, you can add a dependency"}
+{"t_us":11572838,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And to add a dependency, you can add a dependency by running of"}
+{"t_us":12078900,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And to add a dependency, you can add a dependency by running of add"}
+{"t_us":12082891,"process":"headless","dir":"in","t_client_us":12082364,"t_server_us":144056466,"type":"pong"}
+{"t_us":13082779,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And to add a dependency, You can add a dependency by running uv add which will include it in"}
+{"t_us":13617050,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And to add a dependency, you can add a dependency by running of add"}
+{"t_us":13633094,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"And to add a dependency, you can add a dependency by running of add which will include it in your"}
+{"t_us":14076791,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":14080914,"process":"headless","dir":"in","type":"socket.closed","code":1000}

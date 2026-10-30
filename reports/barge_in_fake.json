@@ -1,0 +1,270 @@
+{
+  "summary": {
+    "scripts": 24,
+    "interrupts": 20,
+    "silenced": 20,
+    "false_barge_ins": "0/4",
+    "net_0ms": {
+      "silence_p50": 180.0,
+      "silence_max": 440.0,
+      "listening_p50": 180.0,
+      "n": 5
+    },
+    "net_20ms": {
+      "silence_p50": 220.0,
+      "silence_max": 440.0,
+      "listening_p50": 220.0,
+      "n": 5
+    },
+    "net_50ms": {
+      "silence_p50": 280.0,
+      "silence_max": 480.0,
+      "listening_p50": 280.0,
+      "n": 5
+    },
+    "net_100ms": {
+      "silence_p50": 380.0,
+      "silence_max": 560.0,
+      "listening_p50": 380.0,
+      "n": 5
+    }
+  },
+  "rows": [
+    {
+      "clip": "dev_interrupt_01",
+      "net_ms": 0,
+      "interrupt_to_silence_ms": 180.0,
+      "interrupt_to_listening_ms": 180.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 1880.0
+      }
+    },
+    {
+      "clip": "dev_interrupt_01",
+      "net_ms": 20,
+      "interrupt_to_silence_ms": 220.0,
+      "interrupt_to_listening_ms": 220.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 1920.0
+      }
+    },
+    {
+      "clip": "dev_interrupt_01",
+      "net_ms": 50,
+      "interrupt_to_silence_ms": 280.0,
+      "interrupt_to_listening_ms": 280.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 1980.0
+      }
+    },
+    {
+      "clip": "dev_interrupt_01",
+      "net_ms": 100,
+      "interrupt_to_silence_ms": -180.0,
+      "interrupt_to_listening_ms": -180.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 1520.0
+      }
+    },
+    {
+      "clip": "dev_interrupt_02",
+      "net_ms": 0,
+      "interrupt_to_silence_ms": 440.0,
+      "interrupt_to_listening_ms": 440.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 2140.0
+      }
+    },
+    {
+      "clip": "dev_interrupt_02",
+      "net_ms": 20,
+      "interrupt_to_silence_ms": 440.0,
+      "interrupt_to_listening_ms": 440.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 2140.0
+      }
+    },
+    {
+      "clip": "dev_interrupt_02",
+      "net_ms": 50,
+      "interrupt_to_silence_ms": 480.0,
+      "interrupt_to_listening_ms": 480.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 2180.0
+      }
+    },
+    {
+      "clip": "dev_interrupt_02",
+      "net_ms": 100,
+      "interrupt_to_silence_ms": 560.0,
+      "interrupt_to_listening_ms": 560.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 2260.0
+      }
+    },
+    {
+      "clip": "dev_interrupt_03",
+      "net_ms": 0,
+      "interrupt_to_silence_ms": 160.00099999999998,
+      "interrupt_to_listening_ms": 160.00099999999998,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 1860.001
+      }
+    },
+    {
+      "clip": "dev_interrupt_03",
+      "net_ms": 20,
+      "interrupt_to_silence_ms": 200.0,
+      "interrupt_to_listening_ms": 200.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 1900.0
+      }
+    },
+    {
+      "clip": "dev_interrupt_03",
+      "net_ms": 50,
+      "interrupt_to_silence_ms": 260.0,
+      "interrupt_to_listening_ms": 260.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 1960.0
+      }
+    },
+    {
+      "clip": "dev_interrupt_03",
+      "net_ms": 100,
+      "interrupt_to_silence_ms": 360.0,
+      "interrupt_to_listening_ms": 360.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 2060.0
+      }
+    },
+    {
+      "clip": "holdout_interrupt_01",
+      "net_ms": 0,
+      "interrupt_to_silence_ms": 180.0,
+      "interrupt_to_listening_ms": 180.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 1880.0
+      }
+    },
+    {
+      "clip": "holdout_interrupt_01",
+      "net_ms": 20,
+      "interrupt_to_silence_ms": 240.00099999999998,
+      "interrupt_to_listening_ms": 240.00099999999998,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 1940.001
+      }
+    },
+    {
+      "clip": "holdout_interrupt_01",
+      "net_ms": 50,
+      "interrupt_to_silence_ms": 300.0,
+      "interrupt_to_listening_ms": 300.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 2000.0
+      }
+    },
+    {
+      "clip": "holdout_interrupt_01",
+      "net_ms": 100,
+      "interrupt_to_silence_ms": 380.0,
+      "interrupt_to_listening_ms": 380.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 2080.0
+      }
+    },
+    {
+      "clip": "holdout_interrupt_02",
+      "net_ms": 0,
+      "interrupt_to_silence_ms": 200.0,
+      "interrupt_to_listening_ms": 200.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 1900.0
+      }
+    },
+    {
+      "clip": "holdout_interrupt_02",
+      "net_ms": 20,
+      "interrupt_to_silence_ms": 220.0,
+      "interrupt_to_listening_ms": 220.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 1920.0
+      }
+    },
+    {
+      "clip": "holdout_interrupt_02",
+      "net_ms": 50,
+      "interrupt_to_silence_ms": 280.0,
+      "interrupt_to_listening_ms": 280.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 1980.0
+      }
+    },
+    {
+      "clip": "holdout_interrupt_02",
+      "net_ms": 100,
+      "interrupt_to_silence_ms": 380.0,
+      "interrupt_to_listening_ms": 380.0,
+      "stopped": {
+        "reason": "cancel",
+        "t_ms": 2080.0
+      }
+    },
+    {
+      "clip": "dev_echo_only_01",
+      "net_ms": 50,
+      "false_barge_in": false,
+      "stopped": {
+        "reason": "done",
+        "t_ms": 7160.0
+      }
+    },
+    {
+      "clip": "dev_echo_only_02",
+      "net_ms": 50,
+      "false_barge_in": false,
+      "stopped": {
+        "reason": "done",
+        "t_ms": 6640.0
+      }
+    },
+    {
+      "clip": "holdout_echo_only_01",
+      "net_ms": 50,
+      "false_barge_in": false,
+      "stopped": {
+        "reason": "done",
+        "t_ms": 5800.0
+      }
+    },
+    {
+      "clip": "holdout_echo_only_02",
+      "net_ms": 50,
+      "false_barge_in": false,
+      "stopped": {
+        "reason": "done",
+        "t_ms": 6180.0
+      }
+    }
+  ]
+}

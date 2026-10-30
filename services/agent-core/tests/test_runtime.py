@@ -232,3 +232,16 @@ async def test_a_tts_failure_still_delivers_the_text_and_frees_the_turn():
     assert [e["gen"] for e in out.events("agent.text")] == [1]
     assert s.active_gen is None and s.state == State.LISTENING
     await s.close()
+
+
+async def test_echo_of_the_agent_is_not_sent_to_stt_while_it_plays():
+    stt = MockSTT()
+    s, _ = await make(stt=stt, vad=FixtureVAD([[0, 3000]]))  # the VAD hears "speech": the agent's echo
+    await s.on_event({"type": "text.input", "text": "hi"})
+    await asyncio.sleep(0.5)
+    await s.on_event({"type": "playout.started", "gen": 1, "t_us": mic(0).capture_us})
+    for k in range(50):  # quiet mic frames: the echo gate keeps the floor with the agent
+        await s.on_frame(mic(k))
+        await asyncio.sleep(0.02)
+    assert stt.audio_ms == 0 and s.active_gen == 1
+    await s.close()

@@ -1,6 +1,6 @@
 # Step 05: Barge In And Recovery
 
-**Status:** Planned; no implementation or test evidence yet.  
+**Status:** Complete (2026-10-30), except the 5 manual acoustic loopback runs (need a person and speakers).  
 **Estimated engineering effort:** 28 hours.  
 **Task owner:** Implementation agent; user confirms external paid credentials.  
 
@@ -85,23 +85,29 @@ Require both deterministic tests and controlled real-provider measurements where
 
 | Decision / rationale | Owner/source section | Actual code/config location | Evidence path | Status |
 |---|---|---|---|---|
-| TBD | This step | TBD | TBD | Unstarted |
+| Barge-in = floor `barge_in` (echo gate on while the client plays) → `Session.cancel`: fence, LLM task cancelled, `tts.cancel`, `agent.cancel` to gateway and client | S05-T01 | `runtime/session.py`, `turntaking/floor.py` | `harness/tests/test_barge_in.py` | Done |
+| Cancellation is enforced at every queue owner: Python (`_alive` check at the TTS reader and before every send), gateway (`TestAgentFramesAtOrBelowFenceAreNotSent`, `TestResumeDropsAudioQueuedWhileAway`), browser (`Playout.cancel`, `client.test.ts`), Cartesia adapter (drop after cancel) | S05-T02 | as listed | tests listed | Done |
+| Recovery rules: STT final 5 s after endpoint → reprompt; TTS failure → text answer, then one retry on a fresh TTS stream if nothing was heard yet; 429 before any text → backoff 1/2/4 s → "I'm busy"; client paused > 30 s → cancel; mic revoked → that stream ignored, text works, a new stream works; network loss → gateway resume + `client.resumed` cancel (S01-T04, S03-T02) | S05-T03 | `runtime/session.py`, `server.py` (TTS factory, credits summed across streams, one shared 1,500-character cap) | `test_recovery.py` (7) | Done |
+| Chaos: JSON fault schedule + seed builds the mocks; one in-process run on fake time; traces compared after making times relative | S05-T05 | `harness/runner/chaos.py`, `harness/scenarios/chaos/stall_and_429.json` | `harness/tests/test_chaos.py` | Done |
+| Live barge-in harness: headless client asks by text, mixes its own playback into its mic (−15 dB, ~40 ms) and starts a user clip 1.2 s into playback; renders by the wall clock (fixed after false barge-ins) | S05-T04 | `packages/web-sdk/bin/headless-client.ts`, `harness/barge_live.py` | `reports/barge_in.md` | Done |
+| During playback, STT opens only when the user holds the floor (echo transcripts leaked into the next turn, found live) | S05-T04 | `Session._to_stt` | `test_echo_of_the_agent_is_not_sent_to_stt_while_it_plays` | Done |
 
 ## Execution record
 
 | Task ID | Status | Output paths | Test command/results | Blocker |
 |---|---|---|---|---|
-| S05-T01 | Not started | — | — | — |
-| S05-T02 | Not started | — | — | — |
-| S05-T03 | Not started | — | — | — |
-| S05-T04 | Not started | — | — | — |
-| S05-T05 | Not started | — | — | — |
+| S05-T01 | Done 2026-10-30 | `harness/runner/inprocess.py::run_barge_in`, `harness/tests/test_barge_in.py` | 3 dev interrupt clips: `agent.cancel{gen:1}`, client `playout.stopped{cancel}`, interrupt-to-silence ≤ 500 ms; 2 dev echo-only clips: no barge-in, answer plays to the end (real Silero, fake time) | — |
+| S05-T02 | Done 2026-10-30 | `packages/web-sdk/src/client.test.ts` (+ earlier gateway and runtime tests) | client: agent frame → playout.push, `agent.cancel` → playout.cancel before the app callback; reconnect resumes with the learned session id | — |
+| S05-T03 | Done 2026-10-30 | `voicecore/runtime/session.py` | `test_recovery.py` → 7 passed: reprompt at 5 s (not 4.5); TTS drop → text + 1 retry spoken; 429 calls at 0/1/3/7 s then BUSY; 429 then success answers; pause 31 s cancels, resume at 20 s keeps; revoked mic ignored, text answers | No STT reconnect (ponytail note) |
+| S05-T04 | Done 2026-10-30 (fake + live); manual open | `reports/barge_in.md`, `reports/barge_in_fake.json`, `benchmarks/raw/barge_live_*` | Fake 24 scripts: 20/20 silenced, p50 180 ms at 0 ms one-way delay → 380 ms at 100 ms; 0/4 false. Live after fixes: 8/8 silenced, p50 303 / p95 1,364 ms; 0/4 false (4/4 before the render fix) | 5 manual acoustic runs need the user |
+| S05-T05 | Done 2026-10-30 | `harness/runner/chaos.py`, `harness/scenarios/chaos/stall_and_429.json` | seed 42: identical normalized trace and client log twice; 429 backoff and 8 s stall both present; one reprompted answer | — |
 
 ## Source and artifact change record
 
 | Consumed artifact | Revision or hash | Affected task(s) | Revalidation decision |
 |---|---|---|---|
-| TBD | TBD | TBD | TBD |
+| `fixtures/audio` interrupt/echo clips | manifest rebuilt 2026-10-30 (−23 dBFS) | S05-T01, T04 | consumed |
+| `docs/adr/0002-turn-policy.md` echo gate parameters | 2026-10-30 | S05-T01, T04 | unchanged; short-first-word weakness recorded |
 
 ## Handoff
 

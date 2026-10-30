@@ -1,0 +1,20 @@
+{"t_us":73617,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/single_03.wav"}
+{"t_us":76418,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-df1a9ca105fe6ff3","type":"welcome"}
+{"t_us":76520,"process":"headless","type":"mic.start","t0_us":76518}
+{"t_us":78611,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":1037151,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"58525611f5ba","title":"Features > Projects","url":"https://docs.astral.sh/uv/getting-started/features/#projects"}],"gen":1}
+{"t_us":1038307,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"To start a new project with uv, use the command `uv init`, and to add a dependency, use `uv add` with the dependency name, e.g., `uv add <dependency>` [1]."}
+{"t_us":1178881,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":1179348,"process":"headless","type":"user.onset","onset_us":3356518}
+{"t_us":2078453,"process":"headless","dir":"in","t_client_us":2077711,"t_server_us":62913645,"type":"pong"}
+{"t_us":2466443,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new"}
+{"t_us":3271719,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new project with uv,"}
+{"t_us":3364405,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"To start a new project with uv,"}
+{"t_us":3559844,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"cancel"}
+{"t_us":3560627,"process":"headless","dir":"out","type":"cancel.ack","gen":1,"played_until_seq":115}
+{"t_us":3561014,"process":"headless","dir":"in","type":"agent.cancel","gen":1}
+{"t_us":3561257,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t2"}
+{"t_us":4080905,"process":"headless","dir":"in","t_client_us":4080505,"t_server_us":64916184,"type":"pong"}
+{"t_us":4329995,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"To start a new project with uv, use The court was spacious."}
+{"t_us":5060337,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":5064169,"process":"headless","dir":"in","type":"socket.closed","code":1000}

@@ -1,0 +1,48 @@
+{
+  "summary": {
+    "interrupts": 0,
+    "silenced": 0,
+    "silence_p50": [],
+    "silence_p95": [],
+    "listening_p50": [],
+    "false_barge_ins": "0/4"
+  },
+  "rows": [
+    {
+      "script": 0,
+      "kind": "echo_only",
+      "cancelled": false,
+      "stopped": "done",
+      "interrupt_to_silence_ms": null,
+      "interrupt_to_listening_ms": null,
+      "played": true
+    },
+    {
+      "script": 1,
+      "kind": "echo_only",
+      "cancelled": false,
+      "stopped": "done",
+      "interrupt_to_silence_ms": null,
+      "interrupt_to_listening_ms": null,
+      "played": true
+    },
+    {
+      "script": 2,
+      "kind": "echo_only",
+      "cancelled": false,
+      "stopped": "done",
+      "interrupt_to_silence_ms": null,
+      "interrupt_to_listening_ms": null,
+      "played": true
+    },
+    {
+      "script": 3,
+      "kind": "echo_only",
+      "cancelled": false,
+      "stopped": "done",
+      "interrupt_to_silence_ms": null,
+      "interrupt_to_listening_ms": null,
+      "played": true
+    }
+  ]
+}

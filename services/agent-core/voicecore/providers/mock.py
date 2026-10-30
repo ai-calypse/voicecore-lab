@@ -86,8 +86,11 @@ class MockTTS:
     Jobs run in order on one worker, so audio within a generation follows the text order.
     """
 
-    def __init__(self, first_audio_ms: int = 150, ms_per_char: int = 60, item_delay_ms: int = 2, error: ProviderError | None = None):
+    def __init__(self, first_audio_ms: int = 150, ms_per_char: int = 60, item_delay_ms: int = 2, error: ProviderError | None = None,
+                 audio: bytes | None = None):
+        """audio: 24 kHz PCM16 to speak for each generation instead of a tone (barge-in scenarios replay a known clip)."""
         self.first_audio_ms, self.ms_per_char, self.item_delay_ms, self.error = first_audio_ms, ms_per_char, item_delay_ms, error
+        self.audio_clip = audio
         self._jobs: asyncio.Queue = asyncio.Queue()
         self._out: asyncio.Queue = asyncio.Queue()
         self._fence = 0
@@ -112,15 +115,19 @@ class MockTTS:
             if self.error:
                 self._out.put_nowait(self.error)
                 continue
-            if gen not in self._started:
+            first = gen not in self._started
+            if first:
                 self._started.add(gen)
                 await asyncio.sleep(self.first_audio_ms / 1000)
-            n_items = max(1, math.ceil(len(text) * self.ms_per_char / 20))
-            t = np.arange(480) / 24000
-            for _ in range(n_items):
+            if self.audio_clip is not None:
+                items = [self.audio_clip[i : i + 960] for i in range(0, len(self.audio_clip), 960)] if first else []
+            else:
+                tone = (np.sin(2 * np.pi * 220 * np.arange(480) / 24000) * 6000).astype("<i2").tobytes()
+                items = [tone] * max(1, math.ceil(len(text) * self.ms_per_char / 20))
+            for pcm in items:
                 if gen <= self._fence:
                     break
-                self._out.put_nowait(Audio(gen, (np.sin(2 * np.pi * 220 * t) * 6000).astype("<i2").tobytes()))
+                self._out.put_nowait(Audio(gen, pcm))
                 await asyncio.sleep(self.item_delay_ms / 1000)
             if last and gen > self._fence:
                 self._out.put_nowait(Audio(gen, b"", last=True))

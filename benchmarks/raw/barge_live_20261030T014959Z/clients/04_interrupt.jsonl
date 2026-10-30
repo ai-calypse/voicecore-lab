@@ -1,0 +1,17 @@
+{"t_us":75409,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/noisy_10db_01.wav"}
+{"t_us":78352,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-ca14baf53a0f60f5","type":"welcome"}
+{"t_us":78460,"process":"headless","type":"mic.start","t0_us":78458}
+{"t_us":80783,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":1626688,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"58525611f5ba","title":"Features > Projects","url":"https://docs.astral.sh/uv/getting-started/features/#projects"}],"gen":1}
+{"t_us":1627729,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"To start a new project with uv, use the command `uv init`, and to add a dependency, use `uv add` with the dependency name, e.g., `uv add <dependency>` [1]."}
+{"t_us":1777788,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":1779120,"process":"headless","type":"user.onset","onset_us":3938458}
+{"t_us":2079587,"process":"headless","dir":"in","t_client_us":2079029,"t_server_us":28543787,"type":"pong"}
+{"t_us":4080965,"process":"headless","dir":"in","t_client_us":4080361,"t_server_us":30545145,"type":"pong"}
+{"t_us":4139738,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"cancel"}
+{"t_us":4140097,"process":"headless","dir":"out","type":"cancel.ack","gen":1,"played_until_seq":118}
+{"t_us":4140214,"process":"headless","dir":"in","type":"agent.cancel","gen":1}
+{"t_us":4140304,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t2"}
+{"t_us":5109651,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"I picked it up in"}
+{"t_us":5640703,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":5645060,"process":"headless","dir":"in","type":"socket.closed","code":1000}

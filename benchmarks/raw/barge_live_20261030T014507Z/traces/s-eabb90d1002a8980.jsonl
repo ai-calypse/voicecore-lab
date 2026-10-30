@@ -1,0 +1,9 @@
+{"trace_id": "s-eabb90d1002a8980", "span": "turn", "event": "text_input", "t_mono_us": 52448511334, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-eabb90d1002a8980", "span": "llm", "event": "request", "t_mono_us": 52448511396, "process": "agent-core", "attrs": {"attempt": 0}, "generation_id": 1}
+{"trace_id": "s-eabb90d1002a8980", "span": "llm", "event": "first_token", "t_mono_us": 52449195699, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-eabb90d1002a8980", "span": "tts", "event": "first_audio", "t_mono_us": 52449594580, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-eabb90d1002a8980", "span": "playout", "event": "started", "t_mono_us": 52449614193, "process": "agent-core", "attrs": {"t_client_us": 1181617}, "generation_id": 1}
+{"trace_id": "s-eabb90d1002a8980", "span": "turn", "event": "barge_in", "t_mono_us": 52452011760, "process": "agent-core", "attrs": {"onset_ms": 3340, "capture_end_us": 3578908}}
+{"trace_id": "s-eabb90d1002a8980", "span": "runtime", "event": "cancel", "t_mono_us": 52452012140, "process": "agent-core", "attrs": {"reason": "barge_in"}, "generation_id": 1}
+{"trace_id": "s-eabb90d1002a8980", "span": "playout", "event": "stopped", "t_mono_us": 52452013765, "process": "agent-core", "attrs": {"reason": "cancel", "t_client_us": 3582029}, "generation_id": 1}
+{"trace_id": "s-eabb90d1002a8980", "span": "playout", "event": "cancel_ack", "t_mono_us": 52452013967, "process": "agent-core", "attrs": {"played_until_seq": 116}, "generation_id": 1}

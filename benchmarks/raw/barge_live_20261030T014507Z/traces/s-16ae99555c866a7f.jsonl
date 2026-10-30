@@ -1,0 +1,17 @@
+{"trace_id": "s-16ae99555c866a7f", "span": "turn", "event": "text_input", "t_mono_us": 52510415353, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-16ae99555c866a7f", "span": "llm", "event": "request", "t_mono_us": 52510415415, "process": "agent-core", "attrs": {"attempt": 0}, "generation_id": 1}
+{"trace_id": "s-16ae99555c866a7f", "span": "llm", "event": "first_token", "t_mono_us": 52511371187, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-16ae99555c866a7f", "span": "tts", "event": "first_audio", "t_mono_us": 52511862820, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-16ae99555c866a7f", "span": "playout", "event": "started", "t_mono_us": 52511879145, "process": "agent-core", "attrs": {"t_client_us": 1540831}, "generation_id": 1}
+{"trace_id": "s-16ae99555c866a7f", "span": "stt", "event": "final", "t_mono_us": 52516838068, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-16ae99555c866a7f", "span": "turn", "event": "barge_in", "t_mono_us": 52519896150, "process": "agent-core", "attrs": {"onset_ms": 9320, "capture_end_us": 9557013}}
+{"trace_id": "s-16ae99555c866a7f", "span": "runtime", "event": "cancel", "t_mono_us": 52519896636, "process": "agent-core", "attrs": {"reason": "barge_in"}, "generation_id": 1}
+{"trace_id": "s-16ae99555c866a7f", "span": "playout", "event": "stopped", "t_mono_us": 52519898147, "process": "agent-core", "attrs": {"reason": "cancel", "t_client_us": 9560845}, "generation_id": 1}
+{"trace_id": "s-16ae99555c866a7f", "span": "playout", "event": "cancel_ack", "t_mono_us": 52519898291, "process": "agent-core", "attrs": {"played_until_seq": 390}, "generation_id": 1}
+{"trace_id": "s-16ae99555c866a7f", "span": "stt", "event": "final", "t_mono_us": 52520453438, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-16ae99555c866a7f", "span": "turn", "event": "endpoint", "t_mono_us": 52520774537, "process": "agent-core", "attrs": {"reason": "silence", "onset_ms": 9320, "capture_end_us": 10437013}}
+{"trace_id": "s-16ae99555c866a7f", "span": "stt", "event": "turn_text", "t_mono_us": 52520775218, "process": "agent-core", "attrs": {"chars": 60, "waited_ms": 0}}
+{"trace_id": "s-16ae99555c866a7f", "span": "llm", "event": "request", "t_mono_us": 52520775650, "process": "agent-core", "attrs": {"attempt": 0}, "generation_id": 2}
+{"trace_id": "s-16ae99555c866a7f", "span": "llm", "event": "first_token", "t_mono_us": 52522535810, "process": "agent-core", "attrs": {}, "generation_id": 2}
+{"trace_id": "s-16ae99555c866a7f", "span": "tts", "event": "first_audio", "t_mono_us": 52522683410, "process": "agent-core", "attrs": {}, "generation_id": 2}
+{"trace_id": "s-16ae99555c866a7f", "span": "playout", "event": "started", "t_mono_us": 52522696287, "process": "agent-core", "attrs": {"t_client_us": 12358518}, "generation_id": 2}
