@@ -5,6 +5,7 @@ test: test-go test-py test-ts
 
 test-go:
 	cd services/realtime-gateway && go test -race ./...
+	cd experiments && go test -race ./...
 
 test-py:
 	uv run pytest -m "not live"

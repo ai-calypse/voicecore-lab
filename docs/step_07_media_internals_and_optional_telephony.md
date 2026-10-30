@@ -1,6 +1,6 @@
 # Step 07: Media Internals And Optional Telephony
 
-**Status:** Planned; no implementation or test evidence yet.  
+**Status:** Complete within the timebox (2026-10-30), except the shaped-network (dummynet) WS vs WebRTC run, which needs `sudo` (user). Telephony is a design document only, with no SIP claim.  
 **Estimated engineering effort:** 35 hours.  
 **Task owner:** Implementation agent; user confirms external paid credentials.  
 
@@ -85,23 +85,29 @@ Require both deterministic tests and controlled real-provider measurements where
 
 | Decision / rationale | Owner/source section | Actual code/config location | Evidence path | Status |
 |---|---|---|---|---|
-| TBD | This step | TBD | TBD | Unstarted |
+| Jitter buffer = fixed playout delay from first arrival (`first + delay + 20 ms × n`); late = arrived after its play time (dropped); lost = play time without a packet, only up to the highest sequence seen; 16-bit sequence unwrapped against the highest seen | S07-T01 | `experiments/rtp/jitter.go` | `jitter_test.go` | Done |
+| RFC 3550 §6.4.1 interarrival jitter `J += (|D| − J)/16` in clock units | S07-T01 | `experiments/rtp/jitter.go::Jitter` | hand-worked 4-packet value 3.59619140625 | Done |
+| Spike: Pion WebRTC v4.2.26, non-trickle (wait for ICE gathering), loopback only (no STUN/TURN), browser offers, Go answers; every Opus RTP packet goes into the T01 buffer and RFC 3550 jitter; ICE / DTLS / connection steps logged. The DTLS handler must be attached when the offer creates the transceiver (inside `OnTrack` it missed the handshake) | S07-T02 | `experiments/cmd/pion-peer/` | Playwright `webrtc.spec.ts` | Done |
+| Comparison timed in one process: Pion receives WebRTC and also speaks the VoiceCore WS protocol on `/ws` | S07-T03 | `pion-peer` `/ws`, `webrtc.spec.ts` (BENCH=1) | `benchmarks/raw/webrtc_vs_ws_20261030T024016Z.json` | Done (local); shaped runs need sudo |
+| Telephony: Twilio Media Streams adapter design in front of the unchanged gateway; SIP flow written down; no code | S07-T04 | `docs/telephony_extension.md` | — | Done (design only) |
+| Experiments are a separate Go module (`experiments/`, replace → gateway module for the protocol codec); CI `go` job runs its tests | S07 | `experiments/go.mod`, `.github/workflows/ci.yml` | CI | Done |
 
 ## Execution record
 
 | Task ID | Status | Output paths | Test command/results | Blocker |
 |---|---|---|---|---|
-| S07-T01 | Not started | — | — | — |
-| S07-T02 | Not started | — | — | — |
-| S07-T03 | Not started | — | — | — |
-| S07-T04 | Not started | — | — | — |
-| S07-T05 | Not started | — | — | — |
+| S07-T01 | Done 2026-10-30 | `experiments/rtp/` | `go test -race ./...` → 4 passed: 65534, 0, 65535, 1 come out 65534, 65535, 0, 1; RFC 3550 jitter literal; reordered within the window in order, late dropped and counted, missing counted lost; duplicate counted | — |
+| S07-T02 | Done 2026-10-30 | `experiments/cmd/pion-peer/main.go`, `index.html`, `apps/demo/e2e/webrtc.spec.ts` | Playwright (Chromium fake mic): steps offer applied → ice checking → answer sent → ice connected → dtls connected → connection connected; codec audio/opus; > 100 packets through the jitter buffer; interarrival p50 between 15 and 25 ms | — |
+| S07-T03 | Done 2026-10-30 (loopback only) | `docs/media_internals.md`, `benchmarks/raw/webrtc_vs_ws_20261030T024016Z.json` | WebRTC 1,002 packets, interarrival p50/p95 20.06/20.41 ms, jitter 0.26 ms; WS 500 frames, 19.86/29.53 ms, jitter 4.84 ms; 0 late, 0 lost on both. Burstiness comes from the SDK's worklet → main-thread framing | Shaped (dummynet) profiles need sudo (user) |
+| S07-T04 | Done 2026-10-30 (design) | `docs/telephony_extension.md` | SIP call flow; Media Streams adapter table (μ-law, 8↔16/24 kHz, `clear` on `agent.cancel`, `mark` → playout events); tests it would need listed | Not built: no SIP claim |
+| S07-T05 | Done 2026-10-30 | `docs/media_internals.md` | links code, tests and every measured number with its source | — |
 
 ## Source and artifact change record
 
 | Consumed artifact | Revision or hash | Affected task(s) | Revalidation decision |
 |---|---|---|---|
-| TBD | TBD | TBD | TBD |
+| `benchmarks/transport.md` | 2026-10-30 | S07-T03, T05 | simulated proxy results reused to explain TCP jitter |
+| Pion WebRTC docs (Context7 `/pion/webrtc`) | fetched 2026-10-30 | S07-T02 | `OnTrack`/`ReadRTP`, `GatheringCompletePromise` |
 
 ## Handoff
 

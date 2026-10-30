@@ -2,6 +2,7 @@ import { defineConfig } from "@playwright/test";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
+const experiments = fileURLToPath(new URL("../../experiments", import.meta.url));
 const gateway = fileURLToPath(new URL("../../services/realtime-gateway", import.meta.url));
 const fixture = fileURLToPath(new URL("../../fixtures/audio/dev/single_01.wav", import.meta.url));
 
@@ -24,5 +25,7 @@ export default defineConfig({
     // builds the docs index at start: minutes on a cold CI runner without the vector cache
     { command: "uv run python -m voicecore.server --providers mock --port 8766", cwd: root, port: 8766, reuseExistingServer: true, timeout: 600_000 },
     { command: "go run ./cmd/gateway -addr 127.0.0.1:8081 -upstream ws://127.0.0.1:8766", cwd: gateway, url: "http://127.0.0.1:8081/debug/counters", reuseExistingServer: true },
+    // Step 07 WebRTC spike (Pion)
+    { command: "go run ./cmd/pion-peer -addr 127.0.0.1:8090", cwd: experiments, url: "http://127.0.0.1:8090/stats", reuseExistingServer: true },
   ],
 });

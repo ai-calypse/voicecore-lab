@@ -1,0 +1,83 @@
+{
+ "steps": [
+  {
+   "step": "offer applied",
+   "t_ms": 574.264
+  },
+  {
+   "step": "ice checking",
+   "t_ms": 574.475
+  },
+  {
+   "step": "connection connecting",
+   "t_ms": 574.622
+  },
+  {
+   "step": "answer sent",
+   "t_ms": 575.437
+  },
+  {
+   "step": "ice connected",
+   "t_ms": 576.264
+  },
+  {
+   "step": "dtls connecting",
+   "t_ms": 576.29
+  },
+  {
+   "step": "dtls connected",
+   "t_ms": 577.701
+  },
+  {
+   "step": "connection connected",
+   "t_ms": 577.727
+  },
+  {
+   "clock_rate": 48000,
+   "codec": "audio/opus",
+   "ssrc": 290581566,
+   "step": "track",
+   "t_ms": 591.099
+  },
+  {
+   "step": "ws mic stream open",
+   "t_ms": 10440.23
+  }
+ ],
+ "webrtc": {
+  "interarrival_ms": {
+   "max": 21.197,
+   "n": 1001,
+   "p50": 20.058,
+   "p95": 20.406,
+   "p99": 20.61
+  },
+  "stream": {
+   "packets": 1002,
+   "codec": "audio/opus",
+   "jitter_ms": 0.25794114120544365,
+   "played": 991,
+   "late": 0,
+   "lost": 0,
+   "duplicate": 0
+  }
+ },
+ "websocket": {
+  "interarrival_ms": {
+   "max": 30.209,
+   "n": 499,
+   "p50": 19.856,
+   "p95": 29.532,
+   "p99": 30.097
+  },
+  "stream": {
+   "packets": 500,
+   "codec": "pcm16/16000 over WebSocket",
+   "jitter_ms": 4.842116003388586,
+   "played": 496,
+   "late": 0,
+   "lost": 0,
+   "duplicate": 0
+  }
+ }
+}

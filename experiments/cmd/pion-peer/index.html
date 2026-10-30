@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>VoiceCore WebRTC spike</title></head>
+<body>
+<p id="state">connecting…</p>
+<script type="module">
+// Browser side of the Step 07 spike: send the microphone over WebRTC (Opus over RTP) to the Pion peer.
+const log = (window.steps = []);
+const say = (s) => { log.push({ t: performance.now(), step: s }); document.getElementById("state").textContent = s; };
+const pc = new RTCPeerConnection();
+pc.oniceconnectionstatechange = () => say("ice " + pc.iceConnectionState);
+pc.onconnectionstatechange = () => say("connection " + pc.connectionState);
+const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+for (const t of mic.getTracks()) pc.addTrack(t, mic);
+await pc.setLocalDescription(await pc.createOffer());
+say("offer created");
+await new Promise((ok) => {
+  if (pc.iceGatheringState === "complete") return ok();
+  pc.onicegatheringstatechange = () => pc.iceGatheringState === "complete" && ok();
+});
+say("ice gathering complete (no trickle)");
+const answer = await (await fetch("/offer", { method: "POST", body: JSON.stringify(pc.localDescription) })).json();
+await pc.setRemoteDescription(answer);
+say("answer applied");
+</script>
+</body>
+</html>
