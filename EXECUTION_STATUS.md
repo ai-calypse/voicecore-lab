@@ -1,12 +1,12 @@
 # VoiceCore Lab — Execution Status
 
-**Status as of 2026-10-28:** All stages are **planned, not started**. This file is a live execution register for the implementing agent.
+**Status as of 2026-10-29:** Step 00 complete; Step 01 in progress. This file is a live execution register for the implementing agent.
 
 Do not mark a step Complete until task-level actual evidence, objective tests and handoff checks are recorded in the corresponding step doc. Track fake and real provider results separately.
 
 | Step | Status | Estimated hours (not time logged) | Verified outputs | Blocker / next action |
 |---|---|---:|---|---|
-| [00](docs/step_00_career_evidence_and_baselines.md) | In progress (handoff pending user actions) | 12 | S00-T01 matrix; S00-T02 baseline (live); S00-T03 fixtures; S00-T04 ADR 0001 | User: record 10 questions, listen to 5 clips, read ADR. Open: intermittent `FAILED_TO_START_LISTENING` (3/7 sessions) |
+| [00](docs/step_00_career_evidence_and_baselines.md) | Complete | 12 | S00-T01 matrix; S00-T02 baseline (live); S00-T03 fixtures; S00-T04 ADR 0001 | Open: intermittent `FAILED_TO_START_LISTENING` (3/7 sessions), investigated before Step 03 adapters |
 | [01](docs/step_01_audio_transport_and_sdk.md) | Not started | 30 | None | Begin step 01 after prerequisites |
 | [02](docs/step_02_voice_activity_and_turn_detection.md) | Not started | 30 | None | Begin step 02 after prerequisites |
 | [03](docs/step_03_streaming_orchestrator.md) | Not started | 38 | None | Begin step 03 after prerequisites |
@@ -29,6 +29,6 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 
 | Date (UTC) | Completed step | Approved handoff evidence | Next step permitted |
 |---|---|---|---|
-| — | — | — | — |
+| 2026-10-29 | 00 | Registers filled; `make test` 16 passed; CI green on `eb7ee6e`; code-review findings fixed. User declined own-voice recordings and waived listen/read checks | 01 |
 
 **Planning update (2026-10-28):** Documented initial STT/VAD/LLM/TTS provider recommendations in the master plan. No live integration, verification, measurements, or step completion is implied.

@@ -1,0 +1,170 @@
+{
+  "spec": "packages/protocol/SPEC.md#1-audio-frame",
+  "valid": [
+    {
+      "name": "mic_basic",
+      "hex": "010100000000000100000000000000000000000000000000000200000100ffff",
+      "fields": {
+        "version": 1,
+        "kind": 1,
+        "flags": 0,
+        "stream_id": 1,
+        "sequence": 0,
+        "capture_us": "0",
+        "generation_id": 0,
+        "samples": 2,
+        "payload": [
+          1,
+          -1
+        ]
+      }
+    },
+    {
+      "name": "mic_max_sequence",
+      "hex": "01010000ffffffffffffffff000000000000000000000000000100000000",
+      "fields": {
+        "version": 1,
+        "kind": 1,
+        "flags": 0,
+        "stream_id": 4294967295,
+        "sequence": 4294967295,
+        "capture_us": "0",
+        "generation_id": 0,
+        "samples": 1,
+        "payload": [
+          0
+        ]
+      }
+    },
+    {
+      "name": "mic_end_of_stream_empty",
+      "hex": "01010001000000010000002900000000000c83200000000000000000",
+      "fields": {
+        "version": 1,
+        "kind": 1,
+        "flags": 1,
+        "stream_id": 1,
+        "sequence": 41,
+        "capture_us": "820000",
+        "generation_id": 0,
+        "samples": 0,
+        "payload": []
+      }
+    },
+    {
+      "name": "capture_us_max",
+      "hex": "010100000000000100000000ffffffffffffffff00000000000100000700",
+      "fields": {
+        "version": 1,
+        "kind": 1,
+        "flags": 0,
+        "stream_id": 1,
+        "sequence": 0,
+        "capture_us": "18446744073709551615",
+        "generation_id": 0,
+        "samples": 1,
+        "payload": [
+          7
+        ]
+      }
+    },
+    {
+      "name": "capture_us_above_2_pow_53",
+      "hex": "010100000000000100000000002000000000000100000000000100000700",
+      "fields": {
+        "version": 1,
+        "kind": 1,
+        "flags": 0,
+        "stream_id": 1,
+        "sequence": 0,
+        "capture_us": "9007199254740993",
+        "generation_id": 0,
+        "samples": 1,
+        "payload": [
+          7
+        ]
+      }
+    },
+    {
+      "name": "agent_gen_7",
+      "hex": "010200000000000700000003000000000000ea600000000700020000000100ff",
+      "fields": {
+        "version": 1,
+        "kind": 2,
+        "flags": 0,
+        "stream_id": 7,
+        "sequence": 3,
+        "capture_us": "60000",
+        "generation_id": 7,
+        "samples": 2,
+        "payload": [
+          256,
+          -256
+        ]
+      }
+    },
+    {
+      "name": "agent_gen_max_end",
+      "hex": "0102000100000001000000000000000000000000ffffffff000100000000",
+      "fields": {
+        "version": 1,
+        "kind": 2,
+        "flags": 1,
+        "stream_id": 1,
+        "sequence": 0,
+        "capture_us": "0",
+        "generation_id": 4294967295,
+        "samples": 1,
+        "payload": [
+          0
+        ]
+      }
+    },
+    {
+      "name": "pcm_extremes",
+      "hex": "01010000000000010000000000000000000000000000000000030000ff7f00800000",
+      "fields": {
+        "version": 1,
+        "kind": 1,
+        "flags": 0,
+        "stream_id": 1,
+        "sequence": 0,
+        "capture_us": "0",
+        "generation_id": 0,
+        "samples": 3,
+        "payload": [
+          32767,
+          -32768,
+          0
+        ]
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "short_header",
+      "hex": "010100000000000100000000000000000000000000000000000000",
+      "error": "short"
+    },
+    {
+      "name": "version_2",
+      "hex": "02010000000000010000000000000000000000000000000000000000",
+      "error": "version"
+    },
+    {
+      "name": "kind_3",
+      "hex": "01030000000000010000000000000000000000000000000000000000",
+      "error": "kind"
+    },
+    {
+      "name": "odd_payload",
+      "hex": "01010000000000010000000000000000000000000000000000010000010000",
+      "error": "length"
+    },
+    {
+      "name": "samples_more_than_payload",
+      "hex": "010100000000000100000000000000000000000000000000000200000100",
+      "error": "length"
+    }
+  ]
+}

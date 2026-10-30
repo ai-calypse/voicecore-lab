@@ -3,7 +3,10 @@ name = "voicecore"
 version = "0.1.0"
 description = "VoiceCore Lab orchestrator: turn-taking, generation runtime, providers, answer engine"
 requires-python = ">=3.12"
-dependencies = ["websockets>=15"]
+dependencies = [
+    "numpy>=2.5.4",
+    "websockets>=15",
+]
 
 [build-system]
 requires = ["hatchling"]

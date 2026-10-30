@@ -1,6 +1,6 @@
 # Step 00: Career Evidence And Baselines
 
-**Status:** In progress. S00-T01–T04 done (2026-10-29). Handoff waits on user actions: record 10 holdout questions, listen to 5 clips, read ADR 0001.  
+**Status:** Complete (2026-10-29). S00-T01–T04 done. The user declined the 10 own-voice recordings and waived the listen/read checks (2026-10-29); holdout docs questions use the Aura holdout voice only.  
 **Estimated engineering effort:** 12 hours.  
 **Task owner:** Implementation agent; user confirms external paid credentials.  
 
@@ -97,7 +97,8 @@ Require both deterministic tests and controlled real-provider measurements where
 | Noise is generated with numpy (seeded) instead of ffmpeg `anoisesrc`; same determinism, fewer moving parts | S00-T03 | `harness/build_fixtures.py::noise` | rebuild gives identical manifest | Done |
 | LibriSpeech tarballs kept in `.cache/librispeech/` (683 MB, gitignored) so the builder can rerun without a download; plan said delete them | S00-T03 | `.cache/` | — | User may delete |
 | Docs corpus: astral-sh/uv docs at tag 0.13.6 (`329bf94`), 81 Markdown files, MIT OR Apache-2.0; answer key 40 questions (30 answerable, 10 unanswerable; dev 25 / holdout 15; 10 marked for user recording) | S00-T03 | `fixtures/docs/uv/`, `fixtures/docs/answer_key.json` | `test_answer_key_cites_sections_that_exist_and_contain_the_key_terms` | Done |
-| ADR 0001 engine ownership written | S00-T04 | `docs/adr/0001-engine-ownership.md` | `grep -c "^## "` = 5 | Done; user to read |
+| ADR 0001 engine ownership written | S00-T04 | `docs/adr/0001-engine-ownership.md` | `grep -c "^## "` = 5 | Done |
+| User declined recording the 10 holdout questions and waived the 5-clip listen and ADR read (2026-10-29). Holdout docs-question audio = Aura `aura-2-luna-en` for all 15 holdout questions; `user_record` flags in the answer key are inert; `harness/record_questions.md` stays as an optional path | S00-T03 handoff | `fixtures/audio/local/manifest.json` | `test_every_docs_question_has_local_audio_in_a_split_specific_voice` passes | Done (user decision) |
 
 ## Execution record
 
@@ -105,8 +106,8 @@ Require both deterministic tests and controlled real-provider measurements where
 |---|---|---|---|---|
 | S00-T01 | Done 2026-10-29 | requirements matrix (kept private) | per-role proof count and task-ID existence check passed | — |
 | S00-T02 | Done 2026-10-29 (live provider, measured) | `harness/baseline_deepgram.py`, `harness/config/baseline.json`, `benchmarks/baseline_results.json` (latest run only), `benchmarks/raw/baseline_*.jsonl` (all runs), `benchmarks/spend_ledger.json` | `uv run harness/baseline_deepgram.py --self-test` → `self-test ok` (budget, scoring, framing). Live runs, unshaped residential WAN, default US endpoint, macOS 26.5.2, Python 3.12 via uv: **(1)** `…180524Z-a0e15d`, 1 session, 3/4 turns (key mismatch, fixed above). **(2)** `…180621Z-662a2e`, 3 sessions: session 0 4/4, sessions 1–2 `FAILED_TO_START_LISTENING` at setup, back to back. **(3)** `…180728Z-a29514`, 3 sessions, 5 s gap: sessions 0–1 4/4, session 2 `FAILED_TO_START_LISTENING`. Run 3 results: turn success 8/12 = 0.667 (all 8 attempted turns passed; 4 lost to the failed session); voice speech end → first agent audio frame min/median/max 932.0 / 1094.8 / 1175.6 ms (n=6); text inject → first audio 968.3 / 1016.3 / 1064.3 ms (n=2); WS open 248.3 / 249.1 / 263.8 ms (n=3); SettingsApplied 327.9 / 340.8 ms (n=2). Deepgram's own `total_latency` per turn 0.90–1.15 s. Session setup failed in 3 of 7 sessions overall. Small sample: no percentiles claimed | Open finding: intermittent `FAILED_TO_START_LISTENING` (failed request IDs in `benchmarks/spend_ledger.json`); acoustic playback start not measured (headless client) |
-| S00-T03 | Done 2026-10-29 (user actions pending) | `fixtures/audio/` (43 committed clips, 11.9 MB), `fixtures/audio/local/` (40 Aura clips, local only), `fixtures/docs/`, `harness/build_fixtures.py`, `harness/build_local_fixtures.py`, `harness/fixtures.py`, `harness/record_questions.md` | `uv run pytest harness/tests` → 10 passed. Each check was shown to fail on a deliberately broken manifest (8/8 caught). Rebuild is byte-identical. Code review (medium) found dev/holdout echo clips were byte-identical and holdout reused the dev agent voice; fixed with one agent speaker per split and a new no-shared-audio test, plus fixes for repeat Aura spend, quiet-audio crash, lost manifest on partial failure, keypress in recordings. Aura spend $0.073 (2,447 chars, live-provider) | User: record 10 questions (`harness/record_questions.md`), listen to 5 clips |
-| S00-T04 | Done 2026-10-29 | `docs/adr/0001-engine-ownership.md` | `grep -c "^## "` → 5 | User to read |
+| S00-T03 | Done 2026-10-29 | `fixtures/audio/` (43 committed clips, 11.9 MB), `fixtures/audio/local/` (40 Aura clips, local only), `fixtures/docs/`, `harness/build_fixtures.py`, `harness/build_local_fixtures.py`, `harness/fixtures.py`, `harness/record_questions.md` | `uv run pytest harness/tests` → 10 passed. Each check was shown to fail on a deliberately broken manifest (8/8 caught). Rebuild is byte-identical. Code review (medium) found dev/holdout echo clips were byte-identical and holdout reused the dev agent voice; fixed with one agent speaker per split and a new no-shared-audio test, plus fixes for repeat Aura spend, quiet-audio crash, lost manifest on partial failure, keypress in recordings. Aura spend $0.073 (2,447 chars, live-provider) | — (recordings declined by user) |
+| S00-T04 | Done 2026-10-29 | `docs/adr/0001-engine-ownership.md` | `grep -c "^## "` → 5 | — |
 
 ## Source and artifact change record
 

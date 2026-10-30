@@ -4,5 +4,10 @@
   "packageManager": "pnpm@11.13.1",
   "scripts": {
     "test": "pnpm -r --if-present test"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5"
   }
 }

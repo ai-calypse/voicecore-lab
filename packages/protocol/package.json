@@ -1,0 +1,12 @@
+{
+  "name": "@voicecore/protocol",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./frame": "./ts/frame.ts",
+    "./events": "./ts/events.ts"
+  },
+  "scripts": {
+    "test": "tsc --noEmit -p . && vitest run"
+  }
+}

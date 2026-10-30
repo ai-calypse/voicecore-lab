@@ -268,11 +268,15 @@ name = "voicecore"
 version = "0.1.0"
 source = { editable = "services/agent-core" }
 dependencies = [
+    { name = "numpy" },
     { name = "websockets" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "websockets", specifier = ">=15" }]
+requires-dist = [
+    { name = "numpy", specifier = ">=2.5.4" },
+    { name = "websockets", specifier = ">=15" },
+]
 
 [[package]]
 name = "voicecore-lab"
