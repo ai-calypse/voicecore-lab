@@ -147,10 +147,13 @@ Each session logs `session started` and `session ended`; the gateway's end line 
 docker compose up --build                 # mock providers: no keys, no spend
 PROVIDERS=live docker compose up          # live providers, keys from .env
 docker compose --profile monitoring up --build --wait   # adds Prometheus, Alertmanager, Loki, Alloy and Grafana
+docker compose --profile scale up -d --build --wait redis seed orch-1 orch-2 gw-1 gw-2 lb   # two of each, behind nginx on :8090
 HOST_UID=$(id -u) HOST_GID=$(id -g) PROVIDERS=live docker compose up   # Linux
 ```
 
 Both web images send security headers from nginx: a Content Security Policy, `X-Content-Type-Options: nosniff` and `Referrer-Policy: strict-origin-when-cross-origin`. The policy allows scripts only from the site itself, from Cloudflare Turnstile and by the hashes of the few inline scripts Docusaurus writes. `scripts/csp.mjs` computes the hashes at build time. Network connections are allowed to the site and to the gateway in `PUBLIC_GATEWAY`. The pages cannot be framed (`frame-ancestors 'none'`).
+
+The `scale` profile runs two gateways and two orchestrators behind nginx on `127.0.0.1:8090`, sharing one Redis for the budget ledger, token nonces and daily quotas. A one-shot `seed` service copies the file ledger's totals into Redis before the orchestrators start, so the caps never restart at zero. nginx sends a reconnect (`/v1/ws?resume=s-gw1-…`) to the gateway that owns the session, and everything else round robin. It uses billed mocks: no provider is called. Measurements are in `reports/load.md`.
 
 The `monitoring` profile adds Prometheus (`127.0.0.1:9090`), Alertmanager (`127.0.0.1:9093`), an alert sink that prints each alert as a log line (`docker compose logs alert-sink`), Loki with 7-day log retention, Alloy to ship the containers' logs, and Grafana with the VoiceCore dashboard (`127.0.0.1:3001`). All ports bind to 127.0.0.1 only. The orchestrator image bakes in the embedding model and the docs vectors for `apps/docs/docs`, so it starts in seconds but the first build takes a few minutes. Live mode writes the shared ledger in `./benchmarks`, mounted into the container; on Linux, run the container as your own user so it can write there.
 

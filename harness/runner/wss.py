@@ -63,12 +63,13 @@ def start_stack(providers, trace_dir, logs, policy="fixed", server_args=()):
     return procs
 
 
-def run_clients(clips, out_dir, tail_s, sequential=False):
+def run_clients(clips, out_dir, tail_s, sequential=False, gateway=None):
     out_dir.mkdir(parents=True, exist_ok=True)
     procs = []
     for i, c in enumerate(clips):
         log = out_dir / f"{i:02d}_{c['id']}.jsonl"
-        cmd = ["node", str(CLIENT), "--fixture", str(MANIFEST.parent / c["file"]), "--out", str(log), "--tail", str(tail_s)]
+        cmd = ["node", str(CLIENT), "--fixture", str(MANIFEST.parent / c["file"]), "--out", str(log), "--tail", str(tail_s),
+               *(["--gateway", gateway] if gateway else [])]
         procs.append((log, subprocess.Popen(cmd, cwd=ROOT)))
         if sequential:
             procs[-1][1].wait(timeout=600)
@@ -92,6 +93,7 @@ def main():
     ap.add_argument("--tail", type=float, default=12)
     ap.add_argument("--out", type=Path)
     ap.add_argument("--no-stack", action="store_true")
+    ap.add_argument("--gateway", help="with --no-stack: a running gateway or load balancer, e.g. http://127.0.0.1:8090")
     ap.add_argument("--sequential", action="store_true", help="one client at a time (provider concurrency limits)")
     ap.add_argument("--policy", choices=["fixed", "adaptive", "asr_assisted", "eager"], help="default: the orchestrator's (eager live, fixed mock)")
     ap.add_argument("--server-arg", action="append", default=[], help="extra orchestrator flag, e.g. --server-arg=--llm-model=openai/gpt-4.1-nano")
@@ -105,7 +107,7 @@ def main():
     clips = [by_id[c] for c in args.clips for _ in range(args.parallel)]
     procs = [] if args.no_stack else start_stack(args.providers, out / "traces", out, args.policy, args.server_arg)
     try:
-        logs = run_clients(clips, out / "clients", args.tail, args.sequential)
+        logs = run_clients(clips, out / "clients", args.tail, args.sequential, args.gateway)
         if procs:
             (out / "gateway_counters.json").write_text(urllib.request.urlopen(COUNTERS_URL).read().decode())
     finally:

@@ -5,6 +5,7 @@ import (
 	"sync/atomic"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -12,6 +13,7 @@ import (
 // The metrics read the same atomic counters as Snapshot, from a registry of this Server's own.
 func (s *Server) AdminHandler() http.Handler {
 	reg := prometheus.NewRegistry()
+	reg.MustRegister(collectors.NewGoCollector(), collectors.NewProcessCollector(collectors.ProcessCollectorOpts{})) // goroutines, memory, open files
 	counter := func(name, help, reason string, v func() int64) {
 		labels := prometheus.Labels{}
 		if reason != "" {

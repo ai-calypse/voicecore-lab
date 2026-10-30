@@ -130,7 +130,7 @@ services:
     build: { context: services/realtime-gateway, args: { VERSION: "${VERSION:-dev}" } }
     # every test client shares one address: the per-address limits are off here, and only here
     command: ["-addr", "0.0.0.0:8080", "-upstream", "ws://orch-1:8765,ws://orch-2:8765", "-copy-id", "gw1", "-redis-url", "redis://redis:6379/1",
-              "-admin-addr", "0.0.0.0:9091", "-max-sessions-per-ip", "0", "-tokens-per-minute", "0", "-sessions-per-ip-per-day", "0"]
+              "-admin-addr", "0.0.0.0:9091", "-max-sessions", "0", "-max-sessions-per-ip", "0", "-tokens-per-minute", "0", "-sessions-per-ip-per-day", "0"]
     environment: ["GATEWAY_SECRET=${GATEWAY_SECRET:-scale-profile-shared-secret-of-32+bytes}", "LOG_FORMAT=json"]  # shared: a token from one copy works on the other
     stop_grace_period: 35s
     healthcheck: { test: ["CMD", "/gateway", "-probe", "http://127.0.0.1:8080/readyz"], interval: 5s, timeout: 3s, retries: 3, start_period: 10s }
@@ -138,7 +138,7 @@ services:
   gw-2:
     <<: *gw
     command: ["-addr", "0.0.0.0:8080", "-upstream", "ws://orch-1:8765,ws://orch-2:8765", "-copy-id", "gw2", "-redis-url", "redis://redis:6379/1",
-              "-admin-addr", "0.0.0.0:9091", "-max-sessions-per-ip", "0", "-tokens-per-minute", "0", "-sessions-per-ip-per-day", "0"]
+              "-admin-addr", "0.0.0.0:9091", "-max-sessions", "0", "-max-sessions-per-ip", "0", "-tokens-per-minute", "0", "-sessions-per-ip-per-day", "0"]
   lb:
     profiles: [scale]
     image: nginx:1.27-alpine
