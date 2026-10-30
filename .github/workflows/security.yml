@@ -1,0 +1,67 @@
+name: security
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "17 6 * * 1"  # Mondays: new advisories for unchanged code
+
+permissions:
+  contents: read
+
+concurrency:  # a newer push to the same ref cancels the older run
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secrets:  # blocking: every commit, every file, benchmarks/raw included
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+      - name: gitleaks 8.30.1 (pinned binary, checksum checked; the action needs a licence for org repos)
+        run: |
+          V=8.30.1
+          curl -sSfL -o gl.tgz "https://github.com/gitleaks/gitleaks/releases/download/v$V/gitleaks_${V}_linux_x64.tar.gz"
+          curl -sSfL -o sums.txt "https://github.com/gitleaks/gitleaks/releases/download/v$V/gitleaks_${V}_checksums.txt"
+          grep "gitleaks_${V}_linux_x64.tar.gz" sums.txt | sed "s/gitleaks_${V}_linux_x64.tar.gz/gl.tgz/" | sha256sum -c -
+          tar xzf gl.tgz gitleaks
+          ./gitleaks git --config .gitleaks.toml --redact --verbose --exit-code 1 .
+
+  govulncheck:  # blocking: known vulnerable Go code that our code actually calls
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: services/realtime-gateway/go.mod
+      - run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+        working-directory: services/realtime-gateway
+      - run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+        working-directory: experiments
+
+  audit:  # non-blocking: a new upstream CVE must not turn main red; the weekly run and Dependabot surface them
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+      - name: pip-audit (Python dependencies)
+        run: uv export --frozen --no-hashes --no-emit-project --format requirements-txt > req.txt && uvx pip-audit -r req.txt
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - name: pnpm audit (production dependencies, high and above)
+        run: pnpm audit --prod --audit-level high
+      - name: grype 0.121.0 (whole tree, only vulnerabilities with a fix)
+        run: |
+          V=0.121.0
+          curl -sSfL -o grype.tgz "https://github.com/anchore/grype/releases/download/v$V/grype_${V}_linux_amd64.tar.gz"
+          curl -sSfL -o sums.txt "https://github.com/anchore/grype/releases/download/v$V/grype_${V}_checksums.txt"
+          grep "grype_${V}_linux_amd64.tar.gz" sums.txt | sed "s/grype_${V}_linux_amd64.tar.gz/grype.tgz/" | sha256sum -c -
+          tar xzf grype.tgz grype
+          ./grype dir:. --only-fixed

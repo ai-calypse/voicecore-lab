@@ -1,0 +1,18 @@
+# Weekly dependency updates. Security updates come as soon as an advisory lands, whatever this schedule says.
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directories: ["/services/realtime-gateway", "/experiments"]
+    schedule: { interval: weekly }
+  - package-ecosystem: uv
+    directory: "/"
+    schedule: { interval: weekly }
+  - package-ecosystem: npm
+    directory: "/"
+    schedule: { interval: weekly }
+  - package-ecosystem: docker
+    directories: ["/services/agent-core", "/services/realtime-gateway", "/apps/demo", "/apps/docs"]
+    schedule: { interval: weekly }
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule: { interval: weekly }

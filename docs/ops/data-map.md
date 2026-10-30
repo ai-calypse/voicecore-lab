@@ -28,7 +28,7 @@ This page decides what logs may contain (Step 09 Phase 4) and what the privacy p
 | The user's questions as text | the LLM provider, and the widget's on-screen log | traces, unless `include_text` is on; logs |
 | Client IP | gateway memory (rate limits), nginx access logs | — |
 
-**Secrets** are the API keys in `.env` (mode 600, gitignored) and `GATEWAY_SECRET` in env. Keys are sent only in provider request headers and are never logged. A secret scan runs before every commit; gitleaks replaces it in Step 09 Phase 7.
+**Secrets** are the API keys in `.env` (mode 600, gitignored) and `GATEWAY_SECRET` in env. Keys are sent only in provider request headers and are never logged. A secret scan runs before every commit, and since Step 09 Phase 7 the CI job `secrets` runs gitleaks over every commit and file, `benchmarks/raw` included, and blocks on a finding. Rotation: [key-rotation.md](key-rotation.md).
 
 ## Ranked threats and the planned fixes
 
@@ -40,7 +40,7 @@ This page decides what logs may contain (Step 09 Phase 4) and what the privacy p
 | 4 | **Token replay** from many IPs within 60 s | **Fixed in P3 (2026-10-30):** tokens are single-use (nonce) and bound to the client IP; `X-Forwarded-For` is believed only from `-trusted-proxies` | Bypasses per-IP limits | Done (P3). Used nonces are per process until Redis (P10) |
 | 5 | **Cross-site token minting** | **Fixed in P7 (2026-10-30):** `POST /v1/session` echoes only `-origins` matches and refuses other origins with 403 | Any site can embed the paid demo | Done (P7); Turnstile also available (P7) |
 | 6 | **Operational data exposure:** `/debug/counters` and `/metrics` are public | **Fixed in P7 (2026-10-30):** counters and metrics are served only on the admin listener, published on 127.0.0.1 in dev and never in prod | Information about load and drops | Done (P5, P7) |
-| 7 | **Secrets in logs or commits** | No key is logged today; there is a manual grep scan | Key theft, then spend | An allow-list log formatter with key redaction (P4); gitleaks in CI, scanning `benchmarks/raw` too (P7) |
+| 7 | **Secrets in logs or commits** | **Fixed in P4 and P7 (2026-10-30):** the log formatter keeps an allow-list and redacts key values and key shapes; gitleaks in CI blocks on any finding, `benchmarks/raw` included | Key theft, then spend | Done (P4, P7) |
 | 8 | **Prompt injection through docs** | First-party docs only; injection-shaped passages are flagged and never quoted; citations are validated | Wrong or unsafe answers | Unchanged (Step 04); adversarial eval |
 | 9 | **Unbounded retention** of trace and log files | No rotation or pruning | Privacy, disk | Traces off in prod; Loki compactor retention of 7 days (P5); the privacy page states retention per deployment (P12) |
 | 10 | **Provider outage cascades** (not security, but availability) | No breakers; STT never reconnects | Sessions hang, or retries pile up | Breakers, STT reconnect, a per-turn deadline (P6) |

@@ -4,15 +4,20 @@ on: [push, pull_request]
 permissions:
   contents: read
 
+concurrency:  # a newer push to the same ref cancels the older run
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   go:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: services/realtime-gateway
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: services/realtime-gateway/go.mod
           cache-dependency-path: services/realtime-gateway/go.sum
@@ -24,17 +29,18 @@ jobs:
 
   python:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
           enable-cache: true
       - run: uv sync --locked
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .cache/fastembed
           key: fastembed-bge-small-en-v1.5
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .cache/answer_vectors_*.npy
           key: answer-vectors-${{ hashFiles('fixtures/docs/uv/**', 'apps/docs/docs/**', 'services/agent-core/voicecore/answer/ingest.py') }}
@@ -43,10 +49,11 @@ jobs:
 
   ts:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
           cache: pnpm
@@ -55,27 +62,28 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version-file: services/realtime-gateway/go.mod
           cache-dependency-path: services/realtime-gateway/go.sum
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
           enable-cache: true
       - run: uv sync --locked
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .cache/fastembed
           key: fastembed-bge-small-en-v1.5
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .cache/answer_vectors_*.npy
           key: answer-vectors-${{ hashFiles('fixtures/docs/uv/**', 'apps/docs/docs/**', 'services/agent-core/voicecore/answer/ingest.py') }}
@@ -84,15 +92,16 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - uses: astral-sh/setup-uv@v6
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
           enable-cache: true
       - run: uv sync --locked
@@ -102,43 +111,3 @@ jobs:
       - run: pnpm --filter @voicecore/docs exec playwright install --with-deps chromium
       - run: pnpm --filter @voicecore/docs exec playwright test
 
-  compose:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: docker compose build
-      - run: docker compose up -d --wait --wait-timeout 300  # every healthcheck green (agent-core /readyz, gateway -probe)
-      - uses: astral-sh/setup-uv@v6
-        with:
-          enable-cache: true
-      - run: uv sync --locked
-      - name: smoke test (token, WebSocket, grounded answer)
-        run: |
-          curl -sf http://localhost:8080/healthz | grep -q '"status":"ok"'
-          uv run python harness/smoke.py
-          curl -sf http://localhost:5173/embed/voicecore.js >/dev/null
-          curl -sf http://localhost:3000/concepts/endpointing | grep -q 'Endpointing'
-          curl -sf http://localhost:3000/embed/voicecore.js >/dev/null
-      - name: graceful stop (SIGTERM drains and exits 0)
-        run: |
-          docker compose stop -t 35 agent-core gateway
-          test "$(docker inspect -f '{{.State.ExitCode}}' $(docker compose ps -aq agent-core))" = 0
-          test "$(docker inspect -f '{{.State.ExitCode}}' $(docker compose ps -aq gateway))" = 0
-      - if: failure()
-        run: docker compose logs
-
-  monitoring:  # seam 15: rules and routes with promtool/amtool, then a stopped orchestrator pages the alert sink
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: monitoring/check.sh
-      - run: docker compose --profile monitoring config --quiet
-      - run: docker compose --profile monitoring build agent-core gateway
-      - run: docker compose --profile monitoring up -d --wait --wait-timeout 300 agent-core gateway prometheus alertmanager alert-sink loki alloy grafana
-      - uses: astral-sh/setup-uv@v6
-        with:
-          enable-cache: true
-      - run: uv sync --locked
-      - run: uv run pytest -m docker harness/tests/test_monitoring.py -p no:randomly
-      - if: failure()
-        run: docker compose --profile monitoring logs

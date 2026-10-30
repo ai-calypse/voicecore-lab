@@ -1,0 +1,23 @@
+# gitleaks (CI job "secrets"): the default rules plus the shapes of this project's provider keys.
+# Patterns only: never put any part of a real key in this file.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "openrouter-api-key"
+description = "OpenRouter API key"
+regex = '''sk-or-v1-[0-9a-f]{64}'''
+keywords = ["sk-or-v1-"]
+
+[[rules]]
+id = "cartesia-api-key"
+description = "Cartesia API key"
+regex = '''sk_car_[A-Za-z0-9_-]{20,}'''
+keywords = ["sk_car_"]
+
+[[rules]]
+id = "deepgram-api-key"
+description = "Deepgram API key next to its name or an Authorization: Token header"
+regex = '''(?i)(?:deepgram[a-z_]*\s*[=:]\s*["']?|token\s+)([0-9a-f]{40})\b'''
+secretGroup = 1
+keywords = ["deepgram", "token"]
