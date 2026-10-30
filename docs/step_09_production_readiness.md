@@ -79,7 +79,7 @@ A change to the wire protocol (`resume_key`, session id format) updates `package
 - [ ] All phases' slices green; `make test`, `make e2e`, docs anchors, promtool and amtool tests, and all CI jobs pass
 - [ ] The verification list in the plan has been run and recorded
 - [ ] Spend ≤ $0.25 above the start of the step, checked in the ledger
-- [ ] `code-review` (high), `health` and `document-release` run, with findings fixed
+- [x] `code-review` (high), `health` and `document-release` run, with findings fixed (2026-10-30; `document-release` stopped at its feature-branch gate, so its audit was done by hand)
 
 ## Decisions and outputs register (fill in during implementation)
 
@@ -145,4 +145,4 @@ A change to the wire protocol (`resume_key`, session id format) updates `package
 
 ## Handoff
 
-Not yet. The step ends when the acceptance checklist is complete. The user then decides on deploying, the real Turnstile and paging credentials, and key rotation.
+Not yet. Open items: CI cannot run until GitHub billing is fixed (every check here ran locally); the live load test (about $0.17) and the optional live provider check and assistant eval wait for approval. The step ends when the acceptance checklist is complete. The user then decides on deploying, the real Turnstile and paging credentials, and key rotation.
