@@ -40,6 +40,7 @@ type result struct {
 
 func main() {
 	gw := flag.String("gateway", "127.0.0.1:8080", "gateway host:port")
+	admin := flag.String("admin", "", "gateway admin host:port (its -admin-addr), to record /debug/counters")
 	orch := flag.String("orch", "127.0.0.1:8765", "fakeorch host:port (used with -direct)")
 	direct := flag.Bool("direct", false, "bypass the gateway: talk to fakeorch directly")
 	n := flag.Int("n", 1, "parallel streams (sessions)")
@@ -75,8 +76,8 @@ func main() {
 	}
 	wg.Wait()
 	res := result{Label: *label, Streams: *n, Seconds: secs.Seconds(), Sent: sent, Received: recv, RTTms: pct(rtt), InterArrival: pct(gaps)}
-	if !*direct {
-		if resp, err := http.Get("http://" + *gw + "/debug/counters"); err == nil {
+	if !*direct && *admin != "" {
+		if resp, err := http.Get("http://" + *admin + "/debug/counters"); err == nil {
 			_ = json.NewDecoder(resp.Body).Decode(&res.Counters)
 			resp.Body.Close()
 		}

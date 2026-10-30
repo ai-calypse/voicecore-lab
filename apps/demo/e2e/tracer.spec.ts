@@ -19,6 +19,6 @@ test("fake-mic audio round-trips through the gateway and the page emits playout.
   const started = await page.evaluate(() => (window as any).events.find((e: any) => e.type === "playout.started"));
   expect(started.gen).toBe(1);
   expect(started.t_us).toBeGreaterThan(0);
-  const counters = await (await request.get("http://127.0.0.1:18080/debug/counters")).json();
+  const counters = await (await request.get("http://127.0.0.1:18091/debug/counters")).json();
   expect(counters).toMatchObject({ drops_duplicate: 0, drops_stale: 0, drops_overload: 0, gaps: 0 });
 });

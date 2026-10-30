@@ -92,7 +92,7 @@ Each session has two queues, and both treat audio and events differently. Audio 
 
 Writes to the client time out after 10 s. When a write fails, the item goes back to the front of the queue, so a resumed connection receives it. A failed write to or read from the orchestrator ends the session with reason `error`.
 
-Queue depths, in audio frames, are exposed as `depth` and `depth_out` at `GET /debug/counters`. In the transport benchmark no queue dropped anything: 0 drops and 0 gaps at 1 and at 20 streams (fake-provider, loopback, 10 s per run).
+Queue depths, in audio frames, are exposed as `depth` and `depth_out` at `GET /debug/counters` on the admin listener. In the transport benchmark no queue dropped anything: 0 drops and 0 gaps at 1 and at 20 streams (fake-provider, loopback, 10 s per run).
 
 ## How the outbound fence drops cancelled audio
 
@@ -109,7 +109,7 @@ Apart from resume, the gateway never decides to cancel by itself. It learns canc
 
 ## The debug counters endpoint
 
-`GET /debug/counters` returns one JSON object with counters summed across all sessions since the gateway started. It is the quickest way to see whether the gateway dropped anything during a run. `cmd/wsload` and the WSS runner in `harness/runner/wss.py` read it to report gateway drops and gaps, The endpoint has no authentication, but the host allow-list still applies.
+`GET /debug/counters` returns one JSON object with counters summed across all sessions since the gateway started. It is the quickest way to see whether the gateway dropped anything during a run. It is served only on the admin listener (`-admin-addr`, with Prometheus `/metrics`), never on the public port, because load and drop numbers are operator information. `cmd/wsload -admin` and the WSS runner in `harness/runner/wss.py` read it to report gateway drops and gaps.
 
 | Key | Meaning |
 |---|---|

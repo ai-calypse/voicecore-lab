@@ -42,7 +42,7 @@ What the runner does, in order:
 1. Builds the gateway with `go build` into `.cache/bin/gateway`. The binary never goes into the run folder, because that folder is committed evidence.
 2. Starts the orchestrator (`python -m voicecore.server`) with `--trace-dir` pointing into the run folder.
 3. Starts the gateway on `127.0.0.1:8080` with a trace file, and with `-max-sessions-per-ip 0 -tokens-per-minute 0`, because every benchmark client shares one IP.
-4. Waits for `GET /debug/counters` to answer, plus one second for the orchestrator to load the VAD model.
+4. Waits for the gateway's `GET /debug/counters` on its admin port, 127.0.0.1:9091, to answer, plus one second for the orchestrator to load the VAD model.
 5. Runs `packages/web-sdk/bin/headless-client.ts` under Node once per clip, each with `--fixture`, `--out` and `--tail`.
 6. Saves the gateway counters, then stops both processes with SIGINT.
 

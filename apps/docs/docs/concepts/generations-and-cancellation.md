@@ -71,7 +71,7 @@ The Go gateway (`services/realtime-gateway/session/session.go`) applies the fenc
 
 Purging matters because the client-bound queue can hold up to 1,500 agent frames, 30 s of audio. Without the purge, a slow client connection would keep playing a cancelled answer from the gateway's buffer.
 
-You can read `drops_fenced` and the other counters at `GET /debug/counters` on the gateway. The gateway is described in [Realtime gateway](../architecture/realtime-gateway.md).
+You can read `drops_fenced` and the other counters at `GET /debug/counters` on the gateway's admin listener (`-admin-addr`). The gateway is described in [Realtime gateway](../architecture/realtime-gateway.md).
 
 ## How the browser playout fences and acknowledges
 

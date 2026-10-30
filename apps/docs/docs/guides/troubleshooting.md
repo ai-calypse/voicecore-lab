@@ -85,7 +85,7 @@ Check these causes in order:
 3. **The speech cap or its pool ran out.** The session's characters are used up (4,000 with Deepgram Aura-2, 1,500 with Cartesia), or the pool cannot reserve them: `usd` for Deepgram, `cartesia_credits` for Cartesia. The agent says so once, and later answers arrive as text unless one still fits in the characters left.
 4. **The answer was cancelled.** Speaking or typing while the agent plays cancels that generation. Its queued audio is dropped everywhere.
 
-To see which one happened, run the orchestrator with `--trace-dir DIR` and the gateway with `-trace FILE`. Look for `tts` `error` or `retry` events, and for fence events with dropped frames. The gateway's `GET /debug/counters` shows `drops_fenced`.
+To see which one happened, run the orchestrator with `--trace-dir DIR` and the gateway with `-trace FILE`. Look for `tts` `error` or `retry` events, and for fence events with dropped frames. The gateway's `GET /debug/counters`, on its admin listener, shows `drops_fenced`.
 
 ## The agent interrupts itself
 

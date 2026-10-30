@@ -24,11 +24,11 @@ export default defineConfig({
   webServer: [
     { command: "pnpm exec vite --host 127.0.0.1 --port 15173 --strictPort", url: "http://127.0.0.1:15173", env: { VITE_GATEWAY: "http://127.0.0.1:18081" }, reuseExistingServer: false },
     { command: "go run ./cmd/fakeorch -addr 127.0.0.1:18765", cwd: gateway, port: 18765, reuseExistingServer: false },
-    { command: "go run ./cmd/gateway -addr 127.0.0.1:18080 -upstream ws://127.0.0.1:18765", cwd: gateway, url: "http://127.0.0.1:18080/debug/counters", reuseExistingServer: false },
+    { command: "go run ./cmd/gateway -addr 127.0.0.1:18080 -upstream ws://127.0.0.1:18765 -admin-addr 127.0.0.1:18091", cwd: gateway, url: "http://127.0.0.1:18080/healthz", reuseExistingServer: false },
     // the real orchestrator with mock providers, behind a second gateway
     // builds the docs index at start: minutes on a cold CI runner without the vector cache
     { command: "uv run python -m voicecore.server --providers mock --port 18766", cwd: root, url: "http://127.0.0.1:18766/readyz", reuseExistingServer: false, timeout: 600_000 },
-    { command: "go run ./cmd/gateway -addr 127.0.0.1:18081 -upstream ws://127.0.0.1:18766", cwd: gateway, url: "http://127.0.0.1:18081/debug/counters", reuseExistingServer: false },
+    { command: "go run ./cmd/gateway -addr 127.0.0.1:18081 -upstream ws://127.0.0.1:18766", cwd: gateway, url: "http://127.0.0.1:18081/healthz", reuseExistingServer: false },
     // Step 07 WebRTC spike (Pion)
     { command: "go run ./cmd/pion-peer -addr 127.0.0.1:18090", cwd: experiments, url: "http://127.0.0.1:18090/stats", reuseExistingServer: false },
   ],

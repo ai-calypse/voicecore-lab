@@ -92,7 +92,7 @@ Every agent frame carries `generation_id`. When generation `g` is cancelled, eac
 - No message from the client for 10 s → close 4003.
 - Tokens: `POST /v1/session` returns `<expiry>.<nonce>.<HMAC(expiry.nonce.client IP)>`. A token starts **one** session, only from the IP it was minted for (4001 otherwise). A `hello` refused with 1013 or 1011 does not use it up. The client IP is the peer address, or `X-Forwarded-For` only through `-trusted-proxies`.
 - Resume: a `hello` with the `session_id` and matching `resume_key` of a disconnected session within 10 s keeps the session (and its upstream connection). The token may already be spent then. A wrong or missing key, or a `hello` after the window, is a new session and needs an unused token: a spent one gets 4001, so the client fetches a fresh token. The resume fences the newest agent generation (audio queued while the client was away is dropped) and sends `client.resumed` upstream. Clients pick a random first `stream_id` so a resumed session never sees a reused stream.
-- `GET /debug/counters` returns the counters and queue depth as JSON.
+- `GET /debug/counters` returns the counters and queue depth as JSON, on the admin listener only (`-admin-addr`).
 - Abuse limits (defaults; flags on `cmd/gateway`):
   - Requests whose `Host` is not allow-listed are refused with 421 (`localhost`, `127.0.0.1`, `::1`).
   - `POST /v1/session` is limited to 10 per minute per IP (429 beyond that).

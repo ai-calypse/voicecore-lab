@@ -69,7 +69,7 @@ func Defaults(secret []byte, upstream string) Config {
 		TokensPerMinute: 10}
 }
 
-// Counters are totals across sessions, exposed at GET /debug/counters.
+// Counters are totals across sessions, exposed at GET /debug/counters on the admin listener (AdminHandler).
 type Counters struct {
 	DropsDuplicate, DropsStale, DropsOverload, DropsOverloadOut, DropsFenced, DropsRateLimit, Gaps atomic.Int64
 	TokensIssued, RejectedRateLimit, RejectedHost, RejectedUpgrade, RejectedDraining               atomic.Int64
@@ -238,7 +238,6 @@ func (s *Server) Handler() http.Handler {
 		_ = json.NewEncoder(w).Encode(map[string]string{"token": s.Token(ip)})
 	})
 	mux.HandleFunc("GET /v1/ws", s.serveWS)
-	mux.HandleFunc("GET /debug/counters", s.serveCounters)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !s.hostAllowed(r.Host) { // a DNS-rebinding page arrives with its own host name
 			s.c.RejectedHost.Add(1)

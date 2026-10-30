@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from fixtures import MANIFEST, ROOT, load_manifest  # noqa: E402
 
 CLIENT = ROOT / "packages/web-sdk/bin/headless-client.ts"
-COUNTERS_URL = "http://127.0.0.1:8080/debug/counters"  # the gateway start_stack launches
+COUNTERS_URL = "http://127.0.0.1:9091/debug/counters"  # the admin listener of the gateway start_stack launches
 ORCH_READY_URL = "http://127.0.0.1:8765/readyz"  # 503 until the VAD and docs index are loaded
 GATEWAY = ROOT / "services/realtime-gateway"
 
@@ -51,7 +51,7 @@ def start_stack(providers, trace_dir, logs, policy="fixed", server_args=()):
                          cwd=ROOT, stdout=open(logs / "orchestrator.log", "w"), stderr=subprocess.STDOUT),
         # all benchmark clients share one IP: lift the per-IP abuse limits for this local run only
         subprocess.Popen([str(binary), "-addr", "127.0.0.1:8080", "-upstream", "ws://127.0.0.1:8765", "-trace", str(logs / "gateway_trace.jsonl"),
-                          "-max-sessions-per-ip", "0", "-tokens-per-minute", "0"],
+                          "-max-sessions-per-ip", "0", "-tokens-per-minute", "0", "-admin-addr", "127.0.0.1:9091"],
                          stdout=open(logs / "gateway.log", "w"), stderr=subprocess.STDOUT),
     ]
     wait_http(COUNTERS_URL)

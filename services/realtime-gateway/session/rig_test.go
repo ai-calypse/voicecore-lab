@@ -50,6 +50,8 @@ func runCfg(t *testing.T, hold bool, mutate func(*Config), f func(t *testing.T, 
 		gw := New(cfg)
 		gwSrv, gwLn := &http.Server{Handler: gw.Handler()}, n.Listen("gw:80")
 		go func() { _ = gwSrv.Serve(gwLn) }()
+		adminSrv, adminLn := &http.Server{Handler: gw.AdminHandler()}, n.Listen("gwadmin:80")
+		go func() { _ = adminSrv.Serve(adminLn) }()
 		r := &rig{t: t, gw: gw, orch: orch, http: n.HTTPClient(), net: n, orchLn: orchLn}
 		defer func() { // also runs after t.Fatal, so a failure does not turn into a bubble deadlock
 			if hold {
@@ -61,6 +63,7 @@ func runCfg(t *testing.T, hold bool, mutate func(*Config), f func(t *testing.T, 
 			}
 			gw.Close()
 			_ = gwSrv.Close()
+			_ = adminSrv.Close()
 			_ = orchSrv.Close()
 			r.http.CloseIdleConnections()
 			cfg.HTTPClient.CloseIdleConnections()
@@ -85,7 +88,7 @@ func (r *rig) tokenVia(hc *http.Client) string {
 }
 
 func (r *rig) counters() map[string]int64 {
-	resp, err := r.http.Get("http://gw:80/debug/counters")
+	resp, err := r.http.Get("http://gwadmin:80/debug/counters")
 	if err != nil {
 		r.t.Fatal(err)
 	}

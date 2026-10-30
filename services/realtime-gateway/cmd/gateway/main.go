@@ -35,6 +35,7 @@ func main() {
 	trusted := flag.String("trusted-proxies", "", "comma-separated CIDRs whose X-Forwarded-For is believed (e.g. the load balancer)")
 	probe := flag.String("probe", "", "GET this URL and exit 0 on HTTP 200, else 1 (container healthcheck; the image has no curl)")
 	drain := flag.Duration("drain", 25*time.Second, "on SIGTERM, how long open sessions may finish before they are ended")
+	env := flag.String("env", "dev", "dev, or prod: refuse to start unless every public-deployment setting is present")
 	turnstileURL := flag.String("turnstile-url", "", "Turnstile siteverify URL (default Cloudflare's); the secret comes from TURNSTILE_SECRET")
 	adminAddr := flag.String("admin-addr", "", "operator listener for /metrics and /debug/counters, e.g. :9091 (empty = off); keep it off the public internet")
 	flag.Parse()
@@ -46,7 +47,7 @@ func main() {
 	}
 
 	secret := []byte(os.Getenv("GATEWAY_SECRET"))
-	if len(secret) == 0 {
+	if len(secret) == 0 && *env != "prod" { // prod must set it: a random secret dies with the process
 		secret = make([]byte, 32)
 		_, _ = rand.Read(secret)
 	}
@@ -84,6 +85,12 @@ func main() {
 		}
 		defer f.Close()
 		cfg.Trace = f
+	}
+	if *env == "prod" {
+		if err := cfg.ValidateProd(); err != nil {
+			slog.Error("refusing to start with -env prod", "missing", err.Error())
+			os.Exit(1)
+		}
 	}
 	gw := session.New(cfg)
 	srv := &http.Server{Addr: *addr, Handler: gw.Handler(), ReadHeaderTimeout: 10 * time.Second}

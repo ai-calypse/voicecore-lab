@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/netip"
 	"strings"
 	"testing"
 )
@@ -96,5 +97,32 @@ func TestCORSEchoesOnlyAllowedOrigin(t *testing.T) {
 	}
 	if s.Snapshot()["rejected_origin"] != 1 {
 		t.Fatalf("rejected_origin %d", s.Snapshot()["rejected_origin"])
+	}
+}
+
+func TestValidateProd(t *testing.T) {
+	bad := Defaults([]byte("short"), "ws://x")
+	bad.Origins, bad.Hosts = []string{"localhost:*", "voicecore.example"}, []string{"127.0.0.1"}
+	err := bad.ValidateProd()
+	for _, want := range []string{"GATEWAY_SECRET", "TURNSTILE_SECRET", "-origins", "-hosts", "-trusted-proxies"} {
+		if err == nil || !strings.Contains(err.Error(), want) {
+			t.Errorf("ValidateProd() = %v, want it to name %s", err, want)
+		}
+	}
+	good := Defaults([]byte(strings.Repeat("k", 32)), "ws://x")
+	good.TurnstileSecret, good.Origins, good.Hosts = "ts", []string{"voicecore.example"}, []string{"voicecore.example"}
+	good.TrustedProxies = []netip.Prefix{netip.MustParsePrefix("172.16.0.0/12")}
+	if err := good.ValidateProd(); err != nil {
+		t.Fatalf("a complete prod config: %v", err)
+	}
+}
+
+func TestDebugCountersNotOnPublicMux(t *testing.T) {
+	s := New(Defaults([]byte("k"), "ws://x"))
+	if code, _ := get(t, s.Handler(), "GET", "/debug/counters"); code != 404 {
+		t.Fatalf("public /debug/counters: %d, want 404 (admin listener only)", code)
+	}
+	if code, _ := get(t, s.AdminHandler(), "GET", "/debug/counters"); code != 200 {
+		t.Fatalf("admin /debug/counters: %d", code)
 	}
 }

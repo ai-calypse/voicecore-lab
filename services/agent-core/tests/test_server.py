@@ -278,9 +278,12 @@ def test_metrics_endpoint_type_lines(tmp_path):
             p.kill()
 
 
-async def test_settle_bills_all_stt_streams():
+async def test_settle_bills_all_stt_streams(monkeypatch):
     from voicecore.providers.deepgram_stt import MAX_AUDIO_S, PRICE_PER_MIN
     from voicecore.server import live_providers
+
+    for k in ("DEEPGRAM_API_KEY", "OPENROUTER_API_KEY"):  # clients are only built, never called: no real key, no spend
+        monkeypatch.setenv(k, "test-key")
 
     p, settle = live_providers("s-r")
     p["stt"].audio_s = 3.0  # the first stream dropped after 3 s of speech
