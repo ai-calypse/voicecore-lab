@@ -1,18 +1,29 @@
-# Weekly dependency updates. Security updates come as soon as an advisory lands, whatever this schedule says.
+# Monthly, one grouped PR per ecosystem and at most two open at a time: each PR runs CI, and CI minutes on a
+# private repo cost money. Security updates (a separate repository setting) still come as soon as an advisory lands.
 version: 2
 updates:
   - package-ecosystem: gomod
     directories: ["/services/realtime-gateway", "/experiments"]
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 2
+    groups: { go: { patterns: ["*"] } }
   - package-ecosystem: uv
     directory: "/"
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 2
+    groups: { python: { patterns: ["*"] } }
   - package-ecosystem: npm
     directory: "/"
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 2
+    groups: { javascript: { patterns: ["*"] } }
   - package-ecosystem: docker
     directories: ["/services/agent-core", "/services/realtime-gateway", "/apps/demo", "/apps/docs"]
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 2
+    groups: { images: { patterns: ["*"] } }
   - package-ecosystem: github-actions
     directory: "/"
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 2
+    groups: { actions: { patterns: ["*"] } }

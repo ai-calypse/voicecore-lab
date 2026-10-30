@@ -1,5 +1,8 @@
 name: evals
-on: [push, pull_request]
+on:  # main and pull requests only: a branch push would run everything twice (CI minutes on a private repo)
+  push:
+    branches: [main]
+  pull_request:
 
 permissions:
   contents: read
