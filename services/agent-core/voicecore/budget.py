@@ -8,13 +8,20 @@ so a crash before settle() still counts the worst case against the cap.
 import fcntl
 import json
 import os
+import time
 import uuid
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
 CAPS = {"usd": 5.00, "cartesia_credits": 16000}
-LEDGER = Path(os.environ.get("VOICECORE_LEDGER") or Path(__file__).resolve().parents[3] / "benchmarks/spend_ledger.json")
+LEDGER = Path(__file__).resolve().parents[3] / "benchmarks/spend_ledger.json"  # default; VOICECORE_LEDGER overrides
+now = time.time  # wall clock for entry timestamps (daily caps); tests replace it
+
+
+def ledger_file(ledger_path=None) -> Path:
+    """Resolved per call, so a test (or a server flag) that sets VOICECORE_LEDGER after import is honoured."""
+    return Path(ledger_path or os.environ.get("VOICECORE_LEDGER") or LEDGER)
 
 
 class BudgetExceeded(Exception):
@@ -53,23 +60,23 @@ def _locked(path):
         f.write(json.dumps(data, indent=2) + "\n")
 
 
-def total(pool, ledger_path=LEDGER):
-    path = Path(ledger_path)
+def total(pool, ledger_path=None):
+    path = ledger_file(ledger_path)
     return _sum(json.loads(path.read_text()).get("entries", []) if path.exists() else [], pool)
 
 
-def reserve(pool, amount, label="", ledger_path=LEDGER):
-    with _locked(ledger_path) as data:
+def reserve(pool, amount, label="", ledger_path=None):
+    with _locked(ledger_file(ledger_path)) as data:
         spent = _sum(data["entries"], pool)
         if round(spent + amount, 6) > CAPS[pool]:
             raise BudgetExceeded(f"{pool}: {spent} spent + {amount} requested > cap {CAPS[pool]}")
         r = Reservation(uuid.uuid4().hex[:12], pool, amount, label)
-        data["entries"].append({"id": r.id, "pool": pool, "amount": amount, "label": label, "status": "reserved"})
+        data["entries"].append({"id": r.id, "pool": pool, "amount": amount, "label": label, "status": "reserved", "ts": now()})
     return r
 
 
-def settle(reservation, actual, ledger_path=LEDGER, **meta):
-    with _locked(ledger_path) as data:
+def settle(reservation, actual, ledger_path=None, **meta):
+    with _locked(ledger_file(ledger_path)) as data:
         for e in data["entries"]:
             if e.get("id") == reservation.id:
                 e.update(amount=round(actual, 6), reserved=reservation.amount, status="settled", **meta)

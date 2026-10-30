@@ -319,7 +319,7 @@ def main():
         "summary": summarize(sessions, len(cfg["turns"])),
         "sessions": sessions,
         "budget": {"pool": "usd", "cap_usd": budget.CAPS["usd"], "budget_stop": budget_stop,
-                   "this_run_estimated_usd": round(sum(e["amount"] for e in json.loads(budget.LEDGER.read_text())["entries"]
+                   "this_run_estimated_usd": round(sum(e["amount"] for e in json.loads(budget.ledger_file().read_text())["entries"]
                                                        if e.get("run_id") == run_id), 4),
                    "pool_total_estimated_usd": budget.total("usd")},
         "raw_trace": str(raw.relative_to(ROOT)),

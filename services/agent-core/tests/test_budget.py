@@ -45,3 +45,19 @@ def test_settle_replaces_the_reservation_with_the_actual_amount(tmp_path):
     r = budget.reserve("usd", 0.10, label="smoke", ledger_path=path)
     budget.settle(r, 0.03, ledger_path=path)
     assert budget.total("usd", ledger_path=path) == 1.03
+
+
+# Step 09 (S09-T00): tests must never write the real ledger, and entries carry a wall-clock time
+
+def test_ledger_path_is_resolved_at_call_time(tmp_path, monkeypatch):
+    path = tmp_path / "late.json"
+    monkeypatch.setenv("VOICECORE_LEDGER", str(path))  # set after the module was imported
+    budget.reserve("usd", 0.01, label="late")
+    assert json.loads(path.read_text())["entries"][0]["label"] == "late"
+
+
+def test_reserve_writes_wall_clock_ts(tmp_path, monkeypatch):
+    monkeypatch.setattr(budget, "now", lambda: 1_761_800_000.0)
+    path = ledger_with(tmp_path, [])
+    budget.reserve("usd", 0.01, ledger_path=path)
+    assert json.loads(path.read_text())["entries"][0]["ts"] == 1761800000.0
