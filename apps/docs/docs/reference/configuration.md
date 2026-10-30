@@ -106,6 +106,7 @@ VoiceCore reads the environment variables below. Only the three provider keys ar
 | `LOG_FORMAT` | gateway, orchestrator | `json` for one JSON object per log line (docker compose sets it); anything else, or unset, gives plain text |
 | `VOICECORE_LEDGER` | orchestrator, harness | path of the spend ledger; default `benchmarks/spend_ledger.json` |
 | `PROVIDERS` | docker compose | `mock` (default) or `live`, passed to the orchestrator |
+| `PUBLIC_GATEWAY` | docker compose build | the gateway URL baked into the demo and docs images, for the widget and the pages' `connect-src`; default `http://localhost:8080` |
 | `HOST_UID`, `HOST_GID` | docker compose | user the orchestrator container runs as; default 10001 |
 | `VITE_GATEWAY` | demo app build | gateway URL for the demo page's widget; default `http://localhost:8080` |
 | `VOICECORE_GATEWAY` | docs site build | gateway URL for this site's widget; default `http://localhost:8080` |
@@ -145,6 +146,8 @@ PROVIDERS=live docker compose up          # live providers, keys from .env
 docker compose --profile monitoring up --build --wait   # adds Prometheus, Alertmanager, Loki, Alloy and Grafana
 HOST_UID=$(id -u) HOST_GID=$(id -g) PROVIDERS=live docker compose up   # Linux
 ```
+
+Both web images send security headers from nginx: a Content Security Policy, `X-Content-Type-Options: nosniff` and `Referrer-Policy: strict-origin-when-cross-origin`. The policy allows scripts only from the site itself, from Cloudflare Turnstile and by the hashes of the few inline scripts Docusaurus writes. `scripts/csp.mjs` computes the hashes at build time. Network connections are allowed to the site and to the gateway in `PUBLIC_GATEWAY`. The pages cannot be framed (`frame-ancestors 'none'`).
 
 The `monitoring` profile adds Prometheus (`127.0.0.1:9090`), Alertmanager (`127.0.0.1:9093`), an alert sink that prints each alert as a log line (`docker compose logs alert-sink`), Loki with 7-day log retention, Alloy to ship the containers' logs, and Grafana with the VoiceCore dashboard (`127.0.0.1:3001`). All ports bind to 127.0.0.1 only. The orchestrator image bakes in the embedding model and the docs vectors for `apps/docs/docs`, so it starts in seconds but the first build takes a few minutes. Live mode writes the shared ledger in `./benchmarks`, mounted into the container; on Linux, run the container as your own user so it can write there.
 

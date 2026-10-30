@@ -38,13 +38,13 @@ services:
     depends_on:
       agent-core: { condition: service_healthy }
   demo:
-    build: { context: ., dockerfile: apps/demo/Dockerfile }
+    build: { context: ., dockerfile: apps/demo/Dockerfile, args: { VITE_GATEWAY: "${PUBLIC_GATEWAY:-http://localhost:8080}" } }
     ports: ["127.0.0.1:5173:8080"]
     restart: unless-stopped
     healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"], interval: 10s, timeout: 3s, retries: 3 }
     depends_on: [gateway]
   docs:
-    build: { context: ., dockerfile: apps/docs/Dockerfile }
+    build: { context: ., dockerfile: apps/docs/Dockerfile, args: { VOICECORE_GATEWAY: "${PUBLIC_GATEWAY:-http://localhost:8080}" } }
     ports: ["127.0.0.1:3000:8080"]
     restart: unless-stopped
     healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"], interval: 10s, timeout: 3s, retries: 3 }
