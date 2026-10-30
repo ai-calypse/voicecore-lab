@@ -38,11 +38,12 @@ def wait_http(url, timeout=60):
 
 def start_stack(providers, trace_dir, logs):
     go = shutil.which("go")
-    subprocess.run([go, "build", "-o", str(logs / "gateway"), "./cmd/gateway"], cwd=GATEWAY, check=True)
+    binary = ROOT / ".cache/bin/gateway"  # never inside the run folder: that folder is committed evidence
+    subprocess.run([go, "build", "-o", str(binary), "./cmd/gateway"], cwd=GATEWAY, check=True)
     procs = [
         subprocess.Popen([sys.executable, "-m", "voicecore.server", "--providers", providers, "--trace-dir", str(trace_dir)],
                          cwd=ROOT, stdout=open(logs / "orchestrator.log", "w"), stderr=subprocess.STDOUT),
-        subprocess.Popen([str(logs / "gateway"), "-addr", "127.0.0.1:8080", "-upstream", "ws://127.0.0.1:8765"],
+        subprocess.Popen([str(binary), "-addr", "127.0.0.1:8080", "-upstream", "ws://127.0.0.1:8765"],
                          stdout=open(logs / "gateway.log", "w"), stderr=subprocess.STDOUT),
     ]
     wait_http("http://127.0.0.1:8080/debug/counters")
