@@ -94,7 +94,7 @@ Logs: `{stack="voicecore", service="agent-core"} |= "provider error"` in Grafana
 
 **Meaning.** A provider's circuit breaker has been open for a minute: after repeated failures, the orchestrator stopped calling it and fails fast (Step 09 Phase 6). Users hear "busy", or get text-only answers.
 
-**Check.** Which provider: the `provider` label. Then that provider's errors, as in ProviderErrorsHigh.
+**Check.** Which provider: the `provider` label. `stt`, `llm` and `tts` are the orchestrator's; `upstream` is the gateway's dial to the orchestrator, so check OrchestratorDown and `docker compose ps agent-core` first. For the others, look at that provider's errors, as in ProviderErrorsHigh.
 
 **Fix.** Usually none: the breaker probes again after 30 s and closes on success. If the provider stays down, follow ProviderErrorsHigh.
 

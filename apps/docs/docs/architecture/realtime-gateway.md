@@ -43,7 +43,7 @@ The token is not bound to a user, and the endpoint answers with `Access-Control-
 | token invalid or expired | 4001 |
 | `version` not 1, mic rate not 16000, `frame_ms` not 20, or playout rate not 24000 | 4002 |
 | session cap reached, in total or per IP | 1013 |
-| the orchestrator cannot be dialled within 5 s | 1011 |
+| the orchestrator cannot be dialled within 5 s, or its circuit breaker is open | 1011 |
 
 For a new session the gateway creates an ID, `s-<copy id>-` followed by 16 hex characters, for example `s-gw-3f9c2a1b7d4e6f80`. The copy id comes from `-copy-id` (default `gw`), so with several gateways a load balancer can send a resume to the copy that owns the session. The gateway also creates a resume key, 32 random bytes as 64 hex characters, and dials `<upstream>/v1/session/{id}`. It starts two goroutines that write to and read from the orchestrator, then sends `welcome{session_id, resume_key, resume_window_ms, resumed}`. A `hello` that carries the `session_id` and the matching `resume_key` of a detached session resumes that session instead.
 
@@ -186,7 +186,9 @@ Both gateway passes together add 0.19 ms at the median (fake-provider, loopback,
 
 ## How the gateway reports health and shuts down gracefully
 
-`GET /healthz` answers 200 `{"status": "ok", "version": ...}` while the process is alive. `GET /readyz` answers 200 `{"ready": true}`, or 503 `{"ready": false, "draining": true}` once a drain has begun, so a load balancer stops sending new users. The image is distroless, with no curl, so the container healthcheck runs the binary itself: `/gateway -probe http://127.0.0.1:8080/readyz` exits 0 on HTTP 200 and 1 otherwise.
+`GET /healthz` answers 200 `{"status": "ok", "version": ...}` while the process is alive. `GET /readyz` answers 200 `{"ready": true}`, or 503 `{"ready": false, "draining": true}` once a drain has begun, so a load balancer stops sending new users. It also answers 503 with `"upstream": "open"` while the orchestrator dial's circuit breaker is open.
+
+**Dialling the orchestrator.** A dial refused outright is retried once after 300 ms: nothing reached the orchestrator, so nothing was reserved there. A dial that times out is never retried, because the orchestrator may have started the session and reserved its budget. Five failed session dials in a row within 60 s open the dial's circuit breaker: for 30 s new sessions close with 1011 at once, without dialling. Then one session's dial goes out as a probe; its success closes the breaker. The state is exported as `gateway_breaker_state{provider="upstream"}`. The image is distroless, with no curl, so the container healthcheck runs the binary itself: `/gateway -probe http://127.0.0.1:8080/readyz` exits 0 on HTTP 200 and 1 otherwise.
 
 On SIGINT or SIGTERM the gateway drains instead of cutting calls off. New tokens get HTTP 503 and new sessions close with 1013 `draining`, while open sessions keep working, and a client that reconnects within the resume window can still resume. After `-drain` (25 s by default) the remaining sessions end with `session.ended{reason: "shutdown"}`, then the HTTP server shuts down and the process exits 0.
 

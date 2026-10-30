@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"syscall"
 )
 
@@ -39,6 +40,9 @@ func (n *Network) dial(ctx context.Context, addr, from string) (net.Conn, error)
 	n.mu.Lock()
 	l := n.listeners[addr]
 	n.mu.Unlock()
+	if l != nil {
+		l.dials.Add(1)
+	}
 	if l == nil || l.refuse() {
 		return nil, refused(addr)
 	}
@@ -78,7 +82,11 @@ type Listener struct {
 	net     *Network
 	mu      sync.Mutex
 	refuseN int
+	dials   atomic.Int64
 }
+
+// Dials counts every dial to this listener, refused or not (tests check that a dial did not happen).
+func (l *Listener) Dials() int64 { return l.dials.Load() }
 
 func (l *Listener) refuse() bool {
 	l.mu.Lock()

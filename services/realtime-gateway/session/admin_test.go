@@ -31,7 +31,8 @@ func TestAdminHandlerServesMetricsAndCounters(t *testing.T) {
 	}
 	code, body := get(t, admin, "GET", "/metrics")
 	for _, want := range []string{"# TYPE gateway_drops_total counter", `gateway_drops_total{reason="fenced"} 0`,
-		"gateway_tokens_issued_total 1", `gateway_rejected_total{reason="draining"} 1`, "# TYPE gateway_sessions gauge"} {
+		"gateway_tokens_issued_total 1", `gateway_rejected_total{reason="draining"} 1`, "# TYPE gateway_sessions gauge",
+		`gateway_breaker_state{provider="upstream"} 0`} {
 		if code != 200 || !strings.Contains(body, want) {
 			t.Errorf("/metrics %d lacks %q", code, want)
 		}

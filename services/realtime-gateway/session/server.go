@@ -20,6 +20,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"time"
 
 	"github.com/ai-calypse/voicecore-lab/services/realtime-gateway/protocol"
@@ -81,6 +82,7 @@ type Server struct {
 	tokens   map[string]*bucket // token issuance per client IP
 	draining atomic.Bool        // no new sessions; open ones (and their resumes) continue
 	nonces   map[string]int64   // used token nonces until their expiry (unix s): a token starts one session
+	upstream *breaker           // the orchestrator dial's circuit breaker
 	swept    int64              // unix s of the last nonce sweep
 }
 
@@ -152,7 +154,7 @@ func New(cfg Config) *Server {
 		cfg.CopyID = "gw"
 	}
 	return &Server{cfg: cfg, start: time.Now(), sessions: map[string]*session{}, perIP: map[string]int{}, tokens: map[string]*bucket{},
-		nonces: map[string]int64{}}
+		nonces: map[string]int64{}, upstream: newBreaker()}
 }
 
 func (s *Server) Handler() http.Handler {
@@ -163,6 +165,10 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /readyz", func(w http.ResponseWriter, r *http.Request) {
 		if s.draining.Load() {
 			writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ready": false, "draining": true})
+			return
+		}
+		if !s.upstream.ready() {
+			writeJSON(w, http.StatusServiceUnavailable, map[string]any{"ready": false, "draining": false, "upstream": "open"})
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"ready": true, "draining": false})
@@ -339,6 +345,7 @@ var (
 	errBusy             = errors.New("session limit reached")
 	errDraining         = errors.New("draining")
 	errUpstreamNotReady = errors.New("orchestrator not ready")
+	errUpstreamOpen     = errors.New("orchestrator circuit breaker open")
 )
 
 func (s *Server) hello(c *websocket.Conn, ip string) (ss *session, resumed bool, code websocket.StatusCode, reason string) {
@@ -382,6 +389,9 @@ func (s *Server) hello(c *websocket.Conn, ip string) (ss *session, resumed bool,
 	case errors.Is(err, errBusy):
 		s.c.RejectedBusy.Add(1)
 		return nil, false, websocket.StatusTryAgainLater, "too many sessions"
+	case errors.Is(err, errUpstreamOpen):
+		s.c.RejectedUpstream.Add(1)
+		return nil, false, websocket.StatusInternalError, "orchestrator unavailable"
 	}
 	if err != nil {
 		s.c.RejectedUpstream.Add(1)
@@ -419,15 +429,28 @@ func (s *Server) newSession(ip string) (*session, error) {
 	sid := "s-" + s.cfg.CopyID + "-" + hex.EncodeToString(id)
 	key := make([]byte, 32)
 	_, _ = rand.Read(key)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	up, resp, err := websocket.Dial(ctx, s.cfg.Upstream+"/v1/session/"+sid, &websocket.DialOptions{HTTPClient: s.cfg.HTTPClient})
+	if !s.upstream.allow() {
+		return nil, errUpstreamOpen
+	}
+	dial := func() (*websocket.Conn, *http.Response, error) {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) // bounds the handshake only
+		defer cancel()
+		return websocket.Dial(ctx, s.cfg.Upstream+"/v1/session/"+sid, &websocket.DialOptions{HTTPClient: s.cfg.HTTPClient})
+	}
+	up, resp, err := dial()
+	if err != nil && errors.Is(err, syscall.ECONNREFUSED) { // refused: nothing reached the orchestrator, so one retry is safe
+		time.Sleep(300 * time.Millisecond) // (a timed-out dial may have reserved budget there: never retried)
+		up, resp, err = dial()
+	}
 	if err != nil {
 		if resp != nil && resp.StatusCode == http.StatusServiceUnavailable { // starting or draining: retry shortly
+			s.upstream.release()
 			return nil, errUpstreamNotReady
 		}
+		s.upstream.failure()
 		return nil, fmt.Errorf("dial %s: %w", s.cfg.Upstream, err)
 	}
+	s.upstream.success()
 	up.SetReadLimit(1 << 20)
 	upCtx, cancelUp := context.WithCancel(context.Background())
 	ss := &session{id: sid, resumeKey: hex.EncodeToString(key), ip: ip, srv: s, up: up, upCtx: upCtx, cancelUp: cancelUp, claimed: true, started: time.Now(),

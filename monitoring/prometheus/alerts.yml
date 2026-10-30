@@ -37,7 +37,7 @@ groups:
         labels: { severity: warning }
         annotations: { summary: The orchestrator event loop p95 lag is over 100 ms, runbook_url: "https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#eventlooplaghigh" }
       - alert: BreakerOpen
-        expr: max by (provider) (voicecore_breaker_state) == 2
+        expr: max by (provider) (voicecore_breaker_state or gateway_breaker_state) == 2
         for: 1m
         labels: { severity: warning }
         annotations: { summary: A provider circuit breaker has been open for a minute, runbook_url: "https://github.com/ai-calypse/voicecore-lab/blob/main/docs/ops/runbooks.md#breakeropen" }

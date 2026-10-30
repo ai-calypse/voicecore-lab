@@ -21,11 +21,12 @@ func TestMain(m *testing.M) { goleak.VerifyTestMain(m) }
 
 // rig is a gateway plus fake orchestrator on an in-memory network, inside a synctest bubble.
 type rig struct {
-	t    *testing.T
-	gw   *Server
-	orch *fakeorch.Orch
-	http *http.Client
-	net  *memnet.Network
+	t      *testing.T
+	gw     *Server
+	orch   *fakeorch.Orch
+	http   *http.Client
+	net    *memnet.Network
+	orchLn *memnet.Listener
 }
 
 func run(t *testing.T, hold bool, f func(t *testing.T, r *rig)) { runCfg(t, hold, nil, f) }
@@ -49,7 +50,7 @@ func runCfg(t *testing.T, hold bool, mutate func(*Config), f func(t *testing.T, 
 		gw := New(cfg)
 		gwSrv, gwLn := &http.Server{Handler: gw.Handler()}, n.Listen("gw:80")
 		go func() { _ = gwSrv.Serve(gwLn) }()
-		r := &rig{t: t, gw: gw, orch: orch, http: n.HTTPClient(), net: n}
+		r := &rig{t: t, gw: gw, orch: orch, http: n.HTTPClient(), net: n, orchLn: orchLn}
 		defer func() { // also runs after t.Fatal, so a failure does not turn into a bubble deadlock
 			if hold {
 				select {
