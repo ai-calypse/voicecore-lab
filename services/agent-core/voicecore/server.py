@@ -30,6 +30,7 @@ from voicecore.providers.deepgram_stt import MAX_AUDIO_S, PRICE_PER_MIN
 from voicecore.providers.base import ProviderError
 from voicecore.providers.factory import make_live
 from voicecore.providers.mock import LLMScript, MockLLM, MockSTT, MockTTS
+from voicecore.resilience import Breaker
 from voicecore.runtime.session import Session
 from voicecore.trace import JsonlSink, Tracer
 from voicecore.turntaking.floor import Policy
@@ -139,6 +140,7 @@ class AppState:
     index: Index | None = None
     sessions: set = field(default_factory=set)
     metrics: Callable[[dict], None] | None = None  # a trace sink that feeds the metrics (main sets it)
+    breakers: dict[str, Breaker] = field(default_factory=lambda: {p: Breaker(p) for p in ("stt", "llm", "tts")})  # per process
 
     def drain(self):
         self.draining = True
@@ -217,7 +219,8 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
             if trace_dir:
                 sinks.append(sink := JsonlSink(trace_dir / f"{sid}.jsonl"))
             engine = AnswerEngine(state.index, providers["llm"], name=name)
-            session = Session(sid, send=ws.send, vad=SileroVAD(), policy=policy, tracer=tracer, answer=engine.stream, **providers)
+            session = Session(sid, send=ws.send, vad=SileroVAD(), policy=policy, tracer=tracer, answer=engine.stream,
+                              breakers=state.breakers, **providers)
             tracer.emit("session", "started")
             await session.start()
             log.info("session started", extra={"session_id": sid})
@@ -289,7 +292,7 @@ async def main():
         llm_opts["reasoning"] = None if args.llm_reasoning == "none" else args.llm_reasoning
     state = AppState(providers=args.providers)
     if args.metrics_port:
-        state.metrics = metrics.serve_metrics(args.metrics_port, args.metrics_host)
+        state.metrics = metrics.serve_metrics(args.metrics_port, args.metrics_host, state.breakers)
     handler = handler_for(args.providers, args.trace_dir, state, policy, llm_opts, tts=args.tts)
     async with serve(handler, args.host, args.port, max_size=1 << 20, process_request=http_routes(state)):
         log.info("orchestrator listening on ws://%s:%d (%s providers), loading models", args.host, args.port, args.providers)

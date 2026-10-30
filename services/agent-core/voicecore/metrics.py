@@ -5,6 +5,7 @@ from opentelemetry.metrics import CallbackOptions, Meter, Observation
 from opentelemetry.sdk.metrics.view import ExplicitBucketHistogramAggregation, View
 
 from voicecore import budget
+from voicecore.resilience import STATES, Breaker
 from voicecore.stages import Stages
 
 STAGE_BUCKETS_MS = (50, 100, 200, 300, 500, 750, 1000, 1200, 1500, 2000, 3000, 5000, 10000)
@@ -17,8 +18,8 @@ CALLS = {("llm", "request"), ("stt", "connect"), ("tts", "request"), ("tts", "re
 class MetricsSink:
     """A trace sink: every session's Tracer sends its events here, and this records the metrics they imply."""
 
-    def __init__(self, meter: Meter):
-        self.stages = Stages()
+    def __init__(self, meter: Meter, breakers: dict[str, Breaker] | None = None):
+        self.stages, self.breakers = Stages(), breakers or {}
         self.stage_ms = meter.create_histogram("voicecore_stage_ms", description="server-side latency stage (voicecore/stages.py)")
         self.loop_lag = meter.create_histogram("voicecore_event_loop_lag_ms", description="asyncio event loop lag, sampled every 1 s")
         self.turns = meter.create_counter("voicecore_turns", description="finished turns by kind and result")
@@ -26,6 +27,8 @@ class MetricsSink:
         self.calls = meter.create_counter("voicecore_provider_calls", description="provider calls (LLM requests, STT streams, TTS generations)")
         self.errors = meter.create_counter("voicecore_provider_errors", description="provider errors by kind")
         meter.create_observable_gauge("voicecore_spend_usd", [self._spend], description="money spent or reserved, from the ledger")
+        meter.create_observable_gauge("voicecore_breaker_state", [self._breaker_state], description="0 closed, 1 half-open, 2 open")
+        meter.create_observable_counter("voicecore_breaker_opens", [self._breaker_opens], description="times a breaker opened")
 
     def __call__(self, e: dict):
         for p in self.stages.feed(e):
@@ -43,6 +46,14 @@ class MetricsSink:
     def _spend(self, _: CallbackOptions):
         yield Observation(budget.total("usd"), {"pool": "usd"})
 
+    def _breaker_state(self, _: CallbackOptions):
+        for provider, b in self.breakers.items():
+            yield Observation(STATES[b.state], {"provider": provider})
+
+    def _breaker_opens(self, _: CallbackOptions):
+        for provider, b in self.breakers.items():
+            yield Observation(b.opens, {"provider": provider})
+
     async def sample_loop_lag(self, every_s: float = 1.0):
         """Runs forever: how late the loop wakes a timer is how long every session waits behind other work."""
         loop = asyncio.get_running_loop()
@@ -56,7 +67,7 @@ def loop_lag_ms(expected_s: float, actual_s: float) -> float:
     return max(0.0, (actual_s - expected_s) * 1000)
 
 
-def serve_metrics(port: int, host: str = "0.0.0.0") -> MetricsSink:
+def serve_metrics(port: int, host: str = "0.0.0.0", breakers: dict[str, Breaker] | None = None) -> MetricsSink:
     """Expose /metrics on its own port (operators only: localhost in dev compose, unpublished in prod) and return the sink."""
     from opentelemetry.exporter.prometheus import PrometheusMetricReader
     from opentelemetry.sdk.metrics import MeterProvider
@@ -67,5 +78,5 @@ def serve_metrics(port: int, host: str = "0.0.0.0") -> MetricsSink:
     reader = PrometheusMetricReader(registry=registry)
     provider = MeterProvider(resource=Resource.create({SERVICE_NAME: "agent-core"}), metric_readers=[reader], views=VIEWS)
     start_http_server(port, host, registry=registry)
-    return MetricsSink(provider.get_meter("voicecore"))
+    return MetricsSink(provider.get_meter("voicecore"), breakers)
 

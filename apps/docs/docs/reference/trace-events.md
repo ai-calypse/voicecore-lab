@@ -54,6 +54,8 @@ The orchestrator emits these events in spans `stt`, `llm` and `tts`. They time t
 | `llm` | `first_token` | none | the first answer token arrived |
 | `llm` | `backoff` | `wait_s` | an HTTP 429 before any text; the session waits 1, 2 then 4 s |
 | `llm` | `stall` | `after_s` | no token for 8 s; the agent asks the user to repeat |
+| `llm` | `deadline` | `after_s` | the LLM part of the turn passed 20 s; the agent says it is having trouble |
+| `stt`, `llm`, `tts` | `breaker_open` | none | the provider's circuit breaker was open, so the call was not made |
 | `llm` | `error` | `kind` | the provider call failed |
 | `llm` | `internal_error` | `kind` | VoiceCore's own answer code raised; `kind` is the exception name. It is not counted as a provider error |
 | `tts` | `request` | none | the first text of a generation went to the TTS |

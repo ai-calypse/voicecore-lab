@@ -134,8 +134,14 @@ Every turn ends with an answer and an end, even when a provider fails. Provider 
 | TTS error | still sends the text answer; retries once on a fresh stream if none of it was heard |
 | STT cap reached | says voice input has reached its limit; typed questions keep working |
 | client paused for 30 s | cancels the playing generation |
+| the LLM part of a turn passes 20 s, even with tokens still trickling in | stops it and says it is having trouble answering; speech of an answer already written is never cut |
+| the LLM circuit breaker is open | says it is busy without calling the provider |
+| the STT circuit breaker is open when a session starts | says "Voice input is unavailable right now; you can type your question." once, ignores the microphone, answers typed questions |
+| the TTS circuit breaker is open | answers in text and says once that spoken replies are unavailable |
 
-The TTS retry is skipped after a fatal error, and it never repeats speech the user already heard. STT has no reconnect yet; a code note leaves it until live sessions show socket drops.
+The TTS retry is skipped after a fatal error, and it never repeats speech the user already heard.
+
+**Circuit breakers.** Each orchestrator process keeps one breaker per provider kind (`stt`, `llm`, `tts`), shared by all its sessions (`voicecore/resilience.py`). Five retryable or rate-limited failures in a row within 60 s open it, and for 30 s every call fails fast. Then one call goes out as a probe. Its success closes the breaker; its failure, or 10 s without an answer, opens it again. A probe cancelled by a barge-in leaves the breaker open, never stuck. Fatal errors, such as a bad key or a session cap, never count. The state is exported as `voicecore_breaker_state` (0 closed, 1 half-open, 2 open) and alerts as `BreakerOpen`. STT has no reconnect yet; a code note leaves it until live sessions show socket drops.
 
 ## How the orchestrator traces a session
 

@@ -269,7 +269,8 @@ def test_metrics_endpoint_type_lines(tmp_path):
         asyncio.run(one_turn())
         body = urllib.request.urlopen(f"http://127.0.0.1:{mport}/metrics", timeout=5).read().decode()
         for line in ("# TYPE voicecore_turns_total counter", "# TYPE voicecore_stage_ms histogram",
-                     "# TYPE voicecore_spend_usd gauge", "# TYPE voicecore_provider_calls_total counter"):
+                     "# TYPE voicecore_spend_usd gauge", "# TYPE voicecore_provider_calls_total counter",
+                     "# TYPE voicecore_breaker_state gauge"):
             assert line in body, line
     finally:
         p.send_signal(signal.SIGTERM)

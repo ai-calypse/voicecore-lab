@@ -17,6 +17,7 @@ import numpy as np
 from voicecore import protocol
 from voicecore.clock import now_us
 from voicecore.providers.base import LLM, Final, Partial, ProviderError, STTStream, TextDelta, TTSStream
+from voicecore.resilience import Breaker
 from voicecore.trace import Tracer
 from voicecore.turntaking.floor import Event, Floor, Policy, power
 
@@ -31,6 +32,13 @@ TROUBLE = "Sorry, I'm having trouble answering right now. Please try again."
 VOICE_LIMIT = "Voice input has reached its limit for this session. You can keep typing your questions."
 VOICE_OFF = "Spoken replies have reached their limit for this session, so I'll answer in text. Close and reopen me to talk again."
 BUSY = "I'm busy right now. Please try again in a moment."
+VOICE_INPUT_DOWN = "Voice input is unavailable right now; you can type your question."
+SPEECH_DOWN = "Spoken replies are unavailable right now, so I'll answer in text."
+COUNTED = ("retryable", "rate_limited")  # provider error kinds that count against a circuit breaker
+
+
+class TurnDeadline(Exception):
+    """The LLM part of a turn took longer than turn_deadline_s, even though tokens kept trickling in."""
 BACKOFF_S = (1, 2, 4)  # after an HTTP 429 before any answer text
 PAUSE_CANCEL_S = 30  # a generation paused this long on the client is cancelled
 TEXT_MAX_CHARS = 500  # same limit as the gateway
@@ -53,15 +61,21 @@ class Session:
     def __init__(self, sid: str, *, llm: LLM, tts: TTSStream, send: Callable[[bytes | str], Awaitable[None]],
                  stt: STTStream | None = None, vad=None, policy: Policy = Policy(), tracer: Tracer | None = None,
                  answer: Answer | None = None, stall_s: float = 8.0, final_wait_s: float = 5.0,
-                 tts_factory: Callable[[], TTSStream] | None = None):
-        """tts_factory: builds a fresh TTS stream for the one retry after a TTS failure."""
+                 tts_factory: Callable[[], TTSStream] | None = None, breakers: dict[str, Breaker] | None = None,
+                 turn_deadline_s: float = 20.0):
+        """tts_factory: builds a fresh TTS stream for the one retry after a TTS failure.
+        breakers: the process's circuit breakers by provider kind (stt, llm, tts), shared by its sessions."""
         self.sid, self.llm, self.tts, self.stt, self.vad = sid, llm, tts, stt, vad
         self.tts_factory = tts_factory
         self._send = send
         self.trace = tracer or Tracer(sid)
         self.floor = Floor(policy)
         self.answer = answer or self._llm_answer
-        self.stall_s, self.final_wait_s = stall_s, final_wait_s
+        self.stall_s, self.final_wait_s, self.turn_deadline_s = stall_s, final_wait_s, turn_deadline_s
+        self.breakers = breakers or {}
+        self._probes: set[str] = set()  # providers whose half-open probe this session holds
+        self._voice_input_down = False
+        self._speech_down_said = False
         self.state = State.LISTENING
         self.gen = 0  # newest generation id
         self.fence = 0  # generations <= fence are dead
@@ -100,6 +114,11 @@ class Session:
     # --- lifecycle -------------------------------------------------------------
 
     async def start(self):
+        if self.stt and not self._allow("stt"):  # voice input is down for new sessions; typing still works
+            with contextlib.suppress(Exception):
+                await self.stt.close()
+            self.stt, self._voice_input_down = None, True
+            await self.start_generation("t0", "", reply=VOICE_INPUT_DOWN)
         for p in (self.stt, self.llm, self.tts):  # open provider connections now, not on the user's first turn
             if hasattr(p, "warm"):
                 self._tasks.append(asyncio.create_task(p.warm()))
@@ -118,6 +137,8 @@ class Session:
         for t in [*self._tasks, *([self.task] if self.task else [])]:
             with contextlib.suppress(asyncio.CancelledError, Exception):
                 await t
+        for provider in list(self._probes):  # a probe that never got an answer must not leave its breaker stuck
+            self._release(provider)
         for p in (self.stt, self.tts):
             if p:
                 with contextlib.suppress(Exception):
@@ -127,6 +148,8 @@ class Session:
 
     async def on_frame(self, f: protocol.Frame):
         """One 20 ms mic frame from the gateway."""
+        if self._voice_input_down:  # the user was told to type; speech would only be re-prompted
+            return
         if f.stream_id == self._revoked_stream:  # the user turned this mic off; a new stream means new consent
             return
         self._stream = f.stream_id
@@ -331,6 +354,10 @@ class Session:
             await speak(reply)
         else:
             for attempt, wait in enumerate((*BACKOFF_S, None)):
+                if not self._allow("llm"):
+                    self._failed.add(g)
+                    await speak(BUSY)
+                    break
                 self.trace.emit("llm", "request", gen=g, turn_id=turn_id, attempt=attempt)
                 rate_limited = await self._stream_answer(g, text, speak, sep)
                 if not self._alive(g):
@@ -359,10 +386,14 @@ class Session:
         """The text answer is already delivered. Retry speech once, else end the generation (no audio will end it)."""
         if g != self.active_gen:
             return
-        fatal = self._tts_failed.get(g) == "fatal"
-        if not fatal and await self._retry_tts(g, self._answers.get(g, "")):
+        kind = self._tts_failed.get(g)
+        fatal = kind == "fatal"
+        if kind != "breaker" and not fatal and await self._retry_tts(g, self._answers.get(g, "")):
             return
         self.active_gen, self.state = None, State.LISTENING
+        if kind == "breaker" and not self._speech_down_said:  # the TTS breaker is open: say so once, then text only
+            self._speech_down_said = True
+            await self.start_generation(self.turn_id or "t0", "", reply=SPEECH_DOWN)
         if fatal and not self._voice_off:  # e.g. the per-session TTS cap: say so once (as text), not silently
             self._voice_off = True
             await self.start_generation(self.turn_id or "t0", "", reply=VOICE_OFF)
@@ -371,12 +402,20 @@ class Session:
         """Streams one answer attempt into speak(). Returns True only for an HTTP 429 before any text (retry it)."""
         it = aiter(self.answer(text, self.history))
         first = True
+        loop = asyncio.get_running_loop()
+        deadline = loop.time() + self.turn_deadline_s  # the LLM only: playback after the text is done is not limited
         try:
             while True:
+                left = deadline - loop.time()
                 try:
-                    item = await asyncio.wait_for(anext(it), self.stall_s)
+                    item = await asyncio.wait_for(anext(it), max(0.0, min(self.stall_s, left)))
                 except StopAsyncIteration:
+                    self._breaker("llm", failed=False)
                     return False
+                except TimeoutError:
+                    if loop.time() >= deadline:
+                        raise TurnDeadline from None
+                    raise
                 if not self._alive(g):
                     return False
                 if isinstance(item, dict):  # e.g. answer.sources from the answer engine
@@ -386,8 +425,14 @@ class Session:
                     self.trace.emit("llm", "first_token", gen=g)
                     first = False
                 await speak(item)
+        except TurnDeadline:
+            self.trace.emit("llm", "deadline", gen=g, after_s=self.turn_deadline_s)
+            self._breaker("llm", failed=True)
+            self._failed.add(g)
+            await speak(sep() + TROUBLE)
         except TimeoutError:
             self.trace.emit("llm", "stall", gen=g, after_s=self.stall_s)
+            self._breaker("llm", failed=True)
             self._failed.add(g)
             await speak(sep() + REPROMPT)
         except ProviderError as err:
@@ -399,8 +444,12 @@ class Session:
         except Exception as err:  # never leave a turn without an answer and an end
             self.trace.emit("llm", "internal_error", gen=g, kind=type(err).__name__)  # not a provider error: our own bug
             log.exception("answer failed", extra={"session_id": self.sid, "gen": g})  # our bug, not the provider's
+            self._breaker("llm", failed=False)
             self._failed.add(g)
             await speak(sep() + TROUBLE)
+        except asyncio.CancelledError:  # e.g. a barge-in: no verdict on the provider
+            self._release("llm")
+            raise
         finally:
             with contextlib.suppress(Exception):
                 await it.aclose()
@@ -408,7 +457,7 @@ class Session:
 
     async def _retry_tts(self, g: int, answer: str) -> bool:
         """One retry on a fresh TTS stream, only if none of this answer was heard yet (never repeat speech)."""
-        if not self.tts_factory or g in self._tts_retried or self._seq.get(g):
+        if not self.tts_factory or g in self._tts_retried or self._seq.get(g) or not self._allow("tts"):
             return False
         self._tts_retried.add(g)
         self._tts_failed.pop(g, None)
@@ -427,10 +476,15 @@ class Session:
     async def _synth(self, g: int, text: str, last: bool):
         if not self._alive(g):
             return
+        if self._tts_failed.get(g) == "breaker":
+            return
         spoken = speechify(text)
         if spoken or last:
             if g not in self._tts_requested:  # one per generation: the denominator of the TTS error ratio
                 self._tts_requested.add(g)
+                if not self._allow("tts"):
+                    self._tts_failed[g] = "breaker"
+                    return
                 self.trace.emit("tts", "request", gen=g)
             try:
                 await self.tts.synth(g, spoken, last)
@@ -477,6 +531,7 @@ class Session:
         self._seq[g] = seq + 1
         if seq == 0:
             self.trace.emit("tts", "first_audio", gen=g)
+            self._breaker("tts", failed=False)
             self.state = State.SPEAKING
         self.played.setdefault(g, bytearray()).extend(pcm)
         f = protocol.Frame(protocol.KIND_AGENT, protocol.FLAG_END_OF_STREAM if end else 0, g, seq, now_us(), g,
@@ -497,6 +552,7 @@ class Session:
     async def _stt_reader(self):
         try:
             async for e in self.stt.events():
+                self._breaker("stt", failed=False)
                 if isinstance(e, Partial):
                     self.transcript.partial(e.text)
                 elif isinstance(e, Final):
@@ -510,8 +566,31 @@ class Session:
 
     def _provider_error(self, provider: str, kind: str, gen: int | None = None):
         self.trace.emit(provider, "error", gen=gen, kind=kind)
+        self._breaker(provider, failed=kind in COUNTED)  # a fatal error is an answer: the provider is up
         extra = {"session_id": self.sid, "provider": provider, "kind": kind}
         log.warning("provider error", extra=extra if gen is None else {**extra, "gen": gen})
+
+    def _allow(self, provider: str) -> bool:
+        b = self.breakers.get(provider)
+        if b is None:
+            return True
+        was = b.state
+        if not b.allow():
+            self.trace.emit(provider, "breaker_open")
+            return False
+        if was != "closed":
+            self._probes.add(provider)
+        return True
+
+    def _breaker(self, provider: str, failed: bool):
+        if b := self.breakers.get(provider):
+            self._probes.discard(provider)
+            b.failure() if failed else b.success()
+
+    def _release(self, provider: str):
+        if provider in self._probes:
+            self._probes.discard(provider)
+            self.breakers[provider].release()
 
     async def _event(self, type: str, **fields):
         await self._send(protocol.event(type, **fields))

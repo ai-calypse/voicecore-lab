@@ -146,3 +146,17 @@ async def test_internal_bug_is_not_a_provider_error(m):
     await s.close()
     assert points(m, "voicecore_provider_errors") == {}
     assert points(m, "voicecore_turns")[frozenset({("kind", "text"), ("result", "error")})].value == 1
+
+
+def test_breaker_state_and_opens_are_exported():
+    from voicecore.resilience import Breaker
+
+    reader = InMemoryMetricReader()
+    breakers = {p: Breaker(p) for p in ("stt", "llm", "tts")}
+    sink = MetricsSink(MeterProvider(metric_readers=[reader]).get_meter("test"), breakers=breakers)
+    sink.reader = reader
+    for _ in range(5):
+        breakers["llm"].failure()
+    state = {dict(k)["provider"]: p.value for k, p in points(sink, "voicecore_breaker_state").items()}
+    assert state == {"stt": 0, "llm": 2, "tts": 0}
+    assert points(sink, "voicecore_breaker_opens")[frozenset({("provider", "llm")})].value == 1
