@@ -6,7 +6,7 @@ VoiceCore Lab is three processes and one protocol. Each process owns one thing:
 - **the Go gateway** owns the connection;
 - **the Python orchestrator** owns the conversation.
 
-The design decisions are in [ADR 0001](adr/0001-engine-ownership.md) and [ADR 0002](adr/0002-turn-policy.md); the media path in detail is in [media_internals.md](media_internals.md).
+The design decisions are in [ADR 0001](adr/0001-engine-ownership.md) and [ADR 0002](adr/0002-turn-policy.md); observability in [ADR 0003](adr/0003-observability.md); deploy, abuse protection, resilience and scaling in [ADR 0004](adr/0004-deploy-abuse-resilience-scale.md). The media path in detail is in [media_internals.md](media_internals.md); operating the stack is in [docs/ops/](ops/).
 
 ```mermaid
 flowchart LR
@@ -74,17 +74,24 @@ sequenceDiagram
 
 | Failure | Behaviour | Where |
 |---|---|---|
-| Network drop | gateway keeps the session and the upstream socket for 10 s; on resume it fences the old generation and the orchestrator cancels it | `session/`, `Session.on_event` |
+| Network drop | gateway keeps the session and the upstream socket for 10 s; the SDK reconnects with the session's `resume_key` (a stale socket that still looks attached is taken over); on resume the gateway fences the old generation and the orchestrator cancels it | `session/`, `client.ts`, `Session.on_event` |
 | Client floods or misbehaves | bounded queues (drop oldest, counted), close codes 1007/1008/4001–4003 | gateway |
 | STT returns nothing | reprompt after 5 s | `Session._after_endpoint` |
-| LLM stall / HTTP 429 | reprompt after 8 s; backoff 1/2/4 s, then "I'm busy" | `Session._generate` |
+| STT connection drops | one reconnect, replaying audio since the last final; a second drop: voice input off, typing still works | `Session._stt_reconnect` |
+| LLM stall / HTTP 429 | reprompt after 8 s; backoff 1/2/4 s, then "I'm busy"; no answer stream past 20 s | `Session._generate` |
+| A provider keeps failing | its circuit breaker opens after 5 failures in 60 s: 30 s of fast "busy" or text-only answers, then one probe | `resilience.py`, `session/breaker.go` |
+| Orchestrator down or restarting | the gateway retries a refused dial once, tries the next ready orchestrator, and fails fast while its breaker is open | `session/server.go` |
+| Stop or deploy | SIGTERM drains: no new sessions, open ones finish (gateway up to 25 s) and settle their spend | `Server.Drain`, `AppState.shutdown` |
 | TTS failure | the text answer is delivered; one retry on a fresh stream if nothing was heard yet | `Session._retry_tts` |
 | Mic revoked | that stream is ignored; text keeps working | `Session.on_event` |
-| Budget exhausted | live adapters cannot be built without a reservation; per-session caps end the voice path | `budget.py`, `providers/factory.py` |
+| Budget exhausted | live adapters cannot be built without a reservation; per-session caps end the voice path; in the public pool, answers point to the closest docs section in text | `budget.py`, `providers/factory.py`, `answer/extractive.py` |
+| Budget ledger unreachable | new sessions are refused (fail closed), never let through | `budget_redis.py`, `server.py` |
 
 ## Observability
 
 Every process writes the same trace event shape (SPEC section 5): the gateway with `-trace`, the orchestrator per session, the client as logs. [`harness/session_timeline.py`](../harness/session_timeline.py) puts them on one clock (NTP-style ping/pong for the gateway, mic-frame timing for the orchestrator), and the demo's `?lab=1` panel draws the result. Text is never traced unless a run asks for it.
+
+In operation, the same trace events feed Prometheus metrics (one latency definition, `voicecore/stages.py`), and both services write JSON logs with an allow-list of fields. Alert rules, dashboards and runbooks are in [docs/ops/monitoring.md](ops/monitoring.md).
 
 ## Testing seams
 
@@ -98,3 +105,6 @@ Every process writes the same trace event shape (SPEC section 5): the gateway wi
 | answers | retrieval and grounding tests, live eval |
 | browser | vitest (offline playout), Playwright with Chromium's fake microphone |
 | whole stack | in-process runner on fake time (CI gate); WSS runner with headless SDK clients (benchmarks) |
+| shared state | one contract suite over the file and Redis ledgers, and the gateway's memory and Redis stores |
+| alerts | `promtool test rules`, `amtool` route tests; a Docker test that stops the orchestrator and waits for the page |
+| deploy | Docker tests of the scale profile and the Fly image (drain, restart, root-owned volume) |
