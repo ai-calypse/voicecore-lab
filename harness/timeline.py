@@ -57,3 +57,13 @@ def turn_breakdown(client, trace, turn_end_ms):
          "total_ms": ms(speech_end, started)}
     b["residual_ms"] = b["total_ms"] - b["endpoint_delay_ms"] - ms(ep["t_mono_us"], fa["t_mono_us"])
     return b
+
+
+def recall_at_k(ranked, relevant, k):
+    """Share of queries with at least one relevant id in their top k."""
+    return sum(bool(set(r[:k]) & rel) for r, rel in zip(ranked, relevant)) / len(ranked)
+
+
+def mrr(ranked, relevant):
+    """Mean over queries of 1 / rank of the first relevant id (0 when none is ranked)."""
+    return sum(next((1 / i for i, x in enumerate(r, 1) if x in rel), 0.0) for r, rel in zip(ranked, relevant)) / len(ranked)

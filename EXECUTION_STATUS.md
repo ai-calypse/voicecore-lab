@@ -1,6 +1,6 @@
 # VoiceCore Lab — Execution Status
 
-**Status as of 2026-10-30:** Steps 00–03 complete (open items listed per row); Step 04 in progress. This file is a live execution register for the implementing agent.
+**Status as of 2026-10-30:** Steps 00–04 complete (open items listed per row); Step 05 in progress. This file is a live execution register for the implementing agent.
 
 Do not mark a step Complete until task-level actual evidence, objective tests and handoff checks are recorded in the corresponding step doc. Track fake and real provider results separately.
 
@@ -10,7 +10,7 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 | [01](docs/step_01_audio_transport_and_sdk.md) | Complete except S01-T05 loss profile (blocked) | 30 | Protocol + 3 codecs, browser capture, Go gateway, playout, tracer bullet, transport benchmark local + simulated (fake-provider) | Blocked: dummynet packet-loss profile needs the user (sudo) |
 | [02](docs/step_02_voice_activity_and_turn_detection.md) | Complete except manual echo check | 30 | Silero + fixture VAD, floor (fixed/adaptive/asr), echo gate, evaluator, sweep + ADR 0002 (fixed 800 ms) | Open: manual speaker/AEC check (user) |
 | [03](docs/step_03_streaming_orchestrator.md) | Complete | 38 | Provider contracts + 3 live adapters, generation runtime, server, in-process/WSS runners, chaos test, live latency breakdown (n = 10) | User: send the drafted Deepgram ticket (optional) |
-| [04](docs/step_04_grounded_docs_agent.md) | Not started | 25 | None | Begin step 04 after prerequisites |
+| [04](docs/step_04_grounded_docs_agent.md) | Complete | 25 | Ingestion + SSRF guard, hybrid retrieval, grounded answer engine shared by text and voice, live holdout + adversarial eval | — |
 | [05](docs/step_05_barge_in_and_recovery.md) | Not started | 28 | None | Begin step 05 after prerequisites |
 | [06](docs/step_06_observability_evals_and_load.md) | Not started | 40 | None | Begin step 06 after prerequisites |
 | [07](docs/step_07_media_internals_and_optional_telephony.md) | Not started | 35 | None | Begin step 07 after prerequisites |
@@ -27,6 +27,7 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 | 2026-10-30 | S01-T01..T07 | Claude Code (Opus 5.5) | `c5cc68e`..HEAD; `packages/`, `apps/demo/`, `services/realtime-gateway/`, `benchmarks/transport.md` | `make test` (Go 20 session + protocol, pytest 18, vitest 17) and `make e2e` (2 Playwright) pass | No sudo: shaped loss profile left to the user |
 | 2026-10-30 | S02-T01..T05 | Claude Code (Opus 5.5) | `voicecore/turntaking/`, `harness/{timeline,turn_sweep}.py`, `reports/turn_policy*`, `docs/adr/0002-turn-policy.md` | `uv run pytest -m 'not live'` → 38 passed; sweep + holdout run once | Fixtures rebuilt at −23 dBFS for mixed clips |
 | 2026-10-30 | S03-T01..T07 | Claude Code (Opus 5.5) | `voicecore/{providers,runtime}/`, `server.py`, `harness/{runner,latency.py,listen_repro.py}`, `reports/latency_breakdown.md` | `make test` (pytest 65, Go, vitest) + `make e2e` (3) pass; code review (02–03) 10 findings fixed; live contracts 7 passed; live latency n = 10 | usd pool $0.706, credits 1,279 |
+| 2026-10-30 | S04-T01..T05 | Claude Code (Opus 5.5) | `voicecore/answer/`, `harness/{retrieval_eval,answer_eval}.py`, `fixtures/docs/adversarial*/`, `reports/docs_eval.md` | `make test` pass; live eval 3 runs ($0.011) | usd pool $0.718 |
 
 ## Handoff history
 
@@ -36,5 +37,6 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 | 2026-10-30 | 01 (one blocked item) | Registers filled; `make test` + `make e2e` pass; CI green; code review (medium) 10 findings fixed. Open: S01-T05 loss profile needs sudo (user). User asked to complete all steps, so Step 02 proceeds; `/improve-codebase-architecture` and `/thermo-nuclear-code-quality-review` are user-run and not yet run | 02 |
 | 2026-10-30 | 02 (manual echo check open) | Registers filled; tests pass; ADR 0002; code review done together with Step 03 | 03 |
 | 2026-10-30 | 03 | Registers filled; tests + e2e + live contracts pass; latency report; code review fixed | 04 |
+| 2026-10-30 | 04 | Registers filled; tests + e2e pass; eval report | 05 |
 
 **Planning update (2026-10-28):** Documented initial STT/VAD/LLM/TTS provider recommendations in the master plan. No live integration, verification, measurements, or step completion is implied.

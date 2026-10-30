@@ -553,6 +553,36 @@
       "label": "live contract test",
       "status": "settled",
       "reserved": 150
+    },
+    {
+      "id": "e12629787a95",
+      "pool": "usd",
+      "amount": 0.003358,
+      "label": "answer_eval 20261030T013034Z",
+      "status": "settled",
+      "reserved": 0.05,
+      "run_id": "20261030T013034Z",
+      "calls": 30
+    },
+    {
+      "id": "a3e6648d8471",
+      "pool": "usd",
+      "amount": 0.004508,
+      "label": "answer_eval 20261030T013307Z",
+      "status": "settled",
+      "reserved": 0.05,
+      "run_id": "20261030T013307Z",
+      "calls": 36
+    },
+    {
+      "id": "bd14753efa2c",
+      "pool": "usd",
+      "amount": 0.003258,
+      "label": "answer_eval 20261030T013455Z",
+      "status": "settled",
+      "reserved": 0.05,
+      "run_id": "20261030T013455Z",
+      "calls": 36
     }
   ],
   "caps": {
@@ -560,7 +590,7 @@
     "cartesia_credits": 16000
   },
   "totals": {
-    "usd": 0.706606,
+    "usd": 0.71773,
     "cartesia_credits": 1348
   }
 }

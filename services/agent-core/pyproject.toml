@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "VoiceCore Lab orchestrator: turn-taking, generation runtime, providers, answer engine"
 requires-python = ">=3.12"
 dependencies = [
+    "fastembed>=0.9.1",
     "numpy>=2.5.4",
     "onnxruntime>=1.31.1",
     "openai>=3.41.0",

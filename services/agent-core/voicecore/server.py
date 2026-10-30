@@ -15,6 +15,9 @@ from websockets.asyncio.server import serve
 from websockets.exceptions import ConnectionClosed
 
 from voicecore import budget, protocol
+from voicecore.answer.engine import AnswerEngine
+from voicecore.answer.index import Index
+from voicecore.answer.ingest import ingest
 from voicecore.providers.deepgram_stt import MAX_AUDIO_S, PRICE_PER_MIN
 from voicecore.providers.factory import make_live
 from voicecore.providers.mock import LLMScript, MockLLM, MockSTT, MockTTS
@@ -23,7 +26,8 @@ from voicecore.trace import JsonlSink, Tracer
 from voicecore.turntaking.vad_silero import SileroVAD
 
 log = logging.getLogger("voicecore.server")
-MOCK_ANSWER = "Install uv with the standalone installer script. Then run uv init to start a project."
+MOCK_ANSWER = "Install uv with the standalone installer script [1]. Then run uv init to start a project [2]."
+DOCS = Path(__file__).resolve().parents[3] / "fixtures/docs/uv"
 LLM_CAP_USD = 0.002
 
 
@@ -48,7 +52,7 @@ def live_providers(sid):
     return p, settle
 
 
-def handler_for(mode: str, trace_dir: Path | None):
+def handler_for(mode: str, trace_dir: Path | None, index: Index):
     async def handler(ws):  # ponytail: VAD runs inline on the event loop (~0.3 ms per window); move to a thread if sessions x frames saturate one core
         sid = ws.request.path.rsplit("/", 1)[-1]
         try:
@@ -59,7 +63,8 @@ def handler_for(mode: str, trace_dir: Path | None):
             await ws.close()
             return
         sink = JsonlSink(trace_dir / f"{sid}.jsonl") if trace_dir else None
-        session = Session(sid, send=ws.send, vad=SileroVAD(), tracer=Tracer(sid, sink), **providers)
+        engine = AnswerEngine(index, providers["llm"])
+        session = Session(sid, send=ws.send, vad=SileroVAD(), tracer=Tracer(sid, sink), answer=engine.stream, **providers)
         await session.start()
         try:
             async for m in ws:
@@ -91,7 +96,9 @@ async def main():
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     SileroVAD()  # load the model now: loading it inside the first session stalls its mic frames
-    async with serve(handler_for(args.providers, args.trace_dir), args.host, args.port, max_size=1 << 20) as server:
+    index = Index(ingest(DOCS))  # docs snapshot; vectors are cached under .cache after the first build
+    index.dense("warm up", 1)
+    async with serve(handler_for(args.providers, args.trace_dir, index), args.host, args.port, max_size=1 << 20) as server:
         log.info("orchestrator listening on ws://%s:%d (%s providers)", args.host, args.port, args.providers)
         await server.serve_forever()
 

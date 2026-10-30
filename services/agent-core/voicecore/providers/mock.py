@@ -94,11 +94,14 @@ class MockTTS:
         self._started: set[int] = set()
         self._worker = None
         self.chars = 0
+        self.texts: list[str] = []  # what was sent to be spoken (tests check it)
 
     async def synth(self, gen: int, text: str, last: bool) -> None:
         if self._worker is None:
             self._worker = asyncio.create_task(self._run())
         self.chars += len(text)
+        if text:
+            self.texts.append(text)
         self._jobs.put_nowait((gen, text, last))
 
     async def _run(self):

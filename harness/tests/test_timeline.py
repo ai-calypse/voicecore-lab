@@ -55,3 +55,13 @@ def test_turn_breakdown_ignores_an_earlier_endpoint_that_started_no_generation()
              {"span": "tts", "event": "first_audio", "generation_id": 1, "t_mono_us": 3_800_000, "attrs": {}}]
     b = turn_breakdown(client, trace, turn_end_ms=3200)
     assert (b["endpoint_delay_ms"], b["stt_settle_ms"], b["residual_ms"]) == (800.0, 0.5, 200.0)
+
+
+def test_recall_at_k_and_mrr_on_a_hand_worked_example():
+    from timeline import mrr, recall_at_k
+
+    ranked = [["a", "x", "y"], ["x", "y", "b"], ["x", "y", "z"]]  # relevant: a, b, c
+    relevant = [{"a"}, {"b"}, {"c"}]
+    assert recall_at_k(ranked, relevant, 2) == 1 / 3
+    assert recall_at_k(ranked, relevant, 3) == 2 / 3
+    assert mrr(ranked, relevant) == (1 + 1 / 3 + 0) / 3
