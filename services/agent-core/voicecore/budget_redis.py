@@ -6,6 +6,7 @@ writes every reservation atomically, so copies can never jointly pass a cap. The
 Redis unreachable means BudgetUnavailable: new sessions are refused, never let through (fail closed).
 """
 import json
+import time
 
 import redis
 
@@ -65,17 +66,29 @@ redis.call('ZREM', p .. 'reserved', id)
 return 'OK'
 """
 
+MIGRATE = """
+local p = ARGV[1]
+if redis.call('EXISTS', p .. 'seeded') == 1 then return redis.error_reply('SEEDED already seeded') end
+for i = 3, #ARGV, 2 do redis.call('SET', p .. ARGV[i], ARGV[i + 1]) end
+redis.call('SET', p .. 'seeded', ARGV[2])
+return 'OK'
+"""
+
 _clients: dict[str, tuple] = {}
+_down_until: dict[str, float] = {}  # after a failed connection, fail fast for a while: callers run on the event loop
+DOWN_FOR_S = 5.0
 
 
 def _store(url: str):
     if url not in _clients:
-        r = redis.Redis.from_url(url, socket_timeout=2, socket_connect_timeout=2, decode_responses=True)
+        r = redis.Redis.from_url(url, socket_timeout=1, socket_connect_timeout=1, decode_responses=True)
         _clients[url] = (r, r.register_script(RESERVE), r.register_script(SETTLE))
     return _clients[url]
 
 
-def _run(fn):
+def _run(fn, url=None):
+    if url and time.monotonic() < _down_until.get(url, 0):
+        raise budget.BudgetUnavailable("ledger unreachable (failed moments ago)")
     try:
         return fn()
     except redis.exceptions.ResponseError as e:
@@ -88,8 +101,12 @@ def _run(fn):
             raise budget.BudgetExceeded(msg) from None
         if msg.startswith("NOENTRY"):
             raise KeyError(msg) from None
-        raise
+        if msg.startswith("SEEDED"):
+            raise budget.BudgetUnavailable("already seeded; migrating twice would count the old spend twice") from None
+        raise budget.BudgetUnavailable(f"ledger refused the write: {msg[:80]}") from None  # e.g. OOM, a read-only replica
     except redis.exceptions.RedisError as e:  # down, timed out: refuse new spend
+        if url and isinstance(e, (redis.exceptions.ConnectionError, redis.exceptions.TimeoutError)):
+            _down_until[url] = time.monotonic() + DOWN_FOR_S
         raise budget.BudgetUnavailable(f"ledger unreachable: {type(e).__name__}") from None
 
 
@@ -104,19 +121,19 @@ def reserve_all(specs, url: str, sub=None) -> list:
         out.append(r)
     caps = budget.SUBCAPS.get(sub, {"total": 0, "daily": 0})
     _run(lambda: script(args=[PREFIX, ts, int(ts // 86_400), sub or "", round(caps["total"] * M), round(caps["daily"] * M),
-                              len(out), *args]))
+                              len(out), *args]), url)
     return out
 
 
 def settle(reservation, actual, url: str, **meta):
     _, _, script = _store(url)
-    _run(lambda: script(args=[PREFIX, reservation.id, round(actual * M), json.dumps(meta)]))
+    _run(lambda: script(args=[PREFIX, reservation.id, round(actual * M), json.dumps(meta)]), url)
 
 
 def total(pool, url: str) -> float:
     r, _, _ = _store(url)
     key = f"{PREFIX}sub:{pool}" if pool in budget.SUBCAPS else f"{PREFIX}total:{pool}"
-    return round(int(_run(lambda: r.get(key)) or 0) / M, 6)
+    return round(int(_run(lambda: r.get(key), url) or 0) / M, 6)
 
 
 def orphans(older_than_s: float, url: str) -> list[dict]:
@@ -129,17 +146,14 @@ def orphans(older_than_s: float, url: str) -> list[dict]:
 def migrate(file_path: str, url: str) -> dict:
     """Seed Redis with the file ledger's totals (reserved entries count in full, as they do in the file)."""
     r, _, _ = _store(url)
-    if _run(lambda: r.exists(f"{PREFIX}seeded")):
-        raise budget.BudgetUnavailable("already seeded; migrating twice would count the old spend twice")
+    if not budget.Path(file_path).exists():  # a typo must never seed 0 spent
+        raise FileNotFoundError(file_path)
     entries = budget._entries(budget.Path(file_path))
     keys = {f"{PREFIX}total:{pool}": budget._sum(entries, pool) for pool in budget.CAPS}
     for sub in budget.SUBCAPS:
         keys[f"{PREFIX}sub:{sub}"] = budget._sum(entries, sub)
         for day in {int(e.get("ts", 0) // 86_400) for e in entries if e.get("sub") == sub}:
             keys[f"{PREFIX}sub:{sub}:{day}"] = budget._sum(entries, sub, day=day)
-    pipe = r.pipeline()
-    for k, v in keys.items():
-        pipe.set(k, round(v * M))
-    pipe.set(f"{PREFIX}seeded", file_path)
-    _run(pipe.execute)
+    pairs = [x for k, v in keys.items() for x in (k.removeprefix(PREFIX), round(v * M))]
+    _run(lambda: r.register_script(MIGRATE)(args=[PREFIX, file_path, *pairs]))  # all at once, or nothing if seeded
     return {k.removeprefix(PREFIX): v for k, v in keys.items()}

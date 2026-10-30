@@ -23,6 +23,7 @@ def ledger(request, tmp_path, monkeypatch):
     import redis
 
     redis.Redis.from_url(REDIS).flushdb()
+    (tmp_path / "empty.json").write_text('{"entries": []}')
     budget.migrate(str(tmp_path / "empty.json"), REDIS)  # an empty file ledger: seeded at 0
     yield REDIS
 
@@ -104,3 +105,40 @@ def test_migrate_carries_the_file_totals(tmp_path):
 def test_redis_down_fails_closed():
     with pytest.raises(budget.BudgetUnavailable):
         budget.reserve("usd", 0.01, "s", ledger_path="redis://127.0.0.1:1/0")  # nothing listens there
+
+
+def test_migrate_refuses_a_missing_file(tmp_path):
+    if not REDIS:
+        pytest.skip("no VOICECORE_TEST_REDIS")
+    import redis
+
+    redis.Redis.from_url(REDIS).flushdb()
+    with pytest.raises(FileNotFoundError):
+        budget.migrate(str(tmp_path / "typo.json"), REDIS)  # seeding 0 from a typo would hand out the whole cap again
+    with pytest.raises(budget.BudgetUnavailable, match="not seeded"):
+        budget.reserve("usd", 0.01, "s", ledger_path=REDIS)
+
+
+def test_any_other_redis_error_is_unavailable(monkeypatch):
+    import redis
+
+    from voicecore import budget_redis
+
+    def readonly():
+        raise redis.exceptions.ResponseError("READONLY You can't write against a read only replica.")
+
+    with pytest.raises(budget.BudgetUnavailable):
+        budget_redis._run(readonly)
+
+
+def test_a_down_ledger_fails_fast_after_the_first_try():
+    """The orchestrator calls the ledger on its event loop: a dead Redis may cost one short stall, not one per session."""
+    import time
+
+    url = "redis://10.255.255.1:6379/0"  # unroutable: a connect would wait for its timeout
+    with pytest.raises(budget.BudgetUnavailable):
+        budget.reserve("usd", 0.01, "first", ledger_path=url)
+    start = time.monotonic()
+    with pytest.raises(budget.BudgetUnavailable):
+        budget.reserve("usd", 0.01, "second", ledger_path=url)
+    assert time.monotonic() - start < 0.05

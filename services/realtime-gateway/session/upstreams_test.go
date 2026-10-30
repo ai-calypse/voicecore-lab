@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ai-calypse/voicecore-lab/services/realtime-gateway/internal/fakeorch"
+	"github.com/coder/websocket"
 )
 
 // second starts another fake orchestrator at orch2:80 on the rig's network; stop() closes it like a dead process.
@@ -53,5 +54,27 @@ func TestOrchestratorDeathOnlyEndsItsSessions(t *testing.T) {
 		welcomeOf(r.connect(nil, nil))
 		r.upstream() // a new session: orch2 refuses, so it goes to orch
 		time.Sleep(time.Second)
+	})
+}
+
+func TestATimedOutDialIsNotTriedOnAnotherOrchestrator(t *testing.T) {
+	runCfg(t, false, func(c *Config) { c.Upstream = "ws://slow:80,ws://orch:80" }, func(t *testing.T, r *rig) {
+		ln := r.net.Listen("slow:80") // accepts nothing: the dial times out, and it may have reserved budget there
+		defer ln.Close()
+		if s := r.connect(nil, nil).closeStatus(); s != websocket.StatusInternalError {
+			t.Fatalf("close %d, want 1011", s)
+		}
+		if n := r.orchLn.Dials(); n != 0 {
+			t.Fatalf("the same session id was dialled on another orchestrator (%d dials)", n)
+		}
+	})
+}
+
+func TestANotReadyOrchestratorMeansTryAgainEvenIfAnotherFailed(t *testing.T) {
+	runCfg(t, false, func(c *Config) { c.Upstream = "ws://orch:80,ws://gone:80" }, func(t *testing.T, r *rig) {
+		r.orch.SetReady(503) // draining; gone:80 refuses every dial
+		if s := r.connect(nil, nil).closeStatus(); s != websocket.StatusTryAgainLater {
+			t.Fatalf("close %d, want 1013 (try again: one orchestrator is only draining)", s)
+		}
 	})
 }

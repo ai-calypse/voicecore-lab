@@ -263,9 +263,9 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
             tracer.emit("session", "ended", reason=reason or end_reason(ws.close_reason, state.draining))
             if sink:
                 sink.close()
-            for s in settle:
+            for s in settle:  # in a thread: a slow ledger (Redis) must not stall the other sessions' audio
                 with contextlib.suppress(Exception):
-                    s()
+                    await asyncio.to_thread(s)
             log.info("session ended", extra={"session_id": sid, "duration_ms": round((time.monotonic() - started) * 1000)})
 
     return handler

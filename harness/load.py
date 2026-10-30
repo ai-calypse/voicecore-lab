@@ -28,8 +28,8 @@ def buckets(orch: str, metric: str, labels: str = "") -> dict[float, float]:
     out = {}
     for le, v in re.findall(rf'^{metric}_bucket\{{([^}}]*)\}} ([0-9.e+]+)$', body, re.M):
         if labels in le:
-            bound = re.search(r'le="([^"]+)"', le).group(1)
-            out[float("inf") if bound == "+Inf" else float(bound)] = out.get(float("inf") if bound == "+Inf" else float(bound), 0) + float(v)
+            b = float(re.search(r'le="([^"]+)"', le).group(1))  # float() reads "+Inf" too
+            out[b] = out.get(b, 0) + float(v)
     return out
 
 

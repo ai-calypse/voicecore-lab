@@ -507,6 +507,7 @@ func (s *Server) newSession(ip string) (*session, error) {
 	var up *websocket.Conn
 	var chosen *upstream
 	var err error = errUpstreamOpen // every breaker open: nothing was dialled
+	notReady := false
 	for _, u := range s.candidates() {
 		if !u.br.allow() {
 			continue
@@ -515,8 +516,18 @@ func (s *Server) newSession(ip string) (*session, error) {
 			chosen = u
 			break
 		}
+		if errors.Is(err, errUpstreamNotReady) {
+			notReady = true // draining or starting: try another, and tell the client to retry if none takes it
+			continue
+		}
+		if !errors.Is(err, syscall.ECONNREFUSED) {
+			break // a timeout may have reserved budget there: never the same session id on another orchestrator
+		}
 	}
 	if chosen == nil {
+		if notReady {
+			return nil, errUpstreamNotReady
+		}
 		return nil, err
 	}
 	up.SetReadLimit(1 << 20)

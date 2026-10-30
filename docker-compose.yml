@@ -104,11 +104,13 @@ services:
     command: ["redis-server", "--appendonly", "yes"]  # the spend record must survive a restart
     volumes: ["redis-data:/data"]
     healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 2s, timeout: 2s, retries: 15 }
-  seed:  # copies the file ledger's totals into Redis once, so the caps never restart at 0
+  seed:  # seeds the Redis ledger once, so its caps never start from an unknown state
     profiles: [scale]
     build: { context: ., dockerfile: services/agent-core/Dockerfile }
-    entrypoint: ["/app/.venv/bin/python", "-m", "voicecore.budget", "migrate", "--from", "/app/benchmarks/spend_ledger.json", "--to", "redis://redis:6379/0"]
-    volumes: ["./benchmarks:/app/benchmarks:ro"]
+    # A test ledger, deliberately empty: the scale profile spends billed-mock amounts, which must never mix with the
+    # real money record. A real multi-copy deployment seeds from benchmarks/spend_ledger.json instead (docs/ops/deploy.md).
+    entrypoint: ["/app/.venv/bin/python", "-m", "voicecore.budget", "migrate", "--from", "/seed/test-ledger.json", "--to", "redis://redis:6379/0"]
+    volumes: ["./deploy/scale/test-ledger.json:/seed/test-ledger.json:ro"]
     depends_on: { redis: { condition: service_healthy } }
   orch-1: &orch
     profiles: [scale]

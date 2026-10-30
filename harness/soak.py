@@ -46,25 +46,32 @@ def main():
     ap.add_argument("--out", type=Path, default=ROOT / "benchmarks/raw/soak")
     args = ap.parse_args()
     clip = next(c for c in all_clips() if c["id"] == "dev_single_01")
-    stop, rounds = time.time() + args.minutes * 60, [0]
+    stop, rounds, errors = time.time() + args.minutes * 60, [0], []
 
-    def load():
+    def load():  # a failed round is recorded, never fatal: an idle stack would otherwise pass for a leak-free one
         while time.time() < stop:
-            run_clients([clip] * 10, args.out / "clients", 5, gateway="http://127.0.0.1:8090")
-            rounds[0] += 1
+            try:
+                run_clients([clip] * 10, args.out / "clients", 5, gateway="http://127.0.0.1:8090")
+                rounds[0] += 1
+            except Exception as e:  # noqa: BLE001
+                errors.append(f"{type(e).__name__}: {e}"[:200])
+                time.sleep(5)
 
-    t = threading.Thread(target=load)
+    t = threading.Thread(target=load, daemon=True)
     t.start()
     samples = []
     while time.time() < stop:
-        samples.append(sample())
-        print(json.dumps(samples[-1]), flush=True)
+        try:
+            samples.append(sample())
+            print(json.dumps(samples[-1]), flush=True)
+        except Exception as e:  # noqa: BLE001
+            errors.append(f"sample: {type(e).__name__}: {e}"[:200])
         time.sleep(60)
     t.join()
     samples.append(sample())
     first, last = samples[1] if len(samples) > 2 else samples[0], samples[-1]  # the first minute is warm-up
     growth = {k: round(100 * (last["mem_mib"][k] - v) / v, 1) for k, v in first["mem_mib"].items() if k in last["mem_mib"] and v}
-    print(json.dumps({"label": "fake-provider", "minutes": args.minutes, "rounds_of_10": rounds[0], "mem_growth_pct": growth,
+    print(json.dumps({"label": "fake-provider", "minutes": args.minutes, "rounds_of_10": rounds[0], "load_errors": errors, "mem_growth_pct": growth,
                       "goroutines": {g: (first[g]["go_goroutines"], last[g]["go_goroutines"]) for g in ("gw-1", "gw-2")},
                       "open_fds": {g: (first[g]["process_open_fds"], last[g]["process_open_fds"]) for g in ("gw-1", "gw-2")},
                       "redis_used_mib": (first["redis_used_mib"], last["redis_used_mib"])}, indent=1))
