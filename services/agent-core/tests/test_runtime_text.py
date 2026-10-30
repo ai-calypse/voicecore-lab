@@ -27,3 +27,12 @@ def test_speechify_drops_citations_and_raw_urls():
 
 def test_speechify_keeps_identifiers_with_underscores_and_hashes():
     assert speechify("Set `UV_INDEX_URL` (see issue #12).") == "Set UV_INDEX_URL (see issue #12)."
+
+
+def test_speechify_says_dollar_amounts_in_full_words():
+    # Aura read "$0.000083" as "zero dollars" (manual session, 2026-10-30): amounts are spoken, not left to the voice
+    assert speechify("It costs $0.000083 per turn.") == "It costs zero point zero zero zero zero eight three dollars per turn."
+    assert speechify("About $0.03 per 1,000 characters.") == "About 3 cents per 1,000 characters."
+    assert speechify("A cap of $0.12, or $5.00 in total.") == "A cap of 12 cents, or 5 dollars in total."
+    assert speechify("It was $1.04 of $5.") == "It was 1 dollar and 4 cents of 5 dollars."
+    assert speechify("$1,500 and $0.0385") == "1,500 dollars and zero point zero three eight five dollars"
