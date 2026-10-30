@@ -30,16 +30,15 @@ def image():
 
 
 def start(image, *env, port=PORT) -> str:
-    name, volume = f"vc-fly-{uuid.uuid4().hex[:8]}", f"vc-fly-data-{uuid.uuid4().hex[:8]}"
+    name = f"vc-fly-{uuid.uuid4().hex[:8]}"
     flags = [x for e in ("PROVIDERS=mock", "POOL=usd", *env) for x in ("-e", e)]
-    docker("run", "-d", "--name", name, "-p", f"127.0.0.1:{port}:8080", "-v", f"{volume}:/data", *flags, image)
+    # a root-owned mount, as Fly's volumes are (a Docker named volume would copy the image's ownership and hide it)
+    docker("run", "-d", "--name", name, "-p", f"127.0.0.1:{port}:8080", "--mount", "type=tmpfs,destination=/data,tmpfs-mode=0755", *flags, image)
     return name
 
 
 def remove(name):
-    volume = json.loads(docker("inspect", name).stdout)[0]["Mounts"][0]["Name"]
     docker("rm", "-f", name, check=False)
-    docker("volume", "rm", volume, check=False)
 
 
 def wait_ready(name, port=PORT, timeout=120):
@@ -59,6 +58,13 @@ def test_dev_run_answers_and_sigterm_drains_then_exits_0(image):
     name = start(image, "VOICECORE_ENV=dev")
     try:
         wait_ready(name)
+        assert docker("exec", name, "stat", "-c", "%U", "/data").stdout.strip() == "app"  # the entrypoint took the volume
+        uids = ("import os\n"
+                "for p in filter(str.isdigit, os.listdir('/proc')):\n"
+                "    argv = open(f'/proc/{p}/cmdline', 'rb').read().split(b'\\0')\n"
+                "    if b'gateway' in argv[0] or argv[1:3] == [b'-m', b'voicecore.server']:\n"
+                "        print([l.split()[1] for l in open(f'/proc/{p}/status') if l.startswith('Uid:')][0])")
+        assert set(docker("exec", name, "/app/.venv/bin/python", "-c", uids).stdout.split()) == {"10001"}  # never root
         smoke = subprocess.run([sys.executable, str(ROOT / "harness/smoke.py"), "--gateway", f"http://127.0.0.1:{PORT}"],
                                capture_output=True, text=True, timeout=60)
         assert smoke.returncode == 0, smoke.stdout + smoke.stderr
@@ -90,7 +96,8 @@ def test_a_dead_orchestrator_makes_the_machine_restart(image):
         wait_ready(name, port=PORT + 1)
         kill = ("import os, signal\n"
                 "for p in filter(str.isdigit, os.listdir('/proc')):\n"
-                "    if b'voicecore.server' in open(f'/proc/{p}/cmdline', 'rb').read(): os.kill(int(p), signal.SIGKILL)")
+                "    argv = open(f'/proc/{p}/cmdline', 'rb').read().split(b'\\0')\n"
+                "    if int(p) != os.getpid() and argv[1:3] == [b'-m', b'voicecore.server']: os.kill(int(p), signal.SIGKILL)")
         docker("exec", name, "/app/.venv/bin/python", "-c", kill, check=False)
         assert docker("wait", name).stdout.strip() not in ("0", "")  # non-zero: Fly restarts the machine
     finally:

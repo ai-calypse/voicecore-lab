@@ -24,7 +24,7 @@ COPY deploy/fly/entrypoint.sh /entrypoint.sh
 ARG VERSION=dev
 ENV VOICECORE_VERSION=$VERSION
 RUN useradd --uid 10001 app && mkdir -p /data && chown app /data
-USER app
+# starts as root only to take ownership of Fly's root-owned volume; entrypoint.sh then drops to "app" (setpriv)
 EXPOSE 8080
 # plain tini, no -g: the script orders the shutdown itself (a group signal would stop both at once)
 ENTRYPOINT ["/usr/bin/tini", "--", "/entrypoint.sh"]

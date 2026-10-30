@@ -8,7 +8,7 @@ One Fly app, `voicecore`, from [`deploy/fly/`](../../deploy/fly/): one machine (
 
 - **The gateway** listens on :8080, the only public port. Its admin listener is on :9091 (metrics, private).
 - **The orchestrator** listens on :8765 on the machine itself; its metrics are on :9464 (private).
-- **`entrypoint.sh`** runs both under `tini`. It starts the orchestrator first and the gateway once the orchestrator is ready. On Fly's SIGTERM it stops the gateway first (its drain ends every session, up to 25 s), then the orchestrator. If either process dies, the script exits non-zero and Fly restarts the machine.
+- **`entrypoint.sh`** runs both under `tini`. It starts as root only to take ownership of the volume (Fly mounts it root-owned), then runs everything as the `app` user. It starts the orchestrator first and the gateway once the orchestrator is ready. On Fly's SIGTERM it stops the gateway first (its drain ends every session, up to 25 s), then the orchestrator. If either process dies, or the orchestrator is not ready within 2 minutes, the script exits non-zero and Fly restarts the machine.
 - **`fly.toml` settings:**
   - `kill_signal = "SIGTERM"` and `kill_timeout = 45` (Fly's defaults, SIGINT and 5 s, would cut the drain off);
   - a `/readyz` check;

@@ -13,6 +13,10 @@ on:
       - packages/**
       - harness/smoke.py
       - scripts/**
+      - deploy/**
+      - docker-compose.prod.yml
+      - harness/tests/test_fly_image.py
+      - Makefile
       - harness/tests/test_monitoring.py
       - uv.lock
       - pnpm-lock.yaml

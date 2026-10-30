@@ -4,22 +4,22 @@
 # PUBLIC_ORIGIN, TRUSTED_PROXIES and the provider keys. Fly uses deploy/fly instead; see docs/ops/deploy.md.
 services:
   agent-core:
-    command: ["--env", "prod", "--providers", "live", "--pool", "public", "--metrics-port", "9464", "--docs-url", "${PUBLIC_DOCS_URL}"]
+    command: ["--env", "prod", "--providers", "live", "--pool", "public", "--metrics-port", "9464", "--docs-url", "${PUBLIC_DOCS_URL:?set the public docs URL}"]
     environment: ["VOICECORE_VERSION=${VERSION:-dev}", "LOG_FORMAT=json", "VOICECORE_LEDGER=/data/spend_ledger.json"]
     volumes: !override ["voicecore-ledger:/data"]  # the money record survives a rebuild; prod refuses a ledger on the image
     ports: !reset []  # metrics are scraped inside the compose network only
 
   gateway:
-    command: ["-env", "prod", "-addr", "0.0.0.0:8080", "-upstream", "ws://agent-core:8765", "-origins", "${PUBLIC_ORIGIN}",
-              "-hosts", "${PUBLIC_HOST}", "-trusted-proxies", "${TRUSTED_PROXIES}", "-admin-addr", "0.0.0.0:9091",
+    command: ["-env", "prod", "-addr", "0.0.0.0:8080", "-upstream", "ws://agent-core:8765", "-origins", "${PUBLIC_ORIGIN:?set it}",
+              "-hosts", "${PUBLIC_HOST:?set it}", "-trusted-proxies", "${TRUSTED_PROXIES:?set it}", "-admin-addr", "0.0.0.0:9091",
               "-sessions-per-ip-per-day", "20"]
     environment: ["GATEWAY_SECRET=${GATEWAY_SECRET:?set a 32+ byte secret}", "TURNSTILE_SECRET=${TURNSTILE_SECRET:?set it}", "LOG_FORMAT=json"]
     ports: !override ["127.0.0.1:8080:8080"]  # the TLS proxy in front publishes it; the admin port stays private
 
   demo:
-    build: { args: { VITE_GATEWAY: "${PUBLIC_GATEWAY}" } }
+    build: { args: { VITE_GATEWAY: "${PUBLIC_GATEWAY:?set the public gateway URL}" } }
   docs:
-    build: { args: { VOICECORE_GATEWAY: "${PUBLIC_GATEWAY}" } }
+    build: { args: { VOICECORE_GATEWAY: "${PUBLIC_GATEWAY:?set the public gateway URL}" } }
 
   # third-party images pinned by digest (tags as of 2026-10-30), so a rebuilt stack is the one that was tested
   prometheus:

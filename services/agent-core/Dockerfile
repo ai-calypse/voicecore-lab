@@ -9,7 +9,7 @@ RUN uv sync --locked --no-dev
 COPY apps/docs/docs ./apps/docs/docs
 # Bake the embedding model and the docs vectors into the image, so the server starts in seconds.
 RUN uv run python -c "from pathlib import Path; from voicecore.answer.ingest import docusaurus, ingest; from voicecore.answer.index import Index; Index(ingest(Path('apps/docs/docs'), site=docusaurus('http://localhost:3000/'))).dense('warm up', 1)"
-RUN useradd --uid 10001 app && mkdir -p benchmarks && chown -R app /app/benchmarks
+RUN useradd --uid 10001 app && mkdir -p benchmarks /data && chown -R app /app/benchmarks /data  # /data: the prod ledger volume
 USER app
 EXPOSE 8765
 ENTRYPOINT ["/app/.venv/bin/python", "-m", "voicecore.server", "--host", "0.0.0.0"]

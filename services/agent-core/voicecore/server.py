@@ -320,7 +320,7 @@ async def main():
     ap.add_argument("--metrics-host", default="0.0.0.0", help="listen address for /metrics (the scraper reaches it inside compose)")
     args = ap.parse_args()
     logs.setup()
-    if args.env == "prod" and (problems := prod_problems(str(budget.ledger_file()) if not budget._redis_url() else budget._redis_url())):
+    if args.env == "prod" and (problems := prod_problems(os.environ.get("VOICECORE_LEDGER") or str(budget.LEDGER))):
         for problem in problems:
             log.error("refusing to start with --env prod: %s", problem)
         raise SystemExit(1)
