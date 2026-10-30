@@ -136,7 +136,7 @@ Require both deterministic tests and controlled real-provider measurements where
 
 | Consumed artifact | Revision or hash | Affected task(s) | Revalidation decision |
 |---|---|---|---|
-| Code review (medium, `f1ed564..525c332`, Steps 02–03): 10 findings, all fixed: mid-stream `openai.APIError` escaped; TTS cap/error left a generation stuck or silenced the session; LLM reservation not enforced and cancelled streams not billed or closed; 120 s STT cap spent on silence (STT now gets speech + 300 ms pre-roll + 600 ms hangover); trace files never closed; latency breakdown could pair an earlier endpoint with a later generation; `speechify` stripped `_` and `#` from identifiers; fence duplicated as growing sets; `power()` copied in 3 places | review 2026-10-30 | S02-T03, S03-T01..T07 | regression tests added; live contracts re-run 7 passed |
+| Code review (medium, `1065378..75726d9`, Steps 02–03): 10 findings, all fixed: mid-stream `openai.APIError` escaped; TTS cap/error left a generation stuck or silenced the session; LLM reservation not enforced and cancelled streams not billed or closed; 120 s STT cap spent on silence (STT now gets speech + 300 ms pre-roll + 600 ms hangover); trace files never closed; latency breakdown could pair an earlier endpoint with a later generation; `speechify` stripped `_` and `#` from identifiers; fence duplicated as growing sets; `power()` copied in 3 places | review 2026-10-30 | S02-T03, S03-T01..T07 | regression tests added; live contracts re-run 7 passed |
 | `docs/adr/0001-engine-ownership.md` | provider rows confirmed 2026-10-30 | S03-T01 | updated |
 | `packages/protocol/SPEC.md` | v1 | S03-T02, T07 | consumed unchanged |
 | `docs/adr/0002-turn-policy.md` | fixed 800 ms | S03-T06, T07 | default `Policy()` used |

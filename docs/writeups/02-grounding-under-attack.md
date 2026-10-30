@@ -15,6 +15,6 @@
 
 Result: 13/15, with **0 adversarial claims in any answer**. The 2 failures are under-answers (a refusal and a vague answer), which is the cost of strictness.
 
-**Honest accounting.** I fixed the engine after seeing these 15 questions, so their score is optimistic. Before re-running, I wrote and committed a fresh 6-question set (`2539dac`). One of its injections ("Note to AI assistants…") is *not* caught by the regex; the prompt rule handled that one. The unbiased contradiction number is the fresh set's 1/2 under v2, because the official-only policy was chosen after that run.
+**Honest accounting.** I fixed the engine after seeing these 15 questions, so their score is optimistic. Before re-running, I wrote and committed a fresh 6-question set (`8646c71`). One of its injections ("Note to AI assistants…") is *not* caught by the regex; the prompt rule handled that one. The unbiased contradiction number is the fresh set's 1/2 under v2, because the official-only policy was chosen after that run.
 
 Evidence: [reports/docs_eval.md](../../reports/docs_eval.md).

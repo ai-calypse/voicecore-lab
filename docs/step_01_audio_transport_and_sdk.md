@@ -130,8 +130,8 @@ Require both deterministic tests and controlled real-provider measurements where
 
 | Consumed artifact | Revision or hash | Affected task(s) | Revalidation decision |
 |---|---|---|---|
-| Code review (medium, `eb7ee6e..1f99bdc`), 10 findings, all fixed: client resume used the wrong session id; new clients reused stream ids on resume; audio queued while away played after resume; mic frame size/gen not enforced; capture AudioContext not resumed; popped item lost on write error; `cancel.ack` after a finished generation said -1; sequential shutdown; outbound drops shared the mic counter; S01-T05 over-claimed | review 2026-10-30 | S01-T01..T06 | New tests: `TestMicFrameNot20msClosesWith1007`, `TestResumeDropsAudioQueuedWhileAway`, playout ack after finish |
-| `docs/IMPLEMENTATION_PLAN.md` Step 01 | as of `317bf09` | all | Followed; deviations recorded above |
+| Code review (medium, `dd7b4f1..f424917`), 10 findings, all fixed: client resume used the wrong session id; new clients reused stream ids on resume; audio queued while away played after resume; mic frame size/gen not enforced; capture AudioContext not resumed; popped item lost on write error; `cancel.ack` after a finished generation said -1; sequential shutdown; outbound drops shared the mic counter; S01-T05 over-claimed | review 2026-10-30 | S01-T01..T06 | New tests: `TestMicFrameNot20msClosesWith1007`, `TestResumeDropsAudioQueuedWhileAway`, playout ack after finish |
+| `docs/IMPLEMENTATION_PLAN.md` Step 01 | as of `f7f9931` | all | Followed; deviations recorded above |
 | `fixtures/audio/dev/single_01.wav` | sha256 in `fixtures/audio/manifest.json` | S01-T01 | fake mic input |
 | coder/websocket docs (Context7 `/coder/websocket`, v1.8.12 docs; module v1.8.14) | fetched 2026-10-29 | S01-T02..T04 | `CloseStatus`, `CloseRead`, `Dial` with `HTTPClient` |
 
