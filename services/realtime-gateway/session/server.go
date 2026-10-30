@@ -520,9 +520,11 @@ func (s *Server) newSession(ip string) (*session, error) {
 			notReady = true // draining or starting: try another, and tell the client to retry if none takes it
 			continue
 		}
-		if !errors.Is(err, syscall.ECONNREFUSED) {
-			break // a timeout may have reserved budget there: never the same session id on another orchestrator
+		if timedOut(err) {
+			break // the orchestrator may have taken the session (and reserved budget): never the same id on another
 		}
+		// anything else failed before an upgrade (refused, a name that no longer resolves, an error status):
+		// no session started there, so the next orchestrator may have it
 	}
 	if chosen == nil {
 		if notReady {
@@ -589,6 +591,11 @@ func (s *Server) dial(u *upstream, sid string) (*websocket.Conn, error) {
 	}
 	u.br.success()
 	return up, nil
+}
+
+func timedOut(err error) bool {
+	var ne net.Error
+	return errors.Is(err, context.DeadlineExceeded) || (errors.As(err, &ne) && ne.Timeout())
 }
 
 func (s *Server) anyUpstreamReady() bool {

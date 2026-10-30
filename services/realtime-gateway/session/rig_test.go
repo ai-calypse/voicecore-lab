@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
 	"testing"
 	"testing/synctest"
@@ -229,4 +230,17 @@ func upEvents(oc *fakeorch.Conn) []string {
 			return s
 		}
 	}
+}
+
+// unresolvable wraps a client so dials to host fail like a name that no longer resolves (not refused, not a timeout).
+func unresolvable(c *http.Client, host string) *http.Client {
+	base := c.Transport.(*http.Transport)
+	t := base.Clone()
+	t.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
+		if addr == host {
+			return nil, &net.DNSError{Err: "no such host", Name: host, IsNotFound: true}
+		}
+		return base.DialContext(ctx, network, addr)
+	}
+	return &http.Client{Transport: t}
 }

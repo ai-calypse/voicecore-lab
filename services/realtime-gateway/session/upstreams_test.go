@@ -78,3 +78,14 @@ func TestANotReadyOrchestratorMeansTryAgainEvenIfAnotherFailed(t *testing.T) {
 		}
 	})
 }
+
+func TestAnOrchestratorThatNoLongerResolvesIsSkipped(t *testing.T) {
+	// gone:80 has no listener at all on the memnet (like a stopped container whose name no longer resolves)
+	runCfg(t, false, func(c *Config) {
+		c.Upstream = "ws://gone:80,ws://orch:80"
+		c.HTTPClient = unresolvable(c.HTTPClient, "gone:80")
+	}, func(t *testing.T, r *rig) {
+		welcomeOf(r.connect(nil, nil))
+		r.upstream()
+	})
+}
