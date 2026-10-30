@@ -18,6 +18,7 @@ from voicecore import budget, protocol
 from voicecore.answer.engine import AnswerEngine
 from voicecore.answer.index import Index
 from voicecore.answer.ingest import ingest
+from voicecore.providers.cartesia_tts import MAX_CHARS
 from voicecore.providers.deepgram_stt import MAX_AUDIO_S, PRICE_PER_MIN
 from voicecore.providers.factory import make_live
 from voicecore.providers.mock import LLMScript, MockLLM, MockSTT, MockTTS
@@ -40,7 +41,7 @@ def live_providers(sid):
     stt_res = budget.reserve("usd", round(MAX_AUDIO_S / 60 * PRICE_PER_MIN, 6), label=f"server stt {sid}")
     llm_res = budget.reserve("usd", LLM_CAP_USD, label=f"server llm {sid}")
     try:
-        tts_res = budget.reserve("cartesia_credits", 1500, label=f"server tts {sid}")
+        tts_res = budget.reserve("cartesia_credits", MAX_CHARS, label=f"server tts {sid}")
     except budget.BudgetExceeded:
         budget.settle(stt_res, 0.0)
         budget.settle(llm_res, 0.0)
@@ -48,7 +49,7 @@ def live_providers(sid):
     tts_streams = []
 
     def new_tts():  # the session may open a second stream for its one TTS retry; both bill the same reservation
-        tts_streams.append(make_live("tts", tts_res, max_chars=1500 - sum(t.chars for t in tts_streams)))
+        tts_streams.append(make_live("tts", tts_res, max_chars=MAX_CHARS - sum(t.chars for t in tts_streams)))
         return tts_streams[-1]
 
     p = {"stt": make_live("stt", stt_res), "llm": make_live("llm", llm_res), "tts": new_tts(), "tts_factory": new_tts}

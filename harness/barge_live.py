@@ -36,8 +36,8 @@ def score(events):
     stop = next((e for e in events if e["type"] == "playout.stopped" and e.get("dir") == "out"), None)
     heard = next((e["t_us"] for e in events if e["type"] == "user.speech_started" and e.get("dir") == "in"), None)
     return {"cancelled": any(e["type"] == "agent.cancel" for e in events), "stopped": stop and stop["reason"],
-            "interrupt_to_silence_ms": round((stop["t_us"] - onset) / 1000, 1) if onset and stop and stop["reason"] == "cancel" else None,
-            "interrupt_to_listening_ms": round((heard - onset) / 1000, 1) if onset and heard else None,
+            "interrupt_to_silence_ms": round((stop["t_us"] - onset) / 1000, 1) if onset is not None and stop and stop["reason"] == "cancel" else None,
+            "interrupt_to_listening_ms": round((heard - onset) / 1000, 1) if onset is not None and heard else None,
             "played": any(e["type"] == "playout.started" for e in events)}
 
 

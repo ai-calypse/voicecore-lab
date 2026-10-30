@@ -4,6 +4,7 @@ One engine serves text and voice: Session calls `stream` for both, and speech ge
 Retrieval runs first (local, a few ms), so a turn costs one LLM round trip, not two as a tool call would.
 `docs_search` is the same retrieval exposed as a function for evals and other callers.
 """
+import asyncio
 import re
 from dataclasses import dataclass, field
 
@@ -70,7 +71,7 @@ class Grounding:
         if not s:
             return []
         if s.rstrip(".") == REFUSAL.rstrip(".") or (REFUSAL.lower().rstrip(".") in s.lower() and not _CITE.search(s)):
-            self.refused = True
+            self.refused = not self.released  # after a grounded sentence was already given, a trailing refusal is just dropped
             return []
         valid = []
 
@@ -122,7 +123,7 @@ class AnswerEngine:
 
     async def stream(self, question: str, history: list[dict]):
         """Text deltas (grounded sentences), then one answer.sources event."""
-        hits = self.retrieve(question)
+        hits = await asyncio.to_thread(self.retrieve, question)  # embedding a query takes ms of CPU: keep the loop free
         g = Grounding(len(hits))
         async for e in self.llm.stream(self.messages(question, history, hits), max_tokens=self.max_tokens):
             if isinstance(e, TextDelta):

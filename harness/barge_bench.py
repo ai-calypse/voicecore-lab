@@ -32,7 +32,8 @@ async def main():
     for net in DELAYS:
         xs = [r["interrupt_to_silence_ms"] for r in hits if r["net_ms"] == net and r["interrupt_to_silence_ms"] is not None]
         ls = [r["interrupt_to_listening_ms"] for r in hits if r["net_ms"] == net and r["interrupt_to_listening_ms"] is not None]
-        summary[f"net_{net}ms"] = {"silence_p50": percentile(xs, 50), "silence_max": max(xs), "listening_p50": percentile(ls, 50), "n": len(xs)}
+        summary[f"net_{net}ms"] = {"silence_p50": percentile(xs, 50) if xs else None, "silence_max": max(xs, default=None),
+                                   "listening_p50": percentile(ls, 50) if ls else None, "n": len(xs)}
     (ROOT / "reports/barge_in_fake.json").write_text(json.dumps({"summary": summary, "rows": rows}, indent=2) + "\n")
     print(json.dumps(summary, indent=2))
 

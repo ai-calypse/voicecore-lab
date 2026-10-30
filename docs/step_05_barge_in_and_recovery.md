@@ -106,6 +106,7 @@ Require both deterministic tests and controlled real-provider measurements where
 
 | Consumed artifact | Revision or hash | Affected task(s) | Revalidation decision |
 |---|---|---|---|
+| Code review (medium, `545bdf0..eaa88c4`, Steps 04–05): 10 findings, all fixed: async TTS errors after the text was sent got no retry and stranded the turn; pause timer leaked across generations and past close; a refusal after a grounded sentence mislabelled the answer; mic revoke mid-utterance stranded the turn; echo tail (200 ms) still reached STT; fatal TTS cap was retried; `max([])` and falsy-zero onset in the harness; retrieval blocked the event loop (now `asyncio.to_thread`, sqlite lock); stale partial audio prepended to a retry | review 2026-10-30 | S04-T03, S05-T03, S05-T04 | 4 regression tests added |
 | `fixtures/audio` interrupt/echo clips | manifest rebuilt 2026-10-30 (−23 dBFS) | S05-T01, T04 | consumed |
 | `docs/adr/0002-turn-policy.md` echo gate parameters | 2026-10-30 | S05-T01, T04 | unchanged; short-first-word weakness recorded |
 

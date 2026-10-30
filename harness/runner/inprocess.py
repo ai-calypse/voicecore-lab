@@ -194,6 +194,6 @@ async def run_barge_in(clip, *, clips=None, vad=None, net_ms: int = 0) -> dict:
     return {"trace": trace, "client": client.log, "barge_in_ms": ms(barge["t_mono_us"]) if barge else None,
             "playout_started_ms": ms(started["t_us"]) if started else None,
             "stopped": stopped and {"reason": stopped["reason"], "t_ms": ms(stopped["t_us"])}, "onset_ms": onset,
-            "interrupt_to_silence_ms": ms(stopped["t_us"]) - onset if stopped and onset and stopped["reason"] == "cancel" else None,
+            "interrupt_to_silence_ms": ms(stopped["t_us"]) - onset if stopped and onset is not None and stopped["reason"] == "cancel" else None,
             "interrupt_to_listening_ms": next((ms(e["t_us"]) - onset for e in client.log if e["type"] == "user.speech_started"), None)
-            if onset else None}
+            if onset is not None else None}

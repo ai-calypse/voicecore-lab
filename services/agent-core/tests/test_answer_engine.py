@@ -87,3 +87,9 @@ async def test_same_question_as_text_and_as_voice_gives_the_same_citations_and_n
         await s.close()
     assert results["text"][0] == results["voice"][0] and results["text"][2] == results["voice"][2]
     assert all("[" not in t for t in results["voice"][1]) and results["voice"][1]
+
+
+def test_a_refusal_after_a_grounded_sentence_is_dropped_not_counted():
+    g = Grounding(5)
+    assert released(g, "Run uv init [1]. ", "I couldn't find that in the docs.") == "Run uv init [1]. "
+    assert g.answerable

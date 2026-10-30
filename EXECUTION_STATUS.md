@@ -39,6 +39,6 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 | 2026-10-30 | 02 (manual echo check open) | Registers filled; tests pass; ADR 0002; code review done together with Step 03 | 03 |
 | 2026-10-30 | 03 | Registers filled; tests + e2e + live contracts pass; latency report; code review fixed | 04 |
 | 2026-10-30 | 04 | Registers filled; tests + e2e pass; eval report | 05 |
-| 2026-10-30 | 05 (manual loopback open) | Registers filled; tests pass; kill gate passed; barge-in report | 06 |
+| 2026-10-30 | 05 (manual loopback open) | Registers filled; tests pass; kill gate passed; barge-in report; code review (04–05) 10 findings fixed | 06 |
 
 **Planning update (2026-10-28):** Documented initial STT/VAD/LLM/TTS provider recommendations in the master plan. No live integration, verification, measurements, or step completion is implied.

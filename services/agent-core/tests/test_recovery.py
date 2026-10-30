@@ -112,3 +112,55 @@ async def test_mic_revoked_stops_voice_but_text_still_works():
     await asyncio.sleep(3)
     assert [e["gen"] for e in out.events("agent.text")] == [1]
     await s.close()
+
+
+# Code review 2026-10-30 (Steps 04-05) regressions
+
+class LateFailingTTS(MockTTS):
+    """synth succeeds; the error arrives later from the socket, as Cartesia reports it."""
+
+    async def audio(self):
+        await asyncio.sleep(0.5)
+        raise ProviderError("retryable", "cartesia error frame")
+        yield  # pragma: no cover
+
+
+async def test_a_late_tts_error_after_the_text_was_sent_is_retried_once():
+    made = []
+
+    def factory():
+        made.append(MockTTS(first_audio_ms=5))
+        return made[-1]
+
+    s, out = await make(tts=LateFailingTTS(), tts_factory=factory, llm=MockLLM(LLMScript(tokens=["Short."], first_token_ms=10)))
+    await s.on_event({"type": "text.input", "text": "hi"})
+    await asyncio.sleep(5)
+    assert len(made) == 1 and out.frames() and out.frames()[-1].flags == 1
+    await s.close()
+
+
+async def test_the_pause_timer_follows_the_current_generation():
+    s, out = await make(tts=MockTTS(ms_per_char=1000))
+    await s.on_event({"type": "text.input", "text": "first"})
+    await s.on_event({"type": "client.paused"})
+    await asyncio.sleep(10)
+    await s.on_event({"type": "text.input", "text": "second"})  # gen 1 superseded; its timer must not linger
+    await asyncio.sleep(0.1)
+    await s.on_event({"type": "client.paused"})
+    await asyncio.sleep(25)
+    assert [e["gen"] for e in out.events("agent.cancel")] == [1]
+    await asyncio.sleep(6)
+    assert [e["gen"] for e in out.events("agent.cancel")] == [1, 2]
+    await s.close()
+
+
+async def test_revoking_the_mic_mid_utterance_drops_the_half_turn():
+    stt = MockSTT()
+    s, out = await make(stt=stt, vad=FixtureVAD([[0, 5000]]))
+    for k in range(25):
+        await s.on_frame(mic(k))
+        await asyncio.sleep(0.02)
+    assert s.state == State.USER_SPEAKING
+    await s.on_event({"type": "mic.revoked"})
+    assert s.state == State.LISTENING and s.transcript.text() == ""
+    await s.close()

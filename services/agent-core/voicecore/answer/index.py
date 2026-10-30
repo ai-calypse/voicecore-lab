@@ -2,6 +2,7 @@
 import hashlib
 import re
 import sqlite3
+import threading
 from pathlib import Path
 
 import numpy as np
@@ -38,6 +39,7 @@ class Index:
         self.passages = passages
         self.by_id = {p.id: p for p in passages}
         self.db = sqlite3.connect(":memory:", check_same_thread=False)
+        self._db_lock = threading.Lock()  # retrieval runs in worker threads; one sqlite connection is shared
         self.db.execute("CREATE VIRTUAL TABLE p USING fts5(id UNINDEXED, title, body, tokenize='porter unicode61')")
         self.db.executemany("INSERT INTO p VALUES (?, ?, ?)", [(p.id, p.title, p.text) for p in passages])
         self._model = None
@@ -66,7 +68,8 @@ class Index:
         query = fts_query(q)
         if not query:
             return []
-        rows = self.db.execute("SELECT id FROM p WHERE p MATCH ? ORDER BY bm25(p) LIMIT ?", (query, k)).fetchall()
+        with self._db_lock:
+            rows = self.db.execute("SELECT id FROM p WHERE p MATCH ? ORDER BY bm25(p) LIMIT ?", (query, k)).fetchall()
         return [self.by_id[r[0]] for r in rows]
 
     def dense(self, q: str, k: int = 10) -> list[Passage]:

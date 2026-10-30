@@ -114,6 +114,10 @@ class Floor:
             return self._end("asr")
         return []
 
+    def echo_gated(self) -> bool:
+        """True while the echo gate is on: the agent is playing, or its echo tail may still be audible."""
+        return self.t <= self.gate_until
+
     def _above_echo(self) -> bool:
         db = lambda x: 10 * math.log10(sum(x) / len(x) + 1e-12)  # noqa: E731
         return bool(self.mic) and db(self.mic) >= db(self.ref) + self.policy.echo_gate_db
