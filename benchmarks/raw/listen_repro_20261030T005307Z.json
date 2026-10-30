@@ -1,0 +1,115 @@
+{
+  "run_id": "20261030T005307Z",
+  "sessions": [
+    {
+      "request_id": "01a18a4b-d2b8-7af0-8ef0-7e14907edff5",
+      "ok": true,
+      "error": null,
+      "finals": [
+        "It is not cultivated in England being"
+      ],
+      "seconds": 2.59,
+      "audio_s": 3.000000000000002,
+      "cost_usd": 0.000385
+    },
+    {
+      "request_id": "01a18a4b-dcd9-7560-a199-e73f1a87f99e",
+      "ok": true,
+      "error": null,
+      "finals": [
+        "It is not cultivated in England being"
+      ],
+      "seconds": 2.636,
+      "audio_s": 3.000000000000002,
+      "cost_usd": 0.000385
+    },
+    {
+      "request_id": "01a18a4b-e713-7cf0-88ef-8882709d46ec",
+      "ok": true,
+      "error": null,
+      "finals": [
+        "It is not cultivated in England being"
+      ],
+      "seconds": 2.617,
+      "audio_s": 3.000000000000002,
+      "cost_usd": 0.000385
+    },
+    {
+      "request_id": "01a18a4b-f156-7852-b538-a380ddd38b4b",
+      "ok": true,
+      "error": null,
+      "finals": [
+        "It is not cultivated in England being"
+      ],
+      "seconds": 2.559,
+      "audio_s": 3.000000000000002,
+      "cost_usd": 0.000385
+    },
+    {
+      "request_id": "01a18a4b-fb56-71e0-aadf-9ad684ad2e29",
+      "ok": true,
+      "error": null,
+      "finals": [
+        "It is not cultivated in England being"
+      ],
+      "seconds": 2.657,
+      "audio_s": 3.000000000000002,
+      "cost_usd": 0.000385
+    },
+    {
+      "request_id": "01a18a4c-05b6-7b50-993a-52039e6fb75b",
+      "ok": true,
+      "error": null,
+      "finals": [
+        "It is not cultivated in England being"
+      ],
+      "seconds": 2.564,
+      "audio_s": 3.000000000000002,
+      "cost_usd": 0.000385
+    },
+    {
+      "request_id": "01a18a4c-101d-7123-a9dd-294d4f630cbc",
+      "ok": true,
+      "error": null,
+      "finals": [
+        "It is not cultivated in England being"
+      ],
+      "seconds": 2.676,
+      "audio_s": 3.000000000000002,
+      "cost_usd": 0.000385
+    },
+    {
+      "request_id": "01a18a4c-1a95-74c3-8db4-c205654b6f20",
+      "ok": true,
+      "error": null,
+      "finals": [
+        "It is not cultivated in England being"
+      ],
+      "seconds": 2.671,
+      "audio_s": 3.000000000000002,
+      "cost_usd": 0.000385
+    },
+    {
+      "request_id": "01a18a4c-24f8-7b03-b421-045dd968ff3b",
+      "ok": true,
+      "error": null,
+      "finals": [
+        "It is not cultivated in England being"
+      ],
+      "seconds": 2.729,
+      "audio_s": 3.000000000000002,
+      "cost_usd": 0.000385
+    },
+    {
+      "request_id": "01a18a4c-2fa7-7900-9c78-9ec7b3a09b52",
+      "ok": true,
+      "error": null,
+      "finals": [
+        "It is not cultivated in England being"
+      ],
+      "seconds": 2.647,
+      "audio_s": 3.000000000000002,
+      "cost_usd": 0.000385
+    }
+  ]
+}

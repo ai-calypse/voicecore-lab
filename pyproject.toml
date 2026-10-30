@@ -21,6 +21,7 @@ dev = [
     "hypothesis>=6.170",
     "numpy>=2.5.4",
     "matplotlib>=3.11.2",
+    "pytest-timeout>=2.4.0",
 ]
 
 [tool.pytest.ini_options]
@@ -29,4 +30,5 @@ pythonpath = ["harness"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 markers = ["live: calls a paid provider; needs keys and a budget reservation"]
+timeout = 60
 filterwarnings = ["ignore:There is no current event loop:DeprecationWarning"]

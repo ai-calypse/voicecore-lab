@@ -59,6 +59,172 @@
       "reserved": 0.0881,
       "chars": 2447,
       "provider": "deepgram aura-2"
+    },
+    {
+      "id": "596618d29e69",
+      "pool": "usd",
+      "amount": 0.00385,
+      "label": "listen_repro 20261030T005307Z",
+      "status": "settled",
+      "reserved": 0.005775,
+      "run_id": "20261030T005307Z",
+      "request_ids": [
+        "01a18a4b-d2b8-7af0-8ef0-7e14907edff5",
+        "01a18a4b-dcd9-7560-a199-e73f1a87f99e",
+        "01a18a4b-e713-7cf0-88ef-8882709d46ec",
+        "01a18a4b-f156-7852-b538-a380ddd38b4b",
+        "01a18a4b-fb56-71e0-aadf-9ad684ad2e29",
+        "01a18a4c-05b6-7b50-993a-52039e6fb75b",
+        "01a18a4c-101d-7123-a9dd-294d4f630cbc",
+        "01a18a4c-1a95-74c3-8db4-c205654b6f20",
+        "01a18a4c-24f8-7b03-b421-045dd968ff3b",
+        "01a18a4c-2fa7-7900-9c78-9ec7b3a09b52"
+      ]
+    },
+    {
+      "id": "2dcd91df0856",
+      "pool": "usd",
+      "amount": 0.00097,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 0.01
+    },
+    {
+      "id": "7cd1bbcc7a1e",
+      "pool": "usd",
+      "amount": 0,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 0.01
+    },
+    {
+      "id": "4c20c0b98f76",
+      "pool": "usd",
+      "amount": 3.4e-05,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 0.01
+    },
+    {
+      "id": "11283eda5424",
+      "pool": "usd",
+      "amount": 0,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 0.01
+    },
+    {
+      "id": "73d2c3feaf61",
+      "pool": "cartesia_credits",
+      "amount": 27,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 150
+    },
+    {
+      "id": "acba6a640aa7",
+      "pool": "cartesia_credits",
+      "amount": 42,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 150
+    },
+    {
+      "id": "159d51d25f39",
+      "pool": "cartesia_credits",
+      "amount": 0,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 150
+    },
+    {
+      "id": "1964c4d44b0c",
+      "pool": "usd",
+      "amount": 0.00097,
+      "label": "deepgram message dump",
+      "status": "settled",
+      "reserved": 0.003,
+      "purpose": "debug Partial after Final"
+    },
+    {
+      "id": "16bf682a0d1e",
+      "pool": "usd",
+      "amount": 0.00097,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 0.01
+    },
+    {
+      "id": "f4b26f01e397",
+      "pool": "usd",
+      "amount": 0.00097,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 0.01
+    },
+    {
+      "id": "40c86081e779",
+      "pool": "usd",
+      "amount": 0.00097,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 0.01
+    },
+    {
+      "id": "c2e704783ea3",
+      "pool": "usd",
+      "amount": 0.00097,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 0.01
+    },
+    {
+      "id": "aedfc5745bf6",
+      "pool": "usd",
+      "amount": 0,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 0.01
+    },
+    {
+      "id": "0e8551120a0e",
+      "pool": "usd",
+      "amount": 3.4e-05,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 0.01
+    },
+    {
+      "id": "0845665f5f9f",
+      "pool": "usd",
+      "amount": 0,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 0.01
+    },
+    {
+      "id": "69d93500f84a",
+      "pool": "cartesia_credits",
+      "amount": 27,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 150
+    },
+    {
+      "id": "5e6d53f904fd",
+      "pool": "cartesia_credits",
+      "amount": 42,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 150
+    },
+    {
+      "id": "d934121eae59",
+      "pool": "cartesia_credits",
+      "amount": 0,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 150
     }
   ],
   "caps": {
@@ -66,7 +232,7 @@
     "cartesia_credits": 16000
   },
   "totals": {
-    "usd": 0.59841,
-    "cartesia_credits": 0
+    "usd": 0.608148,
+    "cartesia_credits": 138
   }
 }

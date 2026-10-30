@@ -27,7 +27,7 @@ import wave
 from datetime import datetime, timezone
 from pathlib import Path
 
-from voicecore import budget
+from voicecore import budget, keys
 
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG = ROOT / "harness/config/baseline.json"
@@ -42,15 +42,7 @@ def now_ms():
 
 
 def load_key():
-    if os.environ.get("DEEPGRAM_API_KEY"):
-        return os.environ["DEEPGRAM_API_KEY"]
-    env = ROOT / ".env"
-    if env.exists():
-        for line in env.read_text().splitlines():
-            k, _, v = line.partition("=")
-            if k.strip() == "DEEPGRAM_API_KEY":
-                return v.strip()
-    sys.exit("DEEPGRAM_API_KEY not set and not in .env")
+    return keys.key("DEEPGRAM_API_KEY") or sys.exit("DEEPGRAM_API_KEY not set and not in .env")
 
 
 # --- budget -----------------------------------------------------------------
