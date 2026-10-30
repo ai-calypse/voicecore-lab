@@ -56,7 +56,7 @@ JSON text messages with a `type` field. Fields listed below are **required**; re
 | `agent.text` | `gen`, `text` | answer text (also sent for voice turns) |
 | `agent.cancel` | `gen` | stop and flush generation `gen` and every older one |
 | `answer.sources` | `gen`, `sources[]` | citations: each `{id, url, title}` |
-| `session.ended` | `reason` | `client`, `expired`, `budget`, `error` |
+| `session.ended` | `reason` | `client`, `expired`, `budget`, `error`, `shutdown` |
 
 **Gateway → orchestrator only:**
 
