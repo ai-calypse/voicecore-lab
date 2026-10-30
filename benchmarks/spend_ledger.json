@@ -3518,6 +3518,96 @@
       "label": "speech check: dollar amounts",
       "status": "settled",
       "reserved": 0.01
+    },
+    {
+      "id": "4cdeab22ef2f",
+      "pool": "usd",
+      "amount": 0.0,
+      "label": "server stt s-e99ee0666153dd2b",
+      "status": "settled",
+      "reserved": 0.0385,
+      "request_id": "01a18ee4-2913-7c21-a73c-a10da470f8f9"
+    },
+    {
+      "id": "d5dc85291525",
+      "pool": "usd",
+      "amount": 0.0,
+      "label": "server llm s-e99ee0666153dd2b",
+      "status": "settled",
+      "reserved": 0.02,
+      "calls": 0
+    },
+    {
+      "id": "b24491461579",
+      "pool": "usd",
+      "amount": 0.0,
+      "label": "server stt s-ab1540aca1b59c47",
+      "status": "settled",
+      "reserved": 0.0385,
+      "request_id": null
+    },
+    {
+      "id": "c8baa01ba53f",
+      "pool": "usd",
+      "amount": 0.0,
+      "label": "server llm s-ab1540aca1b59c47",
+      "status": "settled",
+      "reserved": 0.02,
+      "calls": 0
+    },
+    {
+      "id": "3e6c8a464a23",
+      "pool": "usd",
+      "amount": 0.0,
+      "label": "server stt s-f9cd88bc42515691",
+      "status": "settled",
+      "reserved": 0.0385,
+      "request_id": null
+    },
+    {
+      "id": "2a8bdba85edb",
+      "pool": "usd",
+      "amount": 0.0,
+      "label": "server llm s-f9cd88bc42515691",
+      "status": "settled",
+      "reserved": 0.02,
+      "calls": 0
+    },
+    {
+      "id": "3c1e0ba2c933",
+      "pool": "usd",
+      "amount": 0.0,
+      "label": "server stt s-d3482e753c1db293",
+      "status": "settled",
+      "reserved": 0.0385,
+      "request_id": "01a18ee7-e3e7-73f3-99fa-e2ff88c427da"
+    },
+    {
+      "id": "11f2be20a0e9",
+      "pool": "usd",
+      "amount": 0.0,
+      "label": "server llm s-d3482e753c1db293",
+      "status": "settled",
+      "reserved": 0.02,
+      "calls": 0
+    },
+    {
+      "id": "cb6296d7d868",
+      "pool": "usd",
+      "amount": 0.0,
+      "label": "server stt s-7b427a5c85608402",
+      "status": "settled",
+      "reserved": 0.0385,
+      "request_id": "01a18ee7-e7eb-74e0-a7f5-3ec77bd450dd"
+    },
+    {
+      "id": "60481f9ac57a",
+      "pool": "usd",
+      "amount": 0.0,
+      "label": "server llm s-7b427a5c85608402",
+      "status": "settled",
+      "reserved": 0.02,
+      "calls": 0
     }
   ],
   "caps": {

@@ -29,3 +29,17 @@ test("a link to another site is left to the widget", async ({ page }) => {
     !dispatchEvent(new CustomEvent("voicecore:navigate", { detail: { url: "https://example.com/x#y", title: "t" }, cancelable: true })));
   expect(handled).toBe(false);
 });
+
+// The widget's footer links the privacy page (data-privacy-url), in a new tab so the voice session lives on.
+test("the widget links the privacy page", async ({ page }) => {
+  // Opening the panel connects to the built-in gateway (localhost:8080), which may be a live stack: never let it.
+  await page.route("**/v1/session", (r) => r.abort());
+  await page.goto("/");
+  await hydrated(page);
+  await page.getByRole("button", { name: "Ask the docs" }).click();
+  const link = page.getByRole("link", { name: "Privacy" });
+  await expect(link).toHaveAttribute("href", "/privacy");
+  const [tab] = await Promise.all([page.waitForEvent("popup"), link.click()]);
+  await expect(tab).toHaveURL(/\/privacy$/);
+  await expect(tab.getByRole("heading", { level: 1 })).toHaveText("Privacy");
+});

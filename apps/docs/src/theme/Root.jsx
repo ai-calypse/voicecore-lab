@@ -60,6 +60,7 @@ export default function Root({ children }) {
       s.dataset.endpoint = siteConfig.customFields.gateway;
       s.dataset.title = "Ask the docs";
       s.dataset.name = "VoiceCore docs assistant";
+      s.dataset.privacyUrl = "/privacy";
       document.body.append(s);
     }
     const onNavigate = (e) => {

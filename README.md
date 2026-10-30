@@ -64,7 +64,23 @@ The docs site ([`apps/docs`](apps/docs)) is the assistant's only source. It is a
 Copy `.env.example` to `.env` and fill in the keys, then `uv run python -m voicecore.server --providers live` (or `PROVIDERS=live docker compose up`).
 
 - **Spending is guarded.** Every live session reserves its caps first (STT 300 s of speech, LLM $0.02, TTS 4,000 characters with Deepgram or 1,500 with Cartesia) in `benchmarks/spend_ledger.json`, and [`voicecore/budget.py`](services/agent-core/voicecore/budget.py) refuses anything over the project caps.
-- **Keys stay on the server.** The browser only ever holds a 60 s gateway token.
+- **Keys stay on the server.** The browser only ever holds a single-use gateway token, valid for 60 s.
+
+## Operations
+
+Step 09 made the stack production-ready without hosting it. Everything below runs locally, with mock providers unless stated.
+
+| Area | What there is | Start here |
+|---|---|---|
+| **Health and shutdown** | `/healthz` and `/readyz` on both services; SIGTERM drains open calls (the gateway up to 25 s), settles their spend, then exits 0 | [runbooks](docs/ops/runbooks.md) |
+| **Monitoring** | `docker compose --profile monitoring up -d --build --wait`: Prometheus, Alertmanager, Loki, Grafana on :3001. Alert rules, one per target, each with a runbook; alerts go to a local sink | [monitoring](docs/ops/monitoring.md), [targets](docs/ops/slos.md) |
+| **Resilience** | Circuit breakers per provider and per orchestrator; speech-to-text reconnects once; a 20 s limit on each answer; the widget reconnects to the same session | [ADR 0004](docs/adr/0004-deploy-abuse-resilience-scale.md) |
+| **Abuse and spend** | Single-use, IP-bound tokens; Cloudflare Turnstile (off until a sitekey is set); per-IP daily quota; a public budget of $2 ($0.50 a day) inside the $5 cap, then text-only answers | [data map](docs/ops/data-map.md) |
+| **Scale** | `docker compose --profile scale up`: two gateways and two orchestrators behind nginx, sharing a Redis ledger | [load report](reports/load.md) |
+| **Deploy** | A Fly.io app, configured and tested locally, **not deployed** | [deploy guide](docs/ops/deploy.md) |
+| **Incidents** | Severity levels, a template and two write-ups | [incidents](docs/ops/incidents.md) |
+
+Checks: `make monitoring-check`, `make monitoring-test`, `make scale-test` and `make fly-image-test` (the last three need Docker).
 
 ## Repository map
 
@@ -79,16 +95,19 @@ Copy `.env.example` to `.env` and fill in the keys, then `uv run python -m voice
 | [`harness/`](harness) | fixture builders, runners (in-process fake time, WSS), timeline and metrics, benchmarks, evals, CI gate |
 | [`experiments/`](experiments) | RTP jitter buffer and RFC 3550 jitter; Pion WebRTC spike |
 | [`fixtures/`](fixtures) | LibriSpeech-derived audio (CC BY 4.0, [attribution](fixtures/audio/ATTRIBUTION.md)), uv docs snapshot (MIT/Apache-2.0), answer key, adversarial docs |
-| [`docs/`](docs) | [architecture](docs/architecture.md), [portfolio story](docs/portfolio_story.md), [media internals](docs/media_internals.md), ADRs, step plans |
+| [`docs/`](docs) | [architecture](docs/architecture.md), [portfolio story](docs/portfolio_story.md), [media internals](docs/media_internals.md), ADRs, step plans; [`docs/ops/`](docs/ops) runbooks, targets, incidents, deploy guide |
+| [`monitoring/`](monitoring) | Prometheus rules and tests, Alertmanager routes, Loki, Alloy, Grafana dashboard |
+| [`deploy/`](deploy) | Fly.io image and config (`deploy/fly`), the scale profile's nginx and test ledger (`deploy/scale`) |
 
 ## Status and open items
 
-All eight build steps are done. These items need a person or a decision:
+Steps 00–08 are done, and Step 09 (production readiness) is in its last phase. These items need a person or a decision:
 
 - the dummynet (`sudo`) network-shaping runs;
 - the manual acoustic barge-in and speaker/AEC checks;
 - the 20-answer manual audit ([reports/answer_audit.md](reports/answer_audit.md));
-- hosting a public demo;
+- deploying the Fly app, with real Turnstile keys and rotated provider keys;
+- the live load test (about $0.17, not yet approved);
 - making the repository public.
 
 [EXECUTION_STATUS.md](EXECUTION_STATUS.md) tracks every step with its evidence.

@@ -28,6 +28,7 @@ The script tag takes two attributes:
 | `data-title` | the label on the launcher button | "Ask the docs" |
 | `data-name` | the assistant's name, shown at the top of the open panel and used as the dialog's accessible name | "Docs assistant" |
 | `data-turnstile-sitekey` | a Cloudflare Turnstile sitekey. The widget then runs the human check before each new session and sends its token with the token request. Use it when the gateway has `TURNSTILE_SECRET`. The check appears only if Cloudflare needs the visitor to act; if it fails, the widget says "Couldn't verify you're human. Reload and try again." | none: no check |
+| `data-privacy-url` | a URL for a "Privacy" link in the panel's footer, opened in a new tab so the session keeps running. This site sets `/privacy`. | none: no link |
 
 The widget derives both gateway addresses from `data-endpoint`:
 
@@ -42,12 +43,22 @@ Leave `data-endpoint` out only when the gateway serves the same origin as the pa
 
 The widget never holds a provider key. It starts a session in four steps:
 
-1. **Token.** When you open the panel, it sends `POST /v1/session` to the gateway. The reply is `{"token": "..."}`: an expiry time signed with HMAC-SHA256, valid for 60 s.
+1. **Token.** When you open the panel, it sends `POST /v1/session` to the gateway, with the Turnstile token as the form field `cf-turnstile-response` when `data-turnstile-sitekey` is set. The reply is `{"token": "..."}`: an expiry time and a random nonce, signed with HMAC-SHA256 together with the client's IP address. A token is valid for 60 s, for one session, and only from the IP address that asked for it.
 2. **Hello.** It opens the WebSocket and sends `hello` with the token, protocol version 1, 16 kHz mic audio in 20 ms frames, and 24 kHz playout. The gateway closes the socket if `hello` does not arrive within 5 s.
-3. **Welcome.** The gateway checks the token and the audio format, dials the orchestrator, and replies `welcome` with the session ID and a 10 s resume window.
+3. **Welcome.** The gateway checks the token and the audio format, dials the orchestrator, and replies `welcome` with the session ID, a resume key and a 10 s resume window.
 4. **Heartbeat.** The client sends `ping` every 2 s. The gateway closes the session after 10 s without any message.
 
 The gateway issues at most 10 tokens per minute per client IP; beyond that the token request fails with HTTP 429. Closing the panel ends the session, and so does leaving the page.
+
+## Reconnect after a dropped connection
+
+If the connection drops after `welcome`, the status line says "Reconnecting…" and the widget tries again after 0.5, 1, 2, 4 and 4 s. Each attempt opens `/v1/ws?resume=<session ID>` and sends the session ID and the resume key, which only this tab has. The microphone keeps running meanwhile.
+
+- **Within the 10 s resume window**, the gateway gives back the same session, and the conversation continues.
+- **After the window**, the widget asks for a new token and starts a new session.
+- **If every attempt fails**, the status line says "Disconnected. Close and reopen to start again."
+
+The widget does not retry a normal end or a refusal that would only happen again, such as a refused audio format.
 
 ## Microphone permission and the text fallback
 

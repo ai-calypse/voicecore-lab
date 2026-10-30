@@ -99,7 +99,7 @@ If you serve the site somewhere else, set `--docs-url` to that address, or the c
 
 ## Environment variables
 
-VoiceCore reads the environment variables below. Only the three provider keys are secret. None of them is needed for mock mode: with no variables set, the stack runs mock providers, the gateway makes a random token secret, and both web apps talk to the gateway on `http://localhost:8080`. The last three are read when the demo or this site is built or started with its dev server, not by the served pages.
+VoiceCore reads the environment variables below. The three provider keys, `GATEWAY_SECRET` and `TURNSTILE_SECRET` are secret. None of them is needed for mock mode: with no variables set, the stack runs mock providers, the gateway makes a random token secret, and both web apps talk to the gateway on `http://localhost:8080`. The last three are read when the demo or this site is built or started with its dev server, not by the served pages.
 
 | Variable | Read by | Meaning |
 |---|---|---|
@@ -109,7 +109,8 @@ VoiceCore reads the environment variables below. Only the three provider keys ar
 | `GATEWAY_SECRET` | gateway | fixed secret for session tokens; otherwise a random secret per gateway process |
 | `TURNSTILE_SECRET` | gateway | Cloudflare Turnstile secret; when set, `POST /v1/session` needs a passed human check. Unset (the default) means no check. Cloudflare's test secret `1x0000000000000000000000000000000AA` always passes |
 | `LOG_FORMAT` | gateway, orchestrator | `json` for one JSON object per log line (docker compose sets it); anything else, or unset, gives plain text |
-| `VOICECORE_LEDGER` | orchestrator, harness | path of the spend ledger; default `benchmarks/spend_ledger.json` |
+| `VOICECORE_LEDGER` | orchestrator, harness | path of the spend ledger, default `benchmarks/spend_ledger.json`; or a `redis://` URL for a ledger shared by several orchestrators, which must first be seeded with `python -m voicecore.budget migrate` |
+| `VOICECORE_VERSION` | orchestrator | the version `/healthz` reports; default `dev` |
 | `PROVIDERS` | docker compose | `mock` (default) or `live`, passed to the orchestrator |
 | `PUBLIC_GATEWAY` | docker compose build | the gateway URL baked into the demo and docs images, for the widget and the pages' `connect-src`; default `http://localhost:8080` |
 | `HOST_UID`, `HOST_GID` | docker compose | user the orchestrator container runs as; default 10001 |

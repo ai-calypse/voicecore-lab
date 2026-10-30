@@ -15,6 +15,7 @@ const endpoint = (script?.dataset.endpoint ?? location.origin).replace(/\/$/, ""
 const label = script?.dataset.title ?? "Ask the docs";
 const name = script?.dataset.name ?? "Docs assistant";
 const sitekey = script?.dataset.turnstileSitekey; // data-turnstile-sitekey: ask Cloudflare Turnstile before each new session
+const privacy = script?.dataset.privacyUrl; // data-privacy-url: a "Privacy" link in the footer
 
 type Turnstile = { render(el: HTMLElement, o: Record<string, unknown>): string; remove(id: string): void };
 class HumanCheckFailed extends Error {}
@@ -85,9 +86,10 @@ function mount() {
   const form = h("form", { class: "ask" }, input, send);
   const close = h("button", { type: "button", class: "close", "aria-label": "Close and end the session" });
   close.innerHTML = ICON.close;
+  const foot = h("p", { class: "foot" }, "Answers come from these docs and cite them. Audio is not stored.");
+  if (privacy) foot.append(" ", h("a", { href: privacy, target: "_blank", rel: "noopener" }, "Privacy")); // a new tab: the session lives on
   const panel = h("section", { class: "panel", id: "vc-panel", role: "dialog", "aria-label": name, hidden: "" },
-    h("header", {}, h("p", { class: "title" }, name), close), stage, status, log, form,
-    h("p", { class: "foot" }, "Answers come from these docs and cite them. Audio is not stored."));
+    h("header", {}, h("p", { class: "title" }, name), close), stage, status, log, form, foot);
   root.append(launcher, panel);
 
   let client: VoiceClient | null = null;
