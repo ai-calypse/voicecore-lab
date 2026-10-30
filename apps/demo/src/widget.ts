@@ -1,7 +1,9 @@
 // Embeddable voice + text widget (S08-T01). One classic script:
-//   <script src="https://…/voicecore.js" data-endpoint="https://gateway.example"></script>
+//   <script src="https://…/voicecore.js" data-endpoint="https://gateway.example" data-title="Ask the docs"></script>
 // Renders in a Shadow DOM so the host page's CSS cannot reach it, and talks to the gateway only
 // (a short-lived session token from POST /v1/session; provider keys never reach the browser).
+// When an answer cites a docs section it dispatches "voicecore:navigate" on window ({url, title}); a host that
+// opens the section itself calls preventDefault() (the docs site does, without a reload, so the session lives on).
 import { startPlayout, VoiceClient, type PlayoutHandle } from "@voicecore/web-sdk";
 import css from "./widget.css?inline";
 
@@ -10,6 +12,8 @@ type Source = { n: number; title: string; url: string };
 
 const script = document.currentScript as HTMLScriptElement | null;
 const endpoint = (script?.dataset.endpoint ?? location.origin).replace(/\/$/, "");
+const label = script?.dataset.title ?? "Ask the docs";
+const name = script?.dataset.name ?? "Docs assistant";
 
 const ICON = {
   mic: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-2.08A7 7 0 0 0 19 12h-2Z"/></svg>',
@@ -32,8 +36,8 @@ function mount() {
   document.body.append(host);
 
   const launcher = h("button", { class: "launcher", type: "button", "aria-expanded": "false", "aria-controls": "vc-panel" },
-    h("span", { class: "orb small", "aria-hidden": "true" }), "Ask the uv docs");
-  const status = h("p", { class: "status", role: "status", "aria-live": "polite" }, "Tap the mic and ask a question about uv.");
+    h("span", { class: "orb small", "aria-hidden": "true" }), label);
+  const status = h("p", { class: "status", role: "status", "aria-live": "polite" }, "Tap the mic and ask me anything about these docs.");
   const mic = h("button", { class: "mic", type: "button", "aria-label": "Start talking", "aria-pressed": "false" });
   mic.innerHTML = ICON.mic;
   const stage = h("div", { class: "stage" }, h("span", { class: "orb big", "aria-hidden": "true" }), mic);
@@ -44,9 +48,9 @@ function mount() {
   const form = h("form", { class: "ask" }, input, send);
   const close = h("button", { type: "button", class: "close", "aria-label": "Close and end the session" });
   close.innerHTML = ICON.close;
-  const panel = h("section", { class: "panel", id: "vc-panel", role: "dialog", "aria-label": "uv docs voice assistant", hidden: "" },
-    h("header", {}, h("p", { class: "title" }, "uv docs assistant"), close), stage, status, log, form,
-    h("p", { class: "foot" }, "Answers come from the uv docs and cite them. Audio is not stored."));
+  const panel = h("section", { class: "panel", id: "vc-panel", role: "dialog", "aria-label": name, hidden: "" },
+    h("header", {}, h("p", { class: "title" }, name), close), stage, status, log, form,
+    h("p", { class: "foot" }, "Answers come from these docs and cite them. Audio is not stored."));
   root.append(launcher, panel);
 
   let client: VoiceClient | null = null;
@@ -68,15 +72,22 @@ function mount() {
     log.scrollTop = log.scrollHeight;
     return li;
   };
+  const open = (s: Source) => // true when the host page opened the section itself
+    !dispatchEvent(new CustomEvent("voicecore:navigate", { detail: { url: s.url, title: s.title }, cancelable: true }));
+  const link = (s: Source, attrs: Record<string, string>, text: string) => {
+    const a = h("a", { href: s.url, target: "_blank", rel: "noopener", ...attrs }, text);
+    a.addEventListener("click", (ev) => { if (open(s)) ev.preventDefault(); });
+    return a;
+  };
   const answer = (gen: number, text: string) => {
     const li = h("li", { class: "agent", "data-gen": String(gen) });
     const src = sources.get(gen) ?? [];
     for (const part of text.split(/(\[\d+\])/)) { // [n] becomes a link to the cited docs section
       const m = part.match(/^\[(\d+)\]$/);
       const s = m && src.find((x) => x.n === Number(m[1]));
-      li.append(s ? h("a", { href: s.url, target: "_blank", rel: "noopener", class: "cite", title: s.title }, `[${s.n}]`) : part);
+      li.append(s ? link(s, { class: "cite", title: s.title }, `[${s.n}]`) : part);
     }
-    if (src.length) li.append(h("ul", { class: "sources", "aria-label": "Sources" }, ...src.map((s) => h("li", {}, h("a", { href: s.url, target: "_blank", rel: "noopener" }, `[${s.n}] ${s.title}`)))));
+    if (src.length) li.append(h("ul", { class: "sources", "aria-label": "Sources" }, ...src.map((s) => h("li", {}, link(s, {}, `[${s.n}] ${s.title}`)))));
     log.append(li);
     log.scrollTop = log.scrollHeight;
   };
@@ -94,7 +105,12 @@ function mount() {
         if (partial) { partial.textContent = String(e.text); partial.classList.remove("live"); partial = null; } else say("user", String(e.text));
         break;
       case "agent.generation_started": partial = null; setState("thinking", "Thinking…"); break;
-      case "answer.sources": sources.set(Number(e.gen), e.sources as Source[]); break;
+      case "answer.sources": { // arrives while the answer is spoken: open the first cited section now
+        const src = e.sources as Source[];
+        sources.set(Number(e.gen), src);
+        if (src[0]) open(src[0]);
+        break;
+      }
       case "agent.text": answer(Number(e.gen), String(e.text)); break;
       case "playout.started": setState("speaking", "Speaking… start talking to interrupt."); break;
       case "playout.stopped": // after a barge-in the user is still talking: keep "Listening…"

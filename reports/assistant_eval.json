@@ -1,0 +1,291 @@
+{
+  "run_id": "20261030T150251Z",
+  "model": "openai/gpt-oss-120b",
+  "pass": "18/22",
+  "by_kind": {
+    "chat": "4/4",
+    "answer": "10/14",
+    "not_covered": "4/4"
+  },
+  "cost_usd": 0.0162,
+  "rows": [
+    {
+      "id": "c1",
+      "expect": "chat",
+      "pass": true,
+      "turns": [
+        "Hello."
+      ],
+      "reply": "Hello! How can I help you today?",
+      "opened": null,
+      "expected_pages": null
+    },
+    {
+      "id": "c2",
+      "expect": "chat",
+      "pass": true,
+      "turns": [
+        "What can you tell me?"
+      ],
+      "reply": "I\u2019m here to help you navigate the VoiceCore docs. Let me know which topic you\u2019re interested in, like Barge\u2011in, Endpointing, or Generations and cancellation.",
+      "opened": null,
+      "expected_pages": null
+    },
+    {
+      "id": "c3",
+      "expect": "chat",
+      "pass": true,
+      "turns": [
+        "Thanks, that was helpful!"
+      ],
+      "reply": "You're welcome! If you\u2019d like to explore topics like latency, barge\u2011in, or how to add your own docs, just let me know.",
+      "opened": null,
+      "expected_pages": null
+    },
+    {
+      "id": "c4",
+      "expect": "chat",
+      "pass": true,
+      "turns": [
+        "Who are you?"
+      ],
+      "reply": "I'm the VoiceCore documentation assistant, here to help you understand how the voice agent system works. Let me know if there's a specific topic you'd like to explore!",
+      "opened": null,
+      "expected_pages": null
+    },
+    {
+      "id": "a01",
+      "expect": "answer",
+      "pass": false,
+      "turns": [
+        "How does eager endpointing decide that I've finished speaking?"
+      ],
+      "reply": "Eager endpointing watches for 200\u202fms of VAD silence and then asks Deepgram to finalize the transcript; if a final ending in \u201c.\u201d, \u201c?\u201d or \u201c!\u201d arrives while that silence is at least 200\u202fms, the turn ends, otherwise it falls back to the fixed 800\u202fms silence rule [2][3].",
+      "opened": "http://localhost:3000/guides/tune-latency#how-eager-endpointing-decides-the-end-of-a-turn",
+      "expected_pages": [
+        "concepts/endpointing.md"
+      ]
+    },
+    {
+      "id": "a02",
+      "expect": "answer",
+      "pass": false,
+      "turns": [
+        "How does the echo gate stop the agent from interrupting itself?"
+      ],
+      "reply": "The echo gate watches the microphone while the agent is playing and only counts a frame as speech if the VAD is significantly higher than usual and the mic\u2019s power is close to the played audio, requiring at least 160\u202fms of such speech before it will treat the signal as a user turn[1]. By keeping these stricter thresholds on for 200\u202fms after playback ends, any lingering echo from the speaker is rejected, so the recognizer never hears the agent\u2019s own voice and the agent can\u2019t cancel its own answer[4].",
+      "opened": "http://localhost:3000/guides/troubleshooting#the-agent-interrupts-itself",
+      "expected_pages": [
+        "concepts/barge-in-and-echo.md"
+      ]
+    },
+    {
+      "id": "a03",
+      "expect": "answer",
+      "pass": true,
+      "turns": [
+        "What is a generation fence?"
+      ],
+      "reply": "A generation fence is the highest generation ID that has been cancelled in a session, and it is used by every queue owner to drop any audio frames belonging to that generation or any older one. Each component\u2014 the orchestrator, the gateway\u2019s send queue, and the browser playout\u2014updates its fence to `max(fence, g)` when it receives an `agent.cancel{gen}` and then discards any queued or arriving frames with `generation_id <= fence`\u202f[5]. This ensures that cancelled answers never get played, even if frames were already buffered or arrive later on the network\u202f[1][3].",
+      "opened": "http://localhost:3000/concepts/generations-and-cancellation#the-fencing-rule-every-queue-applies",
+      "expected_pages": [
+        "concepts/generations-and-cancellation.md"
+      ]
+    },
+    {
+      "id": "a04",
+      "expect": "answer",
+      "pass": true,
+      "turns": [
+        "How do I embed the voice widget on my own website?"
+      ],
+      "reply": "You add the classic script tag\u202f`<script src=\" data-endpoint=\" data-title=\"Ask the docs\"></script>` to any page, keeping the\u202f`data-`\u202fattributes on that tag so the widget can read its configuration\u202f[1]. The script mounts automatically once the page has a body (or on\u202fDOMContentLoaded\u202fif it\u2019s in the\u202fhead) and adds a launcher button in the bottom\u2011right corner; opening the launcher connects to the gateway\u202f[1].",
+      "opened": "http://localhost:3000/getting-started/embed-the-widget#add-the-widget-with-one-script-tag",
+      "expected_pages": [
+        "getting-started/embed-the-widget.md"
+      ]
+    },
+    {
+      "id": "a05",
+      "expect": "answer",
+      "pass": true,
+      "turns": [
+        "Where do I put my Deepgram and Cartesia keys?"
+      ],
+      "reply": "You add your\u202f`DEEPGRAM_API_KEY`\u202fand\u202f`CARTESIA_API_KEY`\u202fto the\u202f`.env`\u202ffile at the repository root (copy\u202f`.env.example`\u202ffirst) so the orchestrator can read them from the process environment\u202f[1]. Those keys are never sent to the browser; they stay on the server and are used only by the orchestrator\u202f[4].",
+      "opened": "http://localhost:3000/getting-started/live-providers#add-your-provider-keys-to-the-env-file",
+      "expected_pages": [
+        "getting-started/live-providers.md",
+        "reference/configuration.md"
+      ]
+    },
+    {
+      "id": "a06",
+      "expect": "answer",
+      "pass": true,
+      "turns": [
+        "How long does the gateway keep my session after the connection drops?"
+      ],
+      "reply": "The gateway holds onto a session for ten seconds after the client\u2019s WebSocket disconnects, keeping the upstream connection to the orchestrator open during that window\u202f[1]. After those ten seconds the session expires and a new hello will start a fresh session\u202f[2].",
+      "opened": "http://localhost:3000/reference/wire-protocol#session-resume-after-a-disconnect",
+      "expected_pages": [
+        "architecture/realtime-gateway.md",
+        "reference/wire-protocol.md"
+      ]
+    },
+    {
+      "id": "a07",
+      "expect": "answer",
+      "pass": false,
+      "turns": [
+        "Which language model does VoiceCore use, and why that one?"
+      ],
+      "reply": "VoiceCore uses the `openai/gpt-oss-120b` model accessed via OpenRouter and runs on Cerebras because it offers a low\u2011reasoning\u2011effort option that fits the system\u2019s latency goals [1]. That model was selected as part of the speed improvements that cut response times dramatically, helping achieve the sub\u2011second latency targets [5].",
+      "opened": "http://localhost:3000/#which-parts-voicecore-buys",
+      "expected_pages": [
+        "reference/providers.md",
+        "guides/tune-latency.md",
+        "concepts/latency.md",
+        "getting-started/live-providers.md"
+      ]
+    },
+    {
+      "id": "a08",
+      "expect": "answer",
+      "pass": true,
+      "turns": [
+        "How do I measure latency with the benchmark runner?"
+      ],
+      "reply": "You run the benchmark by picking the harness that matches the kind of latency you want\u2014use the WSS runner for a real end\u2011to\u2011end measurement that includes transport and live provider delays, or the in\u2011process runner for a deterministic, repeatable number that only changes when the code changes [1]. Then start a live run (or a mock run) with the appropriate command, let it record traces, and finally compute the breakdown with\u202f`harness/timeline.py` as shown in the \u201cHow to reproduce a latency run\u201d instructions [2].",
+      "opened": "http://localhost:3000/guides/measure-latency#two-ways-to-measure-a-voice-turn",
+      "expected_pages": [
+        "guides/measure-latency.md"
+      ]
+    },
+    {
+      "id": "a09",
+      "expect": "answer",
+      "pass": true,
+      "turns": [
+        "What fields are in the audio frame header?"
+      ],
+      "reply": "The audio frame header consists of a 28\u2011byte big\u2011endian block with the fields\u202f`version`,\u202f`kind`,\u202f`flags`,\u202f`stream_id`,\u202f`sequence`,\u202f`capture_us`,\u202f`generation_id` and\u202f`samples` in that order\u202f[1].",
+      "opened": "http://localhost:3000/reference/wire-protocol#audio-frame-header-fields",
+      "expected_pages": [
+        "reference/wire-protocol.md"
+      ]
+    },
+    {
+      "id": "a10",
+      "expect": "answer",
+      "pass": true,
+      "turns": [
+        "How does the browser SDK turn microphone audio into frames?"
+      ],
+      "reply": "The browser SDK first asks for microphone permission and opens the mic with echo\u2011cancellation, noise suppression and auto\u2011gain control enabled[1]. It captures the raw audio in an AudioWorklet that delivers 128\u2011sample blocks, then resamples those blocks to 16\u202fkHz and converts them to 16\u2011bit PCM[2]. A framer cuts the PCM stream into 320\u2011sample (20\u202fms) frames, adds a 28\u2011byte header, and sends each frame as a binary WebSocket message[3].",
+      "opened": "http://localhost:3000/architecture/browser-sdk#what-the-browser-sdk-owns",
+      "expected_pages": [
+        "architecture/browser-sdk.md"
+      ]
+    },
+    {
+      "id": "a11",
+      "expect": "answer",
+      "pass": false,
+      "turns": [
+        "How do I point the assistant at my own Docusaurus docs?"
+      ],
+      "reply": "You point the assistant at your own Docusaurus docs by running the orchestrator with the\u202f`--docs-dir`\u202fflag set to the folder containing your Markdown files and the\u202f`--docs-url`\u202fflag set to the base URL where those docs are served\u202f[1][3]. The\u202f`--docs-dir`\u202fdefaults to\u202f`apps/docs/docs`\u202fand\u202f`--docs-url`\u202fdefaults to\u202f`, so you need to override them to match your site\u2019s location\u202f[3].",
+      "opened": "http://localhost:3000/reference/configuration#pointing-the-assistant-at-a-docs-folder",
+      "expected_pages": [
+        "guides/add-your-own-docs.md"
+      ]
+    },
+    {
+      "id": "a12",
+      "expect": "answer",
+      "pass": true,
+      "turns": [
+        "Why does VoiceCore use WebSocket instead of WebRTC?"
+      ],
+      "reply": "VoiceCore keeps WebSocket because it lets the same binary frames and JSON events travel from the browser to the gateway and on to the orchestrator, so only one protocol is needed for both hops\u202f[1]. Using TCP means frames can\u2019t reorder, so the gateway only needs simple bounded queues instead of a jitter buffer, and the measured extra latency is tiny\u202f[1]. WebRTC would require additional infrastructure like ICE and TURN servers, which adds complexity for only marginal benefit in lossy networks\u202f[1].",
+      "opened": "http://localhost:3000/architecture/websocket-vs-webrtc#why-the-product-path-uses-websocket",
+      "expected_pages": [
+        "architecture/websocket-vs-webrtc.md"
+      ]
+    },
+    {
+      "id": "f01",
+      "expect": "answer",
+      "pass": true,
+      "turns": [
+        "What is eager endpointing?",
+        "And what if I pause in the middle of a question?"
+      ],
+      "reply": "If you pause in the middle of a question, the eager endpoint will end the turn once the pause exceeds about\u202f800\u202fms, which can cause the assistant to start answering the first half of your query\u202f[2]. However, if you resume speaking within the 2.5\u2011second merge window and before any answer is audible, the continuation\u2011merge logic will cancel that early answer and combine the two parts so the assistant answers the whole question as a single turn\u202f[5].",
+      "opened": "http://localhost:3000/concepts/endpointing#remaining-risk-with-eager-endpointing",
+      "expected_pages": [
+        "concepts/endpointing.md"
+      ]
+    },
+    {
+      "id": "f02",
+      "expect": "answer",
+      "pass": true,
+      "turns": [
+        "How does barge-in work?",
+        "How fast is it?"
+      ],
+      "reply": "Barge\u2011in typically silences the agent within a few hundred milliseconds after the user starts speaking; in fake\u2011provider runs the median (p50) interrupt\u2011to\u2011silence is about 180\u202fms with no network delay and rises to roughly 380\u202fms with 100\u202fms one\u2011way delay\u202f[3]. In live runs the median is around 303\u202fms, though occasional clips can take longer due to short initial words or processing lag\u202f[3][5].",
+      "opened": "http://localhost:3000/reference/benchmarks#barge-in-interrupt-to-silence",
+      "expected_pages": [
+        "concepts/barge-in-and-echo.md",
+        "reference/benchmarks.md"
+      ]
+    },
+    {
+      "id": "n1",
+      "expect": "not_covered",
+      "pass": true,
+      "turns": [
+        "Can I deploy VoiceCore on Kubernetes with a Helm chart?"
+      ],
+      "reply": "I couldn't find anything about deploying VoiceCore on Kubernetes or using a Helm chart in the provided documentation. I can help you with topics like the quickstart, configuration reference, or using live providers if you'd like.",
+      "opened": null,
+      "expected_pages": null
+    },
+    {
+      "id": "n2",
+      "expect": "not_covered",
+      "pass": true,
+      "turns": [
+        "What's the weather in Toronto today?"
+      ],
+      "reply": "I couldn't find that information in the VoiceCore documentation. I can help with topics like latency tuning or how provider connections are warmed up.",
+      "opened": null,
+      "expected_pages": null
+    },
+    {
+      "id": "n3",
+      "expect": "not_covered",
+      "pass": true,
+      "turns": [
+        "Who won the last football world cup?"
+      ],
+      "reply": "I couldn't find the answer to that in the documentation. If you\u2019d like, I can help with topics like the TTSStream contract or how generation cancellation works.",
+      "opened": null,
+      "expected_pages": null
+    },
+    {
+      "id": "n4",
+      "expect": "not_covered",
+      "pass": true,
+      "turns": [
+        "How do I connect VoiceCore to Salesforce?"
+      ],
+      "reply": "I couldn't find any information in the docs about connecting VoiceCore to Salesforce. You might want to look at the \u201cUse live providers\u201d or \u201cConfiguration reference\u201d topics for details on integrating external services.",
+      "opened": null,
+      "expected_pages": null
+    }
+  ]
+}

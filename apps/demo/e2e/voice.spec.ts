@@ -19,5 +19,5 @@ test("a spoken turn through the gateway and orchestrator gets an answer that pla
   await expect.poll(types, { timeout: 25_000 }).toEqual(expect.arrayContaining(
     ["user.speech_started", "transcript.final", "agent.generation_started", "agent.text", "playout.started"]));
   const final = await page.evaluate(() => (window as any).events.find((e: any) => e.type === "transcript.final"));
-  expect(final.text).toBe("how do I install uv?");
+  expect(final.text).toBe("how does eager endpointing work?");
 });

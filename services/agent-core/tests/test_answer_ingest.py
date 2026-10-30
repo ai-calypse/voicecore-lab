@@ -86,3 +86,24 @@ def test_stale_and_unauthorized_pages_are_not_indexed_but_injections_are_kept_an
     assert {p.file for p in ps} == {"contra_cache.md", "contra_clean.md", "contra_preference.md",
                                     "inject_installs.md", "inject_proxy.md", "inject_verify.md"}
     assert {p.file for p in ps if p.suspicious} >= {"inject_installs.md", "inject_proxy.md", "inject_verify.md"}
+
+
+def test_docusaurus_pages_get_the_route_and_heading_anchor_the_site_renders(tmp_path):
+    from voicecore.answer.ingest import docusaurus, github_slug
+
+    (tmp_path / "concepts").mkdir()
+    (tmp_path / "intro.md").write_text("---\ntitle: VoiceCore\nslug: /\n---\nWhat it is.\n\n## Why it exists\n\nBecause.\n")
+    (tmp_path / "concepts/endpointing.md").write_text(
+        "---\ntitle: 'Endpointing'\n---\nDeciding the user finished.\n\n## Eager endpointing, in short\n\nFast.\n\n"
+        "```bash\n# not a heading\n```\n\n## STT → LLM\n\nArrow.\n\n## Eager endpointing, in short\n\nAgain.\n")
+    (tmp_path / "concepts/_partial.md").write_text("## Skipped\n\nNot a page.\n")
+    urls = {p.url: p.title for p in ingest(tmp_path, site=docusaurus("http://localhost:3000"))}
+    assert urls == {
+        "http://localhost:3000/": "VoiceCore",
+        "http://localhost:3000/#why-it-exists": "VoiceCore > Why it exists",
+        "http://localhost:3000/concepts/endpointing": "Endpointing",
+        "http://localhost:3000/concepts/endpointing#eager-endpointing-in-short": "Endpointing > Eager endpointing, in short",
+        "http://localhost:3000/concepts/endpointing#stt--llm": "Endpointing > STT → LLM",
+        "http://localhost:3000/concepts/endpointing#eager-endpointing-in-short-1": "Endpointing > Eager endpointing, in short",
+    }
+    assert github_slug("Why p95 tails come from the LLM?") == "why-p95-tails-come-from-the-llm"

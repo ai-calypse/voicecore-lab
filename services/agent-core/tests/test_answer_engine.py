@@ -94,3 +94,55 @@ def test_a_refusal_after_a_grounded_sentence_is_dropped_not_counted():
     g = Grounding(5)
     assert released(g, "Run uv init [1]. ", "I couldn't find that in the docs.") == "Run uv init [1]. "
     assert g.answerable
+
+
+# Conversational replies (2026-10-30): small talk and "not in the docs" are spoken, never cited facts
+
+def test_a_reply_marked_as_conversation_is_released_without_citations_and_is_not_an_answer():
+    g = Grounding(5)
+    assert released(g, " ~Hi! I can help ", "with endpointing and latency.") == "Hi! I can help with endpointing and latency. "
+    assert not g.answerable and g.cited == []
+
+
+def test_conversation_keeps_two_sentences_and_drops_citations_and_urls():
+    g = Grounding(5)
+    text = released(g, "~I couldn't find that [2]. See https://x.example/a for more. Ask me about latency. Or barge-in.")
+    assert text == "I couldn't find that. See for more. "
+
+
+def test_engine_reply_for_small_talk_has_no_sources_and_the_prompt_lists_the_docs_topics(index):
+    llm = MockLLM(LLMScript(tokens=["~Hello", "! Ask me anything about uv."]))
+    engine = AnswerEngine(index, llm, name="uv", topics=["Installation", "Projects"])
+    out = asyncio.run(_collect(engine.stream("hello", [])))
+    assert "".join(x for x in out if isinstance(x, str)) == "Hello! Ask me anything about uv. "
+    assert out[-1] == {"type": "answer.sources", "sources": []}
+    assert "Installation; Projects" in llm.calls[-1][0]["content"]
+
+
+async def _collect(it):
+    return [x async for x in it]
+
+
+def test_a_short_follow_up_is_searched_together_with_the_previous_question():
+    from voicecore.answer.engine import retrieval_query
+
+    history = [{"role": "user", "content": "What is eager endpointing?"}, {"role": "assistant", "content": "It ends turns early [1]."}]
+    assert retrieval_query("And if I pause?", history) == "What is eager endpointing? And if I pause?"
+    assert retrieval_query("How do I embed the widget on my own site?", history) == "How do I embed the widget on my own site?"
+    assert retrieval_query("And if I pause?", []) == "And if I pause?"
+
+
+def test_citations_in_cjk_or_fullwidth_brackets_count_like_square_ones():
+    g = Grounding(5)  # gpt-oss-120b writes 【5】 for some answers; they were dropped as uncited
+    assert released(g, "Each queue drops frames at or below the fence【5】. ", "So audio stops［2］.") == "Each queue drops frames at or below the fence[5]. So audio stops[2]. "
+    assert g.cited == [5, 2]
+
+
+def test_a_space_before_a_dotfile_or_flag_is_kept():
+    g = Grounding(5)
+    assert released(g, "Put the keys in the .env file [1].") == "Put the keys in the .env file [1]. "
+
+
+def test_a_url_inside_a_code_span_is_removed_with_its_backticks():
+    g = Grounding(5)
+    assert released(g, "It defaults to `http://localhost:3000/`, so set it [3].") == "It defaults to, so set it [3]. "

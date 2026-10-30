@@ -1,6 +1,6 @@
 # VoiceCore Lab
 
-A real-time voice agent for the [uv](https://docs.astral.sh/uv/) documentation, built to show the systems work underneath voice AI: browser audio capture and playout, a Go real-time gateway, turn-taking with an echo gate, barge-in that silences the agent, a grounded answer engine, and the tracing and benchmarks that measure all of it.
+A real-time voice assistant for a documentation site, built to show the systems work underneath voice AI: browser audio capture and playout, a Go real-time gateway, turn-taking with an echo gate, barge-in that silences the agent, a grounded answer engine, and the tracing and benchmarks that measure all of it.
 
 Speech-to-text, the language model and text-to-speech are bought (Deepgram nova-3, `openai/gpt-oss-120b` on Cerebras via OpenRouter, Cartesia sonic-3.6) through replaceable adapters. Everything between the microphone and the speaker is this repository's code. [ADR 0001](docs/adr/0001-engine-ownership.md) draws that line.
 
@@ -26,6 +26,7 @@ flowchart LR
 | Barge-in: user starts talking → agent audio stops | p50 303 ms (8/8 silenced), 0/4 false barge-ins on echo | live-provider | [reports/barge_in.md](reports/barge_in.md) |
 | Gateway overhead per round trip (two passes) | 0.19 ms median | measured, loopback | [benchmarks/transport.md](benchmarks/transport.md) |
 | Grounded answers on held-out questions (gpt-oss-120b) | refusals 14/15 right, citations 12/12 supporting | live-provider | [reports/docs_eval.md](reports/docs_eval.md) |
+| Docs assistant on the docs site, 22 scripted cases (gpt-oss-120b, text) | small talk 4/4 friendly and uncited; off-topic 4/4 declined; docs questions 14/14 answered with citations, 10/14 opened the predicted page (the other 4 opened another section that answers it) | live-provider | [reports/assistant_eval.json](reports/assistant_eval.json) |
 | Adversarial docs (stale, contradicting, injected, unauthorised) | 14/15 pass, 0 leaked claims | live-provider | [reports/docs_eval.md](reports/docs_eval.md) |
 | STT word error rate, held-out audio | 6.5 % (n = 25) | live-provider | [reports/quality_eval.md](reports/quality_eval.md) |
 | Concurrent sessions, mock providers | 40/40 complete, p95 1,305 ms, 0 drops | fake-provider | [reports/perf.md](reports/perf.md) |
@@ -35,8 +36,9 @@ Samples are small (10–30 live turns per number), so these rank design choices;
 ## Quick start (no keys, no spend)
 
 ```bash
-docker compose up --build        # gateway :8080, orchestrator, demo :5173 — mock speech and language providers
-open http://localhost:5173       # "Ask the uv docs" widget; /?lab=1 shows a session timeline
+docker compose up --build        # gateway :8080, orchestrator, docs :3000, demo :5173 — mock speech and language providers
+open http://localhost:3000       # the docs site; "Ask the docs" answers from it and opens the section it cites
+open http://localhost:5173/?lab=1  # a session timeline
 uv run python harness/smoke.py   # optional: one typed question over the WebSocket, expects a cited answer
 ```
 
@@ -53,7 +55,9 @@ make e2e         # Playwright (Chromium fake mic): capture, gateway round trip, 
 uv run python harness/gate.py   # the CI latency/quality regression gate (fake time)
 ```
 
-Run the pieces by hand: `go run ./cmd/gateway` (in `services/realtime-gateway`), `uv run python -m voicecore.server` (mock providers), `pnpm --filter @voicecore/demo dev`.
+Run the pieces by hand: `go run ./cmd/gateway` (in `services/realtime-gateway`), `uv run python -m voicecore.server` (mock providers; `--providers live` for real ones), `pnpm --filter @voicecore/docs start` (docs site with the assistant, :3000), `pnpm --filter @voicecore/demo dev`.
+
+The docs site ([`apps/docs`](apps/docs)) is the assistant's only source. It is a Docusaurus site about building, measuring and tuning voice agents, using this repository as the worked example. The assistant chats normally, but every fact it gives comes from a cited section. When it cites one, the page opens at that section and highlights it, without a reload, so the voice session continues.
 
 ### Live providers (spends money)
 
@@ -70,6 +74,7 @@ Copy `.env.example` to `.env` and fill in the keys, then `uv run python -m voice
 | [`packages/web-sdk/`](packages/web-sdk/src) | capture (resampler, framer), `VoiceClient`, playout with generation fence, headless Node client |
 | [`services/realtime-gateway/`](services/realtime-gateway) | Go gateway: sessions, resume, queues, counters, traces; `cmd/wsload`, `cmd/fakeorch` |
 | [`services/agent-core/voicecore/`](services/agent-core/voicecore) | `turntaking/` (VAD, floor, echo gate), `runtime/` (generations), `providers/`, `answer/` (ingest, hybrid retrieval, grounding), `server.py` |
+| [`apps/docs/`](apps/docs) | Docusaurus docs site: the assistant's corpus; `src/theme/Root.jsx` opens and highlights cited sections |
 | [`apps/demo/`](apps/demo) | landing page, embeddable widget (`voicecore.js`), `?lab=1` timeline panel, Playwright suites |
 | [`harness/`](harness) | fixture builders, runners (in-process fake time, WSS), timeline and metrics, benchmarks, evals, CI gate |
 | [`experiments/`](experiments) | RTP jitter buffer and RFC 3550 jitter; Pion WebRTC spike |

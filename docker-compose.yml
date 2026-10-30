@@ -1,4 +1,5 @@
-# Local stack: docker compose up --build, then open http://localhost:5173
+# Local stack: docker compose up --build, then open http://localhost:3000 (docs site with the voice assistant)
+# or http://localhost:5173 (demo page and the ?lab=1 timeline)
 # Mock providers by default (no keys, no spend). Live: PROVIDERS=live docker compose up, with keys in .env;
 # every live session reserves budget in benchmarks/spend_ledger.json first (mounted below).
 services:
@@ -19,4 +20,8 @@ services:
   demo:
     build: { context: ., dockerfile: apps/demo/Dockerfile }
     ports: ["127.0.0.1:5173:8080"]
+    depends_on: [gateway]
+  docs:
+    build: { context: ., dockerfile: apps/docs/Dockerfile }
+    ports: ["127.0.0.1:3000:8080"]
     depends_on: [gateway]

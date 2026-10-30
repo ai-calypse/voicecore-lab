@@ -18,3 +18,5 @@ test-live:
 
 e2e:
 	pnpm --filter @voicecore/demo e2e
+	pnpm --filter @voicecore/docs e2e
+	uv run python harness/check_docs_anchors.py

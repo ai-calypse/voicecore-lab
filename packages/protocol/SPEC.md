@@ -77,6 +77,7 @@ The orchestrator learns the session ID from the upstream URL `ws://<orchestrator
 | 4002 | unsupported `version` or audio format |
 | 4003 | heartbeat missed (no message for 10 s) |
 | 1013 | session limit reached (global or per client IP); try again later |
+| 1011 | the gateway could not reach the orchestrator (`orchestrator unavailable`) |
 
 ## 3. Generation fencing
 

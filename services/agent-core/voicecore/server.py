@@ -3,7 +3,7 @@
     uv run python -m voicecore.server [--providers mock|live] [--port 8765] [--trace-dir DIR]
 
 Mock providers by default. Live providers spend money: each session reserves its caps first
-(STT 120 s, LLM up to $0.002, TTS 1,500 characters) and settles what it actually used.
+(STT 120 s, LLM up to $0.006, TTS 1,500 characters) and settles what it actually used.
 """
 import argparse
 import asyncio
@@ -17,7 +17,7 @@ from websockets.exceptions import ConnectionClosed
 from voicecore import budget, protocol
 from voicecore.answer.engine import AnswerEngine
 from voicecore.answer.index import Index
-from voicecore.answer.ingest import ingest
+from voicecore.answer.ingest import docusaurus, ingest
 from voicecore.providers.cartesia_tts import MAX_CHARS, open_socket
 from voicecore.providers.deepgram_stt import MAX_AUDIO_S, PRICE_PER_MIN
 from voicecore.providers.base import ProviderError
@@ -29,13 +29,13 @@ from voicecore.turntaking.floor import Policy
 from voicecore.turntaking.vad_silero import SileroVAD
 
 log = logging.getLogger("voicecore.server")
-MOCK_ANSWER = "Install uv with the standalone installer script [1]. Then run uv init to start a project [2]."
-DOCS = Path(__file__).resolve().parents[3] / "fixtures/docs/uv"
+MOCK_ANSWER = "Eager endpointing asks the speech recognizer for a final transcript after 200 ms of silence [1]. A punctuated final ends the turn [2]."
+DOCS_DIR = Path(__file__).resolve().parents[3] / "apps/docs/docs"  # the Docusaurus site the assistant answers from
 LLM_CAP_USD = 0.006  # gpt-oss-120b on Cerebras: about $0.0007 per grounded turn
 
 
 def mock_providers():
-    return {"stt": MockSTT(canned="how do I install uv?"), "llm": MockLLM(LLMScript(tokens=[w + " " for w in MOCK_ANSWER.split()])),
+    return {"stt": MockSTT(canned="how does eager endpointing work?"), "llm": MockLLM(LLMScript(tokens=[w + " " for w in MOCK_ANSWER.split()])),
             "tts": MockTTS(), "tts_factory": MockTTS}, []
 
 
@@ -98,7 +98,8 @@ def live_providers(sid, llm_opts=None):
     return p, settle
 
 
-def handler_for(mode: str, trace_dir: Path | None, index: Index, policy: Policy = Policy(), llm_opts: dict | None = None):
+def handler_for(mode: str, trace_dir: Path | None, index: Index, policy: Policy = Policy(), llm_opts: dict | None = None,
+                name: str = "VoiceCore"):
     async def handler(ws):  # ponytail: VAD runs inline on the event loop (~0.3 ms per window); move to a thread if sessions x frames saturate one core
         sid = ws.request.path.rsplit("/", 1)[-1]
         try:
@@ -109,7 +110,7 @@ def handler_for(mode: str, trace_dir: Path | None, index: Index, policy: Policy 
             await ws.close()
             return
         sink = JsonlSink(trace_dir / f"{sid}.jsonl") if trace_dir else None
-        engine = AnswerEngine(index, providers["llm"])
+        engine = AnswerEngine(index, providers["llm"], name=name)
         session = Session(sid, send=ws.send, vad=SileroVAD(), policy=policy, tracer=Tracer(sid, sink), answer=engine.stream, **providers)
         await session.start()
         try:
@@ -139,6 +140,8 @@ async def main():
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--trace-dir", type=Path)
+    ap.add_argument("--docs-dir", type=Path, default=DOCS_DIR, help="Docusaurus docs folder to answer from")
+    ap.add_argument("--docs-url", default="http://localhost:3000/", help="base URL of that docs site (citations link there)")
     ap.add_argument("--policy", choices=["fixed", "adaptive", "asr_assisted", "eager"], default=None,
                     help="endpointing (ADR 0002); default eager with live providers, fixed with mocks (the mock STT "
                          "returns its canned final at every pause, which would end every turn early)")
@@ -148,7 +151,7 @@ async def main():
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     SileroVAD()  # load the model now: loading it inside the first session stalls its mic frames
-    index = Index(ingest(DOCS))  # docs snapshot; vectors are cached under .cache after the first build
+    index = Index(ingest(args.docs_dir, site=docusaurus(args.docs_url)))  # vectors are cached under .cache after the first build
     index.dense("warm up", 1)
     args.policy = args.policy or ("eager" if args.providers == "live" else "fixed")
     policy = Policy("eager", asr_silence_ms=200) if args.policy == "eager" else Policy(args.policy)

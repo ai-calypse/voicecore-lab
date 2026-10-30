@@ -1,0 +1,22 @@
+{
+  "name": "@voicecore/docs",
+  "private": true,
+  "scripts": {
+    "widget": "pnpm --filter @voicecore/demo build:widget && mkdir -p static/embed && cp ../demo/public/embed/voicecore.js static/embed/",
+    "start": "pnpm widget && docusaurus start --port 3000",
+    "build": "pnpm widget && docusaurus build",
+    "serve": "docusaurus serve --port 3000",
+    "e2e": "pnpm build && playwright test"
+  },
+  "dependencies": {
+    "@docusaurus/core": "3.10.2",
+    "@docusaurus/preset-classic": "3.10.2",
+    "@easyops-cn/docusaurus-search-local": "0.55.2",
+    "prism-react-renderer": "2.4.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1"
+  }
+}

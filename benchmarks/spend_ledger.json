@@ -3214,6 +3214,62 @@
       "reserved": 0.05,
       "run_id": "20261030T134132Z",
       "calls": 36
+    },
+    {
+      "id": "ede953169054",
+      "pool": "usd",
+      "amount": 0.001209,
+      "label": "server stt s-3ae9e202290ca88f",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18d30-c2e7-70e2-bce9-85efeaf12906"
+    },
+    {
+      "id": "b09546ebc12b",
+      "pool": "usd",
+      "amount": 0.001803,
+      "label": "server llm s-3ae9e202290ca88f",
+      "status": "settled",
+      "reserved": 0.006,
+      "calls": 4
+    },
+    {
+      "id": "12acae229d59",
+      "pool": "cartesia_credits",
+      "amount": 339,
+      "label": "server tts s-3ae9e202290ca88f",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "7089b1935c3d",
+      "pool": "usd",
+      "amount": 0.016182,
+      "label": "assistant_eval 20261030T150120Z",
+      "status": "settled",
+      "reserved": 0.05,
+      "run_id": "20261030T150120Z",
+      "calls": 24
+    },
+    {
+      "id": "b174bc815d22",
+      "pool": "usd",
+      "amount": 0.00142,
+      "label": "debug refusals",
+      "status": "settled",
+      "reserved": 0.01,
+      "calls": 2
+    },
+    {
+      "id": "456be2973d6e",
+      "pool": "usd",
+      "amount": 0.0162,
+      "label": "assistant_eval 20261030T150251Z",
+      "status": "settled",
+      "reserved": 0.05,
+      "run_id": "20261030T150251Z",
+      "calls": 24
     }
   ],
   "caps": {
@@ -3221,7 +3277,7 @@
     "cartesia_credits": 16000
   },
   "totals": {
-    "usd": 0.94808,
-    "cartesia_credits": 13692
+    "usd": 0.984894,
+    "cartesia_credits": 14031
   }
 }

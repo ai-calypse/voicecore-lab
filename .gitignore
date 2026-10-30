@@ -13,3 +13,6 @@ dist/
 public/embed/
 .hypothesis/
 .pytest_cache/
+apps/docs/build/
+apps/docs/.docusaurus/
+apps/docs/static/embed/

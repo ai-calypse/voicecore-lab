@@ -37,7 +37,7 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: .cache/answer_vectors_*.npy
-          key: answer-vectors-${{ hashFiles('fixtures/docs/uv/**', 'services/agent-core/voicecore/answer/ingest.py') }}
+          key: answer-vectors-${{ hashFiles('fixtures/docs/uv/**', 'apps/docs/docs/**', 'services/agent-core/voicecore/answer/ingest.py') }}
       - run: uv run pytest -m "not live"
       - run: uv run python harness/baseline_deepgram.py --self-test
 
@@ -78,9 +78,29 @@ jobs:
       - uses: actions/cache@v4
         with:
           path: .cache/answer_vectors_*.npy
-          key: answer-vectors-${{ hashFiles('fixtures/docs/uv/**', 'services/agent-core/voicecore/answer/ingest.py') }}
+          key: answer-vectors-${{ hashFiles('fixtures/docs/uv/**', 'apps/docs/docs/**', 'services/agent-core/voicecore/answer/ingest.py') }}
       - run: pnpm --filter @voicecore/demo exec playwright install --with-deps chromium
       - run: pnpm --filter @voicecore/demo e2e
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: pnpm --filter @voicecore/docs build
+      - name: every passage the assistant can cite exists on the built site
+        run: uv run python harness/check_docs_anchors.py
+      - run: pnpm --filter @voicecore/docs exec playwright install --with-deps chromium
+      - run: pnpm --filter @voicecore/docs exec playwright test
 
   compose:
     runs-on: ubuntu-latest
@@ -98,5 +118,7 @@ jobs:
           for i in $(seq 1 60); do docker compose logs agent-core | grep -q listening && break; sleep 2; done
           uv run python harness/smoke.py
           curl -sf http://localhost:5173/embed/voicecore.js >/dev/null
+          curl -sf http://localhost:3000/concepts/endpointing | grep -q 'Endpointing'
+          curl -sf http://localhost:3000/embed/voicecore.js >/dev/null
       - if: failure()
         run: docker compose logs

@@ -21,7 +21,7 @@ from voicecore.turntaking.floor import Event, Floor, Policy, power
 
 from .text import Chunker, TranscriptAssembler, speechify
 
-SYSTEM = ("You are VoiceCore, a voice assistant for the uv Python package manager. "
+SYSTEM = ("You are VoiceCore, a voice assistant for a documentation site. "
           "Answer in at most two short sentences of plain spoken English.")
 REPROMPT = "Sorry, could you say that again?"
 TROUBLE = "Sorry, I'm having trouble answering right now. Please try again."

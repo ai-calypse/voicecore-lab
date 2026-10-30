@@ -1,0 +1,27 @@
+{
+  "about": "Docs assistant eval over apps/docs/docs (harness/assistant_eval.py). 'pages': the first cited section (the one the widget opens) must be on one of these pages. Written 2026-10-30 from the page list, before any run.",
+  "cases": [
+    {"id": "c1", "expect": "chat", "turns": ["Hello."]},
+    {"id": "c2", "expect": "chat", "turns": ["What can you tell me?"]},
+    {"id": "c3", "expect": "chat", "turns": ["Thanks, that was helpful!"]},
+    {"id": "c4", "expect": "chat", "turns": ["Who are you?"]},
+    {"id": "a01", "expect": "answer", "turns": ["How does eager endpointing decide that I've finished speaking?"], "pages": ["concepts/endpointing.md"]},
+    {"id": "a02", "expect": "answer", "turns": ["How does the echo gate stop the agent from interrupting itself?"], "pages": ["concepts/barge-in-and-echo.md"]},
+    {"id": "a03", "expect": "answer", "turns": ["What is a generation fence?"], "pages": ["concepts/generations-and-cancellation.md"]},
+    {"id": "a04", "expect": "answer", "turns": ["How do I embed the voice widget on my own website?"], "pages": ["getting-started/embed-the-widget.md"]},
+    {"id": "a05", "expect": "answer", "turns": ["Where do I put my Deepgram and Cartesia keys?"], "pages": ["getting-started/live-providers.md", "reference/configuration.md"]},
+    {"id": "a06", "expect": "answer", "turns": ["How long does the gateway keep my session after the connection drops?"], "pages": ["architecture/realtime-gateway.md", "reference/wire-protocol.md"]},
+    {"id": "a07", "expect": "answer", "turns": ["Which language model does VoiceCore use, and why that one?"], "pages": ["reference/providers.md", "guides/tune-latency.md", "concepts/latency.md", "getting-started/live-providers.md"]},
+    {"id": "a08", "expect": "answer", "turns": ["How do I measure latency with the benchmark runner?"], "pages": ["guides/measure-latency.md"]},
+    {"id": "a09", "expect": "answer", "turns": ["What fields are in the audio frame header?"], "pages": ["reference/wire-protocol.md"]},
+    {"id": "a10", "expect": "answer", "turns": ["How does the browser SDK turn microphone audio into frames?"], "pages": ["architecture/browser-sdk.md"]},
+    {"id": "a11", "expect": "answer", "turns": ["How do I point the assistant at my own Docusaurus docs?"], "pages": ["guides/add-your-own-docs.md"]},
+    {"id": "a12", "expect": "answer", "turns": ["Why does VoiceCore use WebSocket instead of WebRTC?"], "pages": ["architecture/websocket-vs-webrtc.md"]},
+    {"id": "f01", "expect": "answer", "turns": ["What is eager endpointing?", "And what if I pause in the middle of a question?"], "pages": ["concepts/endpointing.md"]},
+    {"id": "f02", "expect": "answer", "turns": ["How does barge-in work?", "How fast is it?"], "pages": ["concepts/barge-in-and-echo.md", "reference/benchmarks.md"]},
+    {"id": "n1", "expect": "not_covered", "turns": ["Can I deploy VoiceCore on Kubernetes with a Helm chart?"]},
+    {"id": "n2", "expect": "not_covered", "turns": ["What's the weather in Toronto today?"]},
+    {"id": "n3", "expect": "not_covered", "turns": ["Who won the last football world cup?"]},
+    {"id": "n4", "expect": "not_covered", "turns": ["How do I connect VoiceCore to Salesforce?"]}
+  ]
+}
