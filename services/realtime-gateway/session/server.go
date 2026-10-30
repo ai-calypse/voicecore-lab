@@ -64,6 +64,7 @@ func Defaults(secret []byte, upstream string) Config {
 // Counters are totals across sessions, exposed at GET /debug/counters.
 type Counters struct {
 	DropsDuplicate, DropsStale, DropsOverload, DropsOverloadOut, DropsFenced, DropsRateLimit, Gaps atomic.Int64
+	TokensIssued, RejectedRateLimit, RejectedHost, RejectedUpgrade, RejectedDraining               atomic.Int64
 }
 
 type Server struct {
@@ -168,6 +169,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /v1/session", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*") // development only: the token is not bound to a user
 		if s.draining.Load() {
+			s.c.RejectedDraining.Add(1)
 			http.Error(w, "draining", http.StatusServiceUnavailable)
 			return
 		}
@@ -184,10 +186,12 @@ func (s *Server) Handler() http.Handler {
 		allowed := s.cfg.TokensPerMinute <= 0 || b.take(time.Now(), s.cfg.TokensPerMinute/60, s.cfg.TokensPerMinute)
 		s.mu.Unlock()
 		if !allowed {
+			s.c.RejectedRateLimit.Add(1)
 			http.Error(w, "too many session requests", http.StatusTooManyRequests)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
+		s.c.TokensIssued.Add(1)
 		_ = json.NewEncoder(w).Encode(map[string]string{"token": s.Token(ip)})
 	})
 	mux.HandleFunc("GET /v1/ws", s.serveWS)
@@ -197,6 +201,7 @@ func (s *Server) Handler() http.Handler {
 	})
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !s.hostAllowed(r.Host) { // a DNS-rebinding page arrives with its own host name
+			s.c.RejectedHost.Add(1)
 			http.Error(w, "unknown host", http.StatusMisdirectedRequest)
 			return
 		}
@@ -216,7 +221,9 @@ func (s *Server) Snapshot() map[string]int64 {
 	s.mu.Unlock()
 	return map[string]int64{"sessions": n, "depth": depth, "depth_out": out,
 		"drops_duplicate": s.c.DropsDuplicate.Load(), "drops_stale": s.c.DropsStale.Load(),
-		"drops_overload": s.c.DropsOverload.Load(), "drops_overload_out": s.c.DropsOverloadOut.Load(), "drops_ratelimit": s.c.DropsRateLimit.Load(), "drops_fenced": s.c.DropsFenced.Load(), "gaps": s.c.Gaps.Load()}
+		"drops_overload": s.c.DropsOverload.Load(), "drops_overload_out": s.c.DropsOverloadOut.Load(), "drops_ratelimit": s.c.DropsRateLimit.Load(), "drops_fenced": s.c.DropsFenced.Load(), "gaps": s.c.Gaps.Load(),
+		"tokens_issued": s.c.TokensIssued.Load(), "rejected_ratelimit": s.c.RejectedRateLimit.Load(), "rejected_host": s.c.RejectedHost.Load(),
+		"rejected_upgrade": s.c.RejectedUpgrade.Load(), "rejected_draining": s.c.RejectedDraining.Load()}
 }
 
 // Close ends every session and waits for their goroutines.
@@ -312,6 +319,7 @@ const (
 func (s *Server) serveWS(w http.ResponseWriter, r *http.Request) {
 	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: s.cfg.Origins})
 	if err != nil {
+		s.c.RejectedUpgrade.Add(1) // mostly a disallowed origin
 		return
 	}
 	c.SetReadLimit(64 << 10)
