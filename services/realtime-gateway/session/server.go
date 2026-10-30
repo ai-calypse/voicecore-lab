@@ -62,6 +62,7 @@ type Config struct {
 	// Session tokens per client IP per UTC day. ponytail: in memory, so a restart resets it; Redis in Phase 10.
 	// Turnstile, the token bucket and the dollar caps still bound spend meanwhile.
 	SessionsPerIPPerDay int
+	Store               Store // shared nonces and daily counts; nil = this process's memory
 }
 
 func Defaults(secret []byte, upstream string) Config {
@@ -92,11 +93,7 @@ type Server struct {
 	pending  int                // sessions being dialled
 	tokens   map[string]*bucket // token issuance per client IP
 	draining atomic.Bool        // no new sessions; open ones (and their resumes) continue
-	nonces   map[string]int64   // used token nonces until their expiry (unix s): a token starts one session
 	upstream *breaker           // the orchestrator dial's circuit breaker
-	swept    int64              // unix s of the last nonce sweep
-	daily    map[string]int     // tokens per client IP today, keyed ip|day (UTC)
-	day      int64              // the UTC day daily counts
 }
 
 // bucket is a token bucket: rate per second, up to burst.
@@ -182,6 +179,9 @@ func (s *Server) trace(sid, event string, gen uint32, attrs map[string]any) {
 }
 
 func New(cfg Config) *Server {
+	if cfg.Store == nil {
+		cfg.Store = newMemStore()
+	}
 	if cfg.HTTPClient == nil {
 		cfg.HTTPClient = http.DefaultClient
 	}
@@ -189,7 +189,7 @@ func New(cfg Config) *Server {
 		cfg.CopyID = "gw"
 	}
 	return &Server{cfg: cfg, start: time.Now(), sessions: map[string]*session{}, perIP: map[string]int{}, tokens: map[string]*bucket{},
-		nonces: map[string]int64{}, upstream: newBreaker(), daily: map[string]int{}}
+		upstream: newBreaker()}
 }
 
 func (s *Server) Handler() http.Handler {
@@ -246,9 +246,7 @@ func (s *Server) Handler() http.Handler {
 				return
 			}
 		}
-		s.mu.Lock()
 		quota := s.takeDaily(ip) // only a request that passed every check spends the day's quota
-		s.mu.Unlock()
 		if !quota {
 			s.c.RejectedQuota.Add(1)
 			http.Error(w, "daily session limit reached for this address", http.StatusTooManyRequests)
@@ -269,19 +267,18 @@ func (s *Server) Handler() http.Handler {
 	})
 }
 
-// takeDaily counts one token against this IP's daily quota (caller holds s.mu). A new UTC day starts every count over.
+// takeDaily counts one token against this IP's daily quota. A store error lets the request through with a warning:
+// Turnstile, the token bucket and the dollar caps still bound spend (fail open).
 func (s *Server) takeDaily(ip string) bool {
 	if s.cfg.SessionsPerIPPerDay <= 0 {
 		return true
 	}
-	if day := time.Now().UTC().Unix() / 86_400; day != s.day || len(s.daily) > 200_000 {
-		s.day, s.daily = day, map[string]int{} // ponytail: crude memory bound, like the token buckets; Redis in Phase 10
+	ok, err := s.cfg.Store.TakeDaily(context.Background(), ip, time.Now().UTC().Unix()/86_400, s.cfg.SessionsPerIPPerDay)
+	if err != nil {
+		s.cfg.Log.Warn("quota store unavailable; allowing", "err", err)
+		return true
 	}
-	if s.daily[ip] >= s.cfg.SessionsPerIPPerDay {
-		return false
-	}
-	s.daily[ip]++
-	return true
+	return ok
 }
 
 func (s *Server) serveCounters(w http.ResponseWriter, _ *http.Request) {
@@ -341,38 +338,25 @@ func (s *Server) sign(msg string) string {
 }
 
 // useToken checks a token for this client IP and spends its nonce: valid once, from the IP it was minted for.
-// It returns the spent nonce, which the caller gives back with unspend when no session was started.
-func (s *Server) useToken(tok, ip string) (string, bool) {
+// It returns the spent nonce, which the caller gives back with unspend when no session was started. err: the store
+// could not say whether the nonce is fresh, so the caller refuses (fail closed).
+func (s *Server) useToken(tok, ip string) (string, bool, error) {
 	parts := strings.Split(tok, ".")
 	if len(parts) != 3 || !hmac.Equal([]byte(parts[2]), []byte(s.sign(parts[0]+"."+parts[1]+"."+ip))) {
-		return "", false
+		return "", false, nil
 	}
 	exp, err := strconv.ParseInt(parts[0], 10, 64)
-	now := time.Now().Unix()
-	if err != nil || now >= exp {
-		return "", false
+	if err != nil || time.Now().Unix() >= exp {
+		return "", false, nil
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if now != s.swept { // at most one linear sweep per second, so a burst of hellos does not rescan the map each time
-		s.swept = now
-		for n, e := range s.nonces {
-			if e <= now {
-				delete(s.nonces, n)
-			}
-		}
-	}
-	if _, used := s.nonces[parts[1]]; used {
-		return "", false
-	}
-	s.nonces[parts[1]] = exp
-	return parts[1], true
+	fresh, err := s.cfg.Store.UseNonce(context.Background(), parts[1], time.Unix(exp, 0))
+	return parts[1], fresh && err == nil, err
 }
 
 func (s *Server) unspend(nonce string) {
-	s.mu.Lock()
-	delete(s.nonces, nonce)
-	s.mu.Unlock()
+	if err := s.cfg.Store.ReleaseNonce(context.Background(), nonce); err != nil {
+		s.cfg.Log.Warn("could not give a token back", "err", err)
+	}
 }
 
 func (s *Server) monoUS() int64 { return time.Since(s.start).Microseconds() }
@@ -443,7 +427,11 @@ func (s *Server) hello(c *websocket.Conn, ip string) (ss *session, resumed bool,
 			return old, true, 0, ""
 		}
 	}
-	nonce, ok := s.useToken(h.Token, ip)
+	nonce, ok, err := s.useToken(h.Token, ip)
+	if err != nil {
+		s.cfg.Log.Warn("token store unavailable", "err", err)
+		return nil, false, websocket.StatusTryAgainLater, "unavailable"
+	}
 	if !ok {
 		s.c.RejectedToken.Add(1)
 		return nil, false, statusBadToken, "invalid, expired or already used token"

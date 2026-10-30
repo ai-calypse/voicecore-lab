@@ -29,6 +29,7 @@ func main() {
 	tracePath := flag.String("trace", "", "append SPEC trace events (JSON lines) to this file")
 	perIP := flag.Int("max-sessions-per-ip", 4, "live sessions per client IP (0 = no limit)")
 	maxSessions := flag.Int("max-sessions", 50, "live sessions in total (0 = no limit)")
+	redisURL := flag.String("redis-url", "", "shared store for token nonces and daily quotas, e.g. redis://redis:6379/0 (several copies need it)")
 	perDay := flag.Int("sessions-per-ip-per-day", 0, "session tokens per client IP per UTC day (0 = no limit; in memory until Redis)")
 	tokensPerMin := flag.Float64("tokens-per-minute", 10, "session tokens per client IP per minute (0 = no limit)")
 	hosts := flag.String("hosts", "localhost,127.0.0.1,::1", "allowed Host header names, comma separated; empty allows any (blocks DNS rebinding)")
@@ -90,6 +91,14 @@ func main() {
 		}
 		defer f.Close()
 		cfg.Trace = f
+	}
+	if *redisURL != "" {
+		store, err := session.NewRedisStore(*redisURL)
+		if err != nil {
+			slog.Error("bad -redis-url", "err", err)
+			os.Exit(2)
+		}
+		cfg.Store = store
 	}
 	if *env == "prod" {
 		if err := cfg.ValidateProd(); err != nil {
