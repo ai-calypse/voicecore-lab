@@ -50,7 +50,7 @@ class MockSTT:
 @dataclass
 class LLMScript:
     tokens: list[str]
-    first_token_ms: int = 200
+    first_token_ms: int = 400  # ci-gate-proof: +200 ms of mock latency must fail the eval gate
     token_ms: int = 15
     error: ProviderError | None = None
     stall_after: int | None = None  # stop sending (but stay open) after this many tokens
