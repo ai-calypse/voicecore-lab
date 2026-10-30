@@ -34,6 +34,15 @@ class DailyCapReached(BudgetExceeded):
     """Today's share is used up; tomorrow (UTC) there is more."""
 
 
+class BudgetUnavailable(BudgetExceeded):
+    """The ledger cannot be checked (Redis down, or never seeded): no new spend, never a guess."""
+
+
+def _redis_url(ledger_path=None) -> str | None:
+    url = str(ledger_path or os.environ.get("VOICECORE_LEDGER") or "")
+    return url if url.startswith(("redis://", "rediss://")) else None
+
+
 @dataclass(frozen=True)
 class Reservation:
     id: str
@@ -95,6 +104,9 @@ def _entries(path) -> list[dict]:
 
 
 def total(pool, ledger_path=None):
+    if url := _redis_url(ledger_path):
+        from voicecore import budget_redis
+        return budget_redis.total(pool, url)
     return _sum(_entries(ledger_file(ledger_path)), pool)
 
 
@@ -104,6 +116,9 @@ def reserve(pool, amount, label="", ledger_path=None, sub=None):
 
 
 def settle(reservation, actual, ledger_path=None, **meta):
+    if url := _redis_url(ledger_path):
+        from voicecore import budget_redis
+        return budget_redis.settle(reservation, actual, url, **meta)
     with _locked(ledger_file(ledger_path)) as data:
         for e in data["entries"]:
             if e.get("id") == reservation.id:
@@ -116,6 +131,9 @@ def reserve_all(specs, ledger_path=None, sub=None) -> list[Reservation]:
     """Reserve several (pool, amount, label) atomically under one ledger lock: all are written, or none (an over-cap
     or unknown pool raises before anything is written, so no partial reservation ever counts against a cap).
     sub: a sub-cap (e.g. "public") every one of them also counts against, in total and for today (UTC)."""
+    if url := _redis_url(ledger_path):
+        from voicecore import budget_redis
+        return budget_redis.reserve_all(specs, url, sub)
     with _locked(ledger_file(ledger_path)) as data:
         spent, out = {}, []
         for pool, amount, label in specs:
@@ -130,18 +148,30 @@ def reserve_all(specs, ledger_path=None, sub=None) -> list[Reservation]:
 def orphans(older_than_s: float = 3600, ledger_path=None) -> list[dict]:
     """Reservations still 'reserved' after older_than_s (or from before entries had a ts). Report only: they already
     count at their full amount, the safe side; settling them by guessing could under-count real spend."""
+    if url := _redis_url(ledger_path):
+        from voicecore import budget_redis
+        return budget_redis.orphans(older_than_s, url)
     entries = _entries(ledger_file(ledger_path))
     cutoff = now() - older_than_s
     return [e for e in entries if e.get("status") == "reserved" and e.get("ts", 0) < cutoff]
 
 
-if __name__ == "__main__":  # python -m voicecore.budget orphans
+def migrate(file_path, url) -> dict:
+    """Seed a Redis ledger with a file ledger's totals, once, before any orchestrator uses it."""
+    from voicecore import budget_redis
+    return budget_redis.migrate(str(file_path), url)
+
+
+if __name__ == "__main__":  # python -m voicecore.budget orphans | migrate --from FILE --to redis://...
     import sys
 
-    if sys.argv[1:] == ["orphans"]:
+    if sys.argv[1:2] == ["migrate"] and len(sys.argv) == 6 and sys.argv[2] == "--from" and sys.argv[4] == "--to":
+        for key, value in migrate(sys.argv[3], sys.argv[5]).items():
+            print(f"{key} = {value}")
+    elif sys.argv[1:] == ["orphans"]:
         found = orphans()
         for e in found:
             print(f"{e.get('id')}  {e.get('pool')}  {e.get('amount')}  {e.get('label', '')}")
         print(f"{len(found)} orphaned reservation(s), {round(sum(e.get('amount', 0) for e in found), 6)} counted at full amount")
     else:
-        sys.exit("usage: python -m voicecore.budget orphans")
+        sys.exit("usage: python -m voicecore.budget orphans | migrate --from FILE --to redis://HOST:PORT/DB")
