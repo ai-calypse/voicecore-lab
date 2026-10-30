@@ -96,5 +96,56 @@ services:
     healthcheck: { test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"], interval: 5s, timeout: 3s, retries: 20 }
     depends_on: [prometheus, loki]
 
+  # --- scale profile: docker compose --profile scale up -d --wait redis seed orch-1 orch-2 gw-1 gw-2 lb (LB on 127.0.0.1:8090) ---
+  # Mock providers that still reserve and settle small fixed amounts, against one Redis ledger for both orchestrators.
+  redis:
+    profiles: [scale]
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]  # the spend record must survive a restart
+    volumes: ["redis-data:/data"]
+    healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 2s, timeout: 2s, retries: 15 }
+  seed:  # copies the file ledger's totals into Redis once, so the caps never restart at 0
+    profiles: [scale]
+    build: { context: ., dockerfile: services/agent-core/Dockerfile }
+    entrypoint: ["/app/.venv/bin/python", "-m", "voicecore.budget", "migrate", "--from", "/app/benchmarks/spend_ledger.json", "--to", "redis://redis:6379/0"]
+    volumes: ["./benchmarks:/app/benchmarks:ro"]
+    depends_on: { redis: { condition: service_healthy } }
+  orch-1: &orch
+    profiles: [scale]
+    build: { context: ., dockerfile: services/agent-core/Dockerfile }
+    command: ["--providers", "mock-billed", "--metrics-port", "9464"]
+    environment: ["VOICECORE_LEDGER=redis://redis:6379/0", "LOG_FORMAT=json"]
+    init: true
+    stop_grace_period: 35s
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/readyz', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 90s
+    depends_on: { seed: { condition: service_completed_successfully } }
+  orch-2: *orch
+  gw-1: &gw
+    profiles: [scale]
+    build: { context: services/realtime-gateway, args: { VERSION: "${VERSION:-dev}" } }
+    # every test client shares one address: the per-address limits are off here, and only here
+    command: ["-addr", "0.0.0.0:8080", "-upstream", "ws://orch-1:8765,ws://orch-2:8765", "-copy-id", "gw1", "-redis-url", "redis://redis:6379/1",
+              "-admin-addr", "0.0.0.0:9091", "-max-sessions-per-ip", "0", "-tokens-per-minute", "0", "-sessions-per-ip-per-day", "0"]
+    environment: ["GATEWAY_SECRET=${GATEWAY_SECRET:-scale-profile-shared-secret-of-32+bytes}", "LOG_FORMAT=json"]  # shared: a token from one copy works on the other
+    stop_grace_period: 35s
+    healthcheck: { test: ["CMD", "/gateway", "-probe", "http://127.0.0.1:8080/readyz"], interval: 5s, timeout: 3s, retries: 3, start_period: 10s }
+    depends_on: { orch-1: { condition: service_healthy }, orch-2: { condition: service_healthy } }
+  gw-2:
+    <<: *gw
+    command: ["-addr", "0.0.0.0:8080", "-upstream", "ws://orch-1:8765,ws://orch-2:8765", "-copy-id", "gw2", "-redis-url", "redis://redis:6379/1",
+              "-admin-addr", "0.0.0.0:9091", "-max-sessions-per-ip", "0", "-tokens-per-minute", "0", "-sessions-per-ip-per-day", "0"]
+  lb:
+    profiles: [scale]
+    image: nginx:1.27-alpine
+    volumes: ["./deploy/scale/nginx.conf:/etc/nginx/conf.d/default.conf:ro"]
+    ports: ["127.0.0.1:8090:8090"]
+    depends_on: { gw-1: { condition: service_healthy }, gw-2: { condition: service_healthy } }
+
 volumes:
   loki-data:
+  redis-data:

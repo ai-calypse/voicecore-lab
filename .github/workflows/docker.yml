@@ -78,3 +78,26 @@ jobs:
       - run: uv run pytest -m docker harness/tests/test_monitoring.py -p no:randomly
       - if: failure()
         run: docker compose --profile monitoring logs
+
+  scale:  # seam 18 on Redis, then two gateways and two orchestrators behind nginx
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      redis:
+        image: redis:7.4-alpine
+        ports: ["16379:6379"]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: "1.27.x"
+      - run: make store-test
+      - run: docker compose --profile scale config --quiet
+      - run: docker compose --profile scale up -d --build --wait --wait-timeout 300 redis seed orch-1 orch-2 gw-1 gw-2 lb
+      - run: uv run pytest -m docker harness/tests/test_scale.py -p no:randomly
+      - if: failure()
+        run: docker compose --profile scale logs

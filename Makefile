@@ -1,5 +1,5 @@
 # All non-live tests in every language. Live tests spend money: run `make test-live` on purpose.
-.PHONY: test test-go test-py test-ts test-live e2e monitoring-check monitoring-test
+.PHONY: test test-go test-py test-ts test-live e2e monitoring-check monitoring-test redis store-test scale-test
 
 test: test-go test-py test-ts
 
@@ -29,3 +29,16 @@ monitoring-check:
 monitoring-test:
 	docker compose --profile monitoring up -d --build --wait --wait-timeout 300
 	uv run pytest -m docker harness/tests/test_monitoring.py -p no:randomly
+
+# A throwaway Redis for the shared-state contract tests (seam 18): make redis store-test
+redis:
+	docker run -d --rm --name vc-redis-test -p 127.0.0.1:16379:6379 redis:7.4-alpine
+
+store-test:
+	VOICECORE_TEST_REDIS=redis://127.0.0.1:16379/15 uv run pytest services/agent-core/tests/test_budget_store.py
+	cd services/realtime-gateway && VOICECORE_TEST_REDIS=redis://127.0.0.1:16379/14 go test -race -run 'TestNonce|TestDailyQuota' ./session
+
+# Two gateways and two orchestrators behind nginx, one Redis ledger (mock providers). About 5 minutes.
+scale-test:
+	docker compose --profile scale up -d --build --wait --wait-timeout 300 redis seed orch-1 orch-2 gw-1 gw-2 lb
+	uv run pytest -m docker harness/tests/test_scale.py -p no:randomly

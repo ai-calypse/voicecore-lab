@@ -166,8 +166,13 @@ if __name__ == "__main__":  # python -m voicecore.budget orphans | migrate --fro
     import sys
 
     if sys.argv[1:2] == ["migrate"] and len(sys.argv) == 6 and sys.argv[2] == "--from" and sys.argv[4] == "--to":
-        for key, value in migrate(sys.argv[3], sys.argv[5]).items():
-            print(f"{key} = {value}")
+        try:
+            for key, value in migrate(sys.argv[3], sys.argv[5]).items():
+                print(f"{key} = {value}")
+        except __import__("voicecore.budget").budget.BudgetUnavailable as e:  # the module's class: as __main__ this file is a copy
+            if "already seeded" not in str(e):
+                raise
+            print("already seeded; nothing to do")  # a restarted stack must not count the old spend twice
     elif sys.argv[1:] == ["orphans"]:
         found = orphans()
         for e in found:
