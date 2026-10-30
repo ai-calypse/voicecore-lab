@@ -26,7 +26,7 @@ func (s *Server) AdminHandler() http.Handler {
 	}
 	for reason, c := range map[string]*atomic.Int64{"ratelimit": &s.c.RejectedRateLimit, "host": &s.c.RejectedHost,
 		"upgrade": &s.c.RejectedUpgrade, "draining": &s.c.RejectedDraining, "token": &s.c.RejectedToken,
-		"busy": &s.c.RejectedBusy, "upstream": &s.c.RejectedUpstream} {
+		"busy": &s.c.RejectedBusy, "upstream": &s.c.RejectedUpstream, "turnstile": &s.c.RejectedTurnstile} {
 		counter("gateway_rejected_total", "requests refused before a session started, by reason", reason, c.Load)
 	}
 	counter("gateway_gaps_total", "mic frames missing between received sequence numbers", "", s.c.Gaps.Load)

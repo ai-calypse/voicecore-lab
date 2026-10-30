@@ -45,6 +45,10 @@ type Config struct {
 
 	TrustedProxies []netip.Prefix // X-Forwarded-For is believed only from these peers
 
+	// Turnstile (Cloudflare's bot check) on new session tokens. Empty secret = off. Resumes are never challenged.
+	TurnstileSecret string
+	TurnstileURL    string // siteverify endpoint; Defaults sets Cloudflare's, tests point it at a fake
+
 	// Abuse limits (security review 2026-10-30). Zero means no limit.
 	Hosts            []string      // allowed Host header names (DNS rebinding); empty = any
 	MaxSessions      int           // live sessions in total
@@ -58,7 +62,8 @@ type Config struct {
 func Defaults(secret []byte, upstream string) Config {
 	return Config{Secret: secret, Upstream: upstream, TokenTTL: 60 * time.Second, HelloTimeout: 5 * time.Second,
 		Heartbeat: 10 * time.Second, ResumeWindow: 10 * time.Second, QueueCap: 50, OutCap: 1500, Log: slog.Default(), Version: "dev", CopyID: "gw",
-		MaxSessions: 50, MaxSessionsPerIP: 4, MaxSessionAge: 15 * time.Minute, TextMaxChars: 500, MaxQueuedEvents: 256,
+		TurnstileURL: "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+		MaxSessions:  50, MaxSessionsPerIP: 4, MaxSessionAge: 15 * time.Minute, TextMaxChars: 500, MaxQueuedEvents: 256,
 		TokensPerMinute: 10}
 }
 
@@ -67,6 +72,7 @@ type Counters struct {
 	DropsDuplicate, DropsStale, DropsOverload, DropsOverloadOut, DropsFenced, DropsRateLimit, Gaps atomic.Int64
 	TokensIssued, RejectedRateLimit, RejectedHost, RejectedUpgrade, RejectedDraining               atomic.Int64
 	RejectedToken, RejectedBusy, RejectedUpstream                                                  atomic.Int64 // refused at hello
+	RejectedTurnstile                                                                              atomic.Int64
 }
 
 type Server struct {
@@ -197,6 +203,12 @@ func (s *Server) Handler() http.Handler {
 			http.Error(w, "too many session requests", http.StatusTooManyRequests)
 			return
 		}
+		if s.cfg.TurnstileSecret != "" { // after the rate limit, so nobody can make us hammer siteverify
+			if code, msg := s.checkTurnstile(w, r, ip); code != 0 {
+				http.Error(w, msg, code)
+				return
+			}
+		}
 		w.Header().Set("Content-Type", "application/json")
 		s.c.TokensIssued.Add(1)
 		_ = json.NewEncoder(w).Encode(map[string]string{"token": s.Token(ip)})
@@ -233,7 +245,8 @@ func (s *Server) Snapshot() map[string]int64 {
 		"drops_overload": s.c.DropsOverload.Load(), "drops_overload_out": s.c.DropsOverloadOut.Load(), "drops_ratelimit": s.c.DropsRateLimit.Load(), "drops_fenced": s.c.DropsFenced.Load(), "gaps": s.c.Gaps.Load(),
 		"tokens_issued": s.c.TokensIssued.Load(), "rejected_ratelimit": s.c.RejectedRateLimit.Load(), "rejected_host": s.c.RejectedHost.Load(),
 		"rejected_upgrade": s.c.RejectedUpgrade.Load(), "rejected_draining": s.c.RejectedDraining.Load(),
-		"rejected_token": s.c.RejectedToken.Load(), "rejected_busy": s.c.RejectedBusy.Load(), "rejected_upstream": s.c.RejectedUpstream.Load()}
+		"rejected_token": s.c.RejectedToken.Load(), "rejected_busy": s.c.RejectedBusy.Load(), "rejected_upstream": s.c.RejectedUpstream.Load(),
+		"rejected_turnstile": s.c.RejectedTurnstile.Load()}
 }
 
 // Close ends every session and waits for their goroutines.

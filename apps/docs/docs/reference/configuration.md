@@ -22,6 +22,7 @@ Run the gateway with `go run ./cmd/gateway` from `services/realtime-gateway`, or
 | `-hosts` | `localhost,127.0.0.1,::1` | allowed `Host` header names, comma separated; empty allows any |
 | `-drain` | `25s` | on SIGTERM, how long open sessions may finish before they are ended with reason `shutdown` |
 | `-probe` | empty | GET this URL and exit 0 on HTTP 200, else 1; the container healthcheck, since the image has no curl |
+| `-turnstile-url` | Cloudflare's siteverify | where Turnstile tokens are checked; tests point it at a fake |
 | `-admin-addr` | empty (off) | operator listener for `/metrics` (Prometheus) and `/debug/counters`; docker compose uses `0.0.0.0:9091` and publishes it on 127.0.0.1 only |
 | `-copy-id` | `gw` | this gateway copy's id; every session id is `s-<copy id>-<16 hex>`, so a load balancer can route a resume to its owner |
 | `-trusted-proxies` | empty | comma-separated CIDRs, such as a load balancer's, whose `X-Forwarded-For` header is believed for the client IP; empty ignores the header |
@@ -101,6 +102,7 @@ VoiceCore reads the environment variables below. Only the three provider keys ar
 | `OPENROUTER_API_KEY` | orchestrator | OpenRouter key, live mode only |
 | `CARTESIA_API_KEY` | orchestrator | Cartesia key, only for `--tts cartesia` |
 | `GATEWAY_SECRET` | gateway | fixed secret for session tokens; otherwise a random secret per gateway process |
+| `TURNSTILE_SECRET` | gateway | Cloudflare Turnstile secret; when set, `POST /v1/session` needs a passed human check. Unset (the default) means no check. Cloudflare's test secret `1x0000000000000000000000000000000AA` always passes |
 | `LOG_FORMAT` | gateway, orchestrator | `json` for one JSON object per log line (docker compose sets it); anything else, or unset, gives plain text |
 | `VOICECORE_LEDGER` | orchestrator, harness | path of the spend ledger; default `benchmarks/spend_ledger.json` |
 | `PROVIDERS` | docker compose | `mock` (default) or `live`, passed to the orchestrator |

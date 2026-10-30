@@ -25,6 +25,8 @@ The code is in `session/server.go`, which has the HTTP routes, tokens, hello and
 
 Used nonces are kept in memory until their token would have expired anyway.
 
+With `TURNSTILE_SECRET` set, `POST /v1/session` also needs Cloudflare Turnstile's human check. The page sends the widget's token as the form field `cf-turnstile-response`; a form keeps the request simple for CORS, so the browser sends no preflight. After the rate limit, the gateway asks Cloudflare's siteverify, with a 2 s limit. A missing or failed check gets 403, a slow or unreachable siteverify 503, and a body over 4 KiB 413. A resume is never challenged: its resume key is the proof.
+
 The client IP is the connection's peer address. `X-Forwarded-For` is believed only when the peer is inside one of the `-trusted-proxies` CIDRs, such as a load balancer; the gateway then takes the rightmost address in that header that is not itself a trusted proxy. With no trusted proxies, the header is ignored, so a client cannot pick its own IP.
 
 The secret comes from the `GATEWAY_SECRET` environment variable. When it is unset, the gateway generates a random 32-byte secret at start, so tokens do not survive a restart.

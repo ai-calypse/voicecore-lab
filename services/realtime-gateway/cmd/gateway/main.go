@@ -35,6 +35,7 @@ func main() {
 	trusted := flag.String("trusted-proxies", "", "comma-separated CIDRs whose X-Forwarded-For is believed (e.g. the load balancer)")
 	probe := flag.String("probe", "", "GET this URL and exit 0 on HTTP 200, else 1 (container healthcheck; the image has no curl)")
 	drain := flag.Duration("drain", 25*time.Second, "on SIGTERM, how long open sessions may finish before they are ended")
+	turnstileURL := flag.String("turnstile-url", "", "Turnstile siteverify URL (default Cloudflare's); the secret comes from TURNSTILE_SECRET")
 	adminAddr := flag.String("admin-addr", "", "operator listener for /metrics and /debug/counters, e.g. :9091 (empty = off); keep it off the public internet")
 	flag.Parse()
 	if *probe != "" {
@@ -51,6 +52,10 @@ func main() {
 	}
 	cfg := session.Defaults(secret, *upstream)
 	cfg.Version = version
+	cfg.TurnstileSecret = os.Getenv("TURNSTILE_SECRET") // env, not a flag: flags show up in ps
+	if *turnstileURL != "" {
+		cfg.TurnstileURL = *turnstileURL
+	}
 	if !regexp.MustCompile(`^[a-z0-9]{1,32}$`).MatchString(*copyID) { // it goes into URL paths and the LB's "s-<id>-" prefix match
 		slog.Error("-copy-id must be 1-32 lowercase letters or digits", "copy_id", *copyID)
 		os.Exit(2)
