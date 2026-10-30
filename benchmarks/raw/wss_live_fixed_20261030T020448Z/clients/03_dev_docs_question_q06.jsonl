@@ -1,0 +1,30 @@
+{"t_us":71641,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q06.wav"}
+{"t_us":74605,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-6ae453f7d686c362","type":"welcome"}
+{"t_us":74713,"process":"headless","type":"mic.start","t0_us":74711}
+{"t_us":1156132,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2075989,"process":"headless","dir":"in","t_client_us":2075025,"t_server_us":58244113,"type":"pong"}
+{"t_us":2186214,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving"}
+{"t_us":3102252,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip"}
+{"t_us":4003681,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip how do I"}
+{"t_us":4076259,"process":"headless","dir":"in","t_client_us":4075971,"t_server_us":60244689,"type":"pong"}
+{"t_us":5004749,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip how do I import my"}
+{"t_us":5868036,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip how do I import my requirements?"}
+{"t_us":6077169,"process":"headless","dir":"in","t_client_us":6076629,"t_server_us":62245477,"type":"pong"}
+{"t_us":6847124,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip how do I import my requirements but keep my"}
+{"t_us":7875353,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip how do I import my requirements but keep my old pinned"}
+{"t_us":8037991,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip how do I import my requirements?"}
+{"t_us":8046743,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip how do I import my requirements? But keep my old pinned"}
+{"t_us":8076888,"process":"headless","dir":"in","t_client_us":8076325,"t_server_us":64245210,"type":"pong"}
+{"t_us":8969668,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip how do I import my requirements? But keep my old pinned versions?"}
+{"t_us":9277869,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"When moving from pip how do I import my requirements? But keep my old pinned versions?"}
+{"t_us":9278515,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":10077606,"process":"headless","dir":"in","t_client_us":10076994,"t_server_us":66245910,"type":"pong"}
+{"t_us":10894650,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"d02e184ca49a","title":"Migrating from pip to a uv project > Importing requirements files","url":"https://docs.astral.sh/uv/guides/migration/pip-to-project/#importing-requirements-files"}],"gen":1}
+{"t_us":10895504,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"You can import your requirements using `uv add -r requirements.in -c requirements.txt` to retain your old pinned versions as constraints [1]."}
+{"t_us":11055075,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":12078663,"process":"headless","dir":"in","t_client_us":12077985,"t_server_us":68246949,"type":"pong"}
+{"t_us":14078862,"process":"headless","dir":"in","t_client_us":14078130,"t_server_us":70247152,"type":"pong"}
+{"t_us":16079604,"process":"headless","dir":"in","t_client_us":16078945,"t_server_us":72247904,"type":"pong"}
+{"t_us":18080516,"process":"headless","dir":"in","t_client_us":18080000,"t_server_us":74248849,"type":"pong"}
+{"t_us":19914278,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":19917968,"process":"headless","dir":"in","type":"socket.closed","code":1000}

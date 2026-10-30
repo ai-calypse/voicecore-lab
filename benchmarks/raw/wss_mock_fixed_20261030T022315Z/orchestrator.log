@@ -1,0 +1,112 @@
+2026-10-29 22:23:16,281 INFO websockets.server server listening on 127.0.0.1:8765
+2026-10-29 22:23:16,282 INFO voicecore.server orchestrator listening on ws://127.0.0.1:8765 (mock providers)
+2026-10-29 22:23:17,392 INFO websockets.server connection open
+2026-10-29 22:23:17,393 INFO websockets.server connection open
+2026-10-29 22:23:17,393 INFO websockets.server connection open
+2026-10-29 22:23:17,413 INFO websockets.server connection open
+2026-10-29 22:23:17,428 INFO websockets.server connection open
+2026-10-29 22:23:17,489 INFO websockets.server connection open
+2026-10-29 22:23:17,492 INFO websockets.server connection open
+2026-10-29 22:23:17,496 INFO websockets.server connection open
+2026-10-29 22:23:17,505 INFO websockets.server connection open
+2026-10-29 22:23:17,519 INFO websockets.server connection open
+2026-10-29 22:23:17,533 INFO websockets.server connection open
+2026-10-29 22:23:17,583 INFO websockets.server connection open
+2026-10-29 22:23:17,697 INFO websockets.server connection open
+2026-10-29 22:23:17,700 INFO websockets.server connection open
+2026-10-29 22:23:17,716 INFO websockets.server connection open
+2026-10-29 22:23:17,718 INFO websockets.server connection open
+2026-10-29 22:23:17,795 INFO websockets.server connection open
+2026-10-29 22:23:17,797 INFO websockets.server connection open
+2026-10-29 22:23:17,797 INFO websockets.server connection open
+2026-10-29 22:23:17,798 INFO websockets.server connection open
+2026-10-29 22:23:17,804 INFO websockets.server connection open
+2026-10-29 22:23:17,805 INFO websockets.server connection open
+2026-10-29 22:23:17,805 INFO websockets.server connection open
+2026-10-29 22:23:17,806 INFO websockets.server connection open
+2026-10-29 22:23:17,806 INFO websockets.server connection open
+2026-10-29 22:23:17,809 INFO websockets.server connection open
+2026-10-29 22:23:17,809 INFO websockets.server connection open
+2026-10-29 22:23:17,809 INFO websockets.server connection open
+2026-10-29 22:23:17,809 INFO websockets.server connection open
+2026-10-29 22:23:17,810 INFO websockets.server connection open
+2026-10-29 22:23:17,815 INFO websockets.server connection open
+2026-10-29 22:23:17,820 INFO websockets.server connection open
+2026-10-29 22:23:17,824 INFO websockets.server connection open
+2026-10-29 22:23:17,825 INFO websockets.server connection open
+2026-10-29 22:23:17,827 INFO websockets.server connection open
+2026-10-29 22:23:17,828 INFO websockets.server connection open
+2026-10-29 22:23:17,829 INFO websockets.server connection open
+2026-10-29 22:23:17,829 INFO websockets.server connection open
+2026-10-29 22:23:17,829 INFO websockets.server connection open
+2026-10-29 22:23:17,839 INFO websockets.server connection open
+2026-10-29 22:23:33,236 INFO websockets.server connection closed
+2026-10-29 22:23:33,236 INFO websockets.server connection closed
+2026-10-29 22:23:33,238 INFO websockets.server connection closed
+2026-10-29 22:23:33,259 INFO websockets.server connection closed
+2026-10-29 22:23:33,272 INFO websockets.server connection closed
+2026-10-29 22:23:33,339 INFO websockets.server connection closed
+2026-10-29 22:23:33,348 INFO websockets.server connection closed
+2026-10-29 22:23:33,358 INFO websockets.server connection closed
+2026-10-29 22:23:33,372 INFO websockets.server connection closed
+2026-10-29 22:23:33,375 INFO websockets.server connection closed
+2026-10-29 22:23:33,379 INFO websockets.server connection closed
+2026-10-29 22:23:33,427 INFO websockets.server connection closed
+2026-10-29 22:23:33,540 INFO websockets.server connection closed
+2026-10-29 22:23:33,542 INFO websockets.server connection closed
+2026-10-29 22:23:33,563 INFO websockets.server connection closed
+2026-10-29 22:23:33,566 INFO websockets.server connection closed
+2026-10-29 22:23:33,637 INFO websockets.server connection closed
+2026-10-29 22:23:33,641 INFO websockets.server connection closed
+2026-10-29 22:23:33,641 INFO websockets.server connection closed
+2026-10-29 22:23:33,646 INFO websockets.server connection closed
+2026-10-29 22:23:33,647 INFO websockets.server connection closed
+2026-10-29 22:23:33,647 INFO websockets.server connection closed
+2026-10-29 22:23:33,649 INFO websockets.server connection closed
+2026-10-29 22:23:33,649 INFO websockets.server connection closed
+2026-10-29 22:23:33,650 INFO websockets.server connection closed
+2026-10-29 22:23:33,650 INFO websockets.server connection closed
+2026-10-29 22:23:33,651 INFO websockets.server connection closed
+2026-10-29 22:23:33,652 INFO websockets.server connection closed
+2026-10-29 22:23:33,652 INFO websockets.server connection closed
+2026-10-29 22:23:33,654 INFO websockets.server connection closed
+2026-10-29 22:23:33,657 INFO websockets.server connection closed
+2026-10-29 22:23:33,662 INFO websockets.server connection closed
+2026-10-29 22:23:33,665 INFO websockets.server connection closed
+2026-10-29 22:23:33,665 INFO websockets.server connection closed
+2026-10-29 22:23:33,669 INFO websockets.server connection closed
+2026-10-29 22:23:33,669 INFO websockets.server connection closed
+2026-10-29 22:23:33,670 INFO websockets.server connection closed
+2026-10-29 22:23:33,671 INFO websockets.server connection closed
+2026-10-29 22:23:33,671 INFO websockets.server connection closed
+2026-10-29 22:23:33,681 INFO websockets.server connection closed
+2026-10-29 22:23:33,895 INFO websockets.server server closing
+2026-10-29 22:23:33,895 INFO websockets.server server closed
+Traceback (most recent call last):
+  File "/opt/homebrew/Cellar/python@3.12/3.12.14/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.14/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/services/agent-core/voicecore/server.py", line 112, in main
+    await server.serve_forever()
+  File "/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/.venv/lib/python3.12/site-packages/websockets/asyncio/server.py", line 405, in serve_forever
+    await self.wait_closed()
+  File "/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/.venv/lib/python3.12/site-packages/websockets/asyncio/server.py", line 439, in wait_closed
+    await asyncio.shield(self.handlers_waiter)
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/services/agent-core/voicecore/server.py", line 116, in <module>
+    asyncio.run(main())
+  File "/opt/homebrew/Cellar/python@3.12/3.12.14/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.12/3.12.14/Frameworks/Python.framework/Versions/3.12/lib/python3.12/asyncio/runners.py", line 123, in run
+    raise KeyboardInterrupt()
+KeyboardInterrupt

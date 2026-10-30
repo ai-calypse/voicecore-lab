@@ -10,6 +10,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -34,6 +35,7 @@ type Config struct {
 	QueueCap     int // mic frames buffered towards the orchestrator (50 = 1 s)
 	OutCap       int // agent frames buffered towards the client (1500 = 30 s)
 	Log          *slog.Logger
+	Trace        io.Writer // SPEC.md section 5 JSON lines; nil = off
 }
 
 func Defaults(secret []byte, upstream string) Config {
@@ -53,6 +55,25 @@ type Server struct {
 	wg       sync.WaitGroup
 	mu       sync.Mutex
 	sessions map[string]*session
+	traceMu  sync.Mutex
+}
+
+// trace writes one SPEC trace event (process "gateway", this server's monotonic clock).
+func (s *Server) trace(sid, event string, gen uint32, attrs map[string]any) {
+	if s.cfg.Trace == nil {
+		return
+	}
+	e := map[string]any{"trace_id": sid, "span": "gateway", "event": event, "t_mono_us": s.monoUS(), "process": "gateway", "attrs": attrs}
+	if gen != 0 {
+		e["generation_id"] = gen
+	}
+	if attrs == nil {
+		e["attrs"] = map[string]any{}
+	}
+	b, _ := json.Marshal(e)
+	s.traceMu.Lock()
+	_, _ = s.cfg.Trace.Write(append(b, '\n'))
+	s.traceMu.Unlock()
 }
 
 func New(cfg Config) *Server {
@@ -217,6 +238,7 @@ func (s *Server) newSession() (*session, error) {
 	s.mu.Lock()
 	s.sessions[sid] = ss
 	s.mu.Unlock()
+	s.trace(sid, "session_started", 0, nil)
 	s.wg.Add(2)
 	go func() { defer s.wg.Done(); ss.writeUpstream() }()
 	go func() { defer s.wg.Done(); ss.readUpstream() }()

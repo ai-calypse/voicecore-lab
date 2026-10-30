@@ -1,0 +1,171 @@
+{
+  "turns": [
+    {
+      "clip": "dev_docs_question_q01",
+      "generations": 1,
+      "endpoint_delay_ms": 360.0,
+      "stt_settle_ms": 0.4,
+      "llm_first_token_ms": 4408.9,
+      "tts_first_audio_ms": 495.9,
+      "total_ms": 5281.8,
+      "residual_ms": 16.3
+    },
+    {
+      "clip": "dev_docs_question_q02",
+      "generations": 1,
+      "endpoint_delay_ms": null,
+      "stt_settle_ms": 0.4,
+      "llm_first_token_ms": 1288.9,
+      "tts_first_audio_ms": 364.8,
+      "total_ms": 2218.4,
+      "residual_ms": null
+    },
+    {
+      "clip": "dev_docs_question_q04",
+      "generations": 1,
+      "endpoint_delay_ms": null,
+      "stt_settle_ms": 0.4,
+      "llm_first_token_ms": 2479.7,
+      "tts_first_audio_ms": 373.1,
+      "total_ms": 3419.8,
+      "residual_ms": null
+    },
+    {
+      "clip": "dev_docs_question_q06",
+      "generations": 2,
+      "error": "incomplete turn: StopIteration()"
+    },
+    {
+      "clip": "dev_docs_question_q07",
+      "generations": 1,
+      "endpoint_delay_ms": null,
+      "stt_settle_ms": 0.4,
+      "llm_first_token_ms": 1459.1,
+      "tts_first_audio_ms": 406.1,
+      "total_ms": 2418.7,
+      "residual_ms": null
+    },
+    {
+      "clip": "dev_docs_question_q09",
+      "generations": 1,
+      "endpoint_delay_ms": null,
+      "stt_settle_ms": 0.4,
+      "llm_first_token_ms": 1176.1,
+      "tts_first_audio_ms": 586.1,
+      "total_ms": 2341.6,
+      "residual_ms": null
+    },
+    {
+      "clip": "dev_docs_question_q11",
+      "generations": 1,
+      "endpoint_delay_ms": null,
+      "stt_settle_ms": 0.5,
+      "llm_first_token_ms": 1398.9,
+      "tts_first_audio_ms": 386.0,
+      "total_ms": 2237.8,
+      "residual_ms": null
+    },
+    {
+      "clip": "dev_docs_question_q12",
+      "generations": 1,
+      "endpoint_delay_ms": null,
+      "stt_settle_ms": 1.8,
+      "llm_first_token_ms": 5855.6,
+      "tts_first_audio_ms": 468.7,
+      "total_ms": 6817.0,
+      "residual_ms": null
+    },
+    {
+      "clip": "dev_docs_question_q14",
+      "generations": 1,
+      "endpoint_delay_ms": null,
+      "stt_settle_ms": 0.5,
+      "llm_first_token_ms": 758.3,
+      "tts_first_audio_ms": 373.4,
+      "total_ms": 1699.3,
+      "residual_ms": null
+    },
+    {
+      "clip": "dev_docs_question_q16",
+      "generations": 2,
+      "error": "incomplete turn: StopIteration()"
+    },
+    {
+      "clip": "dev_docs_question_q17",
+      "generations": 2,
+      "error": "incomplete turn: StopIteration()"
+    },
+    {
+      "clip": "dev_docs_question_q19",
+      "generations": 1,
+      "endpoint_delay_ms": null,
+      "stt_settle_ms": 0.4,
+      "llm_first_token_ms": 1470.2,
+      "tts_first_audio_ms": 384.4,
+      "total_ms": 2400.7,
+      "residual_ms": null
+    },
+    {
+      "clip": "dev_docs_question_q21",
+      "generations": 1,
+      "endpoint_delay_ms": null,
+      "stt_settle_ms": 0.4,
+      "llm_first_token_ms": 1251.3,
+      "tts_first_audio_ms": 449.1,
+      "total_ms": 2259.1,
+      "residual_ms": null
+    },
+    {
+      "clip": "dev_docs_question_q22",
+      "generations": 1,
+      "endpoint_delay_ms": 380.0,
+      "stt_settle_ms": 0.6,
+      "llm_first_token_ms": 893.1,
+      "tts_first_audio_ms": 484.4,
+      "total_ms": 1777.2,
+      "residual_ms": 18.8
+    },
+    {
+      "clip": "dev_docs_question_q24",
+      "generations": 1,
+      "endpoint_delay_ms": null,
+      "stt_settle_ms": 0.4,
+      "llm_first_token_ms": 682.0,
+      "tts_first_audio_ms": 450.6,
+      "total_ms": 1618.1,
+      "residual_ms": null
+    }
+  ],
+  "summary": {
+    "total_ms": {
+      "p50": 2259.1,
+      "p95": 6817.0
+    },
+    "endpoint_delay_ms": {
+      "p50": 360.0,
+      "p95": 380.0
+    },
+    "stt_settle_ms": {
+      "p50": 0.4,
+      "p95": 1.8
+    },
+    "llm_first_token_ms": {
+      "p50": 1288.9,
+      "p95": 5855.6
+    },
+    "tts_first_audio_ms": {
+      "p50": 406.1,
+      "p95": 586.1
+    },
+    "residual_ms": {
+      "p50": 16.3,
+      "p95": 18.8
+    },
+    "split_turns": [
+      "dev_docs_question_q06",
+      "dev_docs_question_q16",
+      "dev_docs_question_q17"
+    ]
+  },
+  "n": 12
+}

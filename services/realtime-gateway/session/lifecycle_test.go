@@ -1,7 +1,9 @@
 package session
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"reflect"
 	"testing"
 	"testing/synctest"
@@ -191,4 +193,38 @@ func TestNoGoroutinesLeftAfterStopExpireOrResume(t *testing.T) {
 			t.Fatalf("sessions %d", n)
 		}
 	})
+}
+
+func TestTraceEventsFollowTheSpecSchema(t *testing.T) {
+	var buf bytes.Buffer
+	run(t, false, func(t *testing.T, r *rig) {
+		r.gw.cfg.Trace = &buf
+		c := r.connect(nil, nil)
+		c.next("welcome")
+		oc := r.upstream()
+		f := protocol.Frame{Kind: protocol.KindAgent, StreamID: 1, GenerationID: 1, Payload: make([]int16, 480)}
+		_ = oc.WS.Write(context.Background(), websocket.MessageBinary, f.Encode())
+		_ = oc.WS.Write(context.Background(), websocket.MessageText, protocol.NewEvent("agent.cancel", map[string]any{"gen": 1}))
+		c.next("agent.cancel")
+		_ = c.ws.Close(websocket.StatusNormalClosure, "")
+		<-oc.Closed
+		synctest.Wait()
+	})
+	var events []string
+	for _, line := range bytes.Split(bytes.TrimSpace(buf.Bytes()), []byte("\n")) {
+		var e map[string]any
+		if err := json.Unmarshal(line, &e); err != nil {
+			t.Fatal(err)
+		}
+		for _, k := range []string{"trace_id", "span", "event", "t_mono_us", "process", "attrs"} {
+			if _, ok := e[k]; !ok {
+				t.Fatalf("event %s has no %s", line, k)
+			}
+		}
+		events = append(events, e["event"].(string))
+	}
+	want := []string{"session_started", "client_attached", "agent_first_frame", "fence", "client_detached", "session_ended"}
+	if !reflect.DeepEqual(events, want) {
+		t.Fatalf("events %v", events)
+	}
 }

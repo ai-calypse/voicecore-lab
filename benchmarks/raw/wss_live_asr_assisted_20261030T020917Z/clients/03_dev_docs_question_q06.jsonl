@@ -1,0 +1,34 @@
+{"t_us":73739,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q06.wav"}
+{"t_us":76660,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-8e59c0e93eb10dcc","type":"welcome"}
+{"t_us":76771,"process":"headless","type":"mic.start","t0_us":76769}
+{"t_us":1158722,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2077910,"process":"headless","dir":"in","t_client_us":2076777,"t_server_us":58290752,"type":"pong"}
+{"t_us":2166642,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving"}
+{"t_us":3082206,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When moving from pip"}
+{"t_us":3200353,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"When moving from pip"}
+{"t_us":3200920,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":3297399,"process":"headless","dir":"out","type":"cancel.ack","gen":1,"played_until_seq":-1}
+{"t_us":3297786,"process":"headless","dir":"in","type":"agent.cancel","gen":1}
+{"t_us":3298131,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t2"}
+{"t_us":4080555,"process":"headless","dir":"in","t_client_us":4079937,"t_server_us":60293549,"type":"pong"}
+{"t_us":4275045,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"how do I"}
+{"t_us":5263772,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"how do I import my"}
+{"t_us":5846238,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"how do I import my requirements?"}
+{"t_us":6081144,"process":"headless","dir":"in","t_client_us":6080565,"t_server_us":62294209,"type":"pong"}
+{"t_us":6849431,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"how do I import my requirements but keep my"}
+{"t_us":7848554,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"how do I import my requirements but keep my old pinned"}
+{"t_us":8081448,"process":"headless","dir":"in","t_client_us":8080616,"t_server_us":64294479,"type":"pong"}
+{"t_us":8269178,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"how do I import my requirements but keep my old pin"}
+{"t_us":8974296,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"how do I import my requirements but keep my old pin versions?"}
+{"t_us":8974976,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t2","text":"how do I import my requirements but keep my old pin versions?"}
+{"t_us":8975155,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t2","gen":2}
+{"t_us":10081277,"process":"headless","dir":"in","t_client_us":10080510,"t_server_us":66294300,"type":"pong"}
+{"t_us":10423467,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"d02e184ca49a","title":"Migrating from pip to a uv project > Importing requirements files","url":"https://docs.astral.sh/uv/guides/migration/pip-to-project/#importing-requirements-files"}],"gen":2}
+{"t_us":10424283,"process":"headless","dir":"in","type":"agent.text","gen":2,"text":"You can import your requirements and keep your old pinned versions by using the `-c` option with `uv add`, like this: `$ uv add -r requirements.in -c requirements.txt` [1]."}
+{"t_us":10597481,"process":"headless","dir":"out","type":"playout.started","gen":2}
+{"t_us":12081326,"process":"headless","dir":"in","t_client_us":12080471,"t_server_us":68294354,"type":"pong"}
+{"t_us":14081349,"process":"headless","dir":"in","t_client_us":14080611,"t_server_us":70294425,"type":"pong"}
+{"t_us":16081064,"process":"headless","dir":"in","t_client_us":16080403,"t_server_us":72294130,"type":"pong"}
+{"t_us":18080628,"process":"headless","dir":"in","t_client_us":18080023,"t_server_us":74293738,"type":"pong"}
+{"t_us":19917029,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":19920678,"process":"headless","dir":"in","type":"socket.closed","code":1000}

@@ -1,0 +1,42 @@
+{
+  "turns": [
+    {
+      "clip": "dev_single_02",
+      "generations": 1,
+      "endpoint_delay_ms": 820.0,
+      "stt_settle_ms": 0.5,
+      "llm_first_token_ms": 324.4,
+      "tts_first_audio_ms": 151.9,
+      "total_ms": 1300.5,
+      "residual_ms": 3.4
+    }
+  ],
+  "summary": {
+    "total_ms": {
+      "p50": 1300.5,
+      "p95": 1300.5
+    },
+    "endpoint_delay_ms": {
+      "p50": 820.0,
+      "p95": 820.0
+    },
+    "stt_settle_ms": {
+      "p50": 0.5,
+      "p95": 0.5
+    },
+    "llm_first_token_ms": {
+      "p50": 324.4,
+      "p95": 324.4
+    },
+    "tts_first_audio_ms": {
+      "p50": 151.9,
+      "p95": 151.9
+    },
+    "residual_ms": {
+      "p50": 3.4,
+      "p95": 3.4
+    },
+    "split_turns": []
+  },
+  "n": 1
+}

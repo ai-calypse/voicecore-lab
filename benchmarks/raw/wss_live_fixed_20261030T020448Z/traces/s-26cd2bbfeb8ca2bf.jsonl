@@ -1,0 +1,12 @@
+{"trace_id": "s-26cd2bbfeb8ca2bf", "span": "clock", "event": "client_offset", "t_mono_us": 53603963412, "process": "agent-core", "attrs": {"client_to_agent_us": 53603861389}}
+{"trace_id": "s-26cd2bbfeb8ca2bf", "span": "turn", "event": "speech_started", "t_mono_us": 53604943491, "process": "agent-core", "attrs": {"onset_ms": 1080, "capture_end_us": 1222021}}
+{"trace_id": "s-26cd2bbfeb8ca2bf", "span": "clock", "event": "client_offset", "t_mono_us": 53608820977, "process": "agent-core", "attrs": {"client_to_agent_us": 53603717214}}
+{"trace_id": "s-26cd2bbfeb8ca2bf", "span": "stt", "event": "final", "t_mono_us": 53609662210, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-26cd2bbfeb8ca2bf", "span": "turn", "event": "endpoint", "t_mono_us": 53610221805, "process": "agent-core", "attrs": {"reason": "silence", "onset_ms": 1080, "capture_end_us": 6502021}}
+{"trace_id": "s-26cd2bbfeb8ca2bf", "span": "stt", "event": "turn_text", "t_mono_us": 53610222580, "process": "agent-core", "attrs": {"chars": 46, "waited_ms": 0}}
+{"trace_id": "s-26cd2bbfeb8ca2bf", "span": "llm", "event": "request", "t_mono_us": 53610222958, "process": "agent-core", "attrs": {"attempt": 0}, "generation_id": 1}
+{"trace_id": "s-26cd2bbfeb8ca2bf", "span": "llm", "event": "first_token", "t_mono_us": 53611365234, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-26cd2bbfeb8ca2bf", "span": "tts", "event": "first_audio", "t_mono_us": 53611777197, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-26cd2bbfeb8ca2bf", "span": "playout", "event": "started", "t_mono_us": 53611800036, "process": "agent-core", "attrs": {"t_client_us": 8080421}, "generation_id": 1}
+{"trace_id": "s-26cd2bbfeb8ca2bf", "span": "clock", "event": "client_offset", "t_mono_us": 53613821263, "process": "agent-core", "attrs": {"client_to_agent_us": 53603717157}}
+{"trace_id": "s-26cd2bbfeb8ca2bf", "span": "clock", "event": "client_offset", "t_mono_us": 53618820600, "process": "agent-core", "attrs": {"client_to_agent_us": 53603717157}}

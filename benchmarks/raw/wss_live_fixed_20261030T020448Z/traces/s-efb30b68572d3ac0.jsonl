@@ -1,0 +1,15 @@
+{"trace_id": "s-efb30b68572d3ac0", "span": "clock", "event": "client_offset", "t_mono_us": 53780929696, "process": "agent-core", "attrs": {"client_to_agent_us": 53780831605}}
+{"trace_id": "s-efb30b68572d3ac0", "span": "turn", "event": "speech_started", "t_mono_us": 53782060534, "process": "agent-core", "attrs": {"onset_ms": 1080, "capture_end_us": 1218089}}
+{"trace_id": "s-efb30b68572d3ac0", "span": "clock", "event": "client_offset", "t_mono_us": 53785931287, "process": "agent-core", "attrs": {"client_to_agent_us": 53780831058}}
+{"trace_id": "s-efb30b68572d3ac0", "span": "stt", "event": "final", "t_mono_us": 53786758686, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-efb30b68572d3ac0", "span": "stt", "event": "final", "t_mono_us": 53790776855, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-efb30b68572d3ac0", "span": "clock", "event": "client_offset", "t_mono_us": 53790930386, "process": "agent-core", "attrs": {"client_to_agent_us": 53780831058}}
+{"trace_id": "s-efb30b68572d3ac0", "span": "turn", "event": "endpoint", "t_mono_us": 53791071452, "process": "agent-core", "attrs": {"reason": "silence", "onset_ms": 1080, "capture_end_us": 10238089}}
+{"trace_id": "s-efb30b68572d3ac0", "span": "stt", "event": "turn_text", "t_mono_us": 53791072107, "process": "agent-core", "attrs": {"chars": 82, "waited_ms": 0}}
+{"trace_id": "s-efb30b68572d3ac0", "span": "llm", "event": "request", "t_mono_us": 53791072347, "process": "agent-core", "attrs": {"attempt": 0}, "generation_id": 1}
+{"trace_id": "s-efb30b68572d3ac0", "span": "llm", "event": "first_token", "t_mono_us": 53792011617, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-efb30b68572d3ac0", "span": "tts", "event": "first_audio", "t_mono_us": 53792428443, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-efb30b68572d3ac0", "span": "playout", "event": "started", "t_mono_us": 53792431908, "process": "agent-core", "attrs": {"t_client_us": 11598524}, "generation_id": 1}
+{"trace_id": "s-efb30b68572d3ac0", "span": "clock", "event": "client_offset", "t_mono_us": 53795929561, "process": "agent-core", "attrs": {"client_to_agent_us": 53780830709}}
+{"trace_id": "s-efb30b68572d3ac0", "span": "playout", "event": "stopped", "t_mono_us": 53800672534, "process": "agent-core", "attrs": {"reason": "done", "t_client_us": 19839401}, "generation_id": 1}
+{"trace_id": "s-efb30b68572d3ac0", "span": "clock", "event": "client_offset", "t_mono_us": 53800929472, "process": "agent-core", "attrs": {"client_to_agent_us": 53780830709}}

@@ -1,0 +1,6 @@
+{
+  "measured": "2026-10-30, harness/gate.py --write-baseline: answered 12/12, early cutoffs 0, total p50 1260 / p95 1380 ms, interrupts silenced 3/3, interrupt-to-silence max 440 ms, false barge-ins 0",
+  "rule": "latencies may grow by at most 100 ms over the measurement; counts may not get worse",
+  "min": {"answered": 12, "interrupts_silenced": 3},
+  "max": {"early_cutoffs": 0, "false_barge_ins": 0, "total_ms_p50": 1360, "total_ms_p95": 1480, "interrupt_to_silence_ms_max": 540}
+}

@@ -29,7 +29,7 @@ type session struct {
 	claimed     bool            // a connection owns or is attaching to this session
 	ended       bool
 	fence       uint32
-	lastGen     uint32 // newest agent generation seen from upstream
+	lastGen     uint32            // newest agent generation seen from upstream
 	lastSeq     map[uint32]uint32 // per mic stream
 	revoked     map[uint32]bool
 	resumeTimer *time.Timer
@@ -60,6 +60,7 @@ func (ss *session) attach(c *websocket.Conn, resumed bool) {
 	}
 	ss.client = c
 	ss.mu.Unlock()
+	ss.srv.trace(ss.id, "client_attached", 0, map[string]any{"resumed": resumed})
 
 	welcome := protocol.NewEvent("welcome", map[string]any{"session_id": ss.id,
 		"resume_window_ms": ss.srv.cfg.ResumeWindow.Milliseconds(), "resumed": resumed})
@@ -83,6 +84,7 @@ func (ss *session) attach(c *websocket.Conn, resumed bool) {
 		<-writerDone
 	}
 
+	ss.srv.trace(ss.id, "client_detached", 0, map[string]any{"ends_session": end})
 	ss.mu.Lock()
 	ss.client, ss.claimed = nil, false
 	if !end && !ss.ended {
@@ -214,8 +216,12 @@ func (ss *session) readUpstream() {
 			}
 			ss.mu.Lock()
 			fenced := f.GenerationID <= ss.fence
+			first := f.GenerationID > ss.lastGen
 			ss.lastGen = max(ss.lastGen, f.GenerationID)
 			ss.mu.Unlock()
+			if first && !fenced {
+				ss.srv.trace(ss.id, "agent_first_frame", f.GenerationID, nil)
+			}
 			if fenced {
 				ss.srv.c.DropsFenced.Add(1)
 				continue
@@ -233,7 +239,9 @@ func (ss *session) readUpstream() {
 			ss.mu.Lock()
 			ss.fence = max(ss.fence, g)
 			ss.mu.Unlock()
-			ss.srv.c.DropsFenced.Add(int64(ss.outq.purge(g)))
+			n := ss.outq.purge(g)
+			ss.srv.c.DropsFenced.Add(int64(n))
+			ss.srv.trace(ss.id, "fence", g, map[string]any{"dropped_queued": n})
 		}
 		ss.outq.push(item{data: b})
 	}
@@ -255,6 +263,7 @@ func (ss *session) end(reason string) {
 	ss.srv.mu.Lock()
 	delete(ss.srv.sessions, ss.id)
 	ss.srv.mu.Unlock()
+	ss.srv.trace(ss.id, "session_ended", 0, map[string]any{"reason": reason})
 	if c != nil {
 		ss.outq.push(item{data: protocol.NewEvent("session.ended", map[string]any{"reason": reason})})
 		ss.outq.push(item{close: true})

@@ -1,0 +1,182 @@
+{
+  "turns": [
+    {
+      "clip": "dev_docs_question_q01",
+      "generations": 1,
+      "endpoint_delay_ms": 860.0,
+      "stt_settle_ms": 0.8,
+      "llm_first_token_ms": 1142.3,
+      "tts_first_audio_ms": 412.0,
+      "total_ms": 2438.4,
+      "residual_ms": 23.0
+    },
+    {
+      "clip": "dev_docs_question_q02",
+      "generations": 1,
+      "endpoint_delay_ms": 880.0,
+      "stt_settle_ms": 0.6,
+      "llm_first_token_ms": 963.9,
+      "tts_first_audio_ms": 530.7,
+      "total_ms": 2379.6,
+      "residual_ms": 4.1
+    },
+    {
+      "clip": "dev_docs_question_q04",
+      "generations": 1,
+      "endpoint_delay_ms": 820.0,
+      "stt_settle_ms": 0.6,
+      "llm_first_token_ms": 783.7,
+      "tts_first_audio_ms": 464.1,
+      "total_ms": 2081.5,
+      "residual_ms": 13.0
+    },
+    {
+      "clip": "dev_docs_question_q06",
+      "generations": 1,
+      "endpoint_delay_ms": 860.0,
+      "stt_settle_ms": 0.7,
+      "llm_first_token_ms": 1260.6,
+      "tts_first_audio_ms": 500.1,
+      "total_ms": 2640.4,
+      "residual_ms": 18.7
+    },
+    {
+      "clip": "dev_docs_question_q07",
+      "generations": 1,
+      "endpoint_delay_ms": 820.0,
+      "stt_settle_ms": 0.6,
+      "llm_first_token_ms": 1627.7,
+      "tts_first_audio_ms": 393.3,
+      "total_ms": 2858.2,
+      "residual_ms": 16.3
+    },
+    {
+      "clip": "dev_docs_question_q09",
+      "generations": 1,
+      "endpoint_delay_ms": 900.0,
+      "stt_settle_ms": 0.6,
+      "llm_first_token_ms": 921.6,
+      "tts_first_audio_ms": 487.9,
+      "total_ms": 2317.1,
+      "residual_ms": 6.7
+    },
+    {
+      "clip": "dev_docs_question_q11",
+      "generations": 1,
+      "endpoint_delay_ms": 820.0,
+      "stt_settle_ms": 0.7,
+      "llm_first_token_ms": 1398.3,
+      "tts_first_audio_ms": 481.9,
+      "total_ms": 2718.7,
+      "residual_ms": 17.5
+    },
+    {
+      "clip": "dev_docs_question_q12",
+      "generations": 1,
+      "endpoint_delay_ms": 780.0,
+      "stt_settle_ms": 0.8,
+      "llm_first_token_ms": 872.9,
+      "tts_first_audio_ms": 473.1,
+      "total_ms": 2143.0,
+      "residual_ms": 16.0
+    },
+    {
+      "clip": "dev_docs_question_q14",
+      "generations": 1,
+      "endpoint_delay_ms": 860.0,
+      "stt_settle_ms": 0.7,
+      "llm_first_token_ms": 1758.4,
+      "tts_first_audio_ms": 458.7,
+      "total_ms": 3101.8,
+      "residual_ms": 23.6
+    },
+    {
+      "clip": "dev_docs_question_q16",
+      "generations": 1,
+      "endpoint_delay_ms": 860.0,
+      "stt_settle_ms": 0.6,
+      "llm_first_token_ms": 825.8,
+      "tts_first_audio_ms": 383.0,
+      "total_ms": 2081.3,
+      "residual_ms": 11.4
+    },
+    {
+      "clip": "dev_docs_question_q17",
+      "generations": 1,
+      "endpoint_delay_ms": 820.0,
+      "stt_settle_ms": 0.7,
+      "llm_first_token_ms": 939.3,
+      "tts_first_audio_ms": 416.8,
+      "total_ms": 2180.4,
+      "residual_ms": 3.4
+    },
+    {
+      "clip": "dev_docs_question_q19",
+      "generations": 1,
+      "endpoint_delay_ms": 840.0,
+      "stt_settle_ms": 0.7,
+      "llm_first_token_ms": 880.8,
+      "tts_first_audio_ms": 394.9,
+      "total_ms": 2140.5,
+      "residual_ms": 23.8
+    },
+    {
+      "clip": "dev_docs_question_q21",
+      "generations": 1,
+      "endpoint_delay_ms": 860.0,
+      "stt_settle_ms": 0.6,
+      "llm_first_token_ms": 1475.3,
+      "tts_first_audio_ms": 456.2,
+      "total_ms": 2799.2,
+      "residual_ms": 6.8
+    },
+    {
+      "clip": "dev_docs_question_q22",
+      "generations": 1,
+      "endpoint_delay_ms": 880.0,
+      "stt_settle_ms": 0.8,
+      "llm_first_token_ms": 788.1,
+      "tts_first_audio_ms": 396.7,
+      "total_ms": 2078.7,
+      "residual_ms": 12.9
+    },
+    {
+      "clip": "dev_docs_question_q24",
+      "generations": 1,
+      "endpoint_delay_ms": 820.0,
+      "stt_settle_ms": 0.7,
+      "llm_first_token_ms": 540.6,
+      "tts_first_audio_ms": 391.3,
+      "total_ms": 1759.8,
+      "residual_ms": 6.9
+    }
+  ],
+  "summary": {
+    "total_ms": {
+      "p50": 2317.1,
+      "p95": 3101.8
+    },
+    "endpoint_delay_ms": {
+      "p50": 860.0,
+      "p95": 900.0
+    },
+    "stt_settle_ms": {
+      "p50": 0.7,
+      "p95": 0.8
+    },
+    "llm_first_token_ms": {
+      "p50": 939.3,
+      "p95": 1758.4
+    },
+    "tts_first_audio_ms": {
+      "p50": 456.2,
+      "p95": 530.7
+    },
+    "residual_ms": {
+      "p50": 13.0,
+      "p95": 23.8
+    },
+    "split_turns": []
+  },
+  "n": 15
+}

@@ -51,11 +51,11 @@ def turn_breakdown(client, trace, turn_end_ms):
 
     req, ft, fa = at("llm", "request", gen), at("llm", "first_token", gen), at("tts", "first_audio", gen)
     ep, tt = last_before("turn", "endpoint", req["t_mono_us"]), last_before("stt", "turn_text", req["t_mono_us"])
-    ms = lambda a, b: (b - a) / 1000  # noqa: E731
-    b = {"endpoint_delay_ms": ms(speech_end, ep["attrs"]["capture_end_us"]), "stt_settle_ms": ms(ep["t_mono_us"], tt["t_mono_us"]),
+    ms = lambda a, b: None if a is None or b is None else (b - a) / 1000  # noqa: E731
+    b = {"endpoint_delay_ms": ms(speech_end, ep["attrs"].get("capture_end_us")), "stt_settle_ms": ms(ep["t_mono_us"], tt["t_mono_us"]),
          "llm_first_token_ms": ms(req["t_mono_us"], ft["t_mono_us"]), "tts_first_audio_ms": ms(ft["t_mono_us"], fa["t_mono_us"]),
          "total_ms": ms(speech_end, started)}
-    b["residual_ms"] = b["total_ms"] - b["endpoint_delay_ms"] - ms(ep["t_mono_us"], fa["t_mono_us"])
+    b["residual_ms"] = None if b["endpoint_delay_ms"] is None else b["total_ms"] - b["endpoint_delay_ms"] - ms(ep["t_mono_us"], fa["t_mono_us"])
     return b
 
 
@@ -67,3 +67,26 @@ def recall_at_k(ranked, relevant, k):
 def mrr(ranked, relevant):
     """Mean over queries of 1 / rank of the first relevant id (0 when none is ranked)."""
     return sum(next((1 / i for i, x in enumerate(r, 1) if x in rel), 0.0) for r, rel in zip(ranked, relevant)) / len(ranked)
+
+
+TEXT_FIELDS = ("text", "transcript", "answer")
+
+
+def ntp_offset(samples):
+    """Clock offset (remote - local, us) from (local send, remote time, local receive) samples, NTP style:
+    the sample with the smallest round trip wins, and the remote time is taken at the midpoint."""
+    send, remote, recv = min(samples, key=lambda s: s[2] - s[0])
+    return round(remote - (send + recv) / 2)
+
+
+def merge(logs: dict, offsets_us: dict, include_text: bool = False) -> list:
+    """One timeline from per-process traces. offsets_us[p] is added to process p's clock to reach the reference
+    clock; t_us is the aligned time. Text fields are dropped unless include_text (SPEC.md section 5)."""
+    out = []
+    for process, events in logs.items():
+        for e in events:
+            attrs = e.get("attrs", {})
+            if not include_text:
+                attrs = {k: v for k, v in attrs.items() if k not in TEXT_FIELDS}
+            out.append({**e, "attrs": attrs, "t_us": e["t_mono_us"] + offsets_us[process]})
+    return sorted(out, key=lambda e: e["t_us"])

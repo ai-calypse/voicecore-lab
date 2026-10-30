@@ -24,6 +24,7 @@ from voicecore.providers.factory import make_live
 from voicecore.providers.mock import LLMScript, MockLLM, MockSTT, MockTTS
 from voicecore.runtime.session import Session
 from voicecore.trace import JsonlSink, Tracer
+from voicecore.turntaking.floor import Policy
 from voicecore.turntaking.vad_silero import SileroVAD
 
 log = logging.getLogger("voicecore.server")
@@ -59,7 +60,7 @@ def live_providers(sid):
     return p, settle
 
 
-def handler_for(mode: str, trace_dir: Path | None, index: Index):
+def handler_for(mode: str, trace_dir: Path | None, index: Index, policy: Policy = Policy()):
     async def handler(ws):  # ponytail: VAD runs inline on the event loop (~0.3 ms per window); move to a thread if sessions x frames saturate one core
         sid = ws.request.path.rsplit("/", 1)[-1]
         try:
@@ -71,7 +72,7 @@ def handler_for(mode: str, trace_dir: Path | None, index: Index):
             return
         sink = JsonlSink(trace_dir / f"{sid}.jsonl") if trace_dir else None
         engine = AnswerEngine(index, providers["llm"])
-        session = Session(sid, send=ws.send, vad=SileroVAD(), tracer=Tracer(sid, sink), answer=engine.stream, **providers)
+        session = Session(sid, send=ws.send, vad=SileroVAD(), policy=policy, tracer=Tracer(sid, sink), answer=engine.stream, **providers)
         await session.start()
         try:
             async for m in ws:
@@ -100,12 +101,13 @@ async def main():
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--trace-dir", type=Path)
+    ap.add_argument("--policy", choices=["fixed", "adaptive", "asr_assisted"], default="fixed", help="endpointing (ADR 0002)")
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     SileroVAD()  # load the model now: loading it inside the first session stalls its mic frames
     index = Index(ingest(DOCS))  # docs snapshot; vectors are cached under .cache after the first build
     index.dense("warm up", 1)
-    async with serve(handler_for(args.providers, args.trace_dir, index), args.host, args.port, max_size=1 << 20) as server:
+    async with serve(handler_for(args.providers, args.trace_dir, index, Policy(args.policy)), args.host, args.port, max_size=1 << 20) as server:
         log.info("orchestrator listening on ws://%s:%d (%s providers)", args.host, args.port, args.providers)
         await server.serve_forever()
 

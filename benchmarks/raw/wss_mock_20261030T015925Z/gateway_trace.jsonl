@@ -1,0 +1,5 @@
+{"attrs":{},"event":"session_started","process":"gateway","span":"gateway","t_mono_us":1118893,"trace_id":"s-502771eecfb89d7f"}
+{"attrs":{"resumed":false},"event":"client_attached","process":"gateway","span":"gateway","t_mono_us":1118937,"trace_id":"s-502771eecfb89d7f"}
+{"attrs":{},"event":"agent_first_frame","generation_id":1,"process":"gateway","span":"gateway","t_mono_us":8019854,"trace_id":"s-502771eecfb89d7f"}
+{"attrs":{"ends_session":true},"event":"client_detached","process":"gateway","span":"gateway","t_mono_us":16182913,"trace_id":"s-502771eecfb89d7f"}
+{"attrs":{"reason":"client"},"event":"session_ended","process":"gateway","span":"gateway","t_mono_us":16183001,"trace_id":"s-502771eecfb89d7f"}

@@ -1,0 +1,22 @@
+{"t_us":69856,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q24.wav"}
+{"t_us":72762,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-60088b44ce76689b","type":"welcome"}
+{"t_us":72865,"process":"headless","type":"mic.start","t0_us":72863}
+{"t_us":1174750,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2074090,"process":"headless","dir":"in","t_client_us":2073147,"t_server_us":254699911,"type":"pong"}
+{"t_us":2207503,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will you all pick up"}
+{"t_us":3008586,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will you all pick up the settings I already"}
+{"t_us":3908876,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will you all pick up the settings I already have configured for"}
+{"t_us":4075760,"process":"headless","dir":"in","t_client_us":4075224,"t_server_us":256701821,"type":"pong"}
+{"t_us":4547706,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will you all pick up the settings I already have configured for PIP?"}
+{"t_us":4856564,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Will you all pick up the settings I already have configured for PIP?"}
+{"t_us":4857301,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":5657721,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"12358de0019b","title":"Compatibility with pip and pip-tools > Configuration files and environment variables","url":"https://docs.astral.sh/uv/pip/compatibility/#configuration-files-and-environment-variables"}],"gen":1}
+{"t_us":5658593,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"No, uv does not read configuration files or environment variables specific to pip, so it won't pick up your existing pip settings [1]. However, uv supports its own environment variables and configuration files like `uv.toml` [1]."}
+{"t_us":5792699,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":6076172,"process":"headless","dir":"in","t_client_us":6075270,"t_server_us":258702081,"type":"pong"}
+{"t_us":8077012,"process":"headless","dir":"in","t_client_us":8076187,"t_server_us":260702937,"type":"pong"}
+{"t_us":10077596,"process":"headless","dir":"in","t_client_us":10076905,"t_server_us":262703657,"type":"pong"}
+{"t_us":12078281,"process":"headless","dir":"in","t_client_us":12077572,"t_server_us":264704329,"type":"pong"}
+{"t_us":14078995,"process":"headless","dir":"in","t_client_us":14078263,"t_server_us":266705021,"type":"pong"}
+{"t_us":15533638,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":15537363,"process":"headless","dir":"in","type":"socket.closed","code":1000}

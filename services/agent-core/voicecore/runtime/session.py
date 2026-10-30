@@ -80,6 +80,8 @@ class Session:
         self._stream: int | None = None  # newest mic stream id
         self._revoked_stream: int | None = None
         self._pause_timer: asyncio.Task | None = None
+        self._min_lag_us: int | None = None  # min (arrival - capture end) of mic frames: client->agent clock offset
+        self._last_capture_end_us: int | None = None
         self.dropped_stale = 0
         self._tasks: list[asyncio.Task] = []
 
@@ -110,6 +112,11 @@ class Session:
         if f.stream_id == self._revoked_stream:  # the user turned this mic off; a new stream means new consent
             return
         self._stream = f.stream_id
+        self._last_capture_end_us = f.capture_us + 20_000
+        lag = now_us() - (f.capture_us + 20_000)
+        self._min_lag_us = lag if self._min_lag_us is None else min(self._min_lag_us, lag)
+        if self._frames % 250 == 0:  # every 5 s: lets the timeline put client and agent events on one clock
+            self.trace.emit("clock", "client_offset", client_to_agent_us=self._min_lag_us)
         prob = self.vad.frame(f.payload) if self.vad else 0.0
         if self.stt:
             self._to_stt(f.payload.tobytes(), prob)
@@ -439,8 +446,8 @@ class Session:
                 elif isinstance(e, Final):
                     self.transcript.final(e.text)
                     self.trace.emit("stt", "final", text=e.text)
-                    for fe in self.floor.transcript_final(e.text):
-                        await self._on_floor(fe)
+                    for fe in self.floor.transcript_final(e.text):  # asr_assisted: the final itself ends the turn
+                        await self._on_floor(fe, capture_end_us=self._last_capture_end_us)
                 await self._event("transcript.partial", turn_id=self.turn_id or "t0", text=self.transcript.text())
         except ProviderError as err:
             self.trace.emit("stt", "error", kind=err.kind)

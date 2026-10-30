@@ -1,0 +1,24 @@
+{"t_us":71159,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q12.wav"}
+{"t_us":73937,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-372aa5887e8b1bc9","type":"welcome"}
+{"t_us":74045,"process":"headless","type":"mic.start","t0_us":74043}
+{"t_us":1176991,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2074867,"process":"headless","dir":"in","t_client_us":2073757,"t_server_us":128071790,"type":"pong"}
+{"t_us":2180408,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add"}
+{"t_us":2982734,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package"}
+{"t_us":3898949,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package for just one u"}
+{"t_us":4078377,"process":"headless","dir":"in","t_client_us":4076670,"t_server_us":130074408,"type":"pong"}
+{"t_us":4902923,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package for just one uv run command?"}
+{"t_us":5500385,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package for just one uv run command?"}
+{"t_us":5796440,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I add an extra package for just one uv run command?"}
+{"t_us":5796963,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6076978,"process":"headless","dir":"in","t_client_us":6076310,"t_server_us":132074057,"type":"pong"}
+{"t_us":6986053,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":2,"id":"4a9cbab65300","title":"Using tools > Requesting extras","url":"https://docs.astral.sh/uv/guides/tools/#requesting-extras"}],"gen":1}
+{"t_us":6987018,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"You can include additional dependencies during tool execution with the `--with` or `-w` options, but for requesting extras specifically, you can use the `--from` option with the extra name in brackets, like `'mypy[faster-cache,reports]'` [2]."}
+{"t_us":7157030,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8076893,"process":"headless","dir":"in","t_client_us":8076391,"t_server_us":134074103,"type":"pong"}
+{"t_us":10077612,"process":"headless","dir":"in","t_client_us":10077012,"t_server_us":136074775,"type":"pong"}
+{"t_us":12078445,"process":"headless","dir":"in","t_client_us":12077754,"t_server_us":138075556,"type":"pong"}
+{"t_us":14078748,"process":"headless","dir":"in","t_client_us":14078079,"t_server_us":140075889,"type":"pong"}
+{"t_us":16079113,"process":"headless","dir":"in","t_client_us":16078404,"t_server_us":142076224,"type":"pong"}
+{"t_us":16514983,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":16519081,"process":"headless","dir":"in","type":"socket.closed","code":1000}

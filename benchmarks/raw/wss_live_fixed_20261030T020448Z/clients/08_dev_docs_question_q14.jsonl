@@ -1,0 +1,28 @@
+{"t_us":75202,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q14.wav"}
+{"t_us":78153,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-f9ace6a8f30b76d9","type":"welcome"}
+{"t_us":78262,"process":"headless","type":"mic.start","t0_us":78260}
+{"t_us":1180945,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2078989,"process":"headless","dir":"in","t_client_us":2077891,"t_server_us":144851701,"type":"pong"}
+{"t_us":2208562,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long"}
+{"t_us":3011381,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support"}
+{"t_us":3706041,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release"}
+{"t_us":4079405,"process":"headless","dir":"in","t_client_us":4078836,"t_server_us":146852295,"type":"pong"}
+{"t_us":4729282,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release of uv for"}
+{"t_us":5714115,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release of uv for companies that"}
+{"t_us":5908708,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release of uv for companies"}
+{"t_us":6079502,"process":"headless","dir":"in","t_client_us":6078873,"t_server_us":148852337,"type":"pong"}
+{"t_us":6106842,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release of uv for companies that upgrade"}
+{"t_us":7089623,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Is there a long term support release of uv for companies that upgrade slowly?"}
+{"t_us":7400504,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Is there a long term support release of uv for companies that upgrade slowly?"}
+{"t_us":7401108,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":8079397,"process":"headless","dir":"in","t_client_us":8078783,"t_server_us":150852305,"type":"pong"}
+{"t_us":9159487,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":9488959,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that in the docs."}
+{"t_us":9640020,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":10079280,"process":"headless","dir":"in","t_client_us":10078673,"t_server_us":152852188,"type":"pong"}
+{"t_us":11395316,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":12080300,"process":"headless","dir":"in","t_client_us":12079645,"t_server_us":154853157,"type":"pong"}
+{"t_us":14080287,"process":"headless","dir":"in","t_client_us":14079783,"t_server_us":156853251,"type":"pong"}
+{"t_us":16080628,"process":"headless","dir":"in","t_client_us":16080097,"t_server_us":158853544,"type":"pong"}
+{"t_us":18038193,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":18042152,"process":"headless","dir":"in","type":"socket.closed","code":1000}

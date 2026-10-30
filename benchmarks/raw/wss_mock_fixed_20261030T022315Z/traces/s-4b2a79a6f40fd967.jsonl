@@ -1,0 +1,13 @@
+{"trace_id": "s-4b2a79a6f40fd967", "span": "clock", "event": "client_offset", "t_mono_us": 54711629355, "process": "agent-core", "attrs": {"client_to_agent_us": 54711370884}}
+{"trace_id": "s-4b2a79a6f40fd967", "span": "turn", "event": "speech_started", "t_mono_us": 54712769355, "process": "agent-core", "attrs": {"onset_ms": 1100, "capture_end_us": 1398464}}
+{"trace_id": "s-4b2a79a6f40fd967", "span": "clock", "event": "client_offset", "t_mono_us": 54716628907, "process": "agent-core", "attrs": {"client_to_agent_us": 54711369301}}
+{"trace_id": "s-4b2a79a6f40fd967", "span": "turn", "event": "endpoint", "t_mono_us": 54718769480, "process": "agent-core", "attrs": {"reason": "silence", "onset_ms": 1100, "capture_end_us": 7398464}}
+{"trace_id": "s-4b2a79a6f40fd967", "span": "stt", "event": "final", "t_mono_us": 54718769575, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-4b2a79a6f40fd967", "span": "stt", "event": "turn_text", "t_mono_us": 54718769627, "process": "agent-core", "attrs": {"chars": 20, "waited_ms": 0}}
+{"trace_id": "s-4b2a79a6f40fd967", "span": "llm", "event": "request", "t_mono_us": 54718769701, "process": "agent-core", "attrs": {"attempt": 0}, "generation_id": 1}
+{"trace_id": "s-4b2a79a6f40fd967", "span": "llm", "event": "first_token", "t_mono_us": 54719084682, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-4b2a79a6f40fd967", "span": "tts", "event": "first_audio", "t_mono_us": 54719235270, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-4b2a79a6f40fd967", "span": "playout", "event": "started", "t_mono_us": 54719241954, "process": "agent-core", "attrs": {"t_client_us": 7871168}, "generation_id": 1}
+{"trace_id": "s-4b2a79a6f40fd967", "span": "clock", "event": "client_offset", "t_mono_us": 54721628332, "process": "agent-core", "attrs": {"client_to_agent_us": 54711369298}}
+{"trace_id": "s-4b2a79a6f40fd967", "span": "playout", "event": "stopped", "t_mono_us": 54724303558, "process": "agent-core", "attrs": {"reason": "done", "t_client_us": 12932342}, "generation_id": 1}
+{"trace_id": "s-4b2a79a6f40fd967", "span": "clock", "event": "client_offset", "t_mono_us": 54726628383, "process": "agent-core", "attrs": {"client_to_agent_us": 54711369298}}

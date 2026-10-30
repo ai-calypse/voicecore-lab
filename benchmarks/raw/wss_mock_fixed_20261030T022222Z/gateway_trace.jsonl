@@ -1,0 +1,5 @@
+{"attrs":{},"event":"session_started","process":"gateway","span":"gateway","t_mono_us":1195863,"trace_id":"s-bdeea5613b675e95"}
+{"attrs":{"resumed":false},"event":"client_attached","process":"gateway","span":"gateway","t_mono_us":1195899,"trace_id":"s-bdeea5613b675e95"}
+{"attrs":{},"event":"agent_first_frame","generation_id":1,"process":"gateway","span":"gateway","t_mono_us":8834999,"trace_id":"s-bdeea5613b675e95"}
+{"attrs":{"ends_session":true},"event":"client_detached","process":"gateway","span":"gateway","t_mono_us":17039736,"trace_id":"s-bdeea5613b675e95"}
+{"attrs":{"reason":"client"},"event":"session_ended","process":"gateway","span":"gateway","t_mono_us":17039810,"trace_id":"s-bdeea5613b675e95"}

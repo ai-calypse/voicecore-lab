@@ -1,0 +1,25 @@
+{"t_us":71169,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q22.wav"}
+{"t_us":74049,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-02877c862bf7ea5d","type":"welcome"}
+{"t_us":74157,"process":"headless","type":"mic.start","t0_us":74155}
+{"t_us":1397228,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2074463,"process":"headless","dir":"in","t_client_us":2073362,"t_server_us":237052999,"type":"pong"}
+{"t_us":2316907,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Should I use a"}
+{"t_us":3115939,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Should I use a workspace if"}
+{"t_us":4078069,"process":"headless","dir":"in","t_client_us":4076550,"t_server_us":239055850,"type":"pong"}
+{"t_us":4088116,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Should I use a workspace if my packages"}
+{"t_us":5112669,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Should I use a workspace if my packages have conflicting"}
+{"t_us":6077505,"process":"headless","dir":"in","t_client_us":6076897,"t_server_us":241056178,"type":"pong"}
+{"t_us":6113646,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Should I use a workspace if my packages have conflicting requirements?"}
+{"t_us":6256762,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Should I use a workspace if my packages have conflicting requirements?"}
+{"t_us":6257330,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":7494584,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"fe7d338371e7","title":"Using workspaces > When (not) to use workspaces","url":"https://docs.astral.sh/uv/concepts/projects/workspaces/#when-not-to-use-workspaces"}],"gen":1}
+{"t_us":7495386,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"No, workspaces are not suited for cases where members have conflicting requirements, and path dependencies are often preferable in such cases [1]."}
+{"t_us":7651331,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8078076,"process":"headless","dir":"in","t_client_us":8077517,"t_server_us":243056874,"type":"pong"}
+{"t_us":10078705,"process":"headless","dir":"in","t_client_us":10078055,"t_server_us":245057443,"type":"pong"}
+{"t_us":12078119,"process":"headless","dir":"in","t_client_us":12077433,"t_server_us":247056829,"type":"pong"}
+{"t_us":14079616,"process":"headless","dir":"in","t_client_us":14078789,"t_server_us":249058321,"type":"pong"}
+{"t_us":15573225,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":16079571,"process":"headless","dir":"in","t_client_us":16078734,"t_server_us":251058150,"type":"pong"}
+{"t_us":17374027,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":17377922,"process":"headless","dir":"in","type":"socket.closed","code":1000}

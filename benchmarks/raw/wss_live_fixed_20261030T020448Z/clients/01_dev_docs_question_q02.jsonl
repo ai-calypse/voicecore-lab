@@ -1,0 +1,26 @@
+{"t_us":76450,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q02.wav"}
+{"t_us":79521,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-ff830fff1ba1d369","type":"welcome"}
+{"t_us":79631,"process":"headless","type":"mic.start","t0_us":79629}
+{"t_us":1181619,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2068322,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Can I buy a"}
+{"t_us":2080051,"process":"headless","dir":"in","t_client_us":2079356,"t_server_us":20595257,"type":"pong"}
+{"t_us":2877840,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Can I buy a paid support"}
+{"t_us":3855110,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Can I buy a paid support contract for"}
+{"t_us":4082685,"process":"headless","dir":"in","t_client_us":4082009,"t_server_us":22597883,"type":"pong"}
+{"t_us":4869892,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Can I buy a paid support contract for uv with"}
+{"t_us":5876159,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Can I buy a paid support contract for uv with guaranteed response"}
+{"t_us":6082630,"process":"headless","dir":"in","t_client_us":6081937,"t_server_us":24597747,"type":"pong"}
+{"t_us":6955766,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Can I buy a paid support contract for uv with guaranteed response times?"}
+{"t_us":7342013,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Can I buy a paid support contract for uv with guaranteed response times?"}
+{"t_us":7342568,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":8083768,"process":"headless","dir":"in","t_client_us":8083074,"t_server_us":26598996,"type":"pong"}
+{"t_us":8306384,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":8714159,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that in the docs."}
+{"t_us":8839227,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":10085196,"process":"headless","dir":"in","t_client_us":10083575,"t_server_us":28599536,"type":"pong"}
+{"t_us":10757137,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":12083955,"process":"headless","dir":"in","t_client_us":12083359,"t_server_us":30599207,"type":"pong"}
+{"t_us":14084067,"process":"headless","dir":"in","t_client_us":14083711,"t_server_us":32599458,"type":"pong"}
+{"t_us":16084622,"process":"headless","dir":"in","t_client_us":16084024,"t_server_us":34599871,"type":"pong"}
+{"t_us":17959455,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":17963340,"process":"headless","dir":"in","type":"socket.closed","code":1000}

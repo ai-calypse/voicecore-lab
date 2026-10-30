@@ -1,0 +1,168 @@
+{
+  "run_id": "20261030T021840Z",
+  "model": "deepgram nova-3 (keyterms: uv, uvx, uv sync, uv lock, pyproject.toml)",
+  "wer_all": 0.0649,
+  "wer_by_category": {
+    "docs_question": 0.0321,
+    "mid_pause_600ms": 0.0423,
+    "noisy_10db": 0.2667,
+    "noisy_5db": 0.1081,
+    "single": 0.0169,
+    "slow_0_8x": 0.0
+  },
+  "clips": 25,
+  "audio_s": 191.3,
+  "cost_usd": 0.02455,
+  "rows": [
+    {
+      "clip": "holdout_single_01",
+      "category": "single",
+      "ref": "were i to comply with your orders without expressing my own opinion i should seem to have done so willingly hereafter",
+      "hyp": "were i to comply with your orders without expressing my own opinion i should seem to have done so willingly hereafter"
+    },
+    {
+      "clip": "holdout_single_02",
+      "category": "single",
+      "ref": "there cannot be a doubt he received you kindly for in fact you returned without his permission",
+      "hyp": "there cannot be a doubt he received you kindly for in fact you returned without his permission"
+    },
+    {
+      "clip": "holdout_single_03",
+      "category": "single",
+      "ref": "uncas occupied a distant corner in a reclining attitude being rigidly bound both hands and feet by strong and painful withes",
+      "hyp": "uncas occupied a distant corner in a reclining attitude being rigidly bound both hands and feet by strong and painful widths"
+    },
+    {
+      "clip": "holdout_noisy_10db_01",
+      "category": "noisy_10db",
+      "ref": "her feeble health gave her her yielding manner for she could never oppose any one without gathering up all her strength for the struggle",
+      "hyp": "her febrile health gave her her yield manner for she could never oppose anyone without gathering up all her for the struggle"
+    },
+    {
+      "clip": "holdout_noisy_10db_02",
+      "category": "noisy_10db",
+      "ref": "sometimes i'm that yearning for a smoke i'm nearly crazy an i dunno which is worst dyin one way or another",
+      "hyp": "sometimes i'm that yearning for a smoke i'm nearly crazy and i don't know which is worse dying one way or the other"
+    },
+    {
+      "clip": "holdout_noisy_5db_01",
+      "category": "noisy_5db",
+      "ref": "could it mean to last a love set pendulous between sorrow and sorrow",
+      "hyp": "could it mean to last a love set pendulous between sorrow and sorrow"
+    },
+    {
+      "clip": "holdout_noisy_5db_02",
+      "category": "noisy_5db",
+      "ref": "by a quick and unexpected march montrose hastened to innerlochy and presented himself in order of battle before the surprised but not affrightened covenanters",
+      "hyp": "by a quick and unexpected march montreux montrose hastened to interlocky and presented himself in order of battle before the surprised but not a frightened covenanters"
+    },
+    {
+      "clip": "holdout_slow_0_8x_01",
+      "category": "slow_0_8x",
+      "ref": "can these things be returned david breathing more freely as the truth began to dawn upon him",
+      "hyp": "can these things be returned david breathing more freely as the truth began to dawn upon him"
+    },
+    {
+      "clip": "holdout_mid_pause_600ms_01",
+      "category": "mid_pause_600ms",
+      "ref": "there is hardly one day out of a hundred which is wholly joyous and sunny the sugar manufacturer who says loaf clarified lumps bastard common burnt this honest manufacturer talks slang",
+      "hyp": "there is hardly one day out of a 100 is wholly joyous and sunny the sugar manufacturer who says loaf clarified lumps bastard common burnt this honest manufacturer talks slang"
+    },
+    {
+      "clip": "holdout_mid_pause_600ms_02",
+      "category": "mid_pause_600ms",
+      "ref": "he knew his uncle would be glad to hear that he had at last turned his thoughts to a practical matter it has occupied mother a long time to find at the shops the exact shade for her new bonnet",
+      "hyp": "he knew his uncle would be glad to hear that he had at last turned his thoughts to a practical matter it has occupied mother a long time to find the shops the exact shade for her new bonnet"
+    },
+    {
+      "clip": "holdout_docs_question_q03",
+      "category": "docs_question",
+      "ref": "how do i update uv to the latest version",
+      "hyp": "how do i update uv to the latest version"
+    },
+    {
+      "clip": "holdout_docs_question_q05",
+      "category": "docs_question",
+      "ref": "how do i remove a package from my dev dependencies",
+      "hyp": "how do i remove a package from my dev dependencies"
+    },
+    {
+      "clip": "holdout_docs_question_q08",
+      "category": "docs_question",
+      "ref": "how much does uv cost for enterprise teams",
+      "hyp": "how much does uv cost for enterprise teams"
+    },
+    {
+      "clip": "holdout_docs_question_q10",
+      "category": "docs_question",
+      "ref": "how do i upgrade a locked package to a specific version",
+      "hyp": "how do i upgrade a locked package to a specific version"
+    },
+    {
+      "clip": "holdout_docs_question_q13",
+      "category": "docs_question",
+      "ref": "how do i pin the python version for my project",
+      "hyp": "how do i pin the python version for my project"
+    },
+    {
+      "clip": "holdout_docs_question_q15",
+      "category": "docs_question",
+      "ref": "how do i ask uv for a python build that has no global interpreter lock",
+      "hyp": "how do i ask uv for a python build that has no global lock"
+    },
+    {
+      "clip": "holdout_docs_question_q18",
+      "category": "docs_question",
+      "ref": "how do i reinstall the python versions that uv manages",
+      "hyp": "how do i reinstall the python versions that uv manages"
+    },
+    {
+      "clip": "holdout_docs_question_q20",
+      "category": "docs_question",
+      "ref": "how do i upgrade all of my installed tools at once",
+      "hyp": "how do i upgrade all of my installed tools at once"
+    },
+    {
+      "clip": "holdout_docs_question_q23",
+      "category": "docs_question",
+      "ref": "can uv install a dependency straight from a mercurial repository",
+      "hyp": "can you install a dependency state from a mercurial repository"
+    },
+    {
+      "clip": "holdout_docs_question_q26",
+      "category": "docs_question",
+      "ref": "how do i create a virtual environment with uv",
+      "hyp": "how do i create a virtual environment with uv"
+    },
+    {
+      "clip": "holdout_docs_question_q28",
+      "category": "docs_question",
+      "ref": "how do i clear the uv cache",
+      "hyp": "how do i clear the uv cache"
+    },
+    {
+      "clip": "holdout_docs_question_q31",
+      "category": "docs_question",
+      "ref": "can i make uv wait a week before it uses newly released packages",
+      "hyp": "can i make uv wait a week before it uses newly released packages"
+    },
+    {
+      "clip": "holdout_docs_question_q33",
+      "category": "docs_question",
+      "ref": "does uv collect telemetry and can i turn it off",
+      "hyp": "does uv collect telemetry and can i turn it off"
+    },
+    {
+      "clip": "holdout_docs_question_q36",
+      "category": "docs_question",
+      "ref": "can the uv build backend build packages with c or rust extensions",
+      "hyp": "can the uv build back end build packages with c or rust extensions"
+    },
+    {
+      "clip": "holdout_docs_question_q39",
+      "category": "docs_question",
+      "ref": "how do i deploy my uv project to a kubernetes cluster",
+      "hyp": "how do i deploy my uv project to a kubernetes cluster"
+    }
+  ]
+}

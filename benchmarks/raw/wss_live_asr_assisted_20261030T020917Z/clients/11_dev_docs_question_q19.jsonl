@@ -1,0 +1,29 @@
+{"t_us":74450,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q19.wav"}
+{"t_us":77287,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-f2228bc82e5572e7","type":"welcome"}
+{"t_us":77407,"process":"headless","type":"mic.start","t0_us":77405}
+{"t_us":1180663,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2079040,"process":"headless","dir":"in","t_client_us":2077908,"t_server_us":201543223,"type":"pong"}
+{"t_us":2144045,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Denovan"}
+{"t_us":2942479,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Do novice stall and"}
+{"t_us":3767704,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Do not install and manage"}
+{"t_us":4079957,"process":"headless","dir":"in","t_client_us":4079501,"t_server_us":203544358,"type":"pong"}
+{"t_us":4772668,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Do not install and manage Node JS"}
+{"t_us":5894005,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Do not install and manage Node JS version"}
+{"t_us":6081011,"process":"headless","dir":"in","t_client_us":6080256,"t_server_us":205545260,"type":"pong"}
+{"t_us":6374172,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Do not install and manage Node JS version as well"}
+{"t_us":7371216,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Do not install and manage Node JS version as well as Python"}
+{"t_us":7780275,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Do not install and manage Node JS version as well as Python."}
+{"t_us":7781001,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Do not install and manage Node JS version as well as Python."}
+{"t_us":7781257,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":8080638,"process":"headless","dir":"in","t_client_us":8079978,"t_server_us":207545012,"type":"pong"}
+{"t_us":9251062,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":1}
+{"t_us":9505964,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"I couldn't find that in the docs."}
+{"t_us":9658084,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":10080968,"process":"headless","dir":"in","t_client_us":10080277,"t_server_us":209545342,"type":"pong"}
+{"t_us":11496488,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":12081413,"process":"headless","dir":"in","t_client_us":12080815,"t_server_us":211545782,"type":"pong"}
+{"t_us":14082438,"process":"headless","dir":"in","t_client_us":14081773,"t_server_us":213546816,"type":"pong"}
+{"t_us":16083365,"process":"headless","dir":"in","t_client_us":16082744,"t_server_us":215547739,"type":"pong"}
+{"t_us":18083114,"process":"headless","dir":"in","t_client_us":18082484,"t_server_us":217547461,"type":"pong"}
+{"t_us":18758799,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":18762984,"process":"headless","dir":"in","type":"socket.closed","code":1000}

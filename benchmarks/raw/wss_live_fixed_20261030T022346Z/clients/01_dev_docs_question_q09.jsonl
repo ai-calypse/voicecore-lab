@@ -1,0 +1,23 @@
+{"t_us":73787,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q09.wav"}
+{"t_us":253097,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-7e4b8912da69650b","type":"welcome"}
+{"t_us":253267,"process":"headless","type":"mic.start","t0_us":253263}
+{"t_us":1356327,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2254442,"process":"headless","dir":"in","t_client_us":2253353,"t_server_us":3422802,"type":"pong"}
+{"t_us":2368377,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How can I check that"}
+{"t_us":3200831,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How can I check that my lock file is"}
+{"t_us":4122447,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How can I check that my lock file is up to date without"}
+{"t_us":4253882,"process":"headless","dir":"in","t_client_us":4253184,"t_server_us":5422291,"type":"pong"}
+{"t_us":4896835,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How can I check that my lock file is up to date without changing it?"}
+{"t_us":5239058,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How can I check that my lock file is up to date without changing it?"}
+{"t_us":5240444,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6254400,"process":"headless","dir":"in","t_client_us":6253695,"t_server_us":7422902,"type":"pong"}
+{"t_us":6361048,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":2,"id":"76747bf5b35a","title":"Locking and syncing > Checking the lockfile","url":"https://docs.astral.sh/uv/concepts/projects/sync/#checking-the-lockfile"}],"gen":1}
+{"t_us":6361863,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"You can check if your lockfile is up-to-date by passing the `--check` flag to `uv lock`, which will verify if the lockfile matches the project metadata [2]."}
+{"t_us":6515856,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8253741,"process":"headless","dir":"in","t_client_us":8253219,"t_server_us":9422297,"type":"pong"}
+{"t_us":10254109,"process":"headless","dir":"in","t_client_us":10253321,"t_server_us":11422629,"type":"pong"}
+{"t_us":12253481,"process":"headless","dir":"in","t_client_us":12252836,"t_server_us":13421994,"type":"pong"}
+{"t_us":14254194,"process":"headless","dir":"in","t_client_us":14253510,"t_server_us":15422700,"type":"pong"}
+{"t_us":14276923,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":15832975,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":15835287,"process":"headless","dir":"in","type":"socket.closed","code":1000}

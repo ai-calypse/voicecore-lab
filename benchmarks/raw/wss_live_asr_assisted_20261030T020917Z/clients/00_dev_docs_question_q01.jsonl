@@ -1,0 +1,25 @@
+{"t_us":77690,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q01.wav"}
+{"t_us":80902,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-086b86ebca4e60a2","type":"welcome"}
+{"t_us":81007,"process":"headless","type":"mic.start","t0_us":81005}
+{"t_us":1223247,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2082976,"process":"headless","dir":"in","t_client_us":2082100,"t_server_us":3219811,"type":"pong"}
+{"t_us":2241427,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I"}
+{"t_us":3043870,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install all"}
+{"t_us":3483326,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install of?"}
+{"t_us":4083892,"process":"headless","dir":"in","t_client_us":4083418,"t_server_us":5220896,"type":"pong"}
+{"t_us":4446992,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install uv on a Mac"}
+{"t_us":5448330,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install uv on a Mac or Linux"}
+{"t_us":5973767,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I install uv on a Mac or Linux machine?"}
+{"t_us":6004231,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I install uv on a Mac or Linux machine?"}
+{"t_us":6004798,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6084227,"process":"headless","dir":"in","t_client_us":6083910,"t_server_us":7221364,"type":"pong"}
+{"t_us":8084674,"process":"headless","dir":"in","t_client_us":8084032,"t_server_us":9221622,"type":"pong"}
+{"t_us":10085139,"process":"headless","dir":"in","t_client_us":10084463,"t_server_us":11222098,"type":"pong"}
+{"t_us":10761454,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":2,"id":"f62147c3a36b","title":"Installing uv > MacPorts","url":"https://docs.astral.sh/uv/getting-started/installation/#macports"},{"n":1,"id":"d9390b8ee133","title":"Resolution > Common marker values","url":"https://docs.astral.sh/uv/concepts/resolution/#common-marker-values"}],"gen":1}
+{"t_us":10762620,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"You can install uv on a Mac using MacPorts with the command `$ sudo port install uv`, and on Linux, you can install it via the `environments` and `required-environments` settings that accept environment markers derived from the Python runtime [2][1]."}
+{"t_us":10922837,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":12085298,"process":"headless","dir":"in","t_client_us":12084518,"t_server_us":13222296,"type":"pong"}
+{"t_us":14085834,"process":"headless","dir":"in","t_client_us":14084641,"t_server_us":15222230,"type":"pong"}
+{"t_us":16085360,"process":"headless","dir":"in","t_client_us":16084532,"t_server_us":17222283,"type":"pong"}
+{"t_us":17141010,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":17145149,"process":"headless","dir":"in","type":"socket.closed","code":1000}

@@ -1,0 +1,24 @@
+{"t_us":77435,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q12.wav"}
+{"t_us":80443,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-593f76734a6fe5f3","type":"welcome"}
+{"t_us":80572,"process":"headless","type":"mic.start","t0_us":80569}
+{"t_us":1182442,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2081461,"process":"headless","dir":"in","t_client_us":2080309,"t_server_us":128187622,"type":"pong"}
+{"t_us":2178768,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add"}
+{"t_us":2981301,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package"}
+{"t_us":3900159,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package for just one u"}
+{"t_us":4083400,"process":"headless","dir":"in","t_client_us":4082788,"t_server_us":130189575,"type":"pong"}
+{"t_us":4905304,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package for just one uv run command?"}
+{"t_us":5502141,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I add an extra package for just one uv run command?"}
+{"t_us":5503662,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I add an extra package for just one uv run command?"}
+{"t_us":5504104,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6084537,"process":"headless","dir":"in","t_client_us":6083842,"t_server_us":132190652,"type":"pong"}
+{"t_us":8085111,"process":"headless","dir":"in","t_client_us":8084488,"t_server_us":134191322,"type":"pong"}
+{"t_us":10085429,"process":"headless","dir":"in","t_client_us":10084748,"t_server_us":136191606,"type":"pong"}
+{"t_us":11616354,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"984e0e339fc9","title":"Tools > Including additional dependencies","url":"https://docs.astral.sh/uv/concepts/tools/#including-additional-dependencies"},{"n":2,"id":"4a9cbab65300","title":"Using tools > Requesting extras","url":"https://docs.astral.sh/uv/guides/tools/#requesting-extras"}],"gen":1}
+{"t_us":11617139,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"You can include additional dependencies during tool execution with the `--with` or `-w` options, but for extras, you should use the `--from` option with the extra specified in brackets, like `'package[extra]'` [1][2]."}
+{"t_us":11837526,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":12086323,"process":"headless","dir":"in","t_client_us":12085526,"t_server_us":138192498,"type":"pong"}
+{"t_us":14085998,"process":"headless","dir":"in","t_client_us":14085433,"t_server_us":140192317,"type":"pong"}
+{"t_us":16086944,"process":"headless","dir":"in","t_client_us":16085953,"t_server_us":142193105,"type":"pong"}
+{"t_us":16521081,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":16525499,"process":"headless","dir":"in","type":"socket.closed","code":1000}

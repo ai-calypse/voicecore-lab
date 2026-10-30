@@ -1,0 +1,12 @@
+{"trace_id": "s-b684d2cbe9e6403c", "span": "clock", "event": "client_offset", "t_mono_us": 53821141492, "process": "agent-core", "attrs": {"client_to_agent_us": 53821048460}}
+{"trace_id": "s-b684d2cbe9e6403c", "span": "turn", "event": "speech_started", "t_mono_us": 53822223173, "process": "agent-core", "attrs": {"onset_ms": 1040, "capture_end_us": 1173030}}
+{"trace_id": "s-b684d2cbe9e6403c", "span": "clock", "event": "client_offset", "t_mono_us": 53826142239, "process": "agent-core", "attrs": {"client_to_agent_us": 53821048043}}
+{"trace_id": "s-b684d2cbe9e6403c", "span": "stt", "event": "final", "t_mono_us": 53826369690, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-b684d2cbe9e6403c", "span": "turn", "event": "endpoint", "t_mono_us": 53826681728, "process": "agent-core", "attrs": {"reason": "silence", "onset_ms": 1040, "capture_end_us": 5633030}}
+{"trace_id": "s-b684d2cbe9e6403c", "span": "stt", "event": "turn_text", "t_mono_us": 53826682347, "process": "agent-core", "attrs": {"chars": 60, "waited_ms": 0}}
+{"trace_id": "s-b684d2cbe9e6403c", "span": "llm", "event": "request", "t_mono_us": 53826682618, "process": "agent-core", "attrs": {"attempt": 0}, "generation_id": 1}
+{"trace_id": "s-b684d2cbe9e6403c", "span": "llm", "event": "first_token", "t_mono_us": 53828157869, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-b684d2cbe9e6403c", "span": "tts", "event": "first_audio", "t_mono_us": 53828614073, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-b684d2cbe9e6403c", "span": "playout", "event": "started", "t_mono_us": 53828622221, "process": "agent-core", "attrs": {"t_client_us": 7572180}, "generation_id": 1}
+{"trace_id": "s-b684d2cbe9e6403c", "span": "clock", "event": "client_offset", "t_mono_us": 53831143388, "process": "agent-core", "attrs": {"client_to_agent_us": 53821048005}}
+{"trace_id": "s-b684d2cbe9e6403c", "span": "clock", "event": "client_offset", "t_mono_us": 53836142489, "process": "agent-core", "attrs": {"client_to_agent_us": 53821048005}}

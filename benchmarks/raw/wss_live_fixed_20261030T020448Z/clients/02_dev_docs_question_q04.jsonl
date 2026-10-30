@@ -1,0 +1,30 @@
+{"t_us":75236,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q04.wav"}
+{"t_us":78488,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-98afa15a16706d99","type":"welcome"}
+{"t_us":78595,"process":"headless","type":"mic.start","t0_us":78593}
+{"t_us":1184118,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2029431,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I"}
+{"t_us":2080239,"process":"headless","dir":"in","t_client_us":2079122,"t_server_us":38788852,"type":"pong"}
+{"t_us":2673692,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create"}
+{"t_us":3648536,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new"}
+{"t_us":4082615,"process":"headless","dir":"in","t_client_us":4082058,"t_server_us":40791409,"type":"pong"}
+{"t_us":4669712,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new library project"}
+{"t_us":5249942,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new library project"}
+{"t_us":5868558,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new library project"}
+{"t_us":6024141,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new library project that other"}
+{"t_us":6082984,"process":"headless","dir":"in","t_client_us":6082392,"t_server_us":42791791,"type":"pong"}
+{"t_us":7020133,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new library project that other people can"}
+{"t_us":8084108,"process":"headless","dir":"in","t_client_us":8083405,"t_server_us":44792876,"type":"pong"}
+{"t_us":8202316,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I create a new library project that other people can install?"}
+{"t_us":8520202,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I create a new library project that other people can install?"}
+{"t_us":8520778,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":9634196,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"00d05fcd0c3b","title":"Creating projects > Libraries","url":"https://docs.astral.sh/uv/concepts/projects/init/#libraries"}],"gen":1}
+{"t_us":9634984,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"You can create a new library project using the `uv init --lib` command, which requires a packaged project and includes a `py.typed` marker for type reading [1]."}
+{"t_us":9780095,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":10084441,"process":"headless","dir":"in","t_client_us":10083720,"t_server_us":46793231,"type":"pong"}
+{"t_us":12084042,"process":"headless","dir":"in","t_client_us":12083470,"t_server_us":48792859,"type":"pong"}
+{"t_us":14084657,"process":"headless","dir":"in","t_client_us":14084021,"t_server_us":50793465,"type":"pong"}
+{"t_us":16084812,"process":"headless","dir":"in","t_client_us":16084068,"t_server_us":52793599,"type":"pong"}
+{"t_us":18084762,"process":"headless","dir":"in","t_client_us":18084202,"t_server_us":54793605,"type":"pong"}
+{"t_us":18497712,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":19198583,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":19202179,"process":"headless","dir":"in","type":"socket.closed","code":1000}

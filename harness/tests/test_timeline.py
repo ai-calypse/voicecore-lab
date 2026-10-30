@@ -65,3 +65,26 @@ def test_recall_at_k_and_mrr_on_a_hand_worked_example():
     assert recall_at_k(ranked, relevant, 2) == 1 / 3
     assert recall_at_k(ranked, relevant, 3) == 2 / 3
     assert mrr(ranked, relevant) == (1 + 1 / 3 + 0) / 3
+
+
+def test_three_logs_with_a_known_12ms_offset_merge_in_the_right_order():
+    from timeline import merge, ntp_offset
+
+    # browser clock = gateway clock - 12 ms; agent-core clock = gateway clock + 5 s
+    pings = [(1_000_000, 1_012_400, 1_000_800), (3_000_000, 3_012_350, 3_000_700)]  # (client send, server, client recv)
+    assert ntp_offset(pings) == 12_000  # gateway - browser, from the sample with the smallest round trip
+    browser = [{"process": "browser", "span": "playout", "event": "started", "t_mono_us": 2_000_030}]
+    gateway = [{"process": "gateway", "span": "gateway", "event": "frame_out", "t_mono_us": 2_012_010}]
+    agent = [{"process": "agent-core", "span": "tts", "event": "first_audio", "t_mono_us": 5_002_012_000}]
+    merged = merge({"browser": browser, "gateway": gateway, "agent-core": agent},
+                   {"browser": 0, "gateway": -12_000, "agent-core": -5_000_012_000})
+    assert [e["event"] for e in merged] == ["first_audio", "frame_out", "started"]
+    assert [e["t_us"] for e in merged] == [2_000_000, 2_000_010, 2_000_030]
+
+
+def test_merged_timeline_has_no_text_unless_include_text():
+    from timeline import merge
+
+    events = [{"process": "agent-core", "span": "stt", "event": "final", "t_mono_us": 1, "attrs": {"text": "secret question", "chars": 15}}]
+    assert merge({"agent-core": events}, {"agent-core": 0})[0]["attrs"] == {"chars": 15}
+    assert merge({"agent-core": events}, {"agent-core": 0}, include_text=True)[0]["attrs"]["text"] == "secret question"

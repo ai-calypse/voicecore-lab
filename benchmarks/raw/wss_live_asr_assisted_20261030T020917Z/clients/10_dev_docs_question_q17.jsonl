@@ -1,0 +1,38 @@
+{"t_us":68916,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q17.wav"}
+{"t_us":71655,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-d8712f7a984cb292","type":"welcome"}
+{"t_us":71762,"process":"headless","type":"mic.start","t0_us":71760}
+{"t_us":1213649,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2072957,"process":"headless","dir":"in","t_client_us":2072049,"t_server_us":180370495,"type":"pong"}
+{"t_us":2214388,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I"}
+{"t_us":3014815,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I run a command"}
+{"t_us":3935513,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I run a command whose package"}
+{"t_us":4076021,"process":"headless","dir":"in","t_client_us":4075348,"t_server_us":182373687,"type":"pong"}
+{"t_us":4936552,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I run a command whose package has a different"}
+{"t_us":5739606,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I run a command whose package has a different name?"}
+{"t_us":5964489,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I run a command whose package has a different name?"}
+{"t_us":5965323,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I run a command whose package has a different name?"}
+{"t_us":5965635,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6032607,"process":"headless","dir":"out","type":"cancel.ack","gen":1,"played_until_seq":-1}
+{"t_us":6032984,"process":"headless","dir":"in","type":"agent.cancel","gen":1}
+{"t_us":6033085,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t2"}
+{"t_us":6076432,"process":"headless","dir":"in","t_client_us":6076169,"t_server_us":184374290,"type":"pong"}
+{"t_us":7036528,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"Like h"}
+{"t_us":8038349,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"Like http"}
+{"t_us":8078044,"process":"headless","dir":"in","t_client_us":8077338,"t_server_us":186375724,"type":"pong"}
+{"t_us":8518141,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"Like http"}
+{"t_us":9498666,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"Like h t t p from h t"}
+{"t_us":9984294,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t2","text":"Like h t t p from h t p"}
+{"t_us":10078508,"process":"headless","dir":"in","t_client_us":10077963,"t_server_us":188376260,"type":"pong"}
+{"t_us":10432291,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t2","text":"Like h t t p from h t p"}
+{"t_us":10433071,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t2","gen":2}
+{"t_us":12079613,"process":"headless","dir":"in","t_client_us":12078904,"t_server_us":190377330,"type":"pong"}
+{"t_us":13644061,"process":"headless","dir":"in","type":"answer.sources","sources":[],"gen":2}
+{"t_us":13935986,"process":"headless","dir":"in","type":"agent.text","gen":2,"text":"I couldn't find that in the docs."}
+{"t_us":14069400,"process":"headless","dir":"out","type":"playout.started","gen":2}
+{"t_us":14080399,"process":"headless","dir":"in","t_client_us":14079614,"t_server_us":192378116,"type":"pong"}
+{"t_us":15910255,"process":"headless","dir":"out","type":"playout.stopped","gen":2,"reason":"done"}
+{"t_us":16081971,"process":"headless","dir":"in","t_client_us":16081355,"t_server_us":194379701,"type":"pong"}
+{"t_us":18083249,"process":"headless","dir":"in","t_client_us":18082582,"t_server_us":196380980,"type":"pong"}
+{"t_us":20084797,"process":"headless","dir":"in","t_client_us":20083870,"t_server_us":198382271,"type":"pong"}
+{"t_us":20912769,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":20916511,"process":"headless","dir":"in","type":"socket.closed","code":1000}

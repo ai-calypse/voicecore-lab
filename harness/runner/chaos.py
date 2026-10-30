@@ -38,8 +38,10 @@ async def run_scenario(path: Path) -> dict:
 
 
 def normalized(run: dict) -> list:
-    """Trace and client log with every time made relative to the run's first trace event."""
+    """Trace and client log with times relative to the run's first trace event, in ms."""
     t0 = run["trace"][0]["t_mono_us"]
-    rel = lambda d: {k: v - t0 if k.endswith("_us") and k != "t0_us" and isinstance(v, int) else v for k, v in d.items()}  # noqa: E731
+    stamps = {"t_mono_us", "t_us", "capture_end_us", "t_client_us", "t_server_us", "onset_us"}  # times, not durations
+    def rel(d):  # relative times, compared at 1 ms: fake-time floats round differently at a different start time
+        return {k: round(((v - t0) if k in stamps else v) / 1000) if k.endswith("_us") and isinstance(v, int) else v for k, v in d.items()}
     trace = [{**rel(e), "attrs": rel(e["attrs"])} for e in run["trace"]]
     return [trace, [rel(e) for e in run["client"]]]

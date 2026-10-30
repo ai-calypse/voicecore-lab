@@ -1,0 +1,24 @@
+{"t_us":72226,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q16.wav"}
+{"t_us":75012,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-4e07a822c7ed469e","type":"welcome"}
+{"t_us":75118,"process":"headless","type":"mic.start","t0_us":75116}
+{"t_us":1162385,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2012395,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When it is uvx"}
+{"t_us":2076373,"process":"headless","dir":"in","t_client_us":2075223,"t_server_us":163147115,"type":"pong"}
+{"t_us":2829718,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"When it is uvx, keep a tools"}
+{"t_us":3994819,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Why does uvx keep a tools environment?"}
+{"t_us":4078281,"process":"headless","dir":"in","t_client_us":4077672,"t_server_us":165149245,"type":"pong"}
+{"t_us":4999196,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Why does uvx keep a tools environment? And does it stick"}
+{"t_us":5870845,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Why does uvx keep a tools environment? And does it stick around?"}
+{"t_us":6078274,"process":"headless","dir":"in","t_client_us":6077643,"t_server_us":167149187,"type":"pong"}
+{"t_us":6238301,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Why does uvx keep a tools environment? And does it stick around?"}
+{"t_us":6238961,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":7326894,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":4,"id":"5e1f7dcfea76","title":"Tools > Tool environments","url":"https://docs.astral.sh/uv/concepts/tools/#tool-environments"}],"gen":1}
+{"t_us":7327557,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"`uvx` keeps a tools environment to run tools in an isolated, disposable virtual environment, reducing conflicts between dependencies [4]. It is stored in the uv cache directory and is treated as disposable, meaning it is deleted when `uv cache clean` is run, but it is recreated automatically if removed [4]."}
+{"t_us":7456431,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8077500,"process":"headless","dir":"in","t_client_us":8077224,"t_server_us":169148679,"type":"pong"}
+{"t_us":10079080,"process":"headless","dir":"in","t_client_us":10078382,"t_server_us":171150053,"type":"pong"}
+{"t_us":12079846,"process":"headless","dir":"in","t_client_us":12079174,"t_server_us":173150872,"type":"pong"}
+{"t_us":14080634,"process":"headless","dir":"in","t_client_us":14079819,"t_server_us":175151518,"type":"pong"}
+{"t_us":16080496,"process":"headless","dir":"in","t_client_us":16079734,"t_server_us":177151424,"type":"pong"}
+{"t_us":16876631,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":16880728,"process":"headless","dir":"in","type":"socket.closed","code":1000}

@@ -1,0 +1,12 @@
+{"trace_id": "s-3a7fc1edcd14666a", "span": "clock", "event": "client_offset", "t_mono_us": 53947896505, "process": "agent-core", "attrs": {"client_to_agent_us": 53947798813}}
+{"trace_id": "s-3a7fc1edcd14666a", "span": "turn", "event": "speech_started", "t_mono_us": 53949277872, "process": "agent-core", "attrs": {"onset_ms": 1340, "capture_end_us": 1477690}}
+{"trace_id": "s-3a7fc1edcd14666a", "span": "clock", "event": "client_offset", "t_mono_us": 53952896648, "process": "agent-core", "attrs": {"client_to_agent_us": 53947798280}}
+{"trace_id": "s-3a7fc1edcd14666a", "span": "stt", "event": "final", "t_mono_us": 53953764597, "process": "agent-core", "attrs": {}}
+{"trace_id": "s-3a7fc1edcd14666a", "span": "turn", "event": "endpoint", "t_mono_us": 53953764794, "process": "agent-core", "attrs": {"reason": "asr", "onset_ms": 1340, "capture_end_us": null}}
+{"trace_id": "s-3a7fc1edcd14666a", "span": "stt", "event": "turn_text", "t_mono_us": 53953765195, "process": "agent-core", "attrs": {"chars": 59, "waited_ms": 0}}
+{"trace_id": "s-3a7fc1edcd14666a", "span": "llm", "event": "request", "t_mono_us": 53953765469, "process": "agent-core", "attrs": {"attempt": 0}, "generation_id": 1}
+{"trace_id": "s-3a7fc1edcd14666a", "span": "llm", "event": "first_token", "t_mono_us": 53955224551, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-3a7fc1edcd14666a", "span": "tts", "event": "first_audio", "t_mono_us": 53955630690, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-3a7fc1edcd14666a", "span": "playout", "event": "started", "t_mono_us": 53955636756, "process": "agent-core", "attrs": {"t_client_us": 7836437}, "generation_id": 1}
+{"trace_id": "s-3a7fc1edcd14666a", "span": "clock", "event": "client_offset", "t_mono_us": 53957897001, "process": "agent-core", "attrs": {"client_to_agent_us": 53947798236}}
+{"trace_id": "s-3a7fc1edcd14666a", "span": "clock", "event": "client_offset", "t_mono_us": 53962897285, "process": "agent-core", "attrs": {"client_to_agent_us": 53947798236}}

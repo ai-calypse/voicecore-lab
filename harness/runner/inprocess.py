@@ -117,9 +117,21 @@ def scripted_stt(clip):
     return MockSTT(canned=clip.get("transcript")) if clip["labels"]["speech"] else MockSTT()
 
 
-async def run_clip(clip, *, llm=None, tts=None, stt=None, vad=None, policy=Policy(), tail_s=20.0, trace_sink=None) -> dict:
+def with_noise(frames: np.ndarray, clip: dict, snr_db: float, seed: int, color: str = "pink") -> np.ndarray:
+    """Adds seeded noise at snr_db below the clip's speech RMS (same generator as the fixture builder)."""
+    from build_fixtures import noise, rms, scale_to_rms, to_int16
+
+    x = frames.reshape(-1)
+    speech = np.concatenate([x[a * 16 : b * 16] for a, b in clip["labels"]["speech"]]) if clip["labels"]["speech"] else x
+    nz = scale_to_rms(noise(len(x), color, np.random.default_rng(seed)), max(rms(speech), 1.0) / 10 ** (snr_db / 20))
+    return to_int16(x + nz).reshape(-1, 320)
+
+
+async def run_clip(clip, *, llm=None, tts=None, stt=None, vad=None, policy=Policy(), tail_s=20.0, trace_sink=None,
+                   net_ms: int = 0, snr_db: float | None = None, seed: int = 0) -> dict:
+    """net_ms: one-way client<->session delay; snr_db: mix seeded pink noise into the mic at this SNR."""
     trace: list[dict] = []
-    client = FakeClient()
+    client = FakeClient(net_ms)
     sink = (lambda e: (trace.append(e), trace_sink(e))) if trace_sink else trace.append
     s = Session(clip["id"], llm=llm or MockLLM(LLMScript(tokens=[w + " " for w in DEFAULT_ANSWER.split()])),
                 tts=tts or MockTTS(), stt=stt or scripted_stt(clip), vad=vad or SileroVAD(), policy=policy,
@@ -128,23 +140,38 @@ async def run_clip(clip, *, llm=None, tts=None, stt=None, vad=None, policy=Polic
     await s.start()
     client.start()
     k = 0
+    uplink: asyncio.Queue = asyncio.Queue()
+
+    async def deliver():  # mic frames reach the session net_ms after they are complete, in order
+        while (item := await uplink.get()) is not None:
+            f, due = item
+            await asyncio.sleep(max(0.0, (due - now_us()) / 1e6))
+            await s.on_frame(f)
+
+    feeder = asyncio.create_task(deliver())
 
     async def feed(pcm):
         nonlocal k
-        await s.on_frame(protocol.Frame(protocol.KIND_MIC, 0, 1, k, now_us(), 0, pcm))
+        await asyncio.sleep(0.02)  # the frame is complete 20 ms after its first sample
+        uplink.put_nowait((protocol.Frame(protocol.KIND_MIC, 0, 1, k, now_us() - 20_000, 0, pcm), now_us() + net_ms * 1000))
         k += 1
-        await asyncio.sleep(0.02)
 
-    for pcm in read_frames(clip):
+    t0_us = now_us()  # capture start of mic frame 0 on the loop clock
+    frames = read_frames(clip)
+    if snr_db is not None:
+        frames = with_noise(frames, clip, snr_db, seed)
+    for pcm in frames:
         await feed(pcm)
     silence, waited = np.zeros(320, np.int16), 0.0
     while waited < tail_s and (s.active_gen is not None or s.state != State.LISTENING):  # the mic keeps sending silence
         await feed(silence)
         waited += 0.02
-    await asyncio.sleep(0.1)
+    uplink.put_nowait(None)
+    await feeder
+    await asyncio.sleep(0.1 + 2 * net_ms / 1000)
     await client.stop()
     await s.close()
-    return {"trace": trace, "client": client.log, "frames_played": client.frames, "state": s.state,
+    return {"trace": trace, "client": client.log, "frames_played": client.frames, "state": s.state, "t0_us": t0_us,
             "stt_drops": s.stt_drops, "stt_queue_max": s.stt_q.maxsize}
 
 
@@ -197,3 +224,8 @@ async def run_barge_in(clip, *, clips=None, vad=None, net_ms: int = 0) -> dict:
             "interrupt_to_silence_ms": ms(stopped["t_us"]) - onset if stopped and onset is not None and stopped["reason"] == "cancel" else None,
             "interrupt_to_listening_ms": next((ms(e["t_us"]) - onset for e in client.log if e["type"] == "user.speech_started"), None)
             if onset is not None else None}
+
+
+async def run_users(clips: list, seed: int, *, net_ms: int = 0, snr_db: float | None = None, **kw) -> list[dict]:
+    """N simulated users at once, one clip each; noise for user i uses seed + i."""
+    return await asyncio.gather(*[run_clip(c, net_ms=net_ms, snr_db=snr_db, seed=seed + i, **kw) for i, c in enumerate(clips)])

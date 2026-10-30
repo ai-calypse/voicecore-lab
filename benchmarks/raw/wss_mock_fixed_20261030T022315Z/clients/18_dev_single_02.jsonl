@@ -1,0 +1,20 @@
+{"t_us":369256,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/dev/single_02.wav"}
+{"t_us":378534,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-73a50b59a5fda6ce","type":"welcome"}
+{"t_us":378672,"process":"headless","type":"mic.start","t0_us":378669}
+{"t_us":1539690,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2379176,"process":"headless","dir":"in","t_client_us":2378849,"t_server_us":3738601,"type":"pong"}
+{"t_us":4379609,"process":"headless","dir":"in","t_client_us":4379419,"t_server_us":5739113,"type":"pong"}
+{"t_us":6379790,"process":"headless","dir":"in","t_client_us":6379495,"t_server_us":7739194,"type":"pong"}
+{"t_us":7544188,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"how do I install uv?"}
+{"t_us":7544370,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"how do I install uv?"}
+{"t_us":7544996,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":8010820,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"2ec301558527","title":"Installing uv > Installation methods","url":"https://docs.astral.sh/uv/getting-started/installation/#installation-methods"},{"n":2,"id":"7ced32678d6f","title":"uv > Installation","url":"https://docs.astral.sh/uv/#installation"}],"gen":1}
+{"t_us":8010904,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"Install uv with the standalone installer script [1]. Then run uv init to start a project [2]."}
+{"t_us":8012190,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8380240,"process":"headless","dir":"in","t_client_us":8380112,"t_server_us":9739789,"type":"pong"}
+{"t_us":10380344,"process":"headless","dir":"in","t_client_us":10380066,"t_server_us":11739791,"type":"pong"}
+{"t_us":12379561,"process":"headless","dir":"in","t_client_us":12379301,"t_server_us":13739049,"type":"pong"}
+{"t_us":13070085,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":14379978,"process":"headless","dir":"in","t_client_us":14379700,"t_server_us":15739450,"type":"pong"}
+{"t_us":16219028,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":16220177,"process":"headless","dir":"in","type":"socket.closed","code":1000}

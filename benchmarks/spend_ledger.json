@@ -1447,6 +1447,897 @@
       "status": "settled",
       "reserved": 1500,
       "streams": 1
+    },
+    {
+      "id": "ae6a241a0f1b",
+      "pool": "usd",
+      "amount": 0.000801,
+      "label": "server stt s-26cd2bbfeb8ca2bf",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a8d-7d36-75b0-b50e-99efd8934c5a"
+    },
+    {
+      "id": "d65346d7df54",
+      "pool": "usd",
+      "amount": 0.000145,
+      "label": "server llm s-26cd2bbfeb8ca2bf",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "dbf77f2d230d",
+      "pool": "cartesia_credits",
+      "amount": 263,
+      "label": "server tts s-26cd2bbfeb8ca2bf",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "2395611c1662",
+      "pool": "usd",
+      "amount": 0.000914,
+      "label": "server stt s-ff830fff1ba1d369",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a8d-c116-7300-a0e1-4254c286662a"
+    },
+    {
+      "id": "cd418275e6b4",
+      "pool": "usd",
+      "amount": 0.000154,
+      "label": "server llm s-ff830fff1ba1d369",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "3715ac1612e5",
+      "pool": "cartesia_credits",
+      "amount": 33,
+      "label": "server tts s-ff830fff1ba1d369",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "c460beb3fafe",
+      "pool": "usd",
+      "amount": 0.001065,
+      "label": "server stt s-98afa15a16706d99",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a8e-0816-71e1-9892-6e808be62969"
+    },
+    {
+      "id": "a7b3eec7234f",
+      "pool": "usd",
+      "amount": 0.000156,
+      "label": "server llm s-98afa15a16706d99",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "0847e9102c4f",
+      "pool": "cartesia_credits",
+      "amount": 152,
+      "label": "server tts s-98afa15a16706d99",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "c1c9cc665b35",
+      "pool": "usd",
+      "amount": 0.001165,
+      "label": "server stt s-6ae453f7d686c362",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a8e-5499-7183-89cd-74f003fe5e4c"
+    },
+    {
+      "id": "516c2f7b8cc9",
+      "pool": "usd",
+      "amount": 0.000129,
+      "label": "server llm s-6ae453f7d686c362",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "f7adb01294f9",
+      "pool": "cartesia_credits",
+      "amount": 135,
+      "label": "server tts s-6ae453f7d686c362",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "1e6cb55ac24f",
+      "pool": "usd",
+      "amount": 0.000734,
+      "label": "server stt s-b89e873c3035d122",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a8e-a402-7303-a037-3527ea454882"
+    },
+    {
+      "id": "7404d1f8b851",
+      "pool": "usd",
+      "amount": 0.000163,
+      "label": "server llm s-b89e873c3035d122",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "efc1935882fe",
+      "pool": "cartesia_credits",
+      "amount": 120,
+      "label": "server tts s-b89e873c3035d122",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "6f59bf45c0e2",
+      "pool": "usd",
+      "amount": 0.000621,
+      "label": "server stt s-19694cabf0702757",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a8e-e62d-7563-9571-c22794db7a2e"
+    },
+    {
+      "id": "e5ab3848f21d",
+      "pool": "usd",
+      "amount": 0.000135,
+      "label": "server llm s-19694cabf0702757",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "e7d6556327a7",
+      "pool": "cartesia_credits",
+      "amount": 148,
+      "label": "server tts s-19694cabf0702757",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "462ee6475aba",
+      "pool": "usd",
+      "amount": 0.000698,
+      "label": "server stt s-77303e359a30b104",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a8f-2457-7b12-bc03-81b79ee67282"
+    },
+    {
+      "id": "9a404048fb4b",
+      "pool": "usd",
+      "amount": 0.000142,
+      "label": "server llm s-77303e359a30b104",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "53d9c535c258",
+      "pool": "cartesia_credits",
+      "amount": 125,
+      "label": "server tts s-77303e359a30b104",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "073d455d873a",
+      "pool": "usd",
+      "amount": 0.000716,
+      "label": "server stt s-372aa5887e8b1bc9",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a8f-655a-7001-b157-4524589e807d"
+    },
+    {
+      "id": "db41c71def31",
+      "pool": "usd",
+      "amount": 0.000163,
+      "label": "server llm s-372aa5887e8b1bc9",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "c9ac5996d924",
+      "pool": "cartesia_credits",
+      "amount": 230,
+      "label": "server tts s-372aa5887e8b1bc9",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "325b45b961e8",
+      "pool": "usd",
+      "amount": 0.000921,
+      "label": "server stt s-f9ace6a8f30b76d9",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a8f-a6f7-76c3-a163-0dc527aa7d9c"
+    },
+    {
+      "id": "1b7e226e9179",
+      "pool": "usd",
+      "amount": 0.000113,
+      "label": "server llm s-f9ace6a8f30b76d9",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "257e74b3220d",
+      "pool": "cartesia_credits",
+      "amount": 33,
+      "label": "server tts s-f9ace6a8f30b76d9",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "bd18e4c5b528",
+      "pool": "usd",
+      "amount": 0.000775,
+      "label": "server stt s-4e07a822c7ed469e",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a8f-edcf-7983-b1ed-8011cfc9eca7"
+    },
+    {
+      "id": "8723dfa0d0dc",
+      "pool": "usd",
+      "amount": 0.000166,
+      "label": "server llm s-4e07a822c7ed469e",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "2ff1279c7568",
+      "pool": "cartesia_credits",
+      "amount": 295,
+      "label": "server tts s-4e07a822c7ed469e",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "29264ddfefa6",
+      "pool": "usd",
+      "amount": 0.001281,
+      "label": "server stt s-efb30b68572d3ac0",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a90-3112-7580-9bd0-1c1dafaa1f18"
+    },
+    {
+      "id": "2fa3c5ff7c56",
+      "pool": "usd",
+      "amount": 0.000142,
+      "label": "server llm s-efb30b68572d3ac0",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "497cd74b515d",
+      "pool": "cartesia_credits",
+      "amount": 118,
+      "label": "server tts s-efb30b68572d3ac0",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "1e433deff6b9",
+      "pool": "usd",
+      "amount": 0.001011,
+      "label": "server stt s-893ac6d553dd2944",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a90-844b-74a0-817d-e89b122cbe2d"
+    },
+    {
+      "id": "6dd7eae6972f",
+      "pool": "usd",
+      "amount": 0.000124,
+      "label": "server llm s-893ac6d553dd2944",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "bfa2f8de2eb8",
+      "pool": "cartesia_credits",
+      "amount": 33,
+      "label": "server tts s-893ac6d553dd2944",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "a885961fca2f",
+      "pool": "usd",
+      "amount": 0.000696,
+      "label": "server stt s-b684d2cbe9e6403c",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a90-ce7e-7e50-b148-22976f46cb9c"
+    },
+    {
+      "id": "83a3a133cba9",
+      "pool": "usd",
+      "amount": 0.000148,
+      "label": "server llm s-b684d2cbe9e6403c",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "13b22a5682fe",
+      "pool": "cartesia_credits",
+      "amount": 203,
+      "label": "server tts s-b684d2cbe9e6403c",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "33de56f652b3",
+      "pool": "usd",
+      "amount": 0.000811,
+      "label": "server stt s-ee3348bb754e0c65",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a91-0feb-74d0-b97f-89c77a3e7afe"
+    },
+    {
+      "id": "8d5d42df4063",
+      "pool": "usd",
+      "amount": 0.000159,
+      "label": "server llm s-ee3348bb754e0c65",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "b1fd9540c1af",
+      "pool": "cartesia_credits",
+      "amount": 142,
+      "label": "server tts s-ee3348bb754e0c65",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "38d0790050a6",
+      "pool": "usd",
+      "amount": 0.000595,
+      "label": "server stt s-60088b44ce76689b",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a91-5414-74e3-87b3-41a678e67e27"
+    },
+    {
+      "id": "6cb100acb96d",
+      "pool": "usd",
+      "amount": 0.000171,
+      "label": "server llm s-60088b44ce76689b",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "f723c43c24ff",
+      "pool": "cartesia_credits",
+      "amount": 218,
+      "label": "server tts s-60088b44ce76689b",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "0a14ba441b09",
+      "pool": "usd",
+      "amount": 0.000737,
+      "label": "server stt s-086b86ebca4e60a2",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a91-97c3-7661-bb59-ca7caf8dfe15"
+    },
+    {
+      "id": "4899ea4e99d4",
+      "pool": "usd",
+      "amount": 7.2e-05,
+      "label": "server llm s-086b86ebca4e60a2",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "e8e437b606ba",
+      "pool": "cartesia_credits",
+      "amount": 237,
+      "label": "server tts s-086b86ebca4e60a2",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "2581b5319dd4",
+      "pool": "usd",
+      "amount": 0.00087,
+      "label": "server stt s-a5b3adfdb6c78cb8",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a91-db85-7942-82e3-f3dd0a46dd28"
+    },
+    {
+      "id": "01480611dc33",
+      "pool": "usd",
+      "amount": 6.4e-05,
+      "label": "server llm s-a5b3adfdb6c78cb8",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "cccebc5ef731",
+      "pool": "cartesia_credits",
+      "amount": 33,
+      "label": "server tts s-a5b3adfdb6c78cb8",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "d4782bf82478",
+      "pool": "usd",
+      "amount": 0.001029,
+      "label": "server stt s-1ac1cfcfd61de56f",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a92-22b7-72c0-8163-0e5c6e7d6aad"
+    },
+    {
+      "id": "8ff96be7a0a7",
+      "pool": "usd",
+      "amount": 6.6e-05,
+      "label": "server llm s-1ac1cfcfd61de56f",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "a873aeeef7b0",
+      "pool": "cartesia_credits",
+      "amount": 152,
+      "label": "server tts s-1ac1cfcfd61de56f",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "520c86ad0d82",
+      "pool": "usd",
+      "amount": 0.001124,
+      "label": "server stt s-8e59c0e93eb10dcc",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a92-6e9c-79c3-b940-21a74b0a9b80"
+    },
+    {
+      "id": "b9985590ed5a",
+      "pool": "usd",
+      "amount": 0.000284,
+      "label": "server llm s-8e59c0e93eb10dcc",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 2
+    },
+    {
+      "id": "a4f16c381aec",
+      "pool": "cartesia_credits",
+      "amount": 162,
+      "label": "server tts s-8e59c0e93eb10dcc",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "253ffd1b7d5d",
+      "pool": "usd",
+      "amount": 0.000698,
+      "label": "server stt s-3a7fc1edcd14666a",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a92-bee3-78c1-9b23-6e65051f76fd"
+    },
+    {
+      "id": "f68504da3bd4",
+      "pool": "usd",
+      "amount": 7.3e-05,
+      "label": "server llm s-3a7fc1edcd14666a",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "eb675affd6aa",
+      "pool": "cartesia_credits",
+      "amount": 115,
+      "label": "server tts s-3a7fc1edcd14666a",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "3cb0c3ddb4c6",
+      "pool": "usd",
+      "amount": 0.000577,
+      "label": "server stt s-a5d5734347e36c54",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a93-00bd-7742-b0ca-4173e29170a8"
+    },
+    {
+      "id": "5135b5a2b253",
+      "pool": "usd",
+      "amount": 6.3e-05,
+      "label": "server llm s-a5d5734347e36c54",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "07a0749d2a15",
+      "pool": "cartesia_credits",
+      "amount": 148,
+      "label": "server tts s-a5d5734347e36c54",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "c9cdf2e4f88d",
+      "pool": "usd",
+      "amount": 0.000647,
+      "label": "server stt s-78abf2b4afd61117",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a93-3e55-7513-b1ae-a32c5867d01e"
+    },
+    {
+      "id": "0977339587b4",
+      "pool": "usd",
+      "amount": 6.1e-05,
+      "label": "server llm s-78abf2b4afd61117",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "8841ac3f1e0d",
+      "pool": "cartesia_credits",
+      "amount": 125,
+      "label": "server tts s-78abf2b4afd61117",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "fdf67b6944a2",
+      "pool": "usd",
+      "amount": 0.000675,
+      "label": "server stt s-593f76734a6fe5f3",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a93-7faf-7f61-909a-903e5ec7912a"
+    },
+    {
+      "id": "fb4858ecf1de",
+      "pool": "usd",
+      "amount": 7.2e-05,
+      "label": "server llm s-593f76734a6fe5f3",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "11249bf652bb",
+      "pool": "cartesia_credits",
+      "amount": 202,
+      "label": "server tts s-593f76734a6fe5f3",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "f04d9b46068e",
+      "pool": "usd",
+      "amount": 0.00088,
+      "label": "server stt s-61febe27eb8a4958",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a93-c170-7c93-9ec4-d87c38d39575"
+    },
+    {
+      "id": "d4887bc3ac43",
+      "pool": "usd",
+      "amount": 0.000113,
+      "label": "server llm s-61febe27eb8a4958",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "e7de72be55c1",
+      "pool": "cartesia_credits",
+      "amount": 33,
+      "label": "server tts s-61febe27eb8a4958",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "612a2487313e",
+      "pool": "usd",
+      "amount": 0.000729,
+      "label": "server stt s-77d164d693df38cb",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a94-0830-7a41-a745-0a776890a90d"
+    },
+    {
+      "id": "505abe2a7f5c",
+      "pool": "usd",
+      "amount": 0.000275,
+      "label": "server llm s-77d164d693df38cb",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 2
+    },
+    {
+      "id": "f802b2d725c0",
+      "pool": "cartesia_credits",
+      "amount": 33,
+      "label": "server tts s-77d164d693df38cb",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "3f7bb16514c0",
+      "pool": "usd",
+      "amount": 0.001306,
+      "label": "server stt s-d8712f7a984cb292",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a94-4bb0-78c0-8a1c-11b1c2a7159a"
+    },
+    {
+      "id": "05af54796928",
+      "pool": "usd",
+      "amount": 0.00026,
+      "label": "server llm s-d8712f7a984cb292",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 2
+    },
+    {
+      "id": "75b9980b7bcc",
+      "pool": "cartesia_credits",
+      "amount": 33,
+      "label": "server tts s-d8712f7a984cb292",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "a587051dac50",
+      "pool": "usd",
+      "amount": 0.00097,
+      "label": "server stt s-f2228bc82e5572e7",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a94-9e23-7ac0-8586-7f7e338f88df"
+    },
+    {
+      "id": "d89ecd9c66fe",
+      "pool": "usd",
+      "amount": 5.2e-05,
+      "label": "server llm s-f2228bc82e5572e7",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "9ad10ad0da41",
+      "pool": "cartesia_credits",
+      "amount": 33,
+      "label": "server tts s-f2228bc82e5572e7",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "dfba01cabc6c",
+      "pool": "usd",
+      "amount": 0.000654,
+      "label": "server stt s-d2ab10f115a92f6f",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a94-e87c-76b1-a029-556a993e9732"
+    },
+    {
+      "id": "40ddeca91f61",
+      "pool": "usd",
+      "amount": 6.8e-05,
+      "label": "server llm s-d2ab10f115a92f6f",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "98eac6950301",
+      "pool": "cartesia_credits",
+      "amount": 221,
+      "label": "server tts s-d2ab10f115a92f6f",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "abb76c2d541a",
+      "pool": "usd",
+      "amount": 0.000747,
+      "label": "server stt s-02877c862bf7ea5d",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a95-298a-70c0-8282-4ac4d9738c8f"
+    },
+    {
+      "id": "57f6590cce2f",
+      "pool": "usd",
+      "amount": 6.9e-05,
+      "label": "server llm s-02877c862bf7ea5d",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "fe30ccfa894a",
+      "pool": "cartesia_credits",
+      "amount": 142,
+      "label": "server tts s-02877c862bf7ea5d",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "6bcdd0e9926a",
+      "pool": "usd",
+      "amount": 0.000549,
+      "label": "server stt s-a67daa5a2e77920e",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a95-6d7d-7102-b643-673c3c3ba508"
+    },
+    {
+      "id": "21b9251df6c9",
+      "pool": "usd",
+      "amount": 8.1e-05,
+      "label": "server llm s-a67daa5a2e77920e",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "f3556a675dd7",
+      "pool": "cartesia_credits",
+      "amount": 218,
+      "label": "server tts s-a67daa5a2e77920e",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "440fd63574b7",
+      "pool": "usd",
+      "amount": 0.02455,
+      "label": "wer_eval 20261030T021456Z",
+      "status": "settled",
+      "reserved": 0.02946,
+      "run_id": "20261030T021456Z"
+    },
+    {
+      "id": "f92258f5042d",
+      "pool": "usd",
+      "amount": 0.007554,
+      "label": "stt tail probe",
+      "status": "settled",
+      "reserved": 0.01,
+      "purpose": "why the end of a clip is missing"
+    },
+    {
+      "id": "9dd0f5bce30a",
+      "pool": "usd",
+      "amount": 0.02455,
+      "label": "wer_eval 20261030T021840Z",
+      "status": "settled",
+      "reserved": 0.02946,
+      "run_id": "20261030T021840Z"
+    },
+    {
+      "id": "7dee9533d2b0",
+      "pool": "usd",
+      "amount": 0.000621,
+      "label": "server stt s-7146c1840bfe2ec5",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a9e-dce5-7cc2-a53f-9af3a6f7bdd7"
+    },
+    {
+      "id": "f54e0ab6691c",
+      "pool": "usd",
+      "amount": 6.3e-05,
+      "label": "server llm s-7146c1840bfe2ec5",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "32e639fb1ee3",
+      "pool": "cartesia_credits",
+      "amount": 148,
+      "label": "server tts s-7146c1840bfe2ec5",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
+    },
+    {
+      "id": "16a26829de1b",
+      "pool": "usd",
+      "amount": 0.000621,
+      "label": "server stt s-7e4b8912da69650b",
+      "status": "settled",
+      "reserved": 0.0154,
+      "request_id": "01a18a9e-dd7f-7112-bd33-efe3ed2288cc"
+    },
+    {
+      "id": "ad5f80217d78",
+      "pool": "usd",
+      "amount": 6.3e-05,
+      "label": "server llm s-7e4b8912da69650b",
+      "status": "settled",
+      "reserved": 0.002,
+      "calls": 1
+    },
+    {
+      "id": "303bccd6c634",
+      "pool": "cartesia_credits",
+      "amount": 148,
+      "label": "server tts s-7e4b8912da69650b",
+      "status": "settled",
+      "reserved": 1500,
+      "streams": 1
     }
   ],
   "caps": {
@@ -1454,7 +2345,7 @@
     "cartesia_credits": 16000
   },
   "totals": {
-    "usd": 0.73762,
-    "cartesia_credits": 6446
+    "usd": 0.824521,
+    "cartesia_credits": 10877
   }
 }

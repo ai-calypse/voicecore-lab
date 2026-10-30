@@ -36,14 +36,14 @@ def wait_http(url, timeout=60):
     raise TimeoutError(url)
 
 
-def start_stack(providers, trace_dir, logs):
+def start_stack(providers, trace_dir, logs, policy="fixed"):
     go = shutil.which("go")
     binary = ROOT / ".cache/bin/gateway"  # never inside the run folder: that folder is committed evidence
     subprocess.run([go, "build", "-o", str(binary), "./cmd/gateway"], cwd=GATEWAY, check=True)
     procs = [
-        subprocess.Popen([sys.executable, "-m", "voicecore.server", "--providers", providers, "--trace-dir", str(trace_dir)],
+        subprocess.Popen([sys.executable, "-m", "voicecore.server", "--providers", providers, "--trace-dir", str(trace_dir), "--policy", policy],
                          cwd=ROOT, stdout=open(logs / "orchestrator.log", "w"), stderr=subprocess.STDOUT),
-        subprocess.Popen([str(binary), "-addr", "127.0.0.1:8080", "-upstream", "ws://127.0.0.1:8765"],
+        subprocess.Popen([str(binary), "-addr", "127.0.0.1:8080", "-upstream", "ws://127.0.0.1:8765", "-trace", str(logs / "gateway_trace.jsonl")],
                          stdout=open(logs / "gateway.log", "w"), stderr=subprocess.STDOUT),
     ]
     wait_http("http://127.0.0.1:8080/debug/counters")
@@ -81,13 +81,14 @@ def main():
     ap.add_argument("--out", type=Path)
     ap.add_argument("--no-stack", action="store_true")
     ap.add_argument("--sequential", action="store_true", help="one client at a time (provider concurrency limits)")
+    ap.add_argument("--policy", default="fixed", choices=["fixed", "adaptive", "asr_assisted"])
     args = ap.parse_args()
     run = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    out = args.out or ROOT / f"benchmarks/raw/wss_{args.providers}_{run}"
+    out = args.out or ROOT / f"benchmarks/raw/wss_{args.providers}_{args.policy}_{run}"
     (out / "traces").mkdir(parents=True, exist_ok=True)
     by_id = {c["id"]: c for c in all_clips()}
     clips = [by_id[c] for c in args.clips for _ in range(args.parallel)]
-    procs = [] if args.no_stack else start_stack(args.providers, out / "traces", out)
+    procs = [] if args.no_stack else start_stack(args.providers, out / "traces", out, args.policy)
     try:
         logs = run_clients(clips, out / "clients", args.tail, args.sequential)
         if procs:

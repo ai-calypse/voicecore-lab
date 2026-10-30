@@ -25,19 +25,27 @@ def main(run: Path):
         clip = by_id[log.stem.split("_", 1)[1]]
         sid = next((e["session_id"] for e in client if e["type"] == "welcome"), None)
         trace_file = run / "traces" / f"{sid}.jsonl"
+        gens = sum(e["type"] == "agent.generation_started" for e in client)
         try:
             b = turn_breakdown(client, jsonl(trace_file), clip["labels"]["turn_end_ms"])
         except (StopIteration, FileNotFoundError) as e:
-            rows.append({"clip": clip["id"], "error": f"incomplete turn: {e!r}"})
+            rows.append({"clip": clip["id"], "generations": gens, "error": f"incomplete turn: {e!r}"})
             continue
-        rows.append({"clip": clip["id"], **{k: round(v, 1) for k, v in b.items()}})
-    ok = [r for r in rows if "error" not in r]
-    summary = {c: {"p50": percentile([r[c] for r in ok], 50), "p95": percentile([r[c] for r in ok], 95)} for c in COLS} if ok else {}
+        rows.append({"clip": clip["id"], "generations": gens, **{k: None if v is None else round(v, 1) for k, v in b.items()}})
+    ok = [r for r in rows if "error" not in r and r["generations"] == 1]  # a turn answered in two pieces was cut early
+
+    def pct(c, p):
+        xs = [r[c] for r in ok if r[c] is not None]
+        return percentile(xs, p) if xs else None
+
+    summary = {c: {"p50": pct(c, 50), "p95": pct(c, 95)} for c in COLS} if ok else {}
+    summary["split_turns"] = [r["clip"] for r in rows if r.get("generations", 1) > 1]
     (run / "latency.json").write_text(json.dumps({"turns": rows, "summary": summary, "n": len(ok)}, indent=2) + "\n")
     print("| clip | " + " | ".join(COLS) + " |")
     print("|---|" + "---:|" * len(COLS))
     for r in rows:
-        print(f"| {r['clip']} | " + (" | ".join(str(r[c]) for c in COLS) if "error" not in r else r["error"]) + " |")
+        print(f"| {r['clip']} | " + (" | ".join(str(r[c]) for c in COLS) if "error" not in r else r["error"]) + (" | split" if r.get("generations", 1) > 1 else "") + " |")
+    print("split turns:", summary.get("split_turns"))
     for k in ("p50", "p95") if ok else ():
         print(f"| **{k}** (n={len(ok)}) | " + " | ".join(str(summary[c][k]) for c in COLS) + " |")
 

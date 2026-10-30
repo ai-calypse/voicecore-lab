@@ -1,0 +1,352 @@
+{
+ "session_id": "s-502771eecfb89d7f",
+ "reference_clock": "client",
+ "offsets_us": {
+  "client": 0,
+  "gateway": -1042025,
+  "agent-core": -53281372683
+ },
+ "offset_notes": {
+  "gateway": "ntp from ping/pong",
+  "agent-core": "derived: min(arrival - capture end) of mic frames, includes the smallest uplink delay"
+ },
+ "events": [
+  {
+   "attrs": {},
+   "event": "session_started",
+   "process": "gateway",
+   "span": "gateway",
+   "t_mono_us": 1118893,
+   "trace_id": "s-502771eecfb89d7f",
+   "t_us": 76868
+  },
+  {
+   "attrs": {
+    "resumed": false
+   },
+   "event": "client_attached",
+   "process": "gateway",
+   "span": "gateway",
+   "t_mono_us": 1118937,
+   "trace_id": "s-502771eecfb89d7f",
+   "t_us": 76912
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "process": "client",
+   "span": "client",
+   "event": "welcome",
+   "t_mono_us": 77189,
+   "attrs": {
+    "resume_window_ms": 10000,
+    "resumed": false,
+    "session_id": "s-502771eecfb89d7f",
+    "dir": "in"
+   },
+   "t_us": 77189
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "process": "client",
+   "span": "capture",
+   "event": "mic.start",
+   "t_mono_us": 77290,
+   "attrs": {
+    "t0_us": 77288,
+    "dir": null
+   },
+   "t_us": 77290
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "span": "clock",
+   "event": "client_offset",
+   "t_mono_us": 53281470700,
+   "process": "agent-core",
+   "attrs": {
+    "client_to_agent_us": 53281373409
+   },
+   "t_us": 98017
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "span": "turn",
+   "event": "speech_started",
+   "t_mono_us": 53282591486,
+   "process": "agent-core",
+   "attrs": {
+    "onset_ms": 1080,
+    "capture_end_us": 1217288
+   },
+   "t_us": 1218803
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "process": "client",
+   "span": "client",
+   "event": "user.speech_started",
+   "t_mono_us": 1219388,
+   "attrs": {
+    "turn_id": "t1",
+    "dir": "in"
+   },
+   "t_us": 1219388
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "span": "clock",
+   "event": "client_offset",
+   "t_mono_us": 53286470956,
+   "process": "agent-core",
+   "attrs": {
+    "client_to_agent_us": 53281372751
+   },
+   "t_us": 5098273
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "span": "turn",
+   "event": "endpoint",
+   "t_mono_us": 53287870875,
+   "process": "agent-core",
+   "attrs": {
+    "reason": "silence",
+    "onset_ms": 1080,
+    "capture_end_us": 6497288
+   },
+   "t_us": 6498192
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "span": "stt",
+   "event": "final",
+   "t_mono_us": 53287871212,
+   "process": "agent-core",
+   "attrs": {},
+   "t_us": 6498529
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "process": "client",
+   "span": "client",
+   "event": "transcript.partial",
+   "t_mono_us": 6498560,
+   "attrs": {
+    "turn_id": "t1",
+    "dir": "in"
+   },
+   "t_us": 6498560
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "span": "stt",
+   "event": "turn_text",
+   "t_mono_us": 53287871465,
+   "process": "agent-core",
+   "attrs": {
+    "chars": 20,
+    "waited_ms": 0
+   },
+   "t_us": 6498782
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "span": "llm",
+   "event": "request",
+   "t_mono_us": 53287871692,
+   "process": "agent-core",
+   "attrs": {
+    "attempt": 0
+   },
+   "generation_id": 1,
+   "t_us": 6499009
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "process": "client",
+   "span": "client",
+   "event": "transcript.final",
+   "t_mono_us": 6499374,
+   "attrs": {
+    "turn_id": "t1",
+    "dir": "in"
+   },
+   "t_us": 6499374
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "process": "client",
+   "span": "client",
+   "event": "agent.generation_started",
+   "t_mono_us": 6499650,
+   "attrs": {
+    "turn_id": "t1",
+    "dir": "in"
+   },
+   "generation_id": 1,
+   "t_us": 6499650
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "span": "llm",
+   "event": "first_token",
+   "t_mono_us": 53288198757,
+   "process": "agent-core",
+   "attrs": {},
+   "generation_id": 1,
+   "t_us": 6826074
+  },
+  {
+   "attrs": {},
+   "event": "agent_first_frame",
+   "generation_id": 1,
+   "process": "gateway",
+   "span": "gateway",
+   "t_mono_us": 8019854,
+   "trace_id": "s-502771eecfb89d7f",
+   "t_us": 6977829
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "span": "tts",
+   "event": "first_audio",
+   "t_mono_us": 53288350736,
+   "process": "agent-core",
+   "attrs": {},
+   "generation_id": 1,
+   "t_us": 6978053
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "process": "client",
+   "span": "client",
+   "event": "answer.sources",
+   "t_mono_us": 6984105,
+   "attrs": {
+    "sources": [
+     {
+      "n": 1,
+      "id": "2ec301558527",
+      "title": "Installing uv > Installation methods",
+      "url": "https://docs.astral.sh/uv/getting-started/installation/#installation-methods"
+     },
+     {
+      "n": 2,
+      "id": "7ced32678d6f",
+      "title": "uv > Installation",
+      "url": "https://docs.astral.sh/uv/#installation"
+     }
+    ],
+    "dir": "in"
+   },
+   "generation_id": 1,
+   "t_us": 6984105
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "process": "client",
+   "span": "client",
+   "event": "agent.text",
+   "t_mono_us": 6984744,
+   "attrs": {
+    "dir": "in"
+   },
+   "generation_id": 1,
+   "t_us": 6984744
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "process": "client",
+   "span": "playout",
+   "event": "playout.started",
+   "t_mono_us": 6993878,
+   "attrs": {
+    "dir": "out"
+   },
+   "generation_id": 1,
+   "t_us": 6993878
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "span": "playout",
+   "event": "started",
+   "t_mono_us": 53288368554,
+   "process": "agent-core",
+   "attrs": {
+    "t_client_us": 6993878
+   },
+   "generation_id": 1,
+   "t_us": 6995871
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "span": "clock",
+   "event": "client_offset",
+   "t_mono_us": 53291471720,
+   "process": "agent-core",
+   "attrs": {
+    "client_to_agent_us": 53281372683
+   },
+   "t_us": 10099037
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "process": "client",
+   "span": "playout",
+   "event": "playout.stopped",
+   "t_mono_us": 12055949,
+   "attrs": {
+    "reason": "done",
+    "dir": "out"
+   },
+   "generation_id": 1,
+   "t_us": 12055949
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "span": "playout",
+   "event": "stopped",
+   "t_mono_us": 53293430855,
+   "process": "agent-core",
+   "attrs": {
+    "reason": "done",
+    "t_client_us": 12055949
+   },
+   "generation_id": 1,
+   "t_us": 12058172
+  },
+  {
+   "trace_id": "s-502771eecfb89d7f",
+   "span": "clock",
+   "event": "client_offset",
+   "t_mono_us": 53296471445,
+   "process": "agent-core",
+   "attrs": {
+    "client_to_agent_us": 53281372683
+   },
+   "t_us": 15098762
+  },
+  {
+   "attrs": {
+    "ends_session": true
+   },
+   "event": "client_detached",
+   "process": "gateway",
+   "span": "gateway",
+   "t_mono_us": 16182913,
+   "trace_id": "s-502771eecfb89d7f",
+   "t_us": 15140888
+  },
+  {
+   "attrs": {
+    "reason": "client"
+   },
+   "event": "session_ended",
+   "process": "gateway",
+   "span": "gateway",
+   "t_mono_us": 16183001,
+   "trace_id": "s-502771eecfb89d7f",
+   "t_us": 15140976
+  }
+ ]
+}

@@ -1,0 +1,24 @@
+{"t_us":69313,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q21.wav"}
+{"t_us":72116,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-d2ab10f115a92f6f","type":"welcome"}
+{"t_us":72230,"process":"headless","type":"mic.start","t0_us":72228}
+{"t_us":1175414,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2073820,"process":"headless","dir":"in","t_client_us":2072610,"t_server_us":220532075,"type":"pong"}
+{"t_us":2182416,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I declare"}
+{"t_us":2987033,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I declare dependencies"}
+{"t_us":3892395,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I declare dependencies inside a single"}
+{"t_us":4076648,"process":"headless","dir":"in","t_client_us":4076194,"t_server_us":222535176,"type":"pong"}
+{"t_us":4895912,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I declare dependencies inside a single Python script?"}
+{"t_us":5316354,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"How do I declare dependencies inside a single Python script?"}
+{"t_us":5317414,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"How do I declare dependencies inside a single Python script?"}
+{"t_us":5317748,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6077221,"process":"headless","dir":"in","t_client_us":6076553,"t_server_us":224535682,"type":"pong"}
+{"t_us":6885867,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"c7e7b0355ffe","title":"Running scripts > Declaring script dependencies","url":"https://docs.astral.sh/uv/guides/scripts/#declaring-script-dependencies"}],"gen":1}
+{"t_us":6886689,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"You can declare dependencies inside a script using inline metadata, which is added with the `uv add --script` command, and it will automatically create a `script` section at the top of the script with the dependencies listed [1]."}
+{"t_us":7031320,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8078857,"process":"headless","dir":"in","t_client_us":8078204,"t_server_us":226537387,"type":"pong"}
+{"t_us":10079104,"process":"headless","dir":"in","t_client_us":10078345,"t_server_us":228537583,"type":"pong"}
+{"t_us":12080880,"process":"headless","dir":"in","t_client_us":12080263,"t_server_us":230539425,"type":"pong"}
+{"t_us":14080563,"process":"headless","dir":"in","t_client_us":14079873,"t_server_us":232539079,"type":"pong"}
+{"t_us":16081565,"process":"headless","dir":"in","t_client_us":16080881,"t_server_us":234540092,"type":"pong"}
+{"t_us":16273142,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":16277232,"process":"headless","dir":"in","type":"socket.closed","code":1000}

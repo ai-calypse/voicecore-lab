@@ -22,6 +22,7 @@ dev = [
     "numpy>=2.5.4",
     "matplotlib>=3.11.2",
     "pytest-timeout>=2.4.0",
+    "jiwer>=4.0.0",
 ]
 
 [tool.pytest.ini_options]

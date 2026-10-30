@@ -1,0 +1,25 @@
+{"t_us":78052,"process":"headless","type":"client.start","fixture":"/Users/yakshgandhi/Documents/Development/apps/VoiceCore_Lab/fixtures/audio/local/dev/docs_question_q11.wav"}
+{"t_us":81588,"process":"headless","dir":"in","resume_window_ms":10000,"resumed":false,"session_id":"s-77303e359a30b104","type":"welcome"}
+{"t_us":81725,"process":"headless","type":"mic.start","t0_us":81722}
+{"t_us":1163494,"process":"headless","dir":"in","type":"user.speech_started","turn_id":"t1"}
+{"t_us":2082246,"process":"headless","dir":"in","t_client_us":2081310,"t_server_us":111515573,"type":"pong"}
+{"t_us":2087236,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will uv sync"}
+{"t_us":2893442,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will uv sync remove packages"}
+{"t_us":3857552,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will uv sync remove packages that are not"}
+{"t_us":4084568,"process":"headless","dir":"in","t_client_us":4083926,"t_server_us":113517945,"type":"pong"}
+{"t_us":4864422,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will uv sync remove packages that are not part of my project?"}
+{"t_us":5277485,"process":"headless","dir":"in","type":"transcript.partial","turn_id":"t1","text":"Will uv sync remove packages that are not part of my project?"}
+{"t_us":5644250,"process":"headless","dir":"in","type":"transcript.final","turn_id":"t1","text":"Will uv sync remove packages that are not part of my project?"}
+{"t_us":5645038,"process":"headless","dir":"in","type":"agent.generation_started","turn_id":"t1","gen":1}
+{"t_us":6084842,"process":"headless","dir":"in","t_client_us":6084075,"t_server_us":115518134,"type":"pong"}
+{"t_us":7385472,"process":"headless","dir":"in","type":"answer.sources","sources":[{"n":1,"id":"3a79a5e79bf9","title":"Locking and syncing > Handling of extraneous packages","url":"https://docs.astral.sh/uv/concepts/projects/sync/#handling-of-extraneous-packages"}],"gen":1}
+{"t_us":7386187,"process":"headless","dir":"in","type":"agent.text","gen":1,"text":"By default, `uv sync` performs \"exact\" syncing, which means it will remove any packages that are not selected for installation [1]."}
+{"t_us":7540439,"process":"headless","dir":"out","type":"playout.started","gen":1}
+{"t_us":8085652,"process":"headless","dir":"in","t_client_us":8084793,"t_server_us":117519053,"type":"pong"}
+{"t_us":10086454,"process":"headless","dir":"in","t_client_us":10085469,"t_server_us":119519810,"type":"pong"}
+{"t_us":12086429,"process":"headless","dir":"in","t_client_us":12085385,"t_server_us":121519702,"type":"pong"}
+{"t_us":14086440,"process":"headless","dir":"in","t_client_us":14085698,"t_server_us":123519818,"type":"pong"}
+{"t_us":15060206,"process":"headless","dir":"out","type":"playout.stopped","gen":1,"reason":"done"}
+{"t_us":16087519,"process":"headless","dir":"in","t_client_us":16086855,"t_server_us":125520934,"type":"pong"}
+{"t_us":16322366,"process":"headless","type":"client.end","underrun_ms":0}
+{"t_us":16323484,"process":"headless","dir":"in","type":"socket.closed","code":1000}
