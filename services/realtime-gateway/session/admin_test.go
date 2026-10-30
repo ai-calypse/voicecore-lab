@@ -51,3 +51,19 @@ func TestTwoServersDoNotCollide(t *testing.T) { // each Server has its own regis
 		}
 	}
 }
+
+func TestHelloRefusalsAreCounted(t *testing.T) {
+	runCfg(t, false, func(c *Config) { c.MaxSessions = 1 }, func(t *testing.T, r *rig) {
+		welcomeOf(r.connect(nil, nil))
+		r.upstream()
+		_ = r.connect(nil, nil).closeStatus()                              // busy: 1013
+		_ = r.connect(map[string]any{"token": "1.2.3"}, nil).closeStatus() // bad token: 4001
+		tok := r.token()
+		r.gw.BeginDrain()
+		_ = r.connect(map[string]any{"token": tok}, nil).closeStatus() // draining: 1013
+		c := r.counters()
+		if c["rejected_busy"] != 1 || c["rejected_token"] != 1 || c["rejected_draining"] != 1 {
+			t.Fatalf("counters %v", c)
+		}
+	})
+}

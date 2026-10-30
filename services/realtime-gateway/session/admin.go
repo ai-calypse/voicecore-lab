@@ -1,7 +1,6 @@
 package session
 
 import (
-	"encoding/json"
 	"net/http"
 	"sync/atomic"
 
@@ -26,7 +25,8 @@ func (s *Server) AdminHandler() http.Handler {
 		counter("gateway_drops_total", "mic and agent frames dropped, by reason", reason, c.Load)
 	}
 	for reason, c := range map[string]*atomic.Int64{"ratelimit": &s.c.RejectedRateLimit, "host": &s.c.RejectedHost,
-		"upgrade": &s.c.RejectedUpgrade, "draining": &s.c.RejectedDraining} {
+		"upgrade": &s.c.RejectedUpgrade, "draining": &s.c.RejectedDraining, "token": &s.c.RejectedToken,
+		"busy": &s.c.RejectedBusy, "upstream": &s.c.RejectedUpstream} {
 		counter("gateway_rejected_total", "requests refused before a session started, by reason", reason, c.Load)
 	}
 	counter("gateway_gaps_total", "mic frames missing between received sequence numbers", "", s.c.Gaps.Load)
@@ -36,9 +36,6 @@ func (s *Server) AdminHandler() http.Handler {
 
 	mux := http.NewServeMux()
 	mux.Handle("GET /metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
-	mux.HandleFunc("GET /debug/counters", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(s.Snapshot())
-	})
+	mux.HandleFunc("GET /debug/counters", s.serveCounters)
 	return mux
 }

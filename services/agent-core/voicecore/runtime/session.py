@@ -397,7 +397,7 @@ class Session:
             self._failed.add(g)
             await speak(sep() + TROUBLE)
         except Exception as err:  # never leave a turn without an answer and an end
-            self.trace.emit("llm", "error", gen=g, kind=type(err).__name__)
+            self.trace.emit("llm", "internal_error", gen=g, kind=type(err).__name__)  # not a provider error: our own bug
             log.exception("answer failed", extra={"session_id": self.sid, "gen": g})  # our bug, not the provider's
             self._failed.add(g)
             await speak(sep() + TROUBLE)
@@ -435,8 +435,9 @@ class Session:
             try:
                 await self.tts.synth(g, spoken, last)
             except ProviderError as err:
+                if g not in self._tts_failed:  # one error per attempt, as calls are counted per attempt
+                    self._provider_error("tts", err.kind, gen=g)
                 self._tts_failed[g] = err.kind
-                self._provider_error("tts", err.kind, gen=g)
 
     # --- audio out -------------------------------------------------------------
 
@@ -458,8 +459,11 @@ class Session:
                         buf.clear()
                 return  # the TTS stream closed
             except ProviderError as err:  # one bad item must not silence the rest of the session
-                self._provider_error("tts", err.kind)
                 g = self.active_gen
+                if g is None:  # leftovers of an answer already given up on: no attempt to charge it to
+                    self.trace.emit("tts", "stale_error", kind=err.kind)
+                elif g not in self._tts_failed:  # one error per attempt, as calls are counted per attempt
+                    self._provider_error("tts", err.kind, gen=g)
                 if g is not None:
                     self._tts_failed[g] = err.kind
                     if self.task is None or self.task.done():  # the answer text is out: handle it here (else _generate does)

@@ -1,9 +1,12 @@
 """Seam 16: metrics are computed from trace events. Latency has one definition, in voicecore/stages.py."""
+import asyncio
+
 import pytest
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
 from voicecore import budget
+from voicecore.providers.mock import LLMScript, MockLLM
 from voicecore.metrics import MetricsSink, loop_lag_ms
 from voicecore.stages import for_generation
 
@@ -115,3 +118,31 @@ def test_loop_lag_from_timestamps():
 def test_spend_gauge_reads_ledger(m):
     budget.settle(budget.reserve("usd", 2.0, "test"), 1.25)
     assert points(m, "voicecore_spend_usd")[frozenset({("pool", "usd")})].value == 1.25
+
+
+async def test_tts_errors_never_outnumber_tts_calls(m):
+    from runtime_helpers import make
+    from voicecore.providers.base import ProviderError
+    from voicecore.providers.mock import MockTTS
+    from voicecore.trace import Tracer
+
+    broken = lambda: MockTTS(error=ProviderError("retryable", "socket closed"))  # noqa: E731 (every chunk fails)
+    s, _ = await make(tts=broken(), tts_factory=broken, tracer=Tracer("s-1", m))
+    await s.on_event({"type": "text.input", "text": "hi"})
+    await asyncio.sleep(3)
+    await s.close()
+    calls = points(m, "voicecore_provider_calls")[frozenset({("provider", "tts")})].value
+    errors = sum(p.value for k, p in points(m, "voicecore_provider_errors").items() if dict(k)["provider"] == "tts")
+    assert (calls, errors) == (2, 2)  # the first attempt and its one retry, each failing once
+
+
+async def test_internal_bug_is_not_a_provider_error(m):
+    from runtime_helpers import make
+    from voicecore.trace import Tracer
+
+    s, _ = await make(llm=MockLLM(LLMScript(tokens=[], first_token_ms=0, error=KeyError("oops"))), tracer=Tracer("s-1", m))
+    await s.on_event({"type": "text.input", "text": "hi"})
+    await asyncio.sleep(0.5)
+    await s.close()
+    assert points(m, "voicecore_provider_errors") == {}
+    assert points(m, "voicecore_turns")[frozenset({("kind", "text"), ("result", "error")})].value == 1

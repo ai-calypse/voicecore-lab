@@ -11,7 +11,7 @@ STAGE_BUCKETS_MS = (50, 100, 200, 300, 500, 750, 1000, 1200, 1500, 2000, 3000, 5
 LAG_BUCKETS_MS = (1, 5, 10, 25, 50, 100, 250, 500, 1000)
 VIEWS = [View(instrument_name="voicecore_stage_ms", aggregation=ExplicitBucketHistogramAggregation(STAGE_BUCKETS_MS)),
          View(instrument_name="voicecore_event_loop_lag_ms", aggregation=ExplicitBucketHistogramAggregation(LAG_BUCKETS_MS))]
-CALLS = {("llm", "request"), ("stt", "connect"), ("tts", "request")}  # the denominators of the provider error ratios
+CALLS = {("llm", "request"), ("stt", "connect"), ("tts", "request"), ("tts", "retry")}  # the denominators of the provider error ratios
 
 
 class MetricsSink:
@@ -57,7 +57,7 @@ def loop_lag_ms(expected_s: float, actual_s: float) -> float:
 
 
 def serve_metrics(port: int, host: str = "0.0.0.0") -> MetricsSink:
-    """Expose /metrics on its own port (never published in compose) and return the sink to feed."""
+    """Expose /metrics on its own port (operators only: localhost in dev compose, unpublished in prod) and return the sink."""
     from opentelemetry.exporter.prometheus import PrometheusMetricReader
     from opentelemetry.sdk.metrics import MeterProvider
     from opentelemetry.sdk.resources import SERVICE_NAME, Resource

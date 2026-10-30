@@ -9,6 +9,8 @@ import os
 import subprocess
 import sys
 import time
+import urllib.parse
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -24,13 +26,14 @@ def compose(*args, check=True) -> str:
 
 
 def promql(q: str) -> list:
-    url = "http://127.0.0.1:9090/api/v1/query?query=" + q.replace(" ", "%20").replace("{", "%7B").replace("}", "%7D")
+    url = "http://127.0.0.1:9090/api/v1/query?query=" + urllib.parse.quote(q, safe="")
     return json.loads(compose("exec", "-T", "prometheus", "wget", "-qO-", url))["data"]["result"]
 
 
-def sink_lines() -> list[dict]:
+def sink_lines(since: str) -> list[dict]:
+    """Alerts the sink printed since `since` (RFC 3339), so lines from an earlier run never satisfy a wait."""
     out = []
-    for line in compose("logs", "--no-log-prefix", "alert-sink").splitlines():
+    for line in compose("logs", "--no-log-prefix", "--since", since, "alert-sink").splitlines():
         try:
             out.append(json.loads(line))
         except ValueError:
@@ -58,12 +61,12 @@ def test_monitoring_counts_turns():
 
 @pytest.mark.timeout(600)
 def test_alert_reaches_sink_then_resolves():
-    wait_for("the Watchdog heartbeat", lambda: any(a["alertname"] == "Watchdog" for a in sink_lines()), 120)
+    start = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    last = lambda name: next((a["status"] for a in reversed(sink_lines(start)) if a["alertname"] == name), None)  # noqa: E731
+    wait_for("a Watchdog heartbeat from this run", lambda: last("Watchdog") == "firing", 150)  # repeats every minute
     compose("kill", "agent-core")  # not a graceful stop: a draining process still serves metrics
     try:
-        wait_for("OrchestratorDown firing", lambda: {"alertname": "OrchestratorDown", "status": "firing"}.items()
-                 <= next((a for a in reversed(sink_lines()) if a["alertname"] == "OrchestratorDown"), {}).items(), 240)
+        wait_for("OrchestratorDown firing", lambda: last("OrchestratorDown") == "firing", 240)
     finally:
         compose("up", "-d", "--wait", "agent-core")
-    wait_for("OrchestratorDown resolved", lambda: next((a["status"] for a in reversed(sink_lines())
-                                                        if a["alertname"] == "OrchestratorDown"), None) == "resolved", 240)
+    wait_for("OrchestratorDown resolved", lambda: last("OrchestratorDown") == "resolved", 240)

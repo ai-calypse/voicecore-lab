@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"flag"
 	"log/slog"
+	"net"
 	"net/http"
 	"net/netip"
 	"os"
@@ -34,7 +35,7 @@ func main() {
 	trusted := flag.String("trusted-proxies", "", "comma-separated CIDRs whose X-Forwarded-For is believed (e.g. the load balancer)")
 	probe := flag.String("probe", "", "GET this URL and exit 0 on HTTP 200, else 1 (container healthcheck; the image has no curl)")
 	drain := flag.Duration("drain", 25*time.Second, "on SIGTERM, how long open sessions may finish before they are ended")
-	adminAddr := flag.String("admin-addr", "", "operator listener for /metrics and /debug/counters, e.g. :9091 (empty = off); never publish it")
+	adminAddr := flag.String("admin-addr", "", "operator listener for /metrics and /debug/counters, e.g. :9091 (empty = off); keep it off the public internet")
 	flag.Parse()
 	if *probe != "" {
 		os.Exit(session.Probe(*probe))
@@ -96,12 +97,13 @@ func main() {
 		_ = srv.Shutdown(sctx)
 	}()
 	if *adminAddr != "" {
-		admin := &http.Server{Addr: *adminAddr, Handler: gw.AdminHandler(), ReadHeaderTimeout: 10 * time.Second}
-		go func() { // ponytail: not drained; a scrape cut off at exit is harmless
-			if err := admin.ListenAndServe(); err != http.ErrServerClosed {
-				slog.Error("admin listener stopped", "err", err)
-			}
-		}()
+		ln, err := net.Listen("tcp", *adminAddr) // bind now: a gateway nobody can scrape would page as GatewayDown
+		if err != nil {
+			slog.Error("admin listener", "addr", *adminAddr, "err", err)
+			os.Exit(2)
+		}
+		admin := &http.Server{Handler: gw.AdminHandler(), ReadHeaderTimeout: 10 * time.Second}
+		go func() { _ = admin.Serve(ln) }() // ponytail: not drained; a scrape cut off at exit is harmless
 	}
 	slog.Info("gateway listening", "addr", *addr, "upstream", *upstream, "version", version)
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {

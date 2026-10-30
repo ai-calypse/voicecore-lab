@@ -217,7 +217,8 @@ func TestQueueDepthAndCountersExposed(t *testing.T) {
 		synctest.Wait()
 		want := map[string]int64{"sessions": 1, "depth": 11, "depth_out": 0, "drops_duplicate": 1, "drops_stale": 0,
 			"drops_overload": 0, "drops_overload_out": 0, "drops_ratelimit": 0, "drops_fenced": 0, "gaps": 2,
-			"tokens_issued": 1, "rejected_ratelimit": 0, "rejected_host": 0, "rejected_upgrade": 0, "rejected_draining": 0}
+			"tokens_issued": 1, "rejected_ratelimit": 0, "rejected_host": 0, "rejected_upgrade": 0, "rejected_draining": 0,
+			"rejected_token": 0, "rejected_busy": 0, "rejected_upstream": 0}
 		if got := r.counters(); !reflect.DeepEqual(got, want) {
 			t.Fatalf("counters %v", got)
 		}

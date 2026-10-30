@@ -65,6 +65,7 @@ func Defaults(secret []byte, upstream string) Config {
 type Counters struct {
 	DropsDuplicate, DropsStale, DropsOverload, DropsOverloadOut, DropsFenced, DropsRateLimit, Gaps atomic.Int64
 	TokensIssued, RejectedRateLimit, RejectedHost, RejectedUpgrade, RejectedDraining               atomic.Int64
+	RejectedToken, RejectedBusy, RejectedUpstream                                                  atomic.Int64 // refused at hello
 }
 
 type Server struct {
@@ -195,10 +196,7 @@ func (s *Server) Handler() http.Handler {
 		_ = json.NewEncoder(w).Encode(map[string]string{"token": s.Token(ip)})
 	})
 	mux.HandleFunc("GET /v1/ws", s.serveWS)
-	mux.HandleFunc("GET /debug/counters", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(s.Snapshot())
-	})
+	mux.HandleFunc("GET /debug/counters", s.serveCounters)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !s.hostAllowed(r.Host) { // a DNS-rebinding page arrives with its own host name
 			s.c.RejectedHost.Add(1)
@@ -210,6 +208,11 @@ func (s *Server) Handler() http.Handler {
 }
 
 // Snapshot returns the counters, live sessions and queue depths.
+func (s *Server) serveCounters(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(s.Snapshot())
+}
+
 func (s *Server) Snapshot() map[string]int64 {
 	s.mu.Lock()
 	var depth, out int64
@@ -223,7 +226,8 @@ func (s *Server) Snapshot() map[string]int64 {
 		"drops_duplicate": s.c.DropsDuplicate.Load(), "drops_stale": s.c.DropsStale.Load(),
 		"drops_overload": s.c.DropsOverload.Load(), "drops_overload_out": s.c.DropsOverloadOut.Load(), "drops_ratelimit": s.c.DropsRateLimit.Load(), "drops_fenced": s.c.DropsFenced.Load(), "gaps": s.c.Gaps.Load(),
 		"tokens_issued": s.c.TokensIssued.Load(), "rejected_ratelimit": s.c.RejectedRateLimit.Load(), "rejected_host": s.c.RejectedHost.Load(),
-		"rejected_upgrade": s.c.RejectedUpgrade.Load(), "rejected_draining": s.c.RejectedDraining.Load()}
+		"rejected_upgrade": s.c.RejectedUpgrade.Load(), "rejected_draining": s.c.RejectedDraining.Load(),
+		"rejected_token": s.c.RejectedToken.Load(), "rejected_busy": s.c.RejectedBusy.Load(), "rejected_upstream": s.c.RejectedUpstream.Load()}
 }
 
 // Close ends every session and waits for their goroutines.
@@ -361,6 +365,7 @@ func (s *Server) hello(c *websocket.Conn, ip string) (ss *session, resumed bool,
 	}
 	nonce, ok := s.useToken(h.Token, ip)
 	if !ok {
+		s.c.RejectedToken.Add(1)
 		return nil, false, statusBadToken, "invalid, expired or already used token"
 	}
 	ss, err = s.newSession(ip) // resumes above still work while draining; new sessions do not
@@ -369,13 +374,17 @@ func (s *Server) hello(c *websocket.Conn, ip string) (ss *session, resumed bool,
 	}
 	switch {
 	case errors.Is(err, errDraining):
+		s.c.RejectedDraining.Add(1)
 		return nil, false, websocket.StatusTryAgainLater, "draining"
 	case errors.Is(err, errUpstreamNotReady):
+		s.c.RejectedUpstream.Add(1)
 		return nil, false, websocket.StatusTryAgainLater, "orchestrator not ready"
 	case errors.Is(err, errBusy):
+		s.c.RejectedBusy.Add(1)
 		return nil, false, websocket.StatusTryAgainLater, "too many sessions"
 	}
 	if err != nil {
+		s.c.RejectedUpstream.Add(1)
 		s.cfg.Log.Warn("upstream dial failed", "err", err)
 		return nil, false, websocket.StatusInternalError, "orchestrator unavailable"
 	}

@@ -60,9 +60,18 @@ def _locked(path):
         f.write(json.dumps(data, indent=2) + "\n")
 
 
+def _entries(path) -> list[dict]:
+    """Read under a shared lock: writers truncate and rewrite the file under an exclusive one."""
+    if not path.exists():
+        return []
+    with open(path) as f:
+        fcntl.flock(f, fcntl.LOCK_SH)
+        text = f.read()
+    return json.loads(text).get("entries", []) if text.strip() else []
+
+
 def total(pool, ledger_path=None):
-    path = ledger_file(ledger_path)
-    return _sum(json.loads(path.read_text()).get("entries", []) if path.exists() else [], pool)
+    return _sum(_entries(ledger_file(ledger_path)), pool)
 
 
 def reserve(pool, amount, label="", ledger_path=None):
@@ -103,13 +112,7 @@ def reserve_all(specs, ledger_path=None) -> list[Reservation]:
 def orphans(older_than_s: float = 3600, ledger_path=None) -> list[dict]:
     """Reservations still 'reserved' after older_than_s (or from before entries had a ts). Report only: they already
     count at their full amount, the safe side; settling them by guessing could under-count real spend."""
-    path = ledger_file(ledger_path)
-    entries = []
-    if path.exists():
-        with open(path) as f:  # shared lock: writers truncate and rewrite under an exclusive one
-            fcntl.flock(f, fcntl.LOCK_SH)
-            text = f.read()
-        entries = json.loads(text).get("entries", []) if text.strip() else []
+    entries = _entries(ledger_file(ledger_path))
     cutoff = now() - older_than_s
     return [e for e in entries if e.get("status") == "reserved" and e.get("ts", 0) < cutoff]
 

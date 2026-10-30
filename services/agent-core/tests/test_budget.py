@@ -87,3 +87,25 @@ def test_orphans_reports_reserved_older_than_1h_or_without_ts(tmp_path, monkeypa
         {"id": "d", "pool": "usd", "amount": 0.1, "status": "settled", "ts": 0},
     ])
     assert [e["id"] for e in budget.orphans(ledger_path=path)] == ["a", "c"]
+
+
+def test_total_waits_for_a_writer_instead_of_reading_a_half_written_ledger():
+    import fcntl
+    import threading
+
+    budget.settle(budget.reserve("usd", 1.0, "t"), 0.5)
+    path, got = budget.ledger_file(), []
+    with open(path, "r+") as f:
+        fcntl.flock(f, fcntl.LOCK_EX)  # a writer mid-rewrite: the file is truncated
+        text = f.read()
+        f.seek(0)
+        f.truncate()
+        reader = threading.Thread(target=lambda: got.append(budget.total("usd")))
+        reader.start()
+        reader.join(0.2)
+        assert reader.is_alive()  # blocked on the lock, not reading an empty file
+        f.write(text)
+        f.flush()
+        fcntl.flock(f, fcntl.LOCK_UN)
+    reader.join(2)
+    assert got == [0.5]

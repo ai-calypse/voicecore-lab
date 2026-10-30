@@ -54,11 +54,13 @@ The orchestrator emits these events in spans `stt`, `llm` and `tts`. They time t
 | `llm` | `first_token` | none | the first answer token arrived |
 | `llm` | `backoff` | `wait_s` | an HTTP 429 before any text; the session waits 1, 2 then 4 s |
 | `llm` | `stall` | `after_s` | no token for 8 s; the agent asks the user to repeat |
-| `llm` | `error` | `kind` | the call failed; `kind` is a provider error kind or an exception name |
+| `llm` | `error` | `kind` | the provider call failed |
+| `llm` | `internal_error` | `kind` | VoiceCore's own answer code raised; `kind` is the exception name. It is not counted as a provider error |
 | `tts` | `request` | none | the first text of a generation went to the TTS |
 | `tts` | `first_audio` | none | the first agent audio frame of the generation was sent |
-| `tts` | `retry` | none | one retry of speech on a fresh TTS stream |
-| `tts` | `error` | `kind` | TTS failed for a generation, or for the stream |
+| `tts` | `retry` | none | one retry of speech on a fresh TTS stream; counted as a TTS call |
+| `tts` | `error` | `kind` | TTS failed for a generation; once per attempt, however many chunks failed |
+| `tts` | `stale_error` | `kind` | TTS reported an error for an answer the session had already given up on |
 
 The latency columns use three of these: `llm.request` to `llm.first_token` is the LLM first token, `llm.first_token` to `tts.first_audio` is the TTS first audio, and `turn.endpoint` to `stt.turn_text` is the STT settle.
 

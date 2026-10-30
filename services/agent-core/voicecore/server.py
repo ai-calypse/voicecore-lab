@@ -274,7 +274,7 @@ async def main():
     ap.add_argument("--llm-reasoning", default=None, help="reasoning effort for reasoning models; 'none' to omit")
     ap.add_argument("--tts", choices=sorted(TTS), default="deepgram", help="speech synthesis provider (live mode)")
     ap.add_argument("--drain-s", type=float, default=25.0, help="on SIGTERM, seconds to let open sessions finish")
-    ap.add_argument("--metrics-port", type=int, default=0, help="Prometheus /metrics port, e.g. 9464 (0 = off); never publish it")
+    ap.add_argument("--metrics-port", type=int, default=0, help="Prometheus /metrics port, e.g. 9464 (0 = off); keep it off the public internet")
     ap.add_argument("--metrics-host", default="0.0.0.0", help="listen address for /metrics (the scraper reaches it inside compose)")
     args = ap.parse_args()
     logs.setup()
