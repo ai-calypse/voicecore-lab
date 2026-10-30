@@ -34,7 +34,9 @@ export function decodeFrame(buf: Uint8Array): Frame {
   };
 }
 
-export function encodeFrame(f: Omit<Frame, "version" | "samples">): Uint8Array {
+export type FrameInit = Omit<Frame, "version" | "samples">;
+
+export function encodeFrame(f: FrameInit): Uint8Array<ArrayBuffer> {
   const buf = new Uint8Array(HEADER_BYTES + f.payload.length * 2);
   const v = new DataView(buf.buffer);
   v.setUint8(0, 1);

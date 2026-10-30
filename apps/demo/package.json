@@ -1,0 +1,20 @@
+{
+  "name": "@voicecore/demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "@voicecore/web-sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/ws": "^8.18.2",
+    "@voicecore/protocol": "workspace:*",
+    "vite": "8.3.5",
+    "ws": "8.22.0"
+  }
+}

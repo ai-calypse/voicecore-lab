@@ -1,0 +1,14 @@
+{
+  "name": "@voicecore/web-sdk",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "tsc --noEmit -p . && vitest run"
+  },
+  "dependencies": {
+    "@voicecore/protocol": "workspace:*"
+  }
+}

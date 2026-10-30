@@ -7,3 +7,6 @@ __pycache__/
 .cache/
 node_modules/
 fixtures/audio/local/
+test-results/
+playwright-report/
+dist/

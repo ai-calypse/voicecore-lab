@@ -1,5 +1,5 @@
 # All non-live tests in every language. Live tests spend money: run `make test-live` on purpose.
-.PHONY: test test-go test-py test-ts test-live
+.PHONY: test test-go test-py test-ts test-live e2e
 
 test: test-go test-py test-ts
 
@@ -14,3 +14,6 @@ test-ts:
 
 test-live:
 	uv run pytest -m live -p no:randomly
+
+e2e:
+	pnpm --filter @voicecore/demo e2e
