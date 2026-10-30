@@ -1,6 +1,6 @@
 # VoiceCore Lab — Execution Status
 
-**Status as of 2026-10-30:** Steps 00–05 complete (open items listed per row); Step 06 in progress. This file is a live execution register for the implementing agent.
+**Status as of 2026-10-30:** Steps 00–06 complete (open items listed per row); Step 07 in progress. This file is a live execution register for the implementing agent.
 
 Do not mark a step Complete until task-level actual evidence, objective tests and handoff checks are recorded in the corresponding step doc. Track fake and real provider results separately.
 
@@ -12,7 +12,7 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 | [03](docs/step_03_streaming_orchestrator.md) | Complete | 38 | Provider contracts + 3 live adapters, generation runtime, server, in-process/WSS runners, chaos test, live latency breakdown (n = 10) | User: send the drafted Deepgram ticket (optional) |
 | [04](docs/step_04_grounded_docs_agent.md) | Complete | 25 | Ingestion + SSRF guard, hybrid retrieval, grounded answer engine shared by text and voice, live holdout + adversarial eval | — |
 | [05](docs/step_05_barge_in_and_recovery.md) | Complete except manual loopback | 26 | Barge-in end to end, recovery rules, chaos reproducibility, fake + live interruption benchmark (kill gate passed) | Open: 5 manual acoustic runs (user). Cartesia credits over plan (6,446 used) |
-| [06](docs/step_06_observability_evals_and_load.md) | Not started | 40 | None | Begin step 06 after prerequisites |
+| [06](docs/step_06_observability_evals_and_load.md) | Complete except manual answer audit | 40 | Trace timeline across 3 processes, lab panel, scenario simulator, fake + live perf, WER, load, CI eval gate | Open: 20-answer manual audit (user). Credits 10,877 / 16,000 |
 | [07](docs/step_07_media_internals_and_optional_telephony.md) | Not started | 35 | None | Begin step 07 after prerequisites |
 | [08](docs/step_08_portfolio_release.md) | Not started | 18 | None | Begin step 08 after prerequisites |
 
@@ -29,6 +29,7 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 | 2026-10-30 | S03-T01..T07 | Claude Code (Opus 5.5) | `voicecore/{providers,runtime}/`, `server.py`, `harness/{runner,latency.py,listen_repro.py}`, `reports/latency_breakdown.md` | `make test` (pytest 65, Go, vitest) + `make e2e` (3) pass; code review (02–03) 10 findings fixed; live contracts 7 passed; live latency n = 10 | usd pool $0.706, credits 1,279 |
 | 2026-10-30 | S04-T01..T05 | Claude Code (Opus 5.5) | `voicecore/answer/`, `harness/{retrieval_eval,answer_eval}.py`, `fixtures/docs/adversarial*/`, `reports/docs_eval.md` | `make test` pass; live eval 3 runs ($0.011) | usd pool $0.718 |
 | 2026-10-30 | S05-T01..T05 | Claude Code (Opus 5.5) | `voicecore/runtime/session.py`, `harness/{barge_bench,barge_live}.py`, `harness/runner/{inprocess,chaos}.py`, `reports/barge_in.md` | `make test` pass; live barge-in 8/8 silenced, 0/4 false | Credits 6,446 of 16,000 (Step 05 used ~4,950 vs 3,000 planned) |
+| 2026-10-30 | S06-T01..T06 | Claude Code (Opus 5.5) | `harness/{timeline,session_timeline,bench,gate,wer_eval,lab_sample}.py`, `apps/demo/src/lab.*`, gateway trace, `reports/{perf,quality_eval}.md` | `make test` + `make e2e` (4) pass; evals gate pass on main, fail on proof branch | usd $0.82, credits 10,877 |
 
 ## Handoff history
 
@@ -40,5 +41,6 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 | 2026-10-30 | 03 | Registers filled; tests + e2e + live contracts pass; latency report; code review fixed | 04 |
 | 2026-10-30 | 04 | Registers filled; tests + e2e pass; eval report | 05 |
 | 2026-10-30 | 05 (manual loopback open) | Registers filled; tests pass; kill gate passed; barge-in report; code review (04–05) 10 findings fixed | 06 |
+| 2026-10-30 | 06 (manual audit open) | Registers filled; tests, e2e and eval gate pass; reports | 07 |
 
 **Planning update (2026-10-28):** Documented initial STT/VAD/LLM/TTS provider recommendations in the master plan. No live integration, verification, measurements, or step completion is implied.

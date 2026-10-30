@@ -1,6 +1,6 @@
 # ADR 0002: Default turn-taking policy
 
-**Status:** Accepted, 2026-10-30. **Task:** S02-T05. **Owner module:** `services/agent-core/voicecore/turntaking/floor.py`.
+**Status:** Accepted, 2026-10-30; confirmed with live STT 2026-10-30 (see Live check). **Task:** S02-T05. **Owner module:** `services/agent-core/voicecore/turntaking/floor.py`.
 
 ## Decision
 
@@ -44,3 +44,12 @@ Endpoint delay is the policy's silence plus about 60 ms: Silero reports the end 
 
 - `Policy()` defaults to `fixed`, `silence_ms=800`; changing it needs a new sweep and an update here.
 - During the S00-T03 → S02 work, the fixture builder was found to mix interrupting users at their raw LibriSpeech level: one user was 16 dB below the agent, so quieter than the echo. Agent clips and interrupting users are now both set to −23 dBFS (rebuilt 2026-10-30, `harness/build_fixtures.py`).
+
+## Live check (S06-T04, 2026-10-30)
+
+The same 15 dev docs questions were run through the full stack twice with live Deepgram finals ([`reports/perf.md`](../../reports/perf.md)):
+
+- **fixed 800 ms:** 15 / 15 answered in one piece; speech end → LLM request p50 862 ms.
+- **asr_assisted:** p50 523 ms (about 340 ms sooner), but 3 / 15 questions were cut at an internal pause, because Deepgram punctuated mid-question.
+
+The default stays fixed 800 ms. A gate that needs both punctuation and a longer silence (for example 600 ms) is the next thing to try if latency matters more than the occasional split.
