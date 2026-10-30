@@ -53,8 +53,9 @@ No older plan, role description, README, agent message, or vendor sample overrid
 | 06 | [Observability, evaluation and load](docs/step_06_observability_evals_and_load.md) | 40 h | traces, latency percentiles, evals and concurrency/load scenarios |
 | 07 | [Media internals and optional telephony](docs/step_07_media_internals_and_optional_telephony.md) | 35 h | packet-level media experiments and timeboxed optional telephony |
 | 08 | [Portfolio release](docs/step_08_portfolio_release.md) | 18 h | reproducible demo, technical write-ups and interview-ready evidence |
+| 09 | [Production readiness](docs/step_09_production_readiness.md) | ~110 h | health and drain, logs/metrics/alerts, resilience and breakers, abuse protection, multi-copy scaling, load, deploy ready (not run) |
 
-**Build plan:** [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) breaks every remaining task into test-first slices (approved 2026-10-29). Step docs keep task IDs and evidence registers.
+**Build plan:** [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) breaks every remaining task into test-first slices (approved 2026-10-29). Step docs keep task IDs and evidence registers. Step 09 has its own: [docs/PRODUCTION_PLAN.md](docs/PRODUCTION_PLAN.md) (approved 2026-10-30, two independent reviews applied).
 
 **Core rule:** each `docs/step_XX_*.md` already contains phases, stable task IDs, inputs, explicit dependencies, evidence criteria, decision/output registers, and handoff requirements. **Execute its tasks**, not a paraphrased checklist from this index. Each step is **unstarted** unless its execution record has actual evidence.
 
@@ -136,7 +137,7 @@ The `archive/` folder (earlier SaaS-first DocsVoice documents) was removed from 
 
 - Root entry points: `README.md` (human), `CLAUDE.md` (AI agent auto-discovery), **`MASTER_AGENT_GUIDE.md`** (canonical index/instructions), and `EXECUTION_STATUS.md` (live register).
 - Canonical plan: `docs/voicecore_lab_career_aligned_plan.md`.
-- Main step docs: `docs/step_00_*.md` through `docs/step_08_*.md` (full exact names in the execution index).
+- Main step docs: `docs/step_00_*.md` through `docs/step_09_*.md` (full exact names in the execution index).
 - Images: `docs/assets/`.
 - Build plan with test-first slices for every remaining task: `docs/IMPLEMENTATION_PLAN.md`.
 

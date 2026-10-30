@@ -1,5 +1,8 @@
 # VoiceCore Lab — build plan to finish the project (v3, final)
 
+
+> Steps 00–08 are complete. Step 09 (production readiness) follows its own plan: [PRODUCTION_PLAN.md](PRODUCTION_PLAN.md).
+
 ## Context
 
 Step 00 is half done: S00-T01 (requirements matrix) and S00-T02 (Deepgram hosted baseline, $0.525 spent). Steps 01–08 exist only as one-line task outcomes in `docs/step_0X_*.md`. The user asked for one plain, very specific, test-first plan for the whole project. It was built in stages: draft v1 → review 1 → improve-codebase-architecture pass → v2 → independent review 2 (19 findings) → this v3. The review log is at the end.
