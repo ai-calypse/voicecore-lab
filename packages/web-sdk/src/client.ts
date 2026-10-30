@@ -11,8 +11,11 @@ export type ClientOptions = {
   nowUs?: () => number;
   startMic?: typeof startCapture; // injectable for headless clients
   getToken?: () => Promise<string>; // a fresh token when a resume is refused (the window passed, the token is spent)
-  retryDelaysMs?: number[]; // reconnect attempts after an unexpected close; default 0.5, 1 and 2 s
+  retryDelaysMs?: number[]; // reconnect attempts after an unexpected close; the default outlasts the 10 s resume window
 };
+
+const RETRY_DELAYS_MS = [500, 1000, 2000, 4000, 4000];
+const NO_RETRY = new Set([1000, 1007, 1008, 4002]); // normal end, or a policy close a retry would only repeat
 
 /** One WebSocket session: hello/welcome, mic frames out, events and agent frames in, clock pings.
  *  An unexpected close after welcome reconnects (resuming the session) before onEvent sees socket.closed. */
@@ -35,6 +38,7 @@ export class VoiceClient {
   private token: string;
   private closing = false;
   private reconnecting = false;
+  private run = 0; // bumped by close(): a reconnect loop from before it stops for good
 
   constructor(opts: ClientOptions) {
     this.opts = opts;
@@ -50,7 +54,10 @@ export class VoiceClient {
   private open(): Promise<Event> {
     return new Promise((resolve, reject) => {
       // ?resume= lets a load balancer route the reconnect to the gateway copy that owns the session
-      const ws = new WebSocket(this.sessionId ? `${this.opts.url}?resume=${encodeURIComponent(this.sessionId)}` : this.opts.url);
+      const url = new URL(this.opts.url);
+      const resume = this.sessionId ?? this.opts.sessionId;
+      if (resume) url.searchParams.set("resume", resume);
+      const ws = new WebSocket(url.toString());
       ws.binaryType = "arraybuffer";
       this.ws = ws;
       let welcomed = false;
@@ -66,7 +73,7 @@ export class VoiceClient {
         if (!welcomed) {
           reject(Object.assign(new Error(`closed ${c.code} ${c.reason}`), { code: c.code }));
           if (!this.reconnecting) this.ended(c.code);
-        } else if (this.closing || c.code === 1000) {
+        } else if (this.closing || NO_RETRY.has(c.code)) {
           this.ended(c.code);
         } else {
           void this.reconnect(c.code);
@@ -119,23 +126,31 @@ export class VoiceClient {
 
   close(): void {
     this.closing = true;
+    this.run++;
     this.stop();
     this.ws?.close(1000);
   }
 
   /** The mic keeps capturing across the gap; frames sent while the socket is down are dropped. */
   private async reconnect(code: number): Promise<void> {
+    const run = this.run;
+    const gone = () => this.closing || run !== this.run;
     this.reconnecting = true;
     this.onEvent({ type: "socket.reconnecting", code });
     try {
-      for (const ms of this.opts.retryDelaysMs ?? [500, 1000, 2000]) {
+      const delays = this.opts.retryDelaysMs ?? RETRY_DELAYS_MS;
+      for (const [i, ms] of delays.entries()) {
         await new Promise((r) => setTimeout(r, ms));
-        if (this.closing) return;
+        if (gone()) return;
         try {
           await this.open();
           return;
         } catch (e) {
-          if ((e as { code?: number }).code === 4001 && this.opts.getToken) this.token = await this.opts.getToken().catch(() => this.token);
+          const last = i === delays.length - 1; // a fresh token nobody would use costs a token and maybe a human check
+          if ((e as { code?: number }).code === 4001 && this.opts.getToken && !last) {
+            this.token = await this.opts.getToken().catch(() => this.token);
+            if (gone()) return;
+          }
         }
       }
       this.ended(code);

@@ -23,7 +23,12 @@ const loadTurnstile = () => (turnstileApi ??= new Promise<Turnstile>((resolve, r
   const s = document.createElement("script");
   s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
   s.async = true;
-  s.onload = () => { const t = (window as unknown as { turnstile?: Turnstile }).turnstile; if (t) resolve(t); else reject(new HumanCheckFailed()); };
+  s.onload = () => {
+    const t = (window as unknown as { turnstile?: Turnstile }).turnstile;
+    if (t) return resolve(t);
+    turnstileApi = null; // e.g. a blocker stubbed the script: try again next time
+    reject(new HumanCheckFailed());
+  };
   s.onerror = () => { turnstileApi = null; reject(new HumanCheckFailed()); };
   document.head.append(s);
 }));
@@ -37,8 +42,9 @@ async function humanCheck(): Promise<string> {
   let id = "";
   try {
     return await new Promise<string>((resolve, reject) => {
-      id = ts.render(box, { sitekey, appearance: "interaction-only", callback: resolve,
-        "error-callback": () => reject(new HumanCheckFailed()), "expired-callback": () => reject(new HumanCheckFailed()) });
+      const fail = () => reject(new HumanCheckFailed()); // every way the check can end without a token
+      id = ts.render(box, { sitekey, appearance: "interaction-only", callback: resolve, "error-callback": fail,
+        "expired-callback": fail, "timeout-callback": fail, "unsupported-callback": fail });
     });
   } finally {
     if (id) ts.remove(id);
@@ -150,7 +156,11 @@ function mount() {
       case "agent.cancel": setState("listening", "Listening…"); break;
       case "session.ended": setState("ended", "The session ended. Close and reopen to start again."); break;
       case "socket.reconnecting": if (client) setState("connecting", "Reconnecting…"); break;
-      case "welcome": if (client) setState("ready", micOn ? "Listening. Ask another question." : "Ready. Tap the mic or type a question."); break;
+      case "welcome": // only after a reconnect: the first welcome arrives before client is set
+        if (!client || panel.dataset.state !== "connecting") break;
+        if (!e.resumed) say("note", "The connection came back as a new session, so I don't remember the earlier questions.");
+        setState("ready", micOn ? "Listening. Ask another question." : "Ready. Tap the mic or type a question.");
+        break;
       case "socket.closed": if (client) setState("ended", "Disconnected. Close and reopen to start again."); break;
     }
   };

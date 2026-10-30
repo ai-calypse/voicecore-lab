@@ -93,16 +93,58 @@ test("a dropped socket reconnects with the session and its key, and audio keeps 
   c.close();
 });
 
-test("three failed attempts at 0.5, 1 and 2 s end in socket.closed", async () => {
+test("retries outlast the 10 s resume window (0.5, 1, 2, 4, 4 s), then socket.closed", async () => {
   const { c, events } = await connected();
   FakeSocket.last.drop();
-  for (const ms of [500, 1000, 2000]) {
+  for (const ms of [500, 1000, 2000, 4000, 4000]) {
     await vi.advanceTimersByTimeAsync(ms);
     FakeSocket.last.drop(); // the gateway is not back
   }
   await vi.advanceTimersByTimeAsync(10_000);
-  expect(FakeSocket.all.length).toBe(4);
+  expect(FakeSocket.all.length).toBe(6);
   expect(events.filter((e) => e === "socket.closed")).toEqual(["socket.closed"]);
+  c.close();
+});
+
+test("a policy close (1008, 1007, 4002) is not retried", async () => {
+  for (const code of [1008, 1007, 4002]) {
+    const { c, events } = await connected();
+    FakeSocket.all = [];
+    FakeSocket.last.drop(code);
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect([FakeSocket.all.length, events.includes("socket.reconnecting"), events.at(-1)]).toEqual([0, false, "socket.closed"]);
+    c.close();
+  }
+});
+
+test("no fresh token is fetched when no attempt is left to use it", async () => {
+  let asked = 0;
+  const { c } = await connected({ getToken: async () => `t${++asked}`, retryDelaysMs: [500] });
+  FakeSocket.last.drop();
+  await vi.advanceTimersByTimeAsync(500);
+  FakeSocket.last.drop(4001);
+  await vi.advanceTimersByTimeAsync(5000);
+  expect(asked).toBe(0);
+  c.close();
+});
+
+test("the resume hint is a proper query parameter, also for a session given in the options", async () => {
+  vi.stubGlobal("WebSocket", FakeSocket);
+  const c = new VoiceClient({ url: "ws://gw/v1/ws?region=eu", token: "t", sessionId: "s-gw-1", resumeKey: "k" });
+  void c.connect().catch(() => {});
+  expect(FakeSocket.last.url).toBe("ws://gw/v1/ws?region=eu&resume=s-gw-1");
+  c.close();
+});
+
+test("close() during a reconnect stops it for good, even if connect() is called again", async () => {
+  const { c } = await connected();
+  FakeSocket.last.drop();
+  c.close();
+  await vi.advanceTimersByTimeAsync(400);
+  void c.connect().catch(() => {}); // a new session the app asked for
+  const sockets = FakeSocket.all.length;
+  await vi.advanceTimersByTimeAsync(10_000);
+  expect(FakeSocket.all.length).toBe(sockets); // the old loop opened nothing more
   c.close();
 });
 

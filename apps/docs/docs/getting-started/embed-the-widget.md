@@ -34,7 +34,7 @@ The widget derives both gateway addresses from `data-endpoint`:
 - the token request goes to `<endpoint>/v1/session`;
 - the WebSocket opens at the same URL with `http` replaced by `ws`, plus `/v1/ws`. An `https` endpoint therefore gives a `wss` WebSocket.
 
-If the connection drops, the widget says "Reconnecting…" and resumes the same session, so an answer in progress is not lost. It retries after 0.5, 1 and 2 s. After the 10 s resume window it starts a new session with a fresh token.
+If the connection drops, the widget says "Reconnecting…" and resumes the same session, so an answer in progress is not lost. It retries after 0.5, 1, 2, 4 and 4 s, which outlasts the gateway's 10 s resume window. After the window it starts a new session with a fresh token and says that it no longer remembers the earlier questions. A close for a broken rule, such as an invalid message, is not retried.
 
 Leave `data-endpoint` out only when the gateway serves the same origin as the page. This docs site sets it from `VOICECORE_GATEWAY`, default `http://localhost:8080`. The demo app sets it from `VITE_GATEWAY`, with the same default.
 
