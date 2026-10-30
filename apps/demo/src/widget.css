@@ -1,0 +1,98 @@
+:host { all: initial; }
+:host {
+  --bg: #ffffff;
+  --ink: #18191c;
+  --muted: #5d636e;
+  --line: #e3e4e7;
+  --soft: #f3f4f6;
+  --accent: #0f766e;
+  --accent-ink: #ffffff;
+  --user: #eef2f7;
+  --warn: #9a3412;
+  --o1: #14b8a6; --o2: #6366f1; --o3: #a3e635; --o4: #0ea5e9;
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--ink);
+}
+@media (prefers-color-scheme: dark) {
+  :host {
+    --bg: #1b1c20; --ink: #ecedf0; --muted: #a4aab5; --line: #30323a; --soft: #25272d;
+    --accent: #2dd4bf; --accent-ink: #062b28; --user: #262a33; --warn: #fdba74;
+  }
+}
+* { box-sizing: border-box; }
+/* Inheritance crosses the shadow boundary (a host page's "* { font-family: … !important }" reaches :host),
+   so the base font and colour are set on the widget's own top-level elements. */
+.launcher, .panel { font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); letter-spacing: normal; text-transform: none; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+svg { width: 20px; height: 20px; fill: currentColor; }
+[hidden] { display: none !important; }
+
+.launcher {
+  position: fixed; right: 20px; bottom: 20px; z-index: 2147483000;
+  display: flex; align-items: center; gap: 12px; padding: 8px 18px 8px 8px;
+  background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.12); font-size: 16px;
+}
+.orb {
+  display: block; border-radius: 50%;
+  background:
+    radial-gradient(circle at 28% 32%, color-mix(in srgb, var(--o3) 70%, transparent) 0 10%, transparent 34%),
+    radial-gradient(circle at 72% 28%, var(--o4) 0 18%, transparent 52%),
+    radial-gradient(circle at 62% 78%, var(--o2) 0 22%, transparent 58%),
+    radial-gradient(circle at 40% 60%, var(--o1) 0 30%, transparent 70%),
+    linear-gradient(135deg, var(--o4), var(--o2));
+  background-size: 160% 160%;
+  animation: drift 9s ease-in-out infinite alternate;
+}
+.orb.small { width: 40px; height: 40px; }
+.orb.big { width: 200px; height: 200px; }
+@keyframes drift { from { background-position: 0% 0%; } to { background-position: 100% 100%; } }
+@media (prefers-reduced-motion: reduce) { .orb { animation: none; } }
+
+.panel {
+  position: fixed; right: 20px; bottom: 20px; z-index: 2147483000;
+  width: 380px; height: min(620px, calc(100vh - 40px));
+  display: flex; flex-direction: column; gap: 12px; padding: 16px;
+  background: var(--bg); border: 1px solid var(--line); border-radius: 24px; box-shadow: 0 12px 40px rgb(0 0 0 / 0.18);
+}
+header { display: flex; align-items: center; justify-content: space-between; }
+.title { margin: 0; font-weight: 600; }
+.close { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--soft); }
+.stage { position: relative; display: grid; place-items: center; padding: 4px 0; }
+.stage .orb { transition: transform 0.4s ease, width 0.3s ease, height 0.3s ease; }
+.panel:has(.log > li) .orb.big { width: 112px; height: 112px; } /* once there is a conversation, give it the room */
+.panel:has(.log > li) .mic { width: 52px; height: 52px; }
+.panel[data-state="speaking"] .orb.big { transform: scale(1.04); }
+.panel[data-state="listening"] .orb.big { transform: scale(0.96); }
+.mic {
+  position: absolute; display: grid; place-items: center; width: 64px; height: 64px;
+  border: 0; border-radius: 50%; background: var(--bg); color: var(--ink); box-shadow: 0 2px 10px rgb(0 0 0 / 0.18);
+}
+.mic svg { width: 26px; height: 26px; }
+.mic[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.mic[disabled] { opacity: 0.45; cursor: not-allowed; }
+.status { margin: 0; text-align: center; color: var(--muted); font-size: 14px; min-height: 1.45em; }
+.panel[data-state="no-mic"] .status, .panel[data-state="error"] .status { color: var(--warn); }
+.log { flex: 1; min-height: 0; overflow-y: auto; list-style: none; margin: 0; padding: 0 2px; display: flex; flex-direction: column; gap: 8px; }
+.log > li { max-width: 88%; padding: 8px 12px; border-radius: 14px; overflow-wrap: anywhere; }
+.log > li.user { align-self: flex-end; background: var(--user); }
+.log > li.user.live { color: var(--muted); font-style: italic; }
+.log > li.agent { align-self: flex-start; background: var(--soft); }
+.log > li.note { align-self: center; color: var(--muted); font-size: 13px; }
+.cite { color: var(--accent); text-decoration: none; font-size: 12px; vertical-align: super; margin-left: 1px; }
+.sources { list-style: none; margin: 6px 0 0; padding: 6px 0 0; border-top: 1px solid var(--line); font-size: 13px; }
+.sources a { color: var(--accent); text-underline-offset: 2px; }
+.ask { display: flex; align-items: center; gap: 6px; padding: 4px 4px 4px 16px; border: 1px solid var(--line); border-radius: 999px; }
+.ask input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font: inherit; padding: 8px 0; }
+.ask input:focus { outline: none; }
+.ask:focus-within { border-color: var(--accent); }
+.send { display: grid; place-items: center; width: 38px; height: 38px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); }
+.send:hover { color: var(--accent); }
+.foot { margin: 0; text-align: center; font-size: 12px; color: var(--muted); }
+
+@media (max-width: 480px) {
+  .panel { right: 0; bottom: 0; width: 100%; height: 100dvh; border-radius: 0; border: 0; }
+  .orb.big { width: 150px; height: 150px; }
+  .launcher { right: 16px; bottom: 16px; }
+}

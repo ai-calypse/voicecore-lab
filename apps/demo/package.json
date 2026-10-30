@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "e2e": "playwright test"
+    "build:widget": "vite build -c vite.widget.config.ts",
+    "e2e": "vite build -c vite.widget.config.ts && playwright test"
   },
   "dependencies": {
     "@voicecore/web-sdk": "workspace:*"

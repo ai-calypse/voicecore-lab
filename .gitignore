@@ -10,3 +10,4 @@ fixtures/audio/local/
 test-results/
 playwright-report/
 dist/
+public/embed/
