@@ -1,0 +1,11 @@
+{
+  "name": "stt_drop",
+  "description": "The STT stream drops 800 ms into the user's speech. The session reconnects once, the new stream hears the audio since the last final again, and the turn is answered normally.",
+  "seed": 7,
+  "clip": "dev_single_02",
+  "stt_error_after_ms": 800,
+  "llm_first_token_ms": [100, 400],
+  "llm_token_ms": [5, 30],
+  "tts_first_audio_ms": [80, 300],
+  "expect": {"trace_counts": {"stt/reconnect": 1, "stt/error": 1}, "reply": "answer"}
+}

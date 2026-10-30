@@ -128,14 +128,15 @@ def with_noise(frames: np.ndarray, clip: dict, snr_db: float, seed: int, color: 
 
 
 async def run_clip(clip, *, llm=None, tts=None, stt=None, vad=None, policy=Policy(), tail_s=20.0, trace_sink=None,
-                   net_ms: int = 0, snr_db: float | None = None, seed: int = 0) -> dict:
-    """net_ms: one-way client<->session delay; snr_db: mix seeded pink noise into the mic at this SNR."""
+                   net_ms: int = 0, snr_db: float | None = None, seed: int = 0, **session_kw) -> dict:
+    """net_ms: one-way client<->session delay; snr_db: mix seeded pink noise into the mic at this SNR.
+    session_kw: more Session options (stt_factory, breakers) for chaos scenarios."""
     trace: list[dict] = []
     client = FakeClient(net_ms)
     sink = (lambda e: (trace.append(e), trace_sink(e))) if trace_sink else trace.append
     s = Session(clip["id"], llm=llm or MockLLM(LLMScript(tokens=[w + " " for w in DEFAULT_ANSWER.split()])),
                 tts=tts or MockTTS(), stt=stt or scripted_stt(clip), vad=vad or SileroVAD(), policy=policy,
-                tracer=Tracer(clip["id"], sink), send=client.receive)
+                tracer=Tracer(clip["id"], sink), send=client.receive, **session_kw)
     client.session = s
     await s.start()
     client.start()

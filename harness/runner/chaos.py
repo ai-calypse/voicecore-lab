@@ -4,19 +4,24 @@ Faults come only from mock configuration; network faults belong to the WSS/dummy
 """
 import json
 import random
+from collections import Counter
 from pathlib import Path
 
 from fixtures import load_manifest
 
 from voicecore.providers.base import ProviderError
-from voicecore.providers.mock import LLMScript, MockLLM, MockTTS
+from voicecore.providers.mock import LLMScript, MockLLM, MockSTT, MockTTS
+from voicecore.resilience import Breaker
+from voicecore.runtime.session import BUSY, REPROMPT, TROUBLE, VOICE_INPUT_DOWN
 
-from .inprocess import DEFAULT_ANSWER, run_clip
+from .inprocess import DEFAULT_ANSWER, run_clip, scripted_stt
 
 SCENARIOS = Path(__file__).resolve().parents[1] / "scenarios"
 
 
-def build(scenario: dict):
+def build(scenario: dict, clip: dict):
+    """The mock LLM and TTS for a scenario, plus Session options: an STT that drops (stt_error_after_ms) with its
+    reconnect factory, and breakers with the scenario's settings."""
     rng = random.Random(scenario["seed"])
     plan = list(scenario.get("llm_calls", []))
     tokens = [w + " " for w in DEFAULT_ANSWER.split()]
@@ -27,14 +32,34 @@ def build(scenario: dict):
                          token_ms=rng.randint(*scenario["llm_token_ms"]), stall_after=fault.get("stall_after"),
                          error=ProviderError(fault["error"], "injected") if "error" in fault else None)
 
-    return MockLLM(script), MockTTS(first_audio_ms=rng.randint(*scenario["tts_first_audio_ms"]))
+    kw = {}
+    if "stt_error_after_ms" in scenario:
+        kw["stt"] = MockSTT(canned=clip.get("transcript"), error_after_ms=scenario["stt_error_after_ms"])
+        kw["stt_factory"] = lambda: scripted_stt(clip)
+    if "breakers" in scenario:
+        kw["breakers"] = {p: Breaker(p, **cfg) for p, cfg in scenario["breakers"].items()}
+    return MockLLM(script), MockTTS(first_audio_ms=rng.randint(*scenario["tts_first_audio_ms"])), kw
 
 
 async def run_scenario(path: Path) -> dict:
     scenario = json.loads(path.read_text())
     clip = next(c for c in load_manifest()["clips"] if c["id"] == scenario["clip"])
-    llm, tts = build(scenario)
-    return await run_clip(clip, llm=llm, tts=tts)
+    llm, tts, kw = build(scenario, clip)
+    return await run_clip(clip, llm=llm, tts=tts, **kw)
+
+
+def verify(scenario: dict, run: dict) -> list[str]:
+    """A scenario's literal expectations ("expect"): trace event counts and what the user was told."""
+    exp, name = scenario.get("expect", {}), scenario["name"]
+    counts = Counter(f'{e["span"]}/{e["event"]}' for e in run["trace"])
+    fails = [f"{name}: {k} x{counts[k]}, want {n}" for k, n in exp.get("trace_counts", {}).items() if counts[k] != n]
+    texts = [e["text"] for e in run["client"] if e["type"] == "agent.text"]
+    want = exp.get("reply")
+    if want == "answer" and (not texts or texts[0] in (BUSY, REPROMPT, TROUBLE, VOICE_INPUT_DOWN)):
+        fails.append(f"{name}: replies {texts}, want an answer")
+    elif want in ("busy", "reprompt") and texts != [{"busy": BUSY, "reprompt": REPROMPT}[want]]:
+        fails.append(f"{name}: replies {texts}, want {want}")
+    return fails
 
 
 def normalized(run: dict) -> list:

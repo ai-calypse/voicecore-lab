@@ -10,6 +10,7 @@ import sys
 import looptime
 from bench import turn
 from fixtures import ROOT, SPEECH_CATEGORIES, load_manifest
+from runner.chaos import SCENARIOS, run_scenario, verify
 from runner.inprocess import run_barge_in, run_clip
 from timeline import percentile
 
@@ -23,11 +24,18 @@ async def measure() -> dict:
     totals = [t["total_ms"] for t in turns if t and t["total_ms"] is not None]
     barge = [await run_barge_in(c, clips=clips) for c in clips if c["split"] == "dev" and c["category"] in ("interrupt", "echo_only")]
     silence = [r["interrupt_to_silence_ms"] for r in barge if r["onset_ms"] is not None]
+    chaos = []  # every chaos scenario with literal expectations must meet them
+    for path in sorted((SCENARIOS / "chaos").glob("*.json")):
+        if "expect" in (scenario := json.loads(path.read_text())):
+            chaos += verify(scenario, await run_scenario(path))
+    for f in chaos:
+        print("CHAOS:", f)
     return {"turns": len(turns), "answered": len(totals), "early_cutoffs": sum(bool(t and t["early"]) for t in turns),
             "total_ms_p50": percentile(totals, 50) if totals else WORST, "total_ms_p95": percentile(totals, 95) if totals else WORST,
             "interrupts_silenced": sum(x is not None for x in silence),
             "interrupt_to_silence_ms_max": max((x for x in silence if x is not None), default=WORST),
-            "false_barge_ins": sum(r["barge_in_ms"] is not None for r in barge if r["onset_ms"] is None)}
+            "false_barge_ins": sum(r["barge_in_ms"] is not None for r in barge if r["onset_ms"] is None),
+            "chaos_failures": len(chaos)}
 
 
 def check(m: dict, t: dict) -> list[str]:

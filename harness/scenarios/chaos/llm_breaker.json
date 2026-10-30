@@ -1,0 +1,12 @@
+{
+  "name": "llm_breaker",
+  "description": "Three HTTP 429s in a row open an LLM breaker set to open after 3 failures. The fourth attempt is never made: the user hears that the agent is busy.",
+  "seed": 7,
+  "clip": "dev_single_02",
+  "llm_calls": [{"error": "rate_limited"}, {"error": "rate_limited"}, {"error": "rate_limited"}],
+  "breakers": {"llm": {"fail_max": 3}},
+  "llm_first_token_ms": [100, 400],
+  "llm_token_ms": [5, 30],
+  "tts_first_audio_ms": [80, 300],
+  "expect": {"trace_counts": {"llm/request": 3, "llm/error": 3, "llm/breaker_open": 1}, "reply": "busy"}
+}

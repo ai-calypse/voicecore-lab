@@ -22,3 +22,13 @@ def test_stall_and_429_with_seed_42_gives_an_identical_trace_twice():
     assert ("llm", "backoff") in events and ("llm", "stall") in events  # both injected faults happened
     texts = [e["text"] for e in a["client"] if e["type"] == "agent.text"]
     assert len(texts) == 1 and texts[0].endswith(REPROMPT)
+
+
+def test_stt_drop_and_llm_breaker_scenarios_meet_their_expectations():
+    import json
+
+    from runner.chaos import verify
+
+    for name in ("stt_drop", "llm_breaker"):
+        path = SCENARIOS / f"chaos/{name}.json"
+        assert verify(json.loads(path.read_text()), fresh_loop(run_scenario(path))) == []
