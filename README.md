@@ -13,6 +13,11 @@ flowchart LR
 
 ## Results (labelled; details and commands in each report)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="reports/latency_chart_dark.png">
+  <img alt="Stage medians of one voice turn. Live with the fixed 800 ms endpoint: 861 ms to detect the end of the turn, 939 ms LLM first token, 456 ms TTS first audio, 2,317 ms total. Live with ASR-assisted endpointing: 523, 1,289, 406 ms, 2,259 ms total. Mock providers with 40 sessions: 820, 314, 150 ms, 1,296 ms total." src="reports/latency_chart_light.png">
+</picture>
+
 | What | Result | Label | Source |
 |---|---|---|---|
 | User stops speaking → first agent audio rendered | p50 2,317 ms, p95 3,102 ms (n = 15) | live-provider | [reports/perf.md](reports/perf.md) |
