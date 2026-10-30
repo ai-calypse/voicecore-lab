@@ -107,8 +107,7 @@ Steps 00–08 are done, and Step 09 (production readiness) is in its last phase.
 - the manual acoustic barge-in and speaker/AEC checks;
 - the 20-answer manual audit ([reports/answer_audit.md](reports/answer_audit.md));
 - deploying the Fly app, with real Turnstile keys and rotated provider keys;
-- the live load test (about $0.17, not yet approved);
-- making the repository public.
+- the live load test (about $0.17, not yet approved).
 
 [EXECUTION_STATUS.md](EXECUTION_STATUS.md) tracks every step with its evidence.
 

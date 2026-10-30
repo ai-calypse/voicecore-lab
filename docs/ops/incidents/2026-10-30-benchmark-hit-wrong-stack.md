@@ -20,8 +20,8 @@ Noticed by the owner during the latency work; how exactly was not recorded. Noth
 | Time | Event |
 |---|---|
 | before 13:48 (not recorded) | a latency run measures the leftover stack |
-| 13:48 | fix committed with the latency work: the runner fails fast when a process it started has exited, for example because a Docker stack holds `:8080` ([8e2f982](https://github.com/ai-calypse/voicecore-lab/commit/8e2f982)) |
-| 17:39 | the runner also waits on the orchestrator's `/readyz` and stops if the process dies ([e112cef](https://github.com/ai-calypse/voicecore-lab/commit/e112cef)) |
+| 13:48 | fix committed with the latency work: the runner fails fast when a process it started has exited, for example because a Docker stack holds `:8080` ([733166d](https://github.com/ai-calypse/voicecore-lab/commit/733166d)) |
+| 17:39 | the runner also waits on the orchestrator's `/readyz` and stops if the process dies ([9ddf19a](https://github.com/ai-calypse/voicecore-lab/commit/9ddf19a)) |
 
 ## Root cause
 
@@ -38,8 +38,8 @@ Noticed by the owner during the latency work; how exactly was not recorded. Noth
 
 | Action | Owner | Link | Status |
 |---|---|---|---|
-| Runner fails fast if a process it started has exited | owner | [8e2f982](https://github.com/ai-calypse/voicecore-lab/commit/8e2f982) | done |
-| Runner waits on `/readyz` of its own orchestrator and watches it | owner | [e112cef](https://github.com/ai-calypse/voicecore-lab/commit/e112cef) | done |
+| Runner fails fast if a process it started has exited | owner | [733166d](https://github.com/ai-calypse/voicecore-lab/commit/733166d) | done |
+| Runner waits on `/readyz` of its own orchestrator and watches it | owner | [9ddf19a](https://github.com/ai-calypse/voicecore-lab/commit/9ddf19a) | done |
 | E2E tests on their own ports, never reusing a server, and refusing a live orchestrator | owner | [Step 09 Phase 0](../../step_09_production_readiness.md) | done |
 
 ## Blameless note

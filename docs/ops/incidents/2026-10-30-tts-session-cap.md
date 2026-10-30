@@ -20,8 +20,8 @@ A person noticed: "after few questions tts stopped". No alert existed for it; th
 | Time | Event |
 |---|---|
 | before 15:49 | the owner reports speech stopping after a few questions |
-| 15:49 | fix committed: Deepgram Aura-2 by default, larger caps, a spoken-cap notice ([fc6e3b1](https://github.com/ai-calypse/voicecore-lab/commit/fc6e3b1)) |
-| 15:58 | follow-up: dollar amounts read correctly ([8353aee](https://github.com/ai-calypse/voicecore-lab/commit/8353aee)) |
+| 15:49 | fix committed: Deepgram Aura-2 by default, larger caps, a spoken-cap notice ([8d9db6d](https://github.com/ai-calypse/voicecore-lab/commit/8d9db6d)) |
+| 15:58 | follow-up: dollar amounts read correctly ([e2cd332](https://github.com/ai-calypse/voicecore-lab/commit/e2cd332)) |
 
 ## Root cause
 
@@ -39,8 +39,8 @@ A person noticed: "after few questions tts stopped". No alert existed for it; th
 
 | Action | Owner | Link | Status |
 |---|---|---|---|
-| Deepgram Aura-2 TTS by default; 4,000-character session cap | owner | [fc6e3b1](https://github.com/ai-calypse/voicecore-lab/commit/fc6e3b1) | done |
-| Say once, as text, when speech hits its session cap (`VOICE_OFF`) | owner | [fc6e3b1](https://github.com/ai-calypse/voicecore-lab/commit/fc6e3b1) | done |
+| Deepgram Aura-2 TTS by default; 4,000-character session cap | owner | [8d9db6d](https://github.com/ai-calypse/voicecore-lab/commit/8d9db6d) | done |
+| Say once, as text, when speech hits its session cap (`VOICE_OFF`) | owner | [8d9db6d](https://github.com/ai-calypse/voicecore-lab/commit/8d9db6d) | done |
 | Count provider errors by kind, so a `fatal` TTS cap shows up | owner | Step 09 Phase 5 (`voicecore_provider_errors_total`) | done |
 | Alert when provider errors pass 2% of calls | owner | Step 09 Phase 5 (`ProviderErrorsHigh`) | done |
 
