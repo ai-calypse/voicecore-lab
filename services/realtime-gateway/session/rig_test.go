@@ -25,9 +25,13 @@ type rig struct {
 	gw   *Server
 	orch *fakeorch.Orch
 	http *http.Client
+	net  *memnet.Network
 }
 
-func run(t *testing.T, hold bool, f func(t *testing.T, r *rig)) {
+func run(t *testing.T, hold bool, f func(t *testing.T, r *rig)) { runCfg(t, hold, nil, f) }
+
+// runCfg is run with a chance to change the gateway config before it starts.
+func runCfg(t *testing.T, hold bool, mutate func(*Config), f func(t *testing.T, r *rig)) {
 	synctest.Test(t, func(t *testing.T) {
 		n := memnet.New()
 		orch := fakeorch.New()
@@ -39,10 +43,13 @@ func run(t *testing.T, hold bool, f func(t *testing.T, r *rig)) {
 		cfg := Defaults([]byte("test-secret"), "ws://orch:80")
 		cfg.HTTPClient = n.HTTPClient()
 		cfg.Log = slog.New(slog.DiscardHandler)
+		if mutate != nil {
+			mutate(&cfg)
+		}
 		gw := New(cfg)
 		gwSrv, gwLn := &http.Server{Handler: gw.Handler()}, n.Listen("gw:80")
 		go func() { _ = gwSrv.Serve(gwLn) }()
-		r := &rig{t: t, gw: gw, orch: orch, http: n.HTTPClient()}
+		r := &rig{t: t, gw: gw, orch: orch, http: n.HTTPClient(), net: n}
 		defer func() { // also runs after t.Fatal, so a failure does not turn into a bubble deadlock
 			if hold {
 				select {
@@ -62,8 +69,11 @@ func run(t *testing.T, hold bool, f func(t *testing.T, r *rig)) {
 	})
 }
 
-func (r *rig) token() string {
-	resp, err := r.http.Post("http://gw:80/v1/session", "application/json", nil)
+func (r *rig) token() string { return r.tokenVia(r.http) }
+
+// tokenVia asks for a session token as the client behind hc (memnet.HTTPClientFrom picks its address).
+func (r *rig) tokenVia(hc *http.Client) string {
+	resp, err := hc.Post("http://gw:80/v1/session", "application/json", nil)
 	if err != nil {
 		r.t.Fatal(err)
 	}
@@ -98,7 +108,12 @@ type client struct {
 
 // connect dials the gateway and sends hello; extra fields override the defaults.
 func (r *rig) connect(extra map[string]any, gate chan struct{}) *client {
-	ws, _, err := websocket.Dial(context.Background(), "ws://gw:80/v1/ws", &websocket.DialOptions{HTTPClient: r.http})
+	return r.connectVia(r.http, extra, gate)
+}
+
+// connectVia is connect as the client behind hc; a token in extra is used as is, otherwise one is minted through hc.
+func (r *rig) connectVia(hc *http.Client, extra map[string]any, gate chan struct{}) *client {
+	ws, _, err := websocket.Dial(context.Background(), "ws://gw:80/v1/ws", &websocket.DialOptions{HTTPClient: hc})
 	if err != nil {
 		r.t.Fatal(err)
 	}
@@ -123,7 +138,10 @@ func (r *rig) connect(extra map[string]any, gate chan struct{}) *client {
 			}
 		}
 	}()
-	h := map[string]any{"version": 1, "token": r.token(), "mic": map[string]any{"rate": 16000, "frame_ms": 20}, "playout": map[string]any{"rate": 24000}}
+	h := map[string]any{"version": 1, "mic": map[string]any{"rate": 16000, "frame_ms": 20}, "playout": map[string]any{"rate": 24000}}
+	if _, ok := extra["token"]; !ok {
+		h["token"] = r.tokenVia(hc)
+	}
 	for k, v := range extra {
 		h[k] = v
 	}

@@ -29,7 +29,7 @@ test("agent frames go to playout and agent.cancel reaches playout before the app
   const welcome = c.connect();
   await Promise.resolve();
   const ws = FakeSocket.last;
-  ws.deliver(JSON.stringify({ type: "welcome", session_id: "s-1", resume_window_ms: 10000, resumed: false }));
+  ws.deliver(JSON.stringify({ type: "welcome", session_id: "s-1", resume_key: "k1", resume_window_ms: 10000, resumed: false }));
   await welcome;
   expect(JSON.parse(ws.sent[0]!).type).toBe("hello");
   ws.deliver(encodeFrame({ kind: KIND_AGENT, flags: 0, stream_id: 3, sequence: 0, capture_us: 0n, generation_id: 3, payload: new Int16Array(480) }));
@@ -43,10 +43,11 @@ test("a reconnecting client resumes the session it was given", async () => {
   const c = new VoiceClient({ url: "ws://x", token: "t" });
   const first = c.connect();
   await Promise.resolve();
-  FakeSocket.last.deliver(JSON.stringify({ type: "welcome", session_id: "s-9", resume_window_ms: 10000, resumed: false }));
+  FakeSocket.last.deliver(JSON.stringify({ type: "welcome", session_id: "s-gw-9", resume_key: "k9", resume_window_ms: 10000, resumed: false }));
   await first;
   void c.connect().catch(() => {});
   await Promise.resolve();
-  expect(JSON.parse(FakeSocket.last.sent[0]!).session_id).toBe("s-9");
+  const hello = JSON.parse(FakeSocket.last.sent[0]!);
+  expect([hello.session_id, hello.resume_key]).toEqual(["s-gw-9", "k9"]); // the key proves the session is ours
   c.close();
 });

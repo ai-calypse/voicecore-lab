@@ -19,7 +19,7 @@ REQUIRED = {
     "playout.started": ["gen", "t_us"],
     "playout.stopped": ["gen", "reason", "t_us"],
     "cancel.ack": ["gen", "played_until_seq"],
-    "welcome": ["session_id", "resume_window_ms", "resumed"],
+    "welcome": ["session_id", "resume_key", "resume_window_ms", "resumed"],
     "pong": ["t_client_us", "t_server_us"],
     "user.speech_started": ["turn_id"],
     "transcript.partial": ["turn_id", "text"],

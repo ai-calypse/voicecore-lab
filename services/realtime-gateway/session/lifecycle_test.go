@@ -42,11 +42,11 @@ func TestResumeWithin10sKeepsSessionAndTellsUpstreamClientResumed(t *testing.T) 
 	run(t, false, func(t *testing.T, r *rig) {
 		c := r.connect(nil, nil)
 		var id, id2 string
-		_ = c.next("welcome").Get("session_id", &id)
+		id, key, _ := welcomeOf(c)
 		oc := r.upstream()
 		_ = c.ws.CloseNow()
 		time.Sleep(9 * time.Second)
-		w := r.connect(map[string]any{"session_id": id}, nil).next("welcome")
+		w := r.connect(map[string]any{"session_id": id, "resume_key": key}, nil).next("welcome")
 		var resumed bool
 		_ = w.Get("session_id", &id2)
 		_ = w.Get("resumed", &resumed)
@@ -68,7 +68,7 @@ func TestResumeDropsAudioQueuedWhileAway(t *testing.T) {
 	run(t, false, func(t *testing.T, r *rig) {
 		c := r.connect(nil, nil)
 		var id string
-		_ = c.next("welcome").Get("session_id", &id)
+		id, key, _ := welcomeOf(c)
 		oc := r.upstream()
 		_ = c.ws.CloseNow()
 		synctest.Wait()
@@ -77,7 +77,7 @@ func TestResumeDropsAudioQueuedWhileAway(t *testing.T) {
 				(protocol.Frame{Kind: protocol.KindAgent, StreamID: 3, Sequence: s, GenerationID: 3, Payload: make([]int16, 480)}).Encode())
 		}
 		synctest.Wait()
-		c2 := r.connect(map[string]any{"session_id": id}, nil)
+		c2 := r.connect(map[string]any{"session_id": id, "resume_key": key}, nil)
 		c2.next("welcome")
 		_ = oc.WS.Write(context.Background(), websocket.MessageBinary,
 			(protocol.Frame{Kind: protocol.KindAgent, StreamID: 4, GenerationID: 4, Payload: make([]int16, 480)}).Encode())
@@ -95,12 +95,12 @@ func TestResumeAfter10sStartsNewSession(t *testing.T) {
 	run(t, false, func(t *testing.T, r *rig) {
 		c := r.connect(nil, nil)
 		var id, id2 string
-		_ = c.next("welcome").Get("session_id", &id)
+		id, key, _ := welcomeOf(c)
 		oc := r.upstream()
 		_ = c.ws.CloseNow()
 		time.Sleep(11 * time.Second)
 		<-oc.Closed
-		w := r.connect(map[string]any{"session_id": id}, nil).next("welcome")
+		w := r.connect(map[string]any{"session_id": id, "resume_key": key}, nil).next("welcome")
 		var resumed bool
 		_ = w.Get("session_id", &id2)
 		_ = w.Get("resumed", &resumed)
@@ -184,9 +184,9 @@ func TestNoGoroutinesLeftAfterStopExpireOrResume(t *testing.T) {
 
 		resume := r.connect(nil, nil)
 		var id string
-		_ = resume.next("welcome").Get("session_id", &id)
+		id, key, _ := welcomeOf(resume)
 		_ = resume.ws.CloseNow()
-		again := r.connect(map[string]any{"session_id": id}, nil)
+		again := r.connect(map[string]any{"session_id": id, "resume_key": key}, nil)
 		again.next("welcome")
 		_ = again.ws.Close(websocket.StatusNormalClosure, "")
 		synctest.Wait()

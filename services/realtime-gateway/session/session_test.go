@@ -227,7 +227,7 @@ func TestSequenceGapAfterResumeIsCounted(t *testing.T) {
 	run(t, false, func(t *testing.T, r *rig) {
 		c := r.connect(nil, nil)
 		var id string
-		_ = c.next("welcome").Get("session_id", &id)
+		id, key, _ := welcomeOf(c)
 		oc := r.upstream()
 		for s := range uint32(5) {
 			c.mic(1, s)
@@ -235,7 +235,7 @@ func TestSequenceGapAfterResumeIsCounted(t *testing.T) {
 		synctest.Wait()
 		_ = c.ws.CloseNow() // network loss: no close frame
 		time.Sleep(2 * time.Second)
-		c2 := r.connect(map[string]any{"session_id": id}, nil)
+		c2 := r.connect(map[string]any{"session_id": id, "resume_key": key}, nil)
 		c2.next("welcome")
 		c2.mic(1, 8)
 		if got := seqs(oc); !reflect.DeepEqual(got, []uint32{0, 1, 2, 3, 4, 8}) {

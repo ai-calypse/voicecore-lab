@@ -7,8 +7,10 @@ import (
 	"flag"
 	"log/slog"
 	"net/http"
+	"net/netip"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"syscall"
 	"time"
@@ -28,6 +30,8 @@ func main() {
 	maxSessions := flag.Int("max-sessions", 50, "live sessions in total (0 = no limit)")
 	tokensPerMin := flag.Float64("tokens-per-minute", 10, "session tokens per client IP per minute (0 = no limit)")
 	hosts := flag.String("hosts", "localhost,127.0.0.1,::1", "allowed Host header names, comma separated; empty allows any (blocks DNS rebinding)")
+	copyID := flag.String("copy-id", "gw", "this gateway copy's id, inside every session id (routes resumes to the owner)")
+	trusted := flag.String("trusted-proxies", "", "comma-separated CIDRs whose X-Forwarded-For is believed (e.g. the load balancer)")
 	probe := flag.String("probe", "", "GET this URL and exit 0 on HTTP 200, else 1 (container healthcheck; the image has no curl)")
 	drain := flag.Duration("drain", 25*time.Second, "on SIGTERM, how long open sessions may finish before they are ended")
 	flag.Parse()
@@ -42,6 +46,21 @@ func main() {
 	}
 	cfg := session.Defaults(secret, *upstream)
 	cfg.Version = version
+	if !regexp.MustCompile(`^[a-z0-9]{1,32}$`).MatchString(*copyID) { // it goes into URL paths and the LB's "s-<id>-" prefix match
+		slog.Error("-copy-id must be 1-32 lowercase letters or digits", "copy_id", *copyID)
+		os.Exit(2)
+	}
+	cfg.CopyID = *copyID
+	for _, c := range strings.Split(*trusted, ",") {
+		if c = strings.TrimSpace(c); c != "" {
+			p, err := netip.ParsePrefix(c)
+			if err != nil {
+				slog.Error("bad -trusted-proxies entry", "cidr", c, "err", err)
+				os.Exit(2)
+			}
+			cfg.TrustedProxies = append(cfg.TrustedProxies, p)
+		}
+	}
 	cfg.Origins = strings.Split(*origins, ",")
 	cfg.MaxSessionsPerIP, cfg.MaxSessions, cfg.TokensPerMinute = *perIP, *maxSessions, *tokensPerMin
 	if *hosts != "" {

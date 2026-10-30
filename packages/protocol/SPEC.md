@@ -33,7 +33,7 @@ JSON text messages with a `type` field. Fields listed below are **required**; re
 
 | `type` | Required fields | Meaning |
 |---|---|---|
-| `hello` | `version`, `token`, `mic{rate,frame_ms}`, `playout{rate}` | first message. Optional `session_id` asks to resume that session |
+| `hello` | `version`, `token`, `mic{rate,frame_ms}`, `playout{rate}` | first message. Optional `session_id` plus `resume_key` (from `welcome`) resume that session |
 | `ping` | `t_client_us` | heartbeat and clock-offset probe, every 2 s |
 | `text.input` | `text` | typed user question |
 | `mic.revoked` | — | the user stopped or lost the microphone; the session stays open for text |
@@ -47,7 +47,7 @@ JSON text messages with a `type` field. Fields listed below are **required**; re
 
 | `type` | Required fields | Meaning |
 |---|---|---|
-| `welcome` | `session_id`, `resume_window_ms`, `resumed` | reply to a valid `hello` |
+| `welcome` | `session_id`, `resume_key`, `resume_window_ms`, `resumed` | reply to a valid `hello`. `session_id` is `s-<copy id>-<16 hex>`; `resume_key` (64 hex) is the only proof of ownership for a resume |
 | `pong` | `t_client_us`, `t_server_us` | reply to `ping` (sent by the gateway) |
 | `user.speech_started` | `turn_id` | floor: the user started speaking |
 | `transcript.partial` | `turn_id`, `text` | interim transcript |
@@ -85,12 +85,13 @@ Every agent frame carries `generation_id`. When generation `g` is cancelled, eac
 
 ## 4. Session rules (gateway)
 
-- `POST /v1/session` returns `{token}`: an HMAC-SHA256 token valid for 60 s (development only).
+- `POST /v1/session` returns `{token}`, valid for 60 s (format below).
 - The first message must be `hello` within 5 s. Bad or expired token → 4001. `version` ≠ 1, mic rate ≠ 16000, `frame_ms` ≠ 20 or playout rate ≠ 24000 → 4002.
 - Mic frames per stream: `sequence` equal to the last one → dropped, counted `drops_duplicate`; lower → dropped, counted `drops_stale`; higher than last + 1 → forwarded, the missing count is added to `gaps`.
 - The upstream queue holds at most 50 frames (1 s); when full the oldest frame is dropped and counted `drops_overload`. The client-bound queue holds at most 1,500 agent frames (30 s); overflow is counted `drops_overload_out`.
 - No message from the client for 10 s → close 4003.
-- Resume: a `hello` with the `session_id` of a disconnected session within 10 s keeps the session (and its upstream connection), fences the newest agent generation (audio queued while the client was away is dropped) and sends `client.resumed` upstream; later, a new session starts. Clients pick a random first `stream_id` so a resumed session never sees a reused stream.
+- Tokens: `POST /v1/session` returns `<expiry>.<nonce>.<HMAC(expiry.nonce.client IP)>`. A token starts **one** session, only from the IP it was minted for (4001 otherwise). A `hello` refused with 1013 or 1011 does not use it up. The client IP is the peer address, or `X-Forwarded-For` only through `-trusted-proxies`.
+- Resume: a `hello` with the `session_id` and matching `resume_key` of a disconnected session within 10 s keeps the session (and its upstream connection). The token may already be spent then. A wrong or missing key, or a `hello` after the window, is a new session and needs an unused token: a spent one gets 4001, so the client fetches a fresh token. The resume fences the newest agent generation (audio queued while the client was away is dropped) and sends `client.resumed` upstream. Clients pick a random first `stream_id` so a resumed session never sees a reused stream.
 - `GET /debug/counters` returns the counters and queue depth as JSON.
 - Abuse limits (defaults; flags on `cmd/gateway`):
   - Requests whose `Host` is not allow-listed are refused with 421 (`localhost`, `127.0.0.1`, `::1`).

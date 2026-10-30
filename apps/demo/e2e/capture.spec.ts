@@ -13,7 +13,7 @@ test("test WS server gets 0 binary frames before start(), then 20 ms frames at 1
     else {
       const e = decodeEvent(String(data));
       events.push(e.type);
-      if (e.type === "hello") ws.send(JSON.stringify({ type: "welcome", session_id: "s-test", resume_window_ms: 10000, resumed: false }));
+      if (e.type === "hello") ws.send(JSON.stringify({ type: "welcome", session_id: "s-gw-test", resume_key: "k", resume_window_ms: 10000, resumed: false }));
     }
   }));
   await once(wss, "listening");

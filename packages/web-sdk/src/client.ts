@@ -6,7 +6,8 @@ import type { PlayoutHandle } from "./playout/worklet-adapter.ts";
 export type ClientOptions = {
   url: string;
   token: string;
-  sessionId?: string; // resume this session
+  sessionId?: string; // resume this session (with its resumeKey)
+  resumeKey?: string; // from welcome: the proof that the session is ours
   nowUs?: () => number;
   startMic?: typeof startCapture; // injectable for headless clients
 };
@@ -18,6 +19,7 @@ export class VoiceClient {
   /** where agent audio goes; agent.cancel is applied to it before onEvent sees the event */
   playout?: Pick<PlayoutHandle, "push" | "cancel">;
   sessionId?: string;
+  resumeKey?: string;
   /** server clock minus client clock in us, from the last pong (NaN until the first one) */
   offsetUs = NaN;
   private ws?: WebSocket;
@@ -40,7 +42,9 @@ export class VoiceClient {
       this.ws = ws;
       ws.onopen = () => this.send({
         type: "hello", version: 1, token: this.opts.token, mic: { rate: 16000, frame_ms: 20 }, playout: { rate: 24000 },
-        ...(this.sessionId ?? this.opts.sessionId ? { session_id: this.sessionId ?? this.opts.sessionId } : {}),
+        ...(this.sessionId ?? this.opts.sessionId
+          ? { session_id: this.sessionId ?? this.opts.sessionId, resume_key: this.resumeKey ?? this.opts.resumeKey }
+          : {}),
       });
       ws.onerror = () => reject(new Error("websocket error"));
       ws.onclose = (c) => { this.stop(); reject(new Error(`closed ${c.code} ${c.reason}`)); this.onEvent({ type: "socket.closed", code: c.code }); };
@@ -54,6 +58,7 @@ export class VoiceClient {
         if (e.type === "agent.cancel") this.playout?.cancel(e.gen as number);
         if (e.type === "welcome") {
           this.sessionId = e.session_id as string;
+          this.resumeKey = e.resume_key as string;
           this.pinger = setInterval(() => this.send({ type: "ping", t_client_us: Math.round(this.nowUs()) }), 2000);
           resolve(e);
         } else if (e.type === "pong") {

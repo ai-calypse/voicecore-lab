@@ -15,6 +15,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/netip"
 	"strconv"
 	"strings"
 	"sync"
@@ -39,6 +40,9 @@ type Config struct {
 	Log          *slog.Logger
 	Trace        io.Writer // SPEC.md section 5 JSON lines; nil = off
 	Version      string    // reported by /healthz
+	CopyID       string    // this gateway copy's id, inside every session id (multi-copy routing); default "gw"
+
+	TrustedProxies []netip.Prefix // X-Forwarded-For is believed only from these peers
 
 	// Abuse limits (security review 2026-10-30). Zero means no limit.
 	Hosts            []string      // allowed Host header names (DNS rebinding); empty = any
@@ -52,7 +56,7 @@ type Config struct {
 
 func Defaults(secret []byte, upstream string) Config {
 	return Config{Secret: secret, Upstream: upstream, TokenTTL: 60 * time.Second, HelloTimeout: 5 * time.Second,
-		Heartbeat: 10 * time.Second, ResumeWindow: 10 * time.Second, QueueCap: 50, OutCap: 1500, Log: slog.Default(), Version: "dev",
+		Heartbeat: 10 * time.Second, ResumeWindow: 10 * time.Second, QueueCap: 50, OutCap: 1500, Log: slog.Default(), Version: "dev", CopyID: "gw",
 		MaxSessions: 50, MaxSessionsPerIP: 4, MaxSessionAge: 15 * time.Minute, TextMaxChars: 500, MaxQueuedEvents: 256,
 		TokensPerMinute: 10}
 }
@@ -74,6 +78,8 @@ type Server struct {
 	pending  int                // sessions being dialled
 	tokens   map[string]*bucket // token issuance per client IP
 	draining atomic.Bool        // no new sessions; open ones (and their resumes) continue
+	nonces   map[string]int64   // used token nonces until their expiry (unix s): a token starts one session
+	swept    int64              // unix s of the last nonce sweep
 }
 
 // bucket is a token bucket: rate per second, up to burst.
@@ -140,7 +146,11 @@ func New(cfg Config) *Server {
 	if cfg.HTTPClient == nil {
 		cfg.HTTPClient = http.DefaultClient
 	}
-	return &Server{cfg: cfg, start: time.Now(), sessions: map[string]*session{}, perIP: map[string]int{}, tokens: map[string]*bucket{}}
+	if cfg.CopyID == "" {
+		cfg.CopyID = "gw"
+	}
+	return &Server{cfg: cfg, start: time.Now(), sessions: map[string]*session{}, perIP: map[string]int{}, tokens: map[string]*bucket{},
+		nonces: map[string]int64{}}
 }
 
 func (s *Server) Handler() http.Handler {
@@ -161,7 +171,7 @@ func (s *Server) Handler() http.Handler {
 			http.Error(w, "draining", http.StatusServiceUnavailable)
 			return
 		}
-		ip := clientIP(r.RemoteAddr)
+		ip := s.clientIP(r)
 		s.mu.Lock()
 		if len(s.tokens) > 10_000 { // ponytail: crude reset bounds memory; use an LRU if this ever serves the internet
 			s.tokens = map[string]*bucket{}
@@ -178,7 +188,7 @@ func (s *Server) Handler() http.Handler {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]string{"token": s.Token()})
+		_ = json.NewEncoder(w).Encode(map[string]string{"token": s.Token(ip)})
 	})
 	mux.HandleFunc("GET /v1/ws", s.serveWS)
 	mux.HandleFunc("GET /debug/counters", func(w http.ResponseWriter, r *http.Request) {
@@ -225,10 +235,13 @@ func (s *Server) Close() {
 	s.wg.Wait()
 }
 
-// Token is "<expiry unix seconds>.<hex HMAC-SHA256 of the expiry>".
-func (s *Server) Token() string {
+// Token is "<expiry unix s>.<nonce>.<hex HMAC-SHA256 of expiry.nonce.client IP>": it starts one session, from that IP.
+func (s *Server) Token(ip string) string {
 	exp := strconv.FormatInt(time.Now().Add(s.cfg.TokenTTL).Unix(), 10)
-	return exp + "." + s.sign(exp)
+	n := make([]byte, 8)
+	_, _ = rand.Read(n)
+	nonce := hex.EncodeToString(n)
+	return exp + "." + nonce + "." + s.sign(exp+"."+nonce+"."+ip)
 }
 
 func (s *Server) sign(msg string) string {
@@ -237,13 +250,39 @@ func (s *Server) sign(msg string) string {
 	return hex.EncodeToString(m.Sum(nil))
 }
 
-func (s *Server) validToken(tok string) bool {
-	exp, mac, ok := strings.Cut(tok, ".")
-	if !ok || !hmac.Equal([]byte(mac), []byte(s.sign(exp))) {
-		return false
+// useToken checks a token for this client IP and spends its nonce: valid once, from the IP it was minted for.
+// It returns the spent nonce, which the caller gives back with unspend when no session was started.
+func (s *Server) useToken(tok, ip string) (string, bool) {
+	parts := strings.Split(tok, ".")
+	if len(parts) != 3 || !hmac.Equal([]byte(parts[2]), []byte(s.sign(parts[0]+"."+parts[1]+"."+ip))) {
+		return "", false
 	}
-	t, err := strconv.ParseInt(exp, 10, 64)
-	return err == nil && time.Now().Unix() < t
+	exp, err := strconv.ParseInt(parts[0], 10, 64)
+	now := time.Now().Unix()
+	if err != nil || now >= exp {
+		return "", false
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if now != s.swept { // at most one linear sweep per second, so a burst of hellos does not rescan the map each time
+		s.swept = now
+		for n, e := range s.nonces {
+			if e <= now {
+				delete(s.nonces, n)
+			}
+		}
+	}
+	if _, used := s.nonces[parts[1]]; used {
+		return "", false
+	}
+	s.nonces[parts[1]] = exp
+	return parts[1], true
+}
+
+func (s *Server) unspend(nonce string) {
+	s.mu.Lock()
+	delete(s.nonces, nonce)
+	s.mu.Unlock()
 }
 
 func (s *Server) monoUS() int64 { return time.Since(s.start).Microseconds() }
@@ -252,6 +291,7 @@ type hello struct {
 	Version   int    `json:"version"`
 	Token     string `json:"token"`
 	SessionID string `json:"session_id"`
+	ResumeKey string `json:"resume_key"`
 	Mic       struct {
 		Rate    int `json:"rate"`
 		FrameMS int `json:"frame_ms"`
@@ -275,7 +315,7 @@ func (s *Server) serveWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c.SetReadLimit(64 << 10)
-	ss, resumed, code, reason := s.hello(c, clientIP(r.RemoteAddr))
+	ss, resumed, code, reason := s.hello(c, s.clientIP(r))
 	if code != 0 {
 		_ = c.Close(code, reason)
 		return
@@ -300,21 +340,25 @@ func (s *Server) hello(c *websocket.Conn, ip string) (ss *session, resumed bool,
 	if e, err := protocol.DecodeEvent(b); typ != websocket.MessageText || err != nil || e.Type() != "hello" || json.Unmarshal(b, &h) != nil {
 		return nil, false, statusPolicy, "first message must be hello"
 	}
-	if !s.validToken(h.Token) {
-		return nil, false, statusBadToken, "invalid or expired token"
-	}
 	if h.Version != 1 || h.Mic.Rate != 16000 || h.Mic.FrameMS != 20 || h.Playout.Rate != 24000 {
 		return nil, false, statusBadFormat, "unsupported version or audio format"
 	}
-	if h.SessionID != "" {
+	if h.SessionID != "" && h.ResumeKey != "" { // the key proves ownership, so a spent token is fine on a reconnect
 		s.mu.Lock()
 		old := s.sessions[h.SessionID]
 		s.mu.Unlock()
-		if old != nil && old.claim() {
+		if old != nil && hmac.Equal([]byte(h.ResumeKey), []byte(old.resumeKey)) && old.claim() {
 			return old, true, 0, ""
 		}
 	}
+	nonce, ok := s.useToken(h.Token, ip)
+	if !ok {
+		return nil, false, statusBadToken, "invalid, expired or already used token"
+	}
 	ss, err = s.newSession(ip) // resumes above still work while draining; new sessions do not
+	if err != nil {
+		s.unspend(nonce) // no session started, so "try again later" can reuse the token
+	}
 	switch {
 	case errors.Is(err, errDraining):
 		return nil, false, websocket.StatusTryAgainLater, "draining"
@@ -355,7 +399,9 @@ func (s *Server) newSession(ip string) (*session, error) {
 	}()
 	id := make([]byte, 8)
 	_, _ = rand.Read(id)
-	sid := "s-" + hex.EncodeToString(id)
+	sid := "s-" + s.cfg.CopyID + "-" + hex.EncodeToString(id)
+	key := make([]byte, 32)
+	_, _ = rand.Read(key)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	up, resp, err := websocket.Dial(ctx, s.cfg.Upstream+"/v1/session/"+sid, &websocket.DialOptions{HTTPClient: s.cfg.HTTPClient})
@@ -367,7 +413,7 @@ func (s *Server) newSession(ip string) (*session, error) {
 	}
 	up.SetReadLimit(1 << 20)
 	upCtx, cancelUp := context.WithCancel(context.Background())
-	ss := &session{id: sid, ip: ip, srv: s, up: up, upCtx: upCtx, cancelUp: cancelUp, claimed: true,
+	ss := &session{id: sid, resumeKey: hex.EncodeToString(key), ip: ip, srv: s, up: up, upCtx: upCtx, cancelUp: cancelUp, claimed: true,
 		upq: newQueue(s.cfg.QueueCap, &s.c.DropsOverload, s.cfg.MaxQueuedEvents), outq: newQueue(s.cfg.OutCap, &s.c.DropsOverloadOut, 0),
 		lastSeq: map[uint32]uint32{}, revoked: map[uint32]bool{}}
 	s.mu.Lock()
@@ -431,4 +477,45 @@ func ProbeWith(c *http.Client, url string) int {
 		return 1
 	}
 	return 0
+}
+
+// clientIP is the address limits and token binding use. X-Forwarded-For counts only when the peer is a trusted
+// proxy; then the rightmost address that is not a trusted proxy is the client (the left part can be spoofed).
+func (s *Server) clientIP(r *http.Request) string {
+	peer := clientIP(r.RemoteAddr)
+	if !s.trusted(peer) {
+		return peer
+	}
+	hops := strings.Split(strings.Join(r.Header.Values("X-Forwarded-For"), ","), ",") // every header line, in order
+	for i := len(hops) - 1; i >= 0; i-- {
+		h := strings.TrimSpace(hops[i])
+		if h == "" {
+			continue
+		}
+		a, err := netip.ParseAddr(strings.Trim(h, "[]"))
+		if err != nil { // some proxies write ip:port
+			ap, err2 := netip.ParseAddrPort(h)
+			if err2 != nil {
+				return peer // garbage: key on the proxy rather than on a string the client may have chosen
+			}
+			a = ap.Addr()
+		}
+		if ip := a.Unmap().String(); !s.trusted(ip) {
+			return ip
+		}
+	}
+	return peer
+}
+
+func (s *Server) trusted(ip string) bool {
+	a, err := netip.ParseAddr(ip)
+	if err != nil {
+		return false
+	}
+	for _, p := range s.cfg.TrustedProxies {
+		if p.Contains(a.Unmap()) {
+			return true
+		}
+	}
+	return false
 }

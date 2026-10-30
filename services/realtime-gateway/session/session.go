@@ -19,6 +19,7 @@ var clientEvents = map[string]bool{"ping": true, "text.input": true, "mic.revoke
 // for the resume window after the client drops.
 type session struct {
 	id        string
+	resumeKey string // 32 random bytes, hex; given only to the client in welcome, required to resume
 	ip        string
 	ageTimer  *time.Timer
 	srv       *Server
@@ -76,7 +77,7 @@ func (ss *session) attach(c *websocket.Conn, resumed bool) {
 		ss.srv.c.DropsFenced.Add(int64(ss.outq.purge(fence)))
 		ss.upq.push(item{data: protocol.NewEvent("client.resumed", nil)})
 	}
-	welcome := protocol.NewEvent("welcome", map[string]any{"session_id": ss.id,
+	welcome := protocol.NewEvent("welcome", map[string]any{"session_id": ss.id, "resume_key": ss.resumeKey,
 		"resume_window_ms": ss.srv.cfg.ResumeWindow.Milliseconds(), "resumed": resumed})
 	end := false
 	if c.Write(context.Background(), websocket.MessageText, welcome) == nil {
