@@ -58,9 +58,9 @@ This happens only with live providers. Every live session reserves its speech-to
 
 What you see:
 
-- the orchestrator logs `session <id> refused:` with the pool, the amount spent, the amount requested and the cap;
+- the orchestrator logs `session refused:` with the pool, the amount spent, the amount requested and the cap, and the fields `session_id` and `reason: budget`;
 - the client receives `session.ended` with reason `budget`; the widget says "The session ended. Close and reopen to start again.";
-- the gateway then ends its side too, so a second `session.ended` with reason `error` can follow.
+- the gateway forwards that one `session.ended` and ends its side with the same reason.
 
 Check `benchmarks/spend_ledger.json`. Its `totals` and `caps` fields show where each pool stands. Entries still marked `reserved` belong to sessions that never settled, for example after a crash, and count their full worst case. Mock providers never touch the ledger, so `--providers mock` always works.
 

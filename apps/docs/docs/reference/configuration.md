@@ -98,6 +98,7 @@ VoiceCore reads the environment variables below. Only the three provider keys ar
 | `OPENROUTER_API_KEY` | orchestrator | OpenRouter key, live mode only |
 | `CARTESIA_API_KEY` | orchestrator | Cartesia key, only for `--tts cartesia` |
 | `GATEWAY_SECRET` | gateway | fixed secret for session tokens; otherwise a random secret per gateway process |
+| `LOG_FORMAT` | gateway, orchestrator | `json` for one JSON object per log line (docker compose sets it); anything else, or unset, gives plain text |
 | `VOICECORE_LEDGER` | orchestrator, harness | path of the spend ledger; default `benchmarks/spend_ledger.json` |
 | `PROVIDERS` | docker compose | `mock` (default) or `live`, passed to the orchestrator |
 | `HOST_UID`, `HOST_GID` | docker compose | user the orchestrator container runs as; default 10001 |
@@ -117,6 +118,12 @@ The orchestrator reads each provider key with `voicecore.keys.key(name)`:
 Keys never leave the server. The browser only ever gets a 60 s gateway session token, and the orchestrator talks to the providers itself. Mock mode needs no keys at all, so an empty `.env`, or none, is fine for mock runs.
 
 In Docker, compose loads `.env` into the orchestrator container if the file exists (`required: false`), and passes only `GATEWAY_SECRET` to the gateway. The rule in `keys.py` is that keys are never logged.
+
+## Log lines
+
+Both services write one line per event: the gateway to stderr, the orchestrator to stdout. With `LOG_FORMAT=json`, each line is a JSON object with `ts`, `level`, `logger` (orchestrator only) and `msg`, plus only these fields when they apply: `session_id`, `gen`, `kind`, `reason`, `provider` and `duration_ms`, and `exc` with the traceback when an exception is logged. The orchestrator's formatter drops every other field, so a transcript passed by mistake never reaches a log. It also replaces the loaded provider key values, and anything shaped like an OpenRouter or Cartesia key or a `Token` header value, with `[redacted]`.
+
+Each session logs `session started` and `session ended`; the gateway's end line has the `reason`, and both have `duration_ms`. A provider failure logs `provider error` with `provider` (`stt`, `llm` or `tts`) and `kind` (`retryable`, `rate_limited` or `fatal`). A bug in VoiceCore's own answer code logs `answer failed` with its traceback instead, so it is never counted as a provider failure. A malformed client message logs `protocol error` with only the exception type as `kind`, because the message text could echo what the client sent. Logs never contain transcripts, answers, audio, keys, tokens or the resume key. To follow one session, filter on its `session_id`.
 
 ## Run the stack with docker compose
 
