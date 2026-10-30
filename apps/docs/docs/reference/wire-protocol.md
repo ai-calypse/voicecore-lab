@@ -78,7 +78,7 @@ These are the events a client sends to the gateway, the browser SDK or any other
 
 | `type` | Required fields | Meaning |
 |---|---|---|
-| `hello` | `version`, `token`, `mic{rate,frame_ms}`, `playout{rate}` | first message; optional `session_id` asks to resume that session |
+| `hello` | `version`, `token`, `mic{rate,frame_ms}`, `playout{rate}` | first message; optional `session_id` plus `resume_key` resume that session |
 | `ping` | `t_client_us` | heartbeat and clock-offset probe, every 2 s |
 | `text.input` | `text` | a typed user question |
 | `mic.revoked` | none | the user stopped or lost the microphone; the session stays open for text |
@@ -96,7 +96,7 @@ These events reach the client. The gateway sends `welcome`, `pong` and its own `
 
 | `type` | Required fields | Meaning |
 |---|---|---|
-| `welcome` | `session_id`, `resume_window_ms`, `resumed` | reply to a valid `hello` |
+| `welcome` | `session_id`, `resume_key`, `resume_window_ms`, `resumed` | reply to a valid `hello`; `session_id` is `s-<copy id>-<16 hex>`, and `resume_key` (64 hex) is the proof needed to resume |
 | `pong` | `t_client_us`, `t_server_us` | reply to `ping`, sent by the gateway |
 | `user.speech_started` | `turn_id` | turn-taking: the user started speaking |
 | `transcript.partial` | `turn_id`, `text` | interim transcript |
@@ -117,7 +117,7 @@ One event exists only on the gateway-to-orchestrator hop:
 |---|---|---|
 | `client.resumed` | none | the client reconnected within the resume window; the orchestrator cancels the live generation so nothing is spoken twice |
 
-The gateway sends `client.resumed` when a client sends `hello` with the `session_id` of a session that disconnected less than 10 s ago. The gateway keeps the session and its upstream connection open during that window. The orchestrator answers by cancelling the generation that was playing, because the audio queued while the client was away is lost and must not be replayed later. All other orchestrator input is either a forwarded client event or a mic frame.
+The gateway sends `client.resumed` when a client sends `hello` with the `session_id` and `resume_key` of a session that disconnected less than 10 s ago. The gateway keeps the session and its upstream connection open during that window. The orchestrator answers by cancelling the generation that was playing, because the audio queued while the client was away is lost and must not be replayed later. All other orchestrator input is either a forwarded client event or a mic frame.
 
 ## Generation fencing rule
 
@@ -153,9 +153,10 @@ Codes 1000, 1007, 1008, 1011 and 1013 are standard WebSocket codes. The 4000-ran
 
 The gateway enforces these rules at the start of every session:
 
-- `POST /v1/session` returns `{token}`, an HMAC-SHA256 token valid for 60 s. It is for development only. The secret comes from `GATEWAY_SECRET`, or is random per gateway process when that is unset.
+- `POST /v1/session` returns `{token}`: `<expiry>.<nonce>.<HMAC-SHA256 of expiry.nonce.client IP>`, valid for 60 s. The secret comes from `GATEWAY_SECRET`, or is random per gateway process when that is unset.
+- A token starts one session, from the IP it was minted for. Reusing it, or using it from another IP, closes with 4001. A `hello` refused with 1013 or 1011 does not use it up. The client IP comes from `X-Forwarded-For` only when the peer is a `-trusted-proxies` address.
 - The first WebSocket message must be `hello`, within 5 s.
-- A bad or expired token closes the connection with 4001.
+- A bad, expired, already used or wrong-IP token closes the connection with 4001.
 - `version` other than 1, mic rate other than 16000, `frame_ms` other than 20, or playout rate other than 24000 closes it with 4002.
 - After `hello`, no message from the client for 10 s closes the connection with 4003. The SDK's `ping` every 2 s keeps it alive.
 
@@ -177,12 +178,13 @@ The gateway checks each mic stream's `sequence` numbers and bounds its queues:
 
 A client that loses its WebSocket can resume its session for 10 s:
 
-- It sends `hello` with the `session_id` from its earlier `welcome`.
+- It sends `hello` with the `session_id` and `resume_key` from its earlier `welcome`. The token in that `hello` may already be spent; the key is the proof of ownership.
+- A wrong or missing key does not resume. The `hello` is then treated as a new session and needs an unused token.
 - The gateway keeps the session, and its upstream connection to the orchestrator, during that window.
 - On resume, the gateway fences the newest agent generation, so audio queued while the client was away is dropped, and sends `client.resumed` upstream. The orchestrator cancels the live generation.
 - The reply is `welcome` with `resumed: true`.
 
-After the 10 s window, the session ends with reason `expired`, and a later `hello` starts a new session.
+After the 10 s window, the session ends with reason `expired`, and a later `hello` is a new session that needs an unused token.
 
 Clients pick a random first `stream_id`, so a resumed session never sees a stream id that the gateway has already seen. Otherwise, the duplicate and stale checks on `sequence` could drop the new stream's first frames.
 

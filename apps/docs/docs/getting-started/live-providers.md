@@ -105,12 +105,12 @@ The ledger is the source of truth. After the latency work on 2026-10-30, the pro
 
 Provider keys stay on the server. Only the orchestrator reads them, and only the orchestrator calls Deepgram, OpenRouter and Cartesia.
 
-The browser talks to the gateway alone. To start a session, the widget asks `POST /v1/session` for a token. The token is an expiry time signed with HMAC-SHA256 using the gateway's secret, and it is valid for 60 s. The browser sends it in its first WebSocket message, `hello`, and the gateway checks it there. After that, heartbeats keep the session open.
+The browser talks to the gateway alone. To start a session, the widget asks `POST /v1/session` for a token. The token is an expiry time and a random nonce, signed with HMAC-SHA256 together with the browser's IP using the gateway's secret. It is valid for 60 s, for one session, from that IP only. The browser sends it in its first WebSocket message, `hello`, and the gateway checks it there. After that, heartbeats keep the session open.
 
-So the most a page visitor can see is a short-lived gateway token. It cannot be used to call a provider, and it expires a minute after it was issued.
+So the most a page visitor can see is a short-lived gateway token. It cannot be used to call a provider, it starts one session at most, and it expires a minute after it was issued.
 
 :::warning
-The token is for development only. It is not bound to a user, and the token endpoint allows any origin. Rate limits and session caps on the gateway bound the abuse, not the token.
+The token is not bound to a user, and the token endpoint allows any origin. Rate limits and session caps on the gateway bound the abuse, not the token.
 :::
 
 ## Choose a different language model

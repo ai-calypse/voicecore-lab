@@ -17,12 +17,20 @@ The code is in `session/server.go`, which has the HTTP routes, tokens, hello and
 
 ## How session tokens are issued and checked
 
-`POST /v1/session` returns `{"token": "..."}`. The token is the expiry time in Unix seconds, a dot, and the hex HMAC-SHA256 of that expiry, signed with the gateway's secret. It is valid for 60 s. The gateway checks the signature with a constant-time comparison when `hello` arrives, so a client must connect within a minute of asking for a token.
+`POST /v1/session` returns `{"token": "..."}`. The token has three parts separated by dots: the expiry time in Unix seconds, a random 16-hex nonce, and the hex HMAC-SHA256 of `expiry.nonce.client IP`, signed with the gateway's secret. It is valid for 60 s. When `hello` arrives, the gateway checks the signature with a constant-time comparison against the IP the WebSocket comes from, then marks the nonce as used. So a token:
+
+- starts one session only; a second `hello` with it closes with 4001, but a `hello` refused with 1013 or 1011 does not use it up, so the client can retry with the same token;
+- works only from the IP it was minted for;
+- must be used within a minute.
+
+Used nonces are kept in memory until their token would have expired anyway.
+
+The client IP is the connection's peer address. `X-Forwarded-For` is believed only when the peer is inside one of the `-trusted-proxies` CIDRs, such as a load balancer; the gateway then takes the rightmost address in that header that is not itself a trusted proxy. With no trusted proxies, the header is ignored, so a client cannot pick its own IP.
 
 The secret comes from the `GATEWAY_SECRET` environment variable. When it is unset, the gateway generates a random 32-byte secret at start, so tokens do not survive a restart.
 
 :::warning
-The token is for development only. It is not bound to a user, and the endpoint answers with `Access-Control-Allow-Origin: *`. Issuance is limited only by the per-IP rate of 10 tokens per minute and the host allow-list.
+The token is not bound to a user, and the endpoint answers with `Access-Control-Allow-Origin: *`. Issuance is limited only by the per-IP rate of 10 tokens per minute and the host allow-list.
 :::
 
 ## The hello and welcome handshake
@@ -37,7 +45,7 @@ The token is for development only. It is not bound to a user, and the endpoint a
 | session cap reached, in total or per IP | 1013 |
 | the orchestrator cannot be dialled within 5 s | 1011 |
 
-For a new session the gateway creates an ID, `s-` followed by 16 hex characters, and dials `<upstream>/v1/session/{id}`. It starts two goroutines that write to and read from the orchestrator, then sends `welcome{session_id, resume_window_ms, resumed}`. A `hello` that carries the `session_id` of a detached session resumes that session instead.
+For a new session the gateway creates an ID, `s-<copy id>-` followed by 16 hex characters, for example `s-gw-3f9c2a1b7d4e6f80`. The copy id comes from `-copy-id` (default `gw`), so with several gateways a load balancer can send a resume to the copy that owns the session. The gateway also creates a resume key, 32 random bytes as 64 hex characters, and dials `<upstream>/v1/session/{id}`. It starts two goroutines that write to and read from the orchestrator, then sends `welcome{session_id, resume_key, resume_window_ms, resumed}`. A `hello` that carries the `session_id` and the matching `resume_key` of a detached session resumes that session instead.
 
 ## How the heartbeat closes silent clients
 
@@ -51,12 +59,12 @@ This keeps the clock offset honest. The client computes the offset from the roun
 
 A session outlives its client connection. When the client disappears without a normal close, the gateway keeps the session and its orchestrator socket open for 10 s, the resume window. A close with code 1000 or 1001, or a protocol violation, ends the session at once instead.
 
-To resume, the client sends `hello` with its `session_id` inside the window. Before it sends `welcome`, the gateway:
+To resume, the client sends `hello` with its `session_id` and `resume_key` inside the window. The key is compared in constant time and only the client that received `welcome` has it, so knowing a session id is not enough to take over someone's session. A resume does not use up a token: the token in that `hello` may already be spent by the original session. A wrong or missing key gets a new session instead, which needs an unused token. The key is never logged or traced. Before it sends `welcome`, the gateway:
 
 1. raises its outbound fence to the newest generation it has seen, and purges that audio from the client-bound queue, so speech queued while the client was away is not played;
 2. sends `client.resumed` upstream, and the orchestrator cancels the live generation so nothing is spoken twice.
 
-The order matters. Once the client has `welcome`, a new generation may already be on its way and must not be caught by this fence; fencing later showed up as a test flake. After 10 s, a `hello` with the old ID starts a new session. Clients pick a random first stream ID, so a resumed session never sees a reused mic stream.
+The order matters. Once the client has `welcome`, a new generation may already be on its way and must not be caught by this fence; fencing later showed up as a test flake. After 10 s, a `hello` with the old ID is a new session and needs an unused token. Clients pick a random first stream ID, so a resumed session never sees a reused mic stream.
 
 ## How mic frames are checked
 

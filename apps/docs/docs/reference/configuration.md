@@ -22,6 +22,8 @@ Run the gateway with `go run ./cmd/gateway` from `services/realtime-gateway`, or
 | `-hosts` | `localhost,127.0.0.1,::1` | allowed `Host` header names, comma separated; empty allows any |
 | `-drain` | `25s` | on SIGTERM, how long open sessions may finish before they are ended with reason `shutdown` |
 | `-probe` | empty | GET this URL and exit 0 on HTTP 200, else 1; the container healthcheck, since the image has no curl |
+| `-copy-id` | `gw` | this gateway copy's id; every session id is `s-<copy id>-<16 hex>`, so a load balancer can route a resume to its owner |
+| `-trusted-proxies` | empty | comma-separated CIDRs, such as a load balancer's, whose `X-Forwarded-For` header is believed for the client IP; empty ignores the header |
 
 The `-hosts` check refuses other host names with HTTP 421, which blocks DNS rebinding. The benchmark runner starts the gateway with `-max-sessions-per-ip 0 -tokens-per-minute 0`, because all its clients share one IP.
 

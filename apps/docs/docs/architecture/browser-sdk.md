@@ -64,7 +64,7 @@ The SDK always sends 20 ms frames because the protocol negotiates it. `hello` de
 {"type": "hello", "version": 1, "token": "...", "mic": {"rate": 16000, "frame_ms": 20}, "playout": {"rate": 24000}}
 ```
 
-To resume, the client adds the `session_id` it was given. `connect()` resolves with the gateway's `welcome`, which carries `session_id`, `resume_window_ms` and `resumed`. The client stores the session ID, so calling `connect()` again on the same object resumes the same session.
+To resume, the client adds the `session_id` and `resume_key` it was given. `connect()` resolves with the gateway's `welcome`, which carries `session_id`, `resume_key`, `resume_window_ms` and `resumed`. The client keeps both in memory only, so calling `connect()` again on the same object resumes the same session.
 
 `startMic()` starts capture and sends frames as they come, under a new stream ID each time. The first stream ID is random, so a new client resuming a session never reuses a stream ID the gateway already saw. `stopMic()` stops capture and sends `mic.revoked`. `close()` closes with code 1000, which ends the session at the gateway.
 

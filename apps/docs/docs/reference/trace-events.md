@@ -11,7 +11,7 @@ VoiceCore's processes write trace events as JSON lines, one event per line, in t
 Every trace event is one JSON object on one line:
 
 ```json
-{"trace_id": "s-0cebbb199035ae0c", "span": "llm", "event": "first_token", "t_mono_us": 66378569916, "process": "agent-core", "attrs": {}, "generation_id": 1}
+{"trace_id": "s-gw-0cebbb199035ae0c", "span": "llm", "event": "first_token", "t_mono_us": 66378569916, "process": "agent-core", "attrs": {}, "generation_id": 1}
 ```
 
 - `trace_id`: the session id.
