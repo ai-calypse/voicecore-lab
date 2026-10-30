@@ -45,8 +45,8 @@ MOCK_BILLED_USD = {"stt": 0.001, "llm": 0.0005, "tts": 0.0002}  # per session; l
 def mock_billed_providers(sid):
     """Mock providers that still reserve and settle fixed literal amounts, like a live session, at no cost."""
     providers, _ = mock_providers()
-    res = {k: budget.reserve("usd", v, label=f"mock-billed {k} {sid}") for k, v in MOCK_BILLED_USD.items()}
-    return providers, [lambda r=r, v=v: budget.settle(r, v) for r, v in ((res[k], MOCK_BILLED_USD[k]) for k in res)]
+    res = budget.reserve_all([("usd", v, f"mock-billed {k} {sid}") for k, v in MOCK_BILLED_USD.items()])
+    return providers, [lambda r=r, v=v: budget.settle(r, v) for r, v in zip(res, MOCK_BILLED_USD.values())]
 
 
 class OnDemandTTS:
@@ -93,8 +93,8 @@ TTS = {  # factory kind, module, budget pool, reservation for MAX_CHARS characte
 
 
 def live_providers(sid, llm_opts=None, tts_name="deepgram"):
-    stt_res = budget.reserve("usd", round(MAX_AUDIO_S / 60 * PRICE_PER_MIN, 6), label=f"server stt {sid}")
-    llm_res = budget.reserve("usd", LLM_CAP_USD, label=f"server llm {sid}")
+    stt_res, llm_res = budget.reserve_all([("usd", round(MAX_AUDIO_S / 60 * PRICE_PER_MIN, 6), f"server stt {sid}"),
+                                           ("usd", LLM_CAP_USD, f"server llm {sid}")])
     kind, mod, pool, amount, cost = TTS[tts_name]
     tts = {"res": None, "streams": []}
 

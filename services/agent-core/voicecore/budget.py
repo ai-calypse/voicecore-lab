@@ -82,3 +82,17 @@ def settle(reservation, actual, ledger_path=None, **meta):
                 e.update(amount=round(actual, 6), reserved=reservation.amount, status="settled", **meta)
                 return
         raise KeyError(f"reservation {reservation.id} not in ledger")
+
+
+def reserve_all(specs, ledger_path=None) -> list[Reservation]:
+    """Reserve several (pool, amount, label) in order, all or nothing: if one is refused, the ones already made are
+    settled at 0 (nothing was used) and BudgetExceeded is raised, so no reservation is left counting forever."""
+    done = []
+    try:
+        for pool, amount, label in specs:
+            done.append(reserve(pool, amount, label, ledger_path=ledger_path))
+    except BudgetExceeded:
+        for r in done:
+            settle(r, 0, ledger_path=ledger_path, refused_with_session=True)
+        raise
+    return done

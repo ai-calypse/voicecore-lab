@@ -61,3 +61,12 @@ def test_reserve_writes_wall_clock_ts(tmp_path, monkeypatch):
     path = ledger_with(tmp_path, [])
     budget.reserve("usd", 0.01, ledger_path=path)
     assert json.loads(path.read_text())["entries"][0]["ts"] == 1761800000.0
+
+
+def test_reserve_all_settles_earlier_reservations_at_0_when_a_later_one_is_refused(tmp_path):
+    path = ledger_with(tmp_path, [{"pool": "usd", "amount": 4.95}])
+    with pytest.raises(budget.BudgetExceeded):  # STT 0.0385 fits (4.9885), then LLM 0.02 would reach 5.0085
+        budget.reserve_all([("usd", 0.0385, "server stt s-1"), ("usd", 0.02, "server llm s-1")], ledger_path=path)
+    stt = next(e for e in json.loads(path.read_text())["entries"] if e.get("label") == "server stt s-1")
+    assert (stt["status"], stt["amount"]) == ("settled", 0)
+    assert budget.total("usd", ledger_path=path) == 4.95

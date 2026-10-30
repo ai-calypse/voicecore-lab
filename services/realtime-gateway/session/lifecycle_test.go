@@ -228,3 +228,26 @@ func TestTraceEventsFollowTheSpecSchema(t *testing.T) {
 		t.Fatalf("events %v", events)
 	}
 }
+
+// Step 09 (S09-T01): an orchestrator that ends the session (budget refused) is reported to the client once.
+func TestBudgetRefusalReachesClientOnce(t *testing.T) {
+	run(t, false, func(t *testing.T, r *rig) {
+		c := r.connect(nil, nil)
+		c.next("welcome")
+		oc := r.upstream()
+		_ = oc.WS.Write(context.Background(), websocket.MessageText, protocol.NewEvent("session.ended", map[string]any{"reason": "budget"}))
+		_ = oc.WS.Close(websocket.StatusNormalClosure, "")
+		c.closeStatus()
+		var reasons []string
+		for len(c.events) > 0 {
+			if e := <-c.events; e.Type() == "session.ended" {
+				var reason string
+				_ = e.Get("reason", &reason)
+				reasons = append(reasons, reason)
+			}
+		}
+		if len(reasons) != 1 || reasons[0] != "budget" {
+			t.Fatalf("session.ended reasons = %v, want [budget]", reasons)
+		}
+	})
+}

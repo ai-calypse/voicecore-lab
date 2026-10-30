@@ -1,6 +1,6 @@
 # Step 09: Production Readiness
 
-**Status:** In progress (started 2026-10-30). Phase 0 (setup and safety rails) is under way.
+**Status:** In progress (started 2026-10-30). Phases 0–1 done; Phase 2 (health and drain) next.
 **Estimated engineering effort:** about 110 hours.
 **Task owner:** Implementation agent. The user decides on deploying, live spend beyond the approved checks, real Turnstile and paging credentials, and key rotation.
 
@@ -89,6 +89,7 @@ A change to the wire protocol (`resume_key`, session id format) updates `package
 | 2026-10-30 | S09-T00 | memnet: `HTTPClientFrom` / `DialContextFrom`, ECONNREFUSED refusals, `Listener.RefuseNext(n)`. The refusal control lives in memnet, which owns connections; the plan had put it in fakeorch. fakeorch: `/readyz` with `SetReady`, and `Kill()`. | `memnet_test.go`, `fakeorch_test.go` |
 | 2026-10-30 | S09-T00 | `MockSTT(error_after_ms)`; a `docker` pytest marker excluded from `make test` and CI; `--providers mock-billed` | `test_provider_contracts.py`, `test_server.py` |
 | 2026-10-30 | S09-T00 | Demo e2e moved to ports 15173 / 18765 / 18080 / 18766 / 18081 / 18090; docs e2e to 13000. Servers never reused (code review: the first version reused them outside CI). `checkMockOnly` guard (5 s timeout, HTTP status checked), wired as globalSetup in S09-T02. | vitest 3/3; demo e2e 11/11 and docs e2e 2/2, run beside a live stack on the dev ports |
+| 2026-10-30 | S09-T01 | `keys.key` ignores inline comments (after whitespace) and strips quotes; an empty value is unset. `budget.reserve_all`: all-or-nothing; earlier reservations are settled at 0 when a later one is refused (live and billed-mock paths). The gateway forwards an orchestrator's `session.ended` once and ends with its reason. | `test_keys.py`, `test_budget.py`, `test_server.py`, `TestBudgetRefusalReachesClientOnce` (was `[budget error]`) |
 | 2026-10-30 | — | Commit attribution removed from all history (user request); project settings disable it from now on | `.claude/settings.json`; `git log --format=%B \| grep -ci co-authored` = 0 |
 
 ## Execution record

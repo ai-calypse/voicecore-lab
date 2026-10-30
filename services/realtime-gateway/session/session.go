@@ -268,11 +268,20 @@ func (ss *session) readUpstream() {
 			ss.srv.trace(ss.id, "fence", g, map[string]any{"dropped_queued": n})
 		}
 		ss.outq.push(item{data: b})
+		if e.Type() == "session.ended" { // the orchestrator ended it (e.g. budget): that is the reason, said once
+			var reason string
+			_ = e.Get("reason", &reason)
+			ss.finish(reason, false)
+			return
+		}
 	}
 }
 
 // end is idempotent: it tells an attached client why, closes the upstream and stops the session goroutines.
-func (ss *session) end(reason string) {
+func (ss *session) end(reason string) { ss.finish(reason, true) }
+
+// finish ends the session; tell is false when the client already got session.ended from the orchestrator.
+func (ss *session) finish(reason string, tell bool) {
 	ss.mu.Lock()
 	if ss.ended {
 		ss.mu.Unlock()
@@ -293,7 +302,9 @@ func (ss *session) end(reason string) {
 	ss.srv.mu.Unlock()
 	ss.srv.trace(ss.id, "session_ended", 0, map[string]any{"reason": reason})
 	if c != nil {
-		ss.outq.push(item{data: protocol.NewEvent("session.ended", map[string]any{"reason": reason})})
+		if tell {
+			ss.outq.push(item{data: protocol.NewEvent("session.ended", map[string]any{"reason": reason})})
+		}
 		ss.outq.push(item{close: true})
 	}
 	_ = ss.up.Close(websocket.StatusNormalClosure, reason)
