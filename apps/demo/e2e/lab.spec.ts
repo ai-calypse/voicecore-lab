@@ -15,3 +15,11 @@ test("fixture trace shows 5 stage bars and marks the interrupted generation", as
   await page.getByRole("button", { name: "gateway" }).click();
   await expect(page.locator("td.proc.gateway")).toHaveCount(0);
 });
+
+test("loading a file that is not a timeline shows an error and keeps the current trace", async ({ page }) => {
+  await page.goto("/?lab=1&trace=/lab/sample-timeline.json");
+  await expect(page.locator("[data-stage]")).toHaveCount(5);
+  await page.locator('.lab-load input[type="file"]').setInputFiles({ name: "notes.json", mimeType: "application/json", buffer: Buffer.from('{"hello": 1}') });
+  await expect(page.getByRole("alert")).toContainText("Could not show notes.json");
+  await expect(page.locator("[data-stage]")).toHaveCount(5);
+});

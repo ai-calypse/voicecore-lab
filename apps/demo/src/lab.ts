@@ -36,6 +36,8 @@ const svg = (tag: string, attrs: Record<string, string | number>, text?: string)
 };
 const fmt = (ms: number | null | undefined) => (ms === null || ms === undefined ? "—" : `${Math.round(ms).toLocaleString()} ms`);
 
+const endpointAt = (e: TraceEvent) => (typeof e.attrs.capture_end_us === "number" ? e.attrs.capture_end_us : e.t_us);
+
 export function analyse(t: Timeline) {
   const ev = t.events;
   const is = (process: string, event: string) => (e: TraceEvent) => e.process === process && e.event === event;
@@ -50,8 +52,10 @@ export function analyse(t: Timeline) {
     const ps = ev.find((e) => is("client", "playout.started")(e) && e.generation_id === g && e.attrs.dir === "out");
     const before = (name: string) => ev.filter((e) => is("agent-core", name)(e) && e.t_us > prevReq && e.t_us <= req.t_us).at(-1);
     const ep = before("endpoint"), tt = before("turn_text");
-    const speechEnd = ep ? ep.t_us - Number(ep.attrs.silence_ms ?? 0) * 1000 : undefined;
-    if (ep && speechEnd !== undefined) bars.push({ stage: "endpoint", gen: g, from: speechEnd, to: ep.t_us });
+    // The endpoint frame's capture time is already on the client clock; the event's own time went through a derived offset.
+    const decided = ep ? endpointAt(ep) : undefined;
+    const speechEnd = ep && decided !== undefined ? decided - Number(ep.attrs.silence_ms ?? 0) * 1000 : undefined;
+    if (decided !== undefined && speechEnd !== undefined) bars.push({ stage: "endpoint", gen: g, from: speechEnd, to: decided });
     if (ep && tt) bars.push({ stage: "stt", gen: g, from: ep.t_us, to: tt.t_us });
     if (ft) bars.push({ stage: "llm", gen: g, from: req.t_us, to: ft.t_us });
     if (ft && fa) bars.push({ stage: "tts", gen: g, from: ft.t_us, to: fa.t_us });
@@ -66,7 +70,7 @@ export function analyse(t: Timeline) {
     if (e.process !== "agent-core") continue;
     if (e.event === "speech_started" || e.event === "barge_in") userStart = e.t_us;
     if (e.event === "endpoint" && userStart !== undefined) {
-      segments.push({ lane: "user", from: userStart, to: e.t_us - Number(e.attrs.silence_ms ?? 0) * 1000 });
+      segments.push({ lane: "user", from: userStart, to: endpointAt(e) - Number(e.attrs.silence_ms ?? 0) * 1000 });
       userStart = undefined;
     }
   }
@@ -93,8 +97,12 @@ export function analyse(t: Timeline) {
   };
 }
 
+const observers = new WeakMap<HTMLElement, ResizeObserver>();
+
 export function renderLab(root: HTMLElement, t: Timeline, onLoad: (t: Timeline) => void) {
+  if (!Array.isArray(t?.events) || t.events.length === 0) throw new Error("not a session timeline: no events");
   const a = analyse(t);
+  observers.get(root)?.disconnect();
   root.replaceChildren();
   root.className = "lab";
 
@@ -105,12 +113,19 @@ export function renderLab(root: HTMLElement, t: Timeline, onLoad: (t: Timeline) 
   const input = el("input");
   input.type = "file";
   input.accept = "application/json,.json";
+  const error = el("p", "lab-error");
+  error.setAttribute("role", "alert");
   input.addEventListener("change", async () => {
     const f = input.files?.[0];
-    if (f) onLoad(JSON.parse(await f.text()) as Timeline);
+    if (!f) return;
+    try {
+      onLoad(JSON.parse(await f.text()) as Timeline);
+    } catch (err) {
+      error.textContent = `Could not show ${f.name}: ${err instanceof Error ? err.message : String(err)}. The current trace is unchanged.`;
+    }
   });
   load.append("Load trace…", input);
-  head.append(title, load);
+  head.append(title, load, error);
 
   const c = t.gateway_counters ?? {};
   const drops = Object.entries(c).filter(([k]) => k.startsWith("drops")).reduce((s, [, v]) => s + v, 0);
@@ -131,16 +146,15 @@ export function renderLab(root: HTMLElement, t: Timeline, onLoad: (t: Timeline) 
 
   const chart = el("section", "lab-chart");
   chart.setAttribute("aria-label", "Timeline");
-  const draw = () => drawChart(chart, t, a);
-  new ResizeObserver(draw).observe(chart);
-
   const table = eventsTable(t);
   root.append(head, strip, chart, table);
-  draw();
+  const observer = new ResizeObserver(() => drawChart(chart, t, a)); // also draws once when it starts observing
+  observer.observe(chart);
+  observers.set(root, observer);
 }
 
 function drawChart(host: HTMLElement, t: Timeline, a: ReturnType<typeof analyse>) {
-  const t0 = t.events[0]!.t_us, t1 = t.events.at(-1)!.t_us;
+  const t0 = t.events[0]!.t_us, t1 = Math.max(t.events.at(-1)!.t_us, t0 + 1000); // at least 1 ms wide
   const W = Math.max(host.clientWidth, 720), LABEL = 132, PAD = 16, ROW = 26;
   const x = (us: number) => LABEL + ((us - t0) / (t1 - t0)) * (W - LABEL - PAD);
   const rows = [{ key: "user", name: "User speaking" }, { key: "agent", name: "Agent speaking" }, ...STAGES.map((s) => ({ key: s.key, name: s.name }))];

@@ -93,6 +93,8 @@ class Session:
             self._tasks += [asyncio.create_task(self._stt_sender()), asyncio.create_task(self._stt_reader())]
 
     async def close(self):
+        if self._min_lag_us is not None:  # the session-wide minimum, so short sessions get an offset too
+            self.trace.emit("clock", "client_offset", client_to_agent_us=self._min_lag_us, final=True)
         self.state = State.ENDED
         self._clear_pause_timer()
         for t in [*self._tasks, *([self.task] if self.task else [])]:

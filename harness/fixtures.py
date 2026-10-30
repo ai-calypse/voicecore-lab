@@ -4,6 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 MANIFEST = ROOT / "fixtures/audio/manifest.json"
+SPEECH_CATEGORIES = ("single", "noisy_10db", "noisy_5db", "slow_0_8x", "mid_pause_600ms")  # one user turn, labelled end
 
 
 def load_manifest(path=MANIFEST):

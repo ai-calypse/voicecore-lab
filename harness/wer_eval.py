@@ -1,8 +1,9 @@
 """STT word error rate on holdout audio (S06-T05, live Deepgram): uv run python harness/wer_eval.py
 
 Holdout LibriSpeech clips (single, noisy, slow, mid-pause; reference = LibriSpeech transcript) and holdout
-docs questions (Aura voice, local only; reference = the question text). Audio is streamed faster than real
-time and closed with CloseStream. Spend is reserved first. Writes reports/wer_holdout.json.
+docs questions (Aura voice, local only; reference = the question text). Audio is paced in real time (20 ms per
+frame) and closed with CloseStream: streamed faster, Deepgram lost the last words of long clips. Spend is
+reserved first. Writes reports/wer_holdout.json, also after a failure (with the clips done so far).
 """
 import asyncio
 import json
@@ -10,14 +11,13 @@ import re
 from datetime import UTC, datetime
 
 import jiwer
-from fixtures import MANIFEST, ROOT, load_manifest, read_pcm
+from fixtures import MANIFEST, ROOT, SPEECH_CATEGORIES, load_manifest, read_pcm
 
 from voicecore import budget
 from voicecore.providers.base import Final
 from voicecore.providers.deepgram_stt import PRICE_PER_MIN
 from voicecore.providers.factory import make_live
 
-CATEGORIES = ("single", "noisy_10db", "noisy_5db", "slow_0_8x", "mid_pause_600ms")
 
 
 def norm(t: str) -> str:
@@ -36,7 +36,7 @@ async def transcribe(res, pcm):
 
 
 async def main():
-    clips = [c for c in load_manifest()["clips"] if c["split"] == "holdout" and c["category"] in CATEGORIES]
+    clips = [c for c in load_manifest()["clips"] if c["split"] == "holdout" and c["category"] in SPEECH_CATEGORIES]
     key = {q["id"]: q["question"] for q in json.loads((ROOT / "fixtures/docs/answer_key.json").read_text())["questions"]}
     local = MANIFEST.parent / "local/manifest.json"
     docs = [c for c in load_manifest(local)["clips"] if c["split"] == "holdout"] if local.exists() else []
@@ -52,10 +52,15 @@ async def main():
             rows.append({"clip": c["id"], "category": c["category"], "ref": norm(ref), "hyp": norm(hyp)})
     finally:
         budget.settle(res, round(spent, 6), run_id=run)
+        write(run, rows, seconds, spent)
+
+
+def write(run, rows, seconds, spent):
     def wer(rs):
-        return jiwer.wer([r["ref"] for r in rs], [r["hyp"] for r in rs]) if rs else None
-    by_cat = {cat: round(wer([r for r in rows if r["category"] == cat]), 4) for cat in sorted({r["category"] for r in rows})}
-    out = {"run_id": run, "model": "deepgram nova-3 (keyterms: uv, uvx, uv sync, uv lock, pyproject.toml)", "wer_all": round(wer(rows), 4),
+        return round(jiwer.wer([r["ref"] for r in rs], [r["hyp"] for r in rs]), 4) if rs else None
+
+    by_cat = {cat: wer([r for r in rows if r["category"] == cat]) for cat in sorted({r["category"] for r in rows})}
+    out = {"run_id": run, "model": "deepgram nova-3 (keyterms: uv, uvx, uv sync, uv lock, pyproject.toml)", "wer_all": wer(rows),
            "wer_by_category": by_cat, "clips": len(rows), "audio_s": seconds, "cost_usd": round(spent, 6), "rows": rows}
     (ROOT / "reports/wer_holdout.json").write_text(json.dumps(out, indent=2) + "\n")
     print(json.dumps({k: v for k, v in out.items() if k != "rows"}, indent=2))

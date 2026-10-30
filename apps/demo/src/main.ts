@@ -10,7 +10,7 @@ if (params.get("lab") === "1") {
     document.title = "VoiceCore Lab · timeline";
     const root = document.createElement("main");
     document.body.append(root);
-    const show = (t: Parameters<typeof renderLab>[1]) => renderLab(root, t, show);
+    const show = (t: Parameters<typeof renderLab>[1]) => renderLab(root, t, show); // throws on a non-timeline; the caller reports it
     try {
       const res = await fetch(params.get("trace") ?? "/lab/sample-timeline.json");
       if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);

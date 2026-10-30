@@ -118,6 +118,7 @@ Require both deterministic tests and controlled real-provider measurements where
 
 | Consumed artifact | Revision or hash | Affected task(s) | Revalidation decision |
 |---|---|---|---|
+| Code review (medium, `30e40e6..1d0…`, Step 06): 10 findings, all fixed: clock offset only sampled every 5 s (now also the session minimum at close); gate/bench crashed on empty results; lab file load had no error handling; lab chart broke on empty or zero-length traces; one ResizeObserver leaked per load; endpoint bars used the derived clock instead of `capture_end_us`; `wer_eval` docstring was stale and lost paid rows on failure; category list copied 4 times; determinism tests compared at 1 ms (now each run gets a fresh fake-time loop and traces compare to the microsecond); counters URL duplicated | review 2026-10-30 | S06-T01..T06 | new Playwright error-path test |
 | `packages/protocol/SPEC.md` section 5 trace schema | v1 | S06-T01 | consumed unchanged |
 | `docs/adr/0002-turn-policy.md` | live check added | S06-T04 | default kept |
 

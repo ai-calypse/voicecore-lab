@@ -8,13 +8,13 @@ import argparse
 import json
 from dataclasses import replace
 
-from fixtures import ROOT, load_manifest, played_power, read_frames
+from fixtures import ROOT, SPEECH_CATEGORIES, load_manifest, played_power, read_frames
 from timeline import endpoint_scores
 
 from voicecore.turntaking.floor import Floor, Policy, power
 from voicecore.turntaking.vad_silero import SileroVAD
 
-CATEGORIES = ("single", "noisy_10db", "noisy_5db", "slow_0_8x", "mid_pause_600ms")
+CATEGORIES = SPEECH_CATEGORIES
 STT_DELAY_MS = 300
 POLICIES = {f"fixed_{ms}": Policy("fixed", silence_ms=ms) for ms in (300, 400, 500, 600, 700, 800, 900, 1200)}
 POLICIES |= {"adaptive": Policy("adaptive"), "adaptive_800_900_1000": Policy("adaptive", adaptive_ms=(800, 900, 1000)),

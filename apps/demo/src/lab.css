@@ -45,6 +45,8 @@ body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 syst
 .lab-load { position: relative; border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
 .lab-load:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
 .lab-load input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.lab-error { flex-basis: 100%; margin: 0; color: var(--cut); font-size: 13px; }
+.lab-error:empty { display: none; }
 .lab-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1px; margin: 0 0 20px; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .stat { background: var(--surface); padding: 10px 14px; display: grid; gap: 2px; }
 .stat dt { color: var(--muted); font-size: 12px; }

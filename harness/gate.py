@@ -9,23 +9,24 @@ import sys
 
 import looptime
 from bench import turn
-from fixtures import ROOT, load_manifest
+from fixtures import ROOT, SPEECH_CATEGORIES, load_manifest
 from runner.inprocess import run_barge_in, run_clip
 from timeline import percentile
 
 THRESHOLDS = ROOT / "harness/thresholds.json"
-CATEGORIES = ("single", "noisy_10db", "noisy_5db", "slow_0_8x", "mid_pause_600ms")
+WORST = 10**9  # an empty result fails the latency thresholds instead of crashing the gate
 
 
 async def measure() -> dict:
     clips = load_manifest()["clips"]
-    turns = [turn(await run_clip(c), c) for c in clips if c["split"] == "dev" and c["category"] in CATEGORIES]
+    turns = [turn(await run_clip(c), c) for c in clips if c["split"] == "dev" and c["category"] in SPEECH_CATEGORIES]
     totals = [t["total_ms"] for t in turns if t and t["total_ms"] is not None]
     barge = [await run_barge_in(c, clips=clips) for c in clips if c["split"] == "dev" and c["category"] in ("interrupt", "echo_only")]
     silence = [r["interrupt_to_silence_ms"] for r in barge if r["onset_ms"] is not None]
     return {"turns": len(turns), "answered": len(totals), "early_cutoffs": sum(bool(t and t["early"]) for t in turns),
-            "total_ms_p50": percentile(totals, 50), "total_ms_p95": percentile(totals, 95),
-            "interrupts_silenced": sum(x is not None for x in silence), "interrupt_to_silence_ms_max": max(x for x in silence if x is not None),
+            "total_ms_p50": percentile(totals, 50) if totals else WORST, "total_ms_p95": percentile(totals, 95) if totals else WORST,
+            "interrupts_silenced": sum(x is not None for x in silence),
+            "interrupt_to_silence_ms_max": max((x for x in silence if x is not None), default=WORST),
             "false_barge_ins": sum(r["barge_in_ms"] is not None for r in barge if r["onset_ms"] is None)}
 
 

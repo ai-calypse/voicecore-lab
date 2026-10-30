@@ -8,11 +8,12 @@ import json
 import signal
 import subprocess
 import sys
+import urllib.request
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fixtures import MANIFEST, ROOT, load_manifest  # noqa: E402
-from runner.wss import CLIENT, start_stack  # noqa: E402
+from runner.wss import CLIENT, COUNTERS_URL, start_stack  # noqa: E402
 from session_timeline import jsonl, session_timeline  # noqa: E402
 
 OUT = ROOT / ".cache/lab_sample"
@@ -28,7 +29,7 @@ def main():
         subprocess.run(["node", str(CLIENT), "--text", "How do I install uv?", "--echo-db=-15", "--fixture", str(MANIFEST.parent / clip["file"]),
                         "--interrupt-after", "1200", "--onset-ms", str(clip["labels"]["speech"][0][0]), "--tail", "8",
                         "--out", str(OUT / "client.jsonl")], cwd=ROOT, check=True, timeout=120)
-        counters = json.loads(__import__("urllib.request").request.urlopen("http://127.0.0.1:8080/debug/counters").read())
+        counters = json.loads(urllib.request.urlopen(COUNTERS_URL).read())
     finally:
         for p in procs:
             p.send_signal(signal.SIGINT)

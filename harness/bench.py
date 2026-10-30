@@ -7,11 +7,9 @@ x clean or 15 dB pink noise x 3 seeds. Writes reports/perf_fake.json.
 import json
 
 import looptime
-from fixtures import ROOT, load_manifest
+from fixtures import ROOT, SPEECH_CATEGORIES, load_manifest
 from runner.inprocess import run_clip
 from timeline import percentile
-
-CATEGORIES = ("single", "noisy_10db", "noisy_5db", "slow_0_8x", "mid_pause_600ms")
 
 
 def turn(run, clip):
@@ -28,7 +26,7 @@ def turn(run, clip):
 
 
 async def main():
-    clips = [c for c in load_manifest()["clips"] if c["split"] == "dev" and c["category"] in CATEGORIES]
+    clips = [c for c in load_manifest()["clips"] if c["split"] == "dev" and c["category"] in SPEECH_CATEGORIES]
     rows = []
     for seed in (1, 2, 3):
         for net in (0, 20, 50):
@@ -41,9 +39,11 @@ async def main():
     ok = [r["total_ms"] for r in rows if r.get("total_ms") is not None]
     ep = [r["endpoint_ms"] for r in rows if r.get("endpoint_ms") is not None]
     summary = {"label": "fake-provider", "turns": len(rows), "answered": len(ok),
-               "total_ms": {p: percentile(ok, p) for p in (50, 95, 99)}, "endpoint_ms": {p: percentile(ep, p) for p in (50, 95, 99)},
+               "total_ms": {p: percentile(ok, p) if ok else None for p in (50, 95, 99)},
+               "endpoint_ms": {p: percentile(ep, p) if ep else None for p in (50, 95, 99)},
                "early_cutoff_turns": sum(bool(r.get("early")) for r in rows), "stt_drops": sum(r["stt_drops"] for r in rows),
-               "by_net_ms": {n: percentile([r["total_ms"] for r in rows if r["net_ms"] == n and r.get("total_ms") is not None], 50) for n in (0, 20, 50)}}
+               "by_net_ms": {n: percentile(xs, 50) if (xs := [r["total_ms"] for r in rows if r["net_ms"] == n and r.get("total_ms") is not None]) else None
+                             for n in (0, 20, 50)}}
     (ROOT / "reports/perf_fake.json").write_text(json.dumps({"summary": summary, "rows": rows}, indent=2) + "\n")
     print(json.dumps(summary, indent=2))
 

@@ -1,15 +1,22 @@
 """S05-T05 (seam 9a): a fault schedule with a seed gives the same trace twice, in fake time."""
-import pytest
+import looptime
 from runner.chaos import SCENARIOS, normalized, run_scenario
 
 from voicecore.runtime.session import REPROMPT
 
-pytestmark = pytest.mark.looptime
+
+def fresh_loop(coro):
+    """Each run gets its own fake-time loop starting at 0, so traces compare exactly (to the microsecond)."""
+    loop = looptime.new_event_loop()
+    try:
+        return loop.run_until_complete(coro)
+    finally:
+        loop.close()
 
 
-async def test_stall_and_429_with_seed_42_gives_an_identical_trace_twice():
+def test_stall_and_429_with_seed_42_gives_an_identical_trace_twice():
     path = SCENARIOS / "chaos/stall_and_429.json"
-    a, b = await run_scenario(path), await run_scenario(path)
+    a, b = fresh_loop(run_scenario(path)), fresh_loop(run_scenario(path))
     assert normalized(a) == normalized(b)
     events = [(e["span"], e["event"]) for e in a["trace"]]
     assert ("llm", "backoff") in events and ("llm", "stall") in events  # both injected faults happened

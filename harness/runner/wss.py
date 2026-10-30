@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from fixtures import MANIFEST, ROOT, load_manifest  # noqa: E402
 
 CLIENT = ROOT / "packages/web-sdk/bin/headless-client.ts"
+COUNTERS_URL = "http://127.0.0.1:8080/debug/counters"  # the gateway start_stack launches
 GATEWAY = ROOT / "services/realtime-gateway"
 
 
@@ -46,7 +47,7 @@ def start_stack(providers, trace_dir, logs, policy="fixed"):
         subprocess.Popen([str(binary), "-addr", "127.0.0.1:8080", "-upstream", "ws://127.0.0.1:8765", "-trace", str(logs / "gateway_trace.jsonl")],
                          stdout=open(logs / "gateway.log", "w"), stderr=subprocess.STDOUT),
     ]
-    wait_http("http://127.0.0.1:8080/debug/counters")
+    wait_http(COUNTERS_URL)
     time.sleep(1)  # orchestrator loads the VAD model
     return procs
 
@@ -92,7 +93,7 @@ def main():
     try:
         logs = run_clients(clips, out / "clients", args.tail, args.sequential)
         if procs:
-            (out / "gateway_counters.json").write_text(urllib.request.urlopen("http://127.0.0.1:8080/debug/counters").read().decode())
+            (out / "gateway_counters.json").write_text(urllib.request.urlopen(COUNTERS_URL).read().decode())
     finally:
         for p in procs:
             p.send_signal(signal.SIGINT)
