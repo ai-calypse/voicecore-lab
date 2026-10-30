@@ -2,6 +2,7 @@ package session
 
 import (
 	"bytes"
+	"encoding/json"
 	"log/slog"
 	"net/http/httptest"
 	"net/netip"
@@ -176,6 +177,31 @@ func TestResumeKeyNeverLoggedOrTraced(t *testing.T) {
 		}
 		if !strings.Contains(trace.String(), "session_ended") {
 			t.Fatal("trace was not written; the check above proves nothing")
+		}
+	})
+}
+
+func TestSessionEndLogLine(t *testing.T) {
+	var logs syncBuf
+	runCfg(t, false, func(c *Config) { c.Log = slog.New(slog.NewJSONHandler(&logs, nil)) }, func(t *testing.T, r *rig) {
+		c := r.connect(nil, nil)
+		id, key, _ := welcomeOf(c)
+		r.upstream()
+		time.Sleep(1500 * time.Millisecond)
+		_ = c.ws.Close(websocket.StatusNormalClosure, "")
+		time.Sleep(time.Second)
+		var ended map[string]any
+		for _, l := range strings.Split(strings.TrimSpace(logs.String()), "\n") {
+			var m map[string]any
+			if json.Unmarshal([]byte(l), &m) == nil && m["msg"] == "session ended" {
+				ended = m
+			}
+		}
+		if ended["session_id"] != id || ended["reason"] != "client" || ended["duration_ms"] != float64(1500) {
+			t.Fatalf("session ended line %v (logs %s)", ended, logs.String())
+		}
+		if strings.Contains(logs.String(), key) {
+			t.Fatal("resume_key in logs")
 		}
 	})
 }

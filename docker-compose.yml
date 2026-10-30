@@ -6,7 +6,7 @@ services:
   agent-core:
     build: { context: ., dockerfile: services/agent-core/Dockerfile }
     command: ["--providers", "${PROVIDERS:-mock}"]
-    environment: ["VOICECORE_VERSION=${VERSION:-dev}"]  # reported by /healthz
+    environment: ["VOICECORE_VERSION=${VERSION:-dev}", "LOG_FORMAT=json"]  # version: reported by /healthz
     env_file: [{ path: .env, required: false }]
     # Live mode writes the shared budget ledger in ./benchmarks. On Linux, run as your own user so it can:
     #   HOST_UID=$(id -u) HOST_GID=$(id -g) PROVIDERS=live docker compose up
@@ -24,7 +24,7 @@ services:
   gateway:
     build: { context: services/realtime-gateway, args: { VERSION: "${VERSION:-dev}" } }  # VERSION=$(git rev-parse --short HEAD)
     command: ["-addr", "0.0.0.0:8080", "-upstream", "ws://agent-core:8765", "-origins", "localhost:*,127.0.0.1:*"]
-    environment: ["GATEWAY_SECRET=${GATEWAY_SECRET:-}"]
+    environment: ["GATEWAY_SECRET=${GATEWAY_SECRET:-}", "LOG_FORMAT=json"]
     ports: ["127.0.0.1:8080:8080"]
     stop_grace_period: 35s
     restart: unless-stopped

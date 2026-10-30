@@ -413,13 +413,14 @@ func (s *Server) newSession(ip string) (*session, error) {
 	}
 	up.SetReadLimit(1 << 20)
 	upCtx, cancelUp := context.WithCancel(context.Background())
-	ss := &session{id: sid, resumeKey: hex.EncodeToString(key), ip: ip, srv: s, up: up, upCtx: upCtx, cancelUp: cancelUp, claimed: true,
+	ss := &session{id: sid, resumeKey: hex.EncodeToString(key), ip: ip, srv: s, up: up, upCtx: upCtx, cancelUp: cancelUp, claimed: true, started: time.Now(),
 		upq: newQueue(s.cfg.QueueCap, &s.c.DropsOverload, s.cfg.MaxQueuedEvents), outq: newQueue(s.cfg.OutCap, &s.c.DropsOverloadOut, 0),
 		lastSeq: map[uint32]uint32{}, revoked: map[uint32]bool{}}
 	s.mu.Lock()
 	s.sessions[sid] = ss
 	registered = true
 	s.mu.Unlock()
+	s.cfg.Log.Info("session started", "session_id", sid)
 	if s.cfg.MaxSessionAge > 0 {
 		ss.ageTimer = time.AfterFunc(s.cfg.MaxSessionAge, func() { ss.end("expired") })
 	}

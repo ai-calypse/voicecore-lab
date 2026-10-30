@@ -8,6 +8,7 @@ import asyncio
 import contextlib
 import enum
 import itertools
+import logging
 from collections import deque
 from collections.abc import AsyncIterator, Awaitable, Callable
 
@@ -20,6 +21,8 @@ from voicecore.trace import Tracer
 from voicecore.turntaking.floor import Event, Floor, Policy, power
 
 from .text import Chunker, TranscriptAssembler, speechify
+
+log = logging.getLogger("voicecore.session")
 
 SYSTEM = ("You are VoiceCore, a voice assistant for a documentation site. "
           "Answer in at most two short sentences of plain spoken English.")
@@ -379,12 +382,13 @@ class Session:
             self.trace.emit("llm", "stall", gen=g, after_s=self.stall_s)
             await speak(sep() + REPROMPT)
         except ProviderError as err:
-            self.trace.emit("llm", "error", gen=g, kind=err.kind)
+            self._provider_error("llm", err.kind, gen=g)
             if err.kind == "rate_limited" and first:
                 return True
             await speak(sep() + TROUBLE)
         except Exception as err:  # never leave a turn without an answer and an end
             self.trace.emit("llm", "error", gen=g, kind=type(err).__name__)
+            log.exception("answer failed", extra={"session_id": self.sid, "gen": g})  # our bug, not the provider's
             await speak(sep() + TROUBLE)
         finally:
             with contextlib.suppress(Exception):
@@ -418,7 +422,7 @@ class Session:
                 await self.tts.synth(g, spoken, last)
             except ProviderError as err:
                 self._tts_failed[g] = err.kind
-                self.trace.emit("tts", "error", gen=g, kind=err.kind)
+                self._provider_error("tts", err.kind, gen=g)
 
     # --- audio out -------------------------------------------------------------
 
@@ -440,7 +444,7 @@ class Session:
                         buf.clear()
                 return  # the TTS stream closed
             except ProviderError as err:  # one bad item must not silence the rest of the session
-                self.trace.emit("tts", "error", kind=err.kind)
+                self._provider_error("tts", err.kind)
                 g = self.active_gen
                 if g is not None:
                     self._tts_failed[g] = err.kind
@@ -468,7 +472,7 @@ class Session:
             while True:
                 await self.stt.send(await self.stt_q.get())
         except ProviderError as err:  # ponytail: no STT reconnect; text keeps working. Add one if live sessions show socket drops
-            self.trace.emit("stt", "error", kind=err.kind)
+            self._provider_error("stt", err.kind)
             if err.kind == "fatal":  # e.g. the per-session STT cap: say so once, text still works
                 await self.start_generation(self.turn_id or "t0", "", reply=VOICE_LIMIT)
 
@@ -484,7 +488,12 @@ class Session:
                         await self._on_floor(fe, capture_end_us=self._last_capture_end_us)
                 await self._event("transcript.partial", turn_id=self.turn_id or "t0", text=self.transcript.text())
         except ProviderError as err:
-            self.trace.emit("stt", "error", kind=err.kind)
+            self._provider_error("stt", err.kind)
+
+    def _provider_error(self, provider: str, kind: str, gen: int | None = None):
+        self.trace.emit(provider, "error", gen=gen, kind=kind)
+        extra = {"session_id": self.sid, "provider": provider, "kind": kind}
+        log.warning("provider error", extra=extra if gen is None else {**extra, "gen": gen})
 
     async def _event(self, type: str, **fields):
         await self._send(protocol.event(type, **fields))

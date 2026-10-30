@@ -19,7 +19,8 @@ var clientEvents = map[string]bool{"ping": true, "text.input": true, "mic.revoke
 // for the resume window after the client drops.
 type session struct {
 	id        string
-	resumeKey string // 32 random bytes, hex; given only to the client in welcome, required to resume
+	started   time.Time // for the session-ended log line
+	resumeKey string    // 32 random bytes, hex; given only to the client in welcome, required to resume
 	ip        string
 	ageTimer  *time.Timer
 	srv       *Server
@@ -308,6 +309,7 @@ func (ss *session) finish(reason string, tell bool) {
 	delete(ss.srv.sessions, ss.id)
 	ss.srv.mu.Unlock()
 	ss.srv.trace(ss.id, "session_ended", 0, map[string]any{"reason": reason})
+	ss.srv.cfg.Log.Info("session ended", "session_id", ss.id, "reason", reason, "duration_ms", time.Since(ss.started).Milliseconds())
 	if c != nil {
 		if tell {
 			ss.outq.push(item{data: protocol.NewEvent("session.ended", map[string]any{"reason": reason})})

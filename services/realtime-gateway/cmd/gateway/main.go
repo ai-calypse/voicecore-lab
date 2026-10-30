@@ -38,6 +38,9 @@ func main() {
 	if *probe != "" {
 		os.Exit(session.Probe(*probe))
 	}
+	if os.Getenv("LOG_FORMAT") == "json" { // one JSON object per line, for Loki; text otherwise
+		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, nil)))
+	}
 
 	secret := []byte(os.Getenv("GATEWAY_SECRET"))
 	if len(secret) == 0 {

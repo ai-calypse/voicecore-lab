@@ -34,6 +34,7 @@ def test_mock_billed_refused_leaves_nothing_reserved(tmp_path, monkeypatch):
 # Phase 2 (seam 14): health, readiness, drain and shutdown on a real websockets server, mock providers
 
 import asyncio  # noqa: E402
+import contextlib  # noqa: E402
 import os  # noqa: E402
 import signal  # noqa: E402
 import socket  # noqa: E402
@@ -48,7 +49,7 @@ from pathlib import Path  # noqa: E402
 import pytest  # noqa: E402
 from websockets.asyncio.client import connect  # noqa: E402
 from websockets.asyncio.server import serve  # noqa: E402
-from websockets.exceptions import InvalidStatus  # noqa: E402
+from websockets.exceptions import ConnectionClosed, InvalidStatus  # noqa: E402
 
 from voicecore import protocol  # noqa: E402
 
@@ -145,6 +146,23 @@ async def test_shutdown_ends_open_sessions_and_settles_each_once(small_index):
                 events = [json.loads(m) async for m in ws if isinstance(m, str)]
                 assert {"type": "session.ended", "reason": "shutdown"} in events
     assert sorted(settled) == ["s-a", "s-b"]
+
+
+async def test_session_setup_failure_still_settles_the_reservations(small_index):
+    from voicecore.server import AppState, mock_providers
+
+    settled = []
+
+    def make(sid):
+        providers, _ = mock_providers()
+        return {**providers, "no_such_option": 1}, [lambda: settled.append(sid)]  # Session(...) raises TypeError
+
+    state = AppState(providers="mock", ready=True, index=small_index)
+    async with running(state, make) as addr:
+        async with connect(f"ws://{addr}/v1/session/s-x") as ws:
+            with contextlib.suppress(ConnectionClosed):
+                await ws.recv()
+    assert settled == ["s-x"]
 
 
 def free_port():

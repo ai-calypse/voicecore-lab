@@ -12,6 +12,7 @@ import json
 import logging
 import os
 import signal
+import time
 from dataclasses import dataclass, field
 from http import HTTPStatus
 from pathlib import Path
@@ -19,7 +20,7 @@ from pathlib import Path
 from websockets.asyncio.server import serve
 from websockets.exceptions import ConnectionClosed
 
-from voicecore import budget, protocol
+from voicecore import budget, logs, protocol
 from voicecore.answer.engine import AnswerEngine
 from voicecore.answer.index import Index
 from voicecore.answer.ingest import docusaurus, ingest
@@ -201,15 +202,17 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
         try:
             providers, settle = make_providers(sid)
         except budget.BudgetExceeded as e:
-            log.warning("session %s refused: %s", sid, e)
+            log.warning("session refused: %s", e, extra={"session_id": sid, "reason": "budget"})
             await ws.send(protocol.event("session.ended", reason="budget"))
             await ws.close()
             return
-        sink = JsonlSink(trace_dir / f"{sid}.jsonl") if trace_dir else None
-        engine = AnswerEngine(state.index, providers["llm"], name=name)
-        session = Session(sid, send=ws.send, vad=SileroVAD(), policy=policy, tracer=Tracer(sid, sink), answer=engine.stream, **providers)
-        await session.start()
-        try:
+        started, sink, session = time.monotonic(), None, None
+        try:  # everything after the reservation: whatever fails, the finally settles it
+            sink = JsonlSink(trace_dir / f"{sid}.jsonl") if trace_dir else None
+            engine = AnswerEngine(state.index, providers["llm"], name=name)
+            session = Session(sid, send=ws.send, vad=SileroVAD(), policy=policy, tracer=Tracer(sid, sink), answer=engine.stream, **providers)
+            await session.start()
+            log.info("session started", extra={"session_id": sid})
             async for m in ws:
                 if isinstance(m, bytes):
                     f = protocol.decode_frame(m)
@@ -217,15 +220,19 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
                         await session.on_frame(f)
                 else:
                     await session.on_event(protocol.decode_event(m))
-        except (ConnectionClosed, ValueError) as e:
-            log.info("session %s: %s", sid, e)
+        except ConnectionClosed as e:
+            log.info("session connection closed: %s", e, extra={"session_id": sid})
+        except ValueError as e:  # the message may echo client text, so log only its kind
+            log.info("protocol error", extra={"session_id": sid, "kind": type(e).__name__})
         finally:
-            await session.close()
+            if session:
+                await session.close()
             if sink:
                 sink.close()
             for s in settle:
                 with contextlib.suppress(Exception):
                     s()
+            log.info("session ended", extra={"session_id": sid, "duration_ms": round((time.monotonic() - started) * 1000)})
 
     return handler
 
@@ -248,7 +255,7 @@ async def main():
     ap.add_argument("--tts", choices=sorted(TTS), default="deepgram", help="speech synthesis provider (live mode)")
     ap.add_argument("--drain-s", type=float, default=25.0, help="on SIGTERM, seconds to let open sessions finish")
     args = ap.parse_args()
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
+    logs.setup()
     args.policy = args.policy or ("eager" if args.providers == "live" else "fixed")
     policy = Policy("eager", asr_silence_ms=200) if args.policy == "eager" else Policy(args.policy)
     llm_opts = {}
