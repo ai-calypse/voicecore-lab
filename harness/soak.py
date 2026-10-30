@@ -69,7 +69,8 @@ def main():
         time.sleep(60)
     t.join()
     samples.append(sample())
-    first, last = samples[1] if len(samples) > 2 else samples[0], samples[-1]  # the first minute is warm-up
+    # warm-up: a gateway's heap grows for its first ~5 minutes under load, then levels off (seen 2026-10-30)
+    first, last = samples[min(5, len(samples) - 2)] if len(samples) > 2 else samples[0], samples[-1]
     growth = {k: round(100 * (last["mem_mib"][k] - v) / v, 1) for k, v in first["mem_mib"].items() if k in last["mem_mib"] and v}
     print(json.dumps({"label": "fake-provider", "minutes": args.minutes, "rounds_of_10": rounds[0], "load_errors": errors, "mem_growth_pct": growth,
                       "goroutines": {g: (first[g]["go_goroutines"], last[g]["go_goroutines"]) for g in ("gw-1", "gw-2")},
