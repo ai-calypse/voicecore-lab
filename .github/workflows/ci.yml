@@ -66,5 +66,13 @@ jobs:
         with:
           enable-cache: true
       - run: uv sync --locked
+      - uses: actions/cache@v4
+        with:
+          path: .cache/fastembed
+          key: fastembed-bge-small-en-v1.5
+      - uses: actions/cache@v4
+        with:
+          path: .cache/answer_vectors_*.npy
+          key: answer-vectors-${{ hashFiles('fixtures/docs/uv/**', 'services/agent-core/voicecore/answer/ingest.py') }}
       - run: pnpm --filter @voicecore/demo exec playwright install --with-deps chromium
       - run: pnpm --filter @voicecore/demo e2e

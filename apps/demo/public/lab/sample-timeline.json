@@ -1,0 +1,590 @@
+{
+ "session_id": "s-0a591b4c32585d2e",
+ "reference_clock": "client",
+ "offsets_us": {
+  "client": 0,
+  "gateway": -1115130,
+  "agent-core": -54914119970
+ },
+ "offset_notes": {
+  "gateway": "ntp from ping/pong",
+  "agent-core": "derived: min(arrival - capture end) of mic frames, includes the smallest uplink delay"
+ },
+ "events": [
+  {
+   "attrs": {},
+   "event": "session_started",
+   "process": "gateway",
+   "span": "gateway",
+   "t_mono_us": 1184558,
+   "trace_id": "s-0a591b4c32585d2e",
+   "t_us": 69428
+  },
+  {
+   "attrs": {
+    "resumed": false
+   },
+   "event": "client_attached",
+   "process": "gateway",
+   "span": "gateway",
+   "t_mono_us": 1184594,
+   "trace_id": "s-0a591b4c32585d2e",
+   "t_us": 69464
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "client",
+   "event": "welcome",
+   "t_mono_us": 69789,
+   "attrs": {
+    "resume_window_ms": 10000,
+    "resumed": false,
+    "session_id": "s-0a591b4c32585d2e",
+    "dir": "in"
+   },
+   "t_us": 69789
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "capture",
+   "event": "mic.start",
+   "t_mono_us": 69909,
+   "attrs": {
+    "t0_us": 69907,
+    "dir": null
+   },
+   "t_us": 69909
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "client",
+   "event": "agent.generation_started",
+   "t_mono_us": 70297,
+   "attrs": {
+    "turn_id": "t1",
+    "dir": "in"
+   },
+   "generation_id": 1,
+   "t_us": 70297
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "turn",
+   "event": "text_input",
+   "t_mono_us": 54914191355,
+   "process": "agent-core",
+   "attrs": {},
+   "t_us": 71385
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "llm",
+   "event": "request",
+   "t_mono_us": 54914191432,
+   "process": "agent-core",
+   "attrs": {
+    "attempt": 0
+   },
+   "generation_id": 1,
+   "t_us": 71462
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "clock",
+   "event": "client_offset",
+   "t_mono_us": 54914210621,
+   "process": "agent-core",
+   "attrs": {
+    "client_to_agent_us": 54914120710
+   },
+   "t_us": 90651
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "llm",
+   "event": "first_token",
+   "t_mono_us": 54914506764,
+   "process": "agent-core",
+   "attrs": {},
+   "generation_id": 1,
+   "t_us": 386794
+  },
+  {
+   "attrs": {},
+   "event": "agent_first_frame",
+   "generation_id": 1,
+   "process": "gateway",
+   "span": "gateway",
+   "t_mono_us": 1652521,
+   "trace_id": "s-0a591b4c32585d2e",
+   "t_us": 537391
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "tts",
+   "event": "first_audio",
+   "t_mono_us": 54914658270,
+   "process": "agent-core",
+   "attrs": {},
+   "generation_id": 1,
+   "t_us": 538300
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "client",
+   "event": "answer.sources",
+   "t_mono_us": 545108,
+   "attrs": {
+    "sources": [
+     {
+      "n": 1,
+      "id": "2ec301558527",
+      "title": "Installing uv > Installation methods",
+      "url": "https://docs.astral.sh/uv/getting-started/installation/#installation-methods"
+     },
+     {
+      "n": 2,
+      "id": "7ced32678d6f",
+      "title": "uv > Installation",
+      "url": "https://docs.astral.sh/uv/#installation"
+     }
+    ],
+    "dir": "in"
+   },
+   "generation_id": 1,
+   "t_us": 545108
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "client",
+   "event": "agent.text",
+   "t_mono_us": 545912,
+   "attrs": {
+    "dir": "in"
+   },
+   "generation_id": 1,
+   "t_us": 545912
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "playout",
+   "event": "playout.started",
+   "t_mono_us": 548579,
+   "attrs": {
+    "dir": "out"
+   },
+   "generation_id": 1,
+   "t_us": 548579
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "capture",
+   "event": "user.onset",
+   "t_mono_us": 549093,
+   "attrs": {
+    "onset_us": 2709907,
+    "dir": null
+   },
+   "t_us": 549093
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "playout",
+   "event": "started",
+   "t_mono_us": 54914670593,
+   "process": "agent-core",
+   "attrs": {
+    "t_client_us": 548579
+   },
+   "generation_id": 1,
+   "t_us": 550623
+  },
+  {
+   "attrs": {
+    "dropped_queued": 0
+   },
+   "event": "fence",
+   "generation_id": 1,
+   "process": "gateway",
+   "span": "gateway",
+   "t_mono_us": 4106433,
+   "trace_id": "s-0a591b4c32585d2e",
+   "t_us": 2991303
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "playout",
+   "event": "playout.stopped",
+   "t_mono_us": 2992085,
+   "attrs": {
+    "reason": "cancel",
+    "dir": "out"
+   },
+   "generation_id": 1,
+   "t_us": 2992085
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "turn",
+   "event": "barge_in",
+   "t_mono_us": 54917112234,
+   "process": "agent-core",
+   "attrs": {
+    "onset_ms": 2760,
+    "capture_end_us": 2989907
+   },
+   "t_us": 2992264
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "runtime",
+   "event": "cancel",
+   "t_mono_us": 54917112425,
+   "process": "agent-core",
+   "attrs": {
+    "reason": "barge_in"
+   },
+   "generation_id": 1,
+   "t_us": 2992455
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "playout",
+   "event": "cancel.ack",
+   "t_mono_us": 2992579,
+   "attrs": {
+    "played_until_seq": 122,
+    "dir": "out"
+   },
+   "generation_id": 1,
+   "t_us": 2992579
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "client",
+   "event": "agent.cancel",
+   "t_mono_us": 2992868,
+   "attrs": {
+    "dir": "in"
+   },
+   "generation_id": 1,
+   "t_us": 2992868
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "client",
+   "event": "user.speech_started",
+   "t_mono_us": 2993087,
+   "attrs": {
+    "turn_id": "t2",
+    "dir": "in"
+   },
+   "t_us": 2993087
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "playout",
+   "event": "stopped",
+   "t_mono_us": 54917114032,
+   "process": "agent-core",
+   "attrs": {
+    "reason": "cancel",
+    "t_client_us": 2992085
+   },
+   "generation_id": 1,
+   "t_us": 2994062
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "playout",
+   "event": "cancel_ack",
+   "t_mono_us": 54917114214,
+   "process": "agent-core",
+   "attrs": {
+    "played_until_seq": 122
+   },
+   "generation_id": 1,
+   "t_us": 2994244
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "clock",
+   "event": "client_offset",
+   "t_mono_us": 54919211763,
+   "process": "agent-core",
+   "attrs": {
+    "client_to_agent_us": 54914119996
+   },
+   "t_us": 5091793
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "client",
+   "event": "transcript.partial",
+   "t_mono_us": 8892220,
+   "attrs": {
+    "turn_id": "t2",
+    "dir": "in"
+   },
+   "t_us": 8892220
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "turn",
+   "event": "endpoint",
+   "t_mono_us": 54923012225,
+   "process": "agent-core",
+   "attrs": {
+    "reason": "silence",
+    "onset_ms": 2760,
+    "silence_ms": 800,
+    "capture_end_us": 8889907
+   },
+   "t_us": 8892255
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "stt",
+   "event": "final",
+   "t_mono_us": 54923012535,
+   "process": "agent-core",
+   "attrs": {},
+   "t_us": 8892565
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "client",
+   "event": "transcript.final",
+   "t_mono_us": 8892661,
+   "attrs": {
+    "turn_id": "t2",
+    "dir": "in"
+   },
+   "t_us": 8892661
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "stt",
+   "event": "turn_text",
+   "t_mono_us": 54923012932,
+   "process": "agent-core",
+   "attrs": {
+    "chars": 20,
+    "waited_ms": 0
+   },
+   "t_us": 8892962
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "client",
+   "event": "agent.generation_started",
+   "t_mono_us": 8893105,
+   "attrs": {
+    "turn_id": "t2",
+    "dir": "in"
+   },
+   "generation_id": 2,
+   "t_us": 8893105
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "llm",
+   "event": "request",
+   "t_mono_us": 54923013182,
+   "process": "agent-core",
+   "attrs": {
+    "attempt": 0
+   },
+   "generation_id": 2,
+   "t_us": 8893212
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "llm",
+   "event": "first_token",
+   "t_mono_us": 54923341359,
+   "process": "agent-core",
+   "attrs": {},
+   "generation_id": 2,
+   "t_us": 9221389
+  },
+  {
+   "attrs": {},
+   "event": "agent_first_frame",
+   "generation_id": 2,
+   "process": "gateway",
+   "span": "gateway",
+   "t_mono_us": 10486626,
+   "trace_id": "s-0a591b4c32585d2e",
+   "t_us": 9371496
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "tts",
+   "event": "first_audio",
+   "t_mono_us": 54923492326,
+   "process": "agent-core",
+   "attrs": {},
+   "generation_id": 2,
+   "t_us": 9372356
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "client",
+   "event": "answer.sources",
+   "t_mono_us": 9376531,
+   "attrs": {
+    "sources": [
+     {
+      "n": 1,
+      "id": "2ec301558527",
+      "title": "Installing uv > Installation methods",
+      "url": "https://docs.astral.sh/uv/getting-started/installation/#installation-methods"
+     },
+     {
+      "n": 2,
+      "id": "7ced32678d6f",
+      "title": "uv > Installation",
+      "url": "https://docs.astral.sh/uv/#installation"
+     }
+    ],
+    "dir": "in"
+   },
+   "generation_id": 2,
+   "t_us": 9376531
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "client",
+   "event": "agent.text",
+   "t_mono_us": 9377121,
+   "attrs": {
+    "dir": "in"
+   },
+   "generation_id": 2,
+   "t_us": 9377121
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "playout",
+   "event": "playout.started",
+   "t_mono_us": 9387509,
+   "attrs": {
+    "dir": "out"
+   },
+   "generation_id": 2,
+   "t_us": 9387509
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "playout",
+   "event": "started",
+   "t_mono_us": 54923509618,
+   "process": "agent-core",
+   "attrs": {
+    "t_client_us": 9387509
+   },
+   "generation_id": 2,
+   "t_us": 9389648
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "clock",
+   "event": "client_offset",
+   "t_mono_us": 54924211809,
+   "process": "agent-core",
+   "attrs": {
+    "client_to_agent_us": 54914119970
+   },
+   "t_us": 10091839
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "process": "client",
+   "span": "playout",
+   "event": "playout.stopped",
+   "t_mono_us": 14450819,
+   "attrs": {
+    "reason": "done",
+    "dir": "out"
+   },
+   "generation_id": 2,
+   "t_us": 14450819
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "playout",
+   "event": "stopped",
+   "t_mono_us": 54928573561,
+   "process": "agent-core",
+   "attrs": {
+    "reason": "done",
+    "t_client_us": 14450819
+   },
+   "generation_id": 2,
+   "t_us": 14453591
+  },
+  {
+   "trace_id": "s-0a591b4c32585d2e",
+   "span": "clock",
+   "event": "client_offset",
+   "t_mono_us": 54929211514,
+   "process": "agent-core",
+   "attrs": {
+    "client_to_agent_us": 54914119970
+   },
+   "t_us": 15091544
+  },
+  {
+   "attrs": {
+    "ends_session": true
+   },
+   "event": "client_detached",
+   "process": "gateway",
+   "span": "gateway",
+   "t_mono_us": 18667255,
+   "trace_id": "s-0a591b4c32585d2e",
+   "t_us": 17552125
+  },
+  {
+   "attrs": {
+    "reason": "client"
+   },
+   "event": "session_ended",
+   "process": "gateway",
+   "span": "gateway",
+   "t_mono_us": 18667395,
+   "trace_id": "s-0a591b4c32585d2e",
+   "t_us": 17552265
+  }
+ ],
+ "label": "fake-provider (mock STT/LLM/TTS), real gateway, orchestrator, Silero VAD and SDK client",
+ "gateway_counters": {
+  "depth": 0,
+  "depth_out": 0,
+  "drops_duplicate": 0,
+  "drops_fenced": 0,
+  "drops_overload": 0,
+  "drops_overload_out": 0,
+  "drops_stale": 0,
+  "gaps": 0,
+  "sessions": 0
+ }
+}

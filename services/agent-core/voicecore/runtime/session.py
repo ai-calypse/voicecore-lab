@@ -220,7 +220,7 @@ class Session:
             self.state = State.USER_SPEAKING
             await self._event("user.speech_started", turn_id=self.turn_id)
         elif e.kind == "endpoint":
-            self.trace.emit("turn", "endpoint", reason=e.reason, onset_ms=e.onset_ms, capture_end_us=capture_end_us)
+            self.trace.emit("turn", "endpoint", reason=e.reason, onset_ms=e.onset_ms, silence_ms=e.silence_ms, capture_end_us=capture_end_us)
             self.state = State.THINKING
             if self.stt:
                 await self.stt.finalize()

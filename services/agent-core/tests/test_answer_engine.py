@@ -10,6 +10,7 @@ from voicecore.answer.ingest import ingest
 from voicecore.providers.mock import LLMScript, MockLLM
 
 DOCS = Path(__file__).resolve().parents[3] / "fixtures/docs/uv"
+pytestmark = pytest.mark.timeout(900)  # a cold CI runner embeds 524 passages before the first test
 
 
 @pytest.fixture(scope="module")

@@ -47,6 +47,7 @@ class Event:
     t_ms: int
     onset_ms: int = 0  # speech_started: first voiced frame; endpoint: start of the utterance
     reason: str = ""  # endpoint: silence | max_length | asr
+    silence_ms: int = 0  # endpoint: trailing silence waited before deciding
 
 
 class Floor:
@@ -126,6 +127,6 @@ class Floor:
         return self.final.rstrip()[-1:] in (".", "?", "!")
 
     def _end(self, reason: str) -> list[Event]:
-        e = Event("endpoint", self.t, self.onset, reason)
+        e = Event("endpoint", self.t, self.onset, reason, self.t - self.silence_start if self.silence_start is not None else 0)
         self.onset, self.silence_start, self.voiced_run, self.final = None, None, 0, ""
         return [e]

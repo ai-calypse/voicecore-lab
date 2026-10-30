@@ -21,7 +21,8 @@ export default defineConfig({
     { command: "go run ./cmd/fakeorch -addr 127.0.0.1:8765", cwd: gateway, port: 8765, reuseExistingServer: true },
     { command: "go run ./cmd/gateway -addr 127.0.0.1:8080 -upstream ws://127.0.0.1:8765", cwd: gateway, url: "http://127.0.0.1:8080/debug/counters", reuseExistingServer: true },
     // the real orchestrator with mock providers, behind a second gateway
-    { command: "uv run python -m voicecore.server --providers mock --port 8766", cwd: root, port: 8766, reuseExistingServer: true },
+    // builds the docs index at start: minutes on a cold CI runner without the vector cache
+    { command: "uv run python -m voicecore.server --providers mock --port 8766", cwd: root, port: 8766, reuseExistingServer: true, timeout: 600_000 },
     { command: "go run ./cmd/gateway -addr 127.0.0.1:8081 -upstream ws://127.0.0.1:8766", cwd: gateway, url: "http://127.0.0.1:8081/debug/counters", reuseExistingServer: true },
   ],
 });

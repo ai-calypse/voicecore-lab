@@ -33,6 +33,7 @@ def test_fixed_700_endpoints_at_labelled_end_plus_700(manifest):
     e = first(run(Policy("fixed", silence_ms=700), c["labels"]["speech"], c["duration_ms"]), "endpoint")
     assert e.reason == "silence"
     assert e.t_ms == -(-end // 20) * 20 + 700  # silence starts at the first frame after the label
+    assert e.silence_ms == 700
 
 
 def test_mid_pause_fixed_400_cuts_inside_the_pause_adaptive_does_not(manifest):

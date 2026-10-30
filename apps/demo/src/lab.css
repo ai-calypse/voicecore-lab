@@ -1,0 +1,85 @@
+:root {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --ink: #1d1f23;
+  --muted: #5c6370;
+  --line: #e2e3e0;
+  --grid: #ecedea;
+  --user: #2f6fd6;
+  --agent: #2b2f36;
+  --cut: #c4342d;
+  --endpoint: #7a8496;
+  --stt: #12867a;
+  --llm: #5b4fd1;
+  --tts: #b7791f;
+  --playout: #2f8a3c;
+  --focus: #2f6fd6;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131417;
+    --surface: #1b1d21;
+    --ink: #e8e9ec;
+    --muted: #9aa1ad;
+    --line: #2c2f35;
+    --grid: #24272c;
+    --user: #6ea0f2;
+    --agent: #c9ced8;
+    --cut: #f2685f;
+    --endpoint: #8f99ab;
+    --stt: #3cbfae;
+    --llm: #958bf2;
+    --tts: #e3a94a;
+    --playout: #5cbf68;
+    --focus: #6ea0f2;
+    color-scheme: dark;
+  }
+}
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.lab { max-width: 1240px; margin: 0 auto; padding: 20px 16px 40px; }
+.lab :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.lab-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.lab-head h1 { font-size: 20px; margin: 0; letter-spacing: -0.01em; }
+.lab-sub { margin: 2px 0 0; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.lab-load { position: relative; border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+.lab-load:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+.lab-load input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.lab-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1px; margin: 0 0 20px; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.stat { background: var(--surface); padding: 10px 14px; display: grid; gap: 2px; }
+.stat dt { color: var(--muted); font-size: 12px; }
+.stat dd { margin: 0; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat-note { color: var(--muted); font-size: 12px; }
+.lab-chart { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow-x: auto; margin-bottom: 20px; }
+.lab-chart svg { display: block; }
+.grid { stroke: var(--grid); }
+.divider { stroke: var(--line); }
+.tick, .row-label, .bar-label, .seg-label { font-size: 11px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.row-label { fill: var(--ink); font-size: 12px; }
+.seg.user rect { fill: var(--user); }
+.seg.agent rect { fill: var(--agent); }
+.seg.agent .seg-label { fill: var(--surface); font-weight: 600; }
+.seg.interrupted rect:first-child { fill: url(#hatch); }
+.seg.interrupted .seg-label { fill: var(--cut); }
+.hatch-bg { fill: color-mix(in srgb, var(--cut) 14%, var(--surface)); }
+.hatch-line { stroke: var(--cut); stroke-width: 2; opacity: 0.45; }
+.seg .cut { fill: var(--cut); }
+.bar.endpoint rect { fill: var(--endpoint); }
+.bar.stt rect { fill: var(--stt); }
+.bar.llm rect { fill: var(--llm); }
+.bar.tts rect { fill: var(--tts); }
+.bar.playout rect { fill: var(--playout); }
+.lab-events-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.lab-events h2 { font-size: 15px; margin: 0; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { font: inherit; font-size: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+.chip[aria-pressed="true"] { color: var(--ink); border-color: var(--muted); }
+.table-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: auto; max-height: 420px; }
+table { border-collapse: collapse; width: 100%; min-width: 680px; font-size: 12.5px; }
+th { position: sticky; top: 0; background: var(--surface); text-align: left; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--line); }
+th, td { padding: 5px 10px; vertical-align: top; }
+tbody tr + tr td { border-top: 1px solid var(--grid); }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; }
+.details { color: var(--muted); overflow-wrap: anywhere; min-width: 220px; }
+.proc { white-space: nowrap; }
