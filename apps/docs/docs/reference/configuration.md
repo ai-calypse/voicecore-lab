@@ -26,6 +26,7 @@ Run the gateway with `go run ./cmd/gateway` from `services/realtime-gateway`, or
 | `-probe` | empty | GET this URL and exit 0 on HTTP 200, else 1; the container healthcheck, since the image has no curl |
 | `-turnstile-url` | Cloudflare's siteverify | where Turnstile tokens are checked; tests point it at a fake |
 | `-admin-addr` | empty (off) | operator listener for `/metrics` (Prometheus) and `/debug/counters`; docker compose uses `0.0.0.0:9091` and publishes it on 127.0.0.1 only |
+| `-env` | `dev` | `prod` refuses to start, listing every gap, unless `GATEWAY_SECRET` (32+ bytes), `TURNSTILE_SECRET`, non-local `-origins` and `-hosts` without catch-all patterns, and `-trusted-proxies` are set |
 | `-copy-id` | `gw` | this gateway copy's id; every session id is `s-<copy id>-<16 hex>`, so a load balancer can route a resume to its owner |
 | `-trusted-proxies` | empty | comma-separated CIDRs, such as a load balancer's, whose `X-Forwarded-For` header is believed for the client IP; empty ignores the header |
 
@@ -66,6 +67,7 @@ Run the orchestrator with `uv run python -m voicecore.server` from the repositor
 | `--llm-provider` | `Cerebras` for the default model | OpenRouter provider to try first; `any` lets OpenRouter route |
 | `--llm-reasoning` | `low` for the default model | reasoning effort; `none` omits it, for models without reasoning |
 | `--tts` | `deepgram` | text-to-speech provider: `deepgram` (Aura-2, `usd` pool) or `cartesia` (sonic-3.6, `cartesia_credits` pool) |
+| `--env` | `dev` | `prod` refuses to start unless the spend ledger is safe: in Redis, or on a mounted volume rather than the image's own filesystem, where a new machine would start again at 0 spent |
 | `--pool` | `usd` | `public` makes every reservation also count against the public sub-cap; over it, sessions answer in text from the docs |
 | `--drain-s` | 25 | on SIGTERM, seconds open sessions may finish before they are ended with reason `shutdown` |
 | `--metrics-port` | 0 (off) | serve Prometheus `/metrics` on this port; docker compose uses 9464 and publishes it on 127.0.0.1 only |

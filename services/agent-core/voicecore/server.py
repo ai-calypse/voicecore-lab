@@ -271,6 +271,21 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
     return handler
 
 
+def prod_problems(ledger: str, root: str = "/") -> list[str]:
+    """What a public deployment must not run with. The ledger is the money record: on the image's own filesystem a
+    cold start (a new machine) would begin again at 0 spent, so it must be on a mounted volume, or in Redis."""
+    if ledger.startswith(("redis://", "rediss://")):
+        return []
+    folder = Path(ledger).parent
+    if not folder.is_dir():
+        return [f"ledger folder does not exist: {folder}"]
+    if not os.access(folder, os.W_OK):
+        return [f"ledger folder is not writable: {folder}"]
+    if os.stat(folder).st_dev == os.stat(root).st_dev:
+        return [f"ledger must be on a mounted volume, not the image's filesystem: {ledger}"]
+    return []
+
+
 END_REASONS = {"client", "expired", "shutdown", "error", "budget", "unavailable"}  # the gateway's close reasons
 
 
@@ -298,12 +313,17 @@ async def main():
     ap.add_argument("--llm-reasoning", default=None, help="reasoning effort for reasoning models; 'none' to omit")
     ap.add_argument("--tts", choices=sorted(TTS), default="deepgram", help="speech synthesis provider (live mode)")
     ap.add_argument("--drain-s", type=float, default=25.0, help="on SIGTERM, seconds to let open sessions finish")
+    ap.add_argument("--env", choices=["dev", "prod"], default="dev", help="prod: refuse to start unless the ledger is safe")
     ap.add_argument("--pool", choices=["usd", "public"], default="usd",
                     help="public: spend also counts against the public sub-cap (2 USD, 0.50 a day); over it, answer in text")
     ap.add_argument("--metrics-port", type=int, default=0, help="Prometheus /metrics port, e.g. 9464 (0 = off); keep it off the public internet")
     ap.add_argument("--metrics-host", default="0.0.0.0", help="listen address for /metrics (the scraper reaches it inside compose)")
     args = ap.parse_args()
     logs.setup()
+    if args.env == "prod" and (problems := prod_problems(str(budget.ledger_file()) if not budget._redis_url() else budget._redis_url())):
+        for problem in problems:
+            log.error("refusing to start with --env prod: %s", problem)
+        raise SystemExit(1)
     args.policy = args.policy or ("eager" if args.providers == "live" else "fixed")
     policy = Policy("eager", asr_silence_ms=200) if args.policy == "eager" else Policy(args.policy)
     llm_opts = {}

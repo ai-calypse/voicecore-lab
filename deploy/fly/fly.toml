@@ -1,0 +1,53 @@
+# Fly app "voicecore" (Step 09 Phase 11): READY, NOT DEPLOYED. Deploying needs the user's go-ahead; see
+# docs/ops/deploy.md for the preconditions (secrets, the ledger volume, provider spend limits, TRUSTED_PROXIES).
+# From the repository root: fly deploy . -c deploy/fly/fly.toml
+app = "voicecore"
+primary_region = "iad"
+kill_signal = "SIGTERM"  # Fly's default is SIGINT
+kill_timeout = 45        # the gateway's 25 s drain, then the orchestrator's, plus margin; Fly's default is 5 s
+
+[build]
+  dockerfile = "deploy/fly/Dockerfile"
+
+[env]
+  VOICECORE_ENV = "prod"
+  PROVIDERS = "live"
+  POOL = "public"                                 # the public sub-cap; over it, answers in text
+  VOICECORE_LEDGER = "/data/spend_ledger.json"    # on the volume: prod refuses to start otherwise
+  LOG_FORMAT = "json"
+  DOCS_URL = "https://voicecore-docs.fly.dev/"
+  ORIGINS = "voicecore-docs.fly.dev"
+  HOSTS = "voicecore.fly.dev"
+  SESSIONS_PER_IP_PER_DAY = "20"
+  # TRUSTED_PROXIES: Fly's proxy range, looked up and set at deploy time. Until it is, -env prod refuses to start.
+
+[mounts]
+  source = "voicecore_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "60s"
+    interval = "15s"
+    timeout = "3s"
+    method = "GET"
+    path = "/readyz"
+    headers = { Host = "voicecore.fly.dev" }  # the gateway answers only its -hosts names
+
+[[metrics]]
+  port = 9464  # the orchestrator
+  path = "/metrics"
+
+[[metrics]]
+  port = 9091  # the gateway's admin listener
+  path = "/metrics"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"

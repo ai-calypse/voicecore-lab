@@ -1,5 +1,5 @@
 # All non-live tests in every language. Live tests spend money: run `make test-live` on purpose.
-.PHONY: test test-go test-py test-ts test-live e2e monitoring-check monitoring-test redis store-test scale-test
+.PHONY: test test-go test-py test-ts test-live e2e monitoring-check monitoring-test redis store-test scale-test fly-image-test
 
 test: test-go test-py test-ts
 
@@ -42,3 +42,7 @@ store-test:
 scale-test:
 	docker compose --profile scale up -d --build --wait --wait-timeout 300 redis seed orch-1 orch-2 gw-1 gw-2 lb
 	uv run pytest -m docker harness/tests/test_scale.py -p no:randomly
+
+# The Fly image built and run locally (never deployed): boots, answers, drains on SIGTERM, refuses an unsafe prod start.
+fly-image-test:
+	uv run pytest -m docker harness/tests/test_fly_image.py -p no:randomly

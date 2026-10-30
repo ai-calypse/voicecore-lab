@@ -1,0 +1,47 @@
+# Production overlay (Step 09 Phase 11), for a single host behind a TLS reverse proxy:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml [--profile monitoring] up -d
+# Needs in the environment or .env: GATEWAY_SECRET (32+ bytes), TURNSTILE_SECRET, PUBLIC_GATEWAY, PUBLIC_HOST,
+# PUBLIC_ORIGIN, TRUSTED_PROXIES and the provider keys. Fly uses deploy/fly instead; see docs/ops/deploy.md.
+services:
+  agent-core:
+    command: ["--env", "prod", "--providers", "live", "--pool", "public", "--metrics-port", "9464", "--docs-url", "${PUBLIC_DOCS_URL}"]
+    environment: ["VOICECORE_VERSION=${VERSION:-dev}", "LOG_FORMAT=json", "VOICECORE_LEDGER=/data/spend_ledger.json"]
+    volumes: !override ["voicecore-ledger:/data"]  # the money record survives a rebuild; prod refuses a ledger on the image
+    ports: !reset []  # metrics are scraped inside the compose network only
+
+  gateway:
+    command: ["-env", "prod", "-addr", "0.0.0.0:8080", "-upstream", "ws://agent-core:8765", "-origins", "${PUBLIC_ORIGIN}",
+              "-hosts", "${PUBLIC_HOST}", "-trusted-proxies", "${TRUSTED_PROXIES}", "-admin-addr", "0.0.0.0:9091",
+              "-sessions-per-ip-per-day", "20"]
+    environment: ["GATEWAY_SECRET=${GATEWAY_SECRET:?set a 32+ byte secret}", "TURNSTILE_SECRET=${TURNSTILE_SECRET:?set it}", "LOG_FORMAT=json"]
+    ports: !override ["127.0.0.1:8080:8080"]  # the TLS proxy in front publishes it; the admin port stays private
+
+  demo:
+    build: { args: { VITE_GATEWAY: "${PUBLIC_GATEWAY}" } }
+  docs:
+    build: { args: { VOICECORE_GATEWAY: "${PUBLIC_GATEWAY}" } }
+
+  # third-party images pinned by digest (tags as of 2026-10-30), so a rebuilt stack is the one that was tested
+  prometheus:
+    image: prom/prometheus:v3.5.0@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996
+    ports: !reset []
+  alertmanager:
+    image: prom/alertmanager:v0.28.1@sha256:27c475db5fb156cab31d5c18a4251ac7ed567746a2483ff264516437a39b15ba
+    ports: !reset []
+  alert-sink:
+    image: python:3.13-slim@sha256:2d44738ebf4ce5f63b9d9ea871e9c7cfdc0426f7b0c97cac915fd88ded1d86bb
+  loki:
+    image: grafana/loki:3.6.7@sha256:3c8fd3570dd9219951a60d3f919c7f31923d10baee578b77bc26c4a0b32d092d
+  alloy:
+    image: grafana/alloy:v1.10.0@sha256:1bc130e909116a4bf950eb5187a346007d3b796f96832b529acb14a64e41230f
+  grafana:
+    image: grafana/grafana:12.1.0@sha256:6ac590e7cabc2fbe8d7b8fc1ce9c9f0582177b334e0df9c927ebd9670469440f
+    environment: !override ["GF_AUTH_ANONYMOUS_ENABLED=false", "GF_ANALYTICS_REPORTING_ENABLED=false",
+                            "GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/voicecore.json"]
+  redis:
+    image: redis:7.4-alpine@sha256:8da19c7399dca900c6822a1cf30f9d2285585e2c4b457ff4095b0f4500054d3f
+  lb:
+    image: nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
+
+volumes:
+  voicecore-ledger:

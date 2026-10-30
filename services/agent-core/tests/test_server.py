@@ -320,3 +320,15 @@ async def test_mock_billed_public_reservations_carry_the_sub_cap():
     assert budget.total("public") == 0.0017
     for s in settle:
         s()
+
+
+def test_prod_refuses_a_ledger_on_the_image_filesystem(tmp_path):
+    """A cold start must never reset the caps: in prod the ledger lives on a mounted volume (or in Redis)."""
+    from voicecore.server import prod_problems
+
+    ledger = tmp_path / "x.json"
+    assert prod_problems(str(ledger), root=str(tmp_path)) == [
+        f"ledger must be on a mounted volume, not the image's filesystem: {ledger}"]  # same device as the root
+    assert prod_problems(str(tmp_path / "missing" / "x.json"), root="/nonexistent-root") == [
+        f"ledger folder does not exist: {tmp_path / 'missing'}"]
+    assert prod_problems("redis://redis:6379/0") == []

@@ -1,0 +1,31 @@
+name: deploy
+# Deploys deploy/fly to the Fly app "voicecore". Manual only, and never run until the user decides to deploy:
+# it needs the FLY_API_TOKEN repository secret, which does not exist yet. Preconditions: docs/ops/deploy.md.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false  # never cut a deploy off halfway
+
+jobs:
+  fly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: superfly/flyctl-actions/setup-flyctl@dfdfedc86b296f5e5384f755a18bf400409a15d0 # v1.4
+      - run: flyctl deploy . -c deploy/fly/fly.toml --remote-only --build-arg VERSION=${GITHUB_SHA::7}
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - name: prod smoke (prod requires Turnstile, so the answer path is covered by test_fly_image instead)
+        run: |
+          base=https://voicecore.fly.dev
+          for i in $(seq 1 30); do curl -sf "$base/readyz" >/dev/null && break; sleep 5; done
+          curl -sf "$base/readyz" | grep -q '"ready":true'
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST "$base/v1/session")" = 403   # no human check: refused
+          test "$(curl -s -o /dev/null -w '%{http_code}' "$base/debug/counters")" = 404        # admin only, never public
