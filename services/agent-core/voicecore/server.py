@@ -43,7 +43,8 @@ LLM_CAP_USD = 0.02  # gpt-oss-120b on Cerebras: about $0.0006 per grounded turn,
 
 
 def mock_providers():
-    return {"stt": MockSTT(canned="how does eager endpointing work?"), "llm": MockLLM(LLMScript(tokens=[w + " " for w in MOCK_ANSWER.split()])),
+    stt = lambda: MockSTT(canned="how does eager endpointing work?")  # noqa: E731
+    return {"stt": stt(), "stt_factory": stt, "llm": MockLLM(LLMScript(tokens=[w + " " for w in MOCK_ANSWER.split()])),
             "tts": MockTTS(), "tts_factory": MockTTS}, []
 
 
@@ -105,6 +106,11 @@ def live_providers(sid, llm_opts=None, tts_name="deepgram"):
     stt_res, llm_res = budget.reserve_all([("usd", round(MAX_AUDIO_S / 60 * PRICE_PER_MIN, 6), f"server stt {sid}"),
                                            ("usd", LLM_CAP_USD, f"server llm {sid}")])
     tts = {"res": None, "streams": []}
+    stt_streams = []
+
+    def new_stt():  # a reconnect opens a second stream; both bill one reservation and share its audio cap
+        stt_streams.append(make_live("stt", stt_res, max_audio_s=MAX_AUDIO_S - sum(t.audio_s for t in stt_streams)))
+        return stt_streams[-1]
 
     def new_tts(ws=None):  # a retry opens a second stream; both bill one reservation and share its character cap
         if tts["res"] is None:
@@ -117,13 +123,14 @@ def live_providers(sid, llm_opts=None, tts_name="deepgram"):
         return tts["streams"][-1]
 
     try:
-        p = {"stt": make_live("stt", stt_res), "llm": make_live("llm", llm_res, **(llm_opts or {})),
+        p = {"stt": new_stt(), "stt_factory": new_stt, "llm": make_live("llm", llm_res, **(llm_opts or {})),
              "tts": OnDemandTTS(new_tts, mod.open_socket), "tts_factory": lambda: OnDemandTTS(new_tts, mod.open_socket)}
     except Exception:  # nothing was used: release the reservations instead of leaving them counting
         for r in (stt_res, llm_res):
             budget.settle(r, 0)
         raise
-    settle = [lambda: budget.settle(stt_res, p["stt"].cost_usd(), request_id=p["stt"].request_id),
+    settle = [lambda: budget.settle(stt_res, round(sum(t.cost_usd() for t in stt_streams), 6),
+                                    request_ids=[t.request_id for t in stt_streams], streams=len(stt_streams)),
               lambda: budget.settle(llm_res, round(p["llm"].cost_usd, 6), calls=p["llm"].calls),
               lambda: tts["res"] and budget.settle(tts["res"], cost(sum(t.chars for t in tts["streams"])),
                                                    chars=sum(t.chars for t in tts["streams"]), streams=len(tts["streams"]))]

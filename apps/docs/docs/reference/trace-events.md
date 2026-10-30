@@ -48,7 +48,8 @@ The orchestrator emits these events in spans `stt`, `llm` and `tts`. They time t
 |---|---|---|---|
 | `stt` | `final` | `text` | a final transcript arrived from the STT |
 | `stt` | `turn_text` | `turn_id`, `chars`, `waited_ms`, `text` | the transcript for the turn is settled; `waited_ms` is how long the session waited for it after the endpoint |
-| `stt` | `connect` | none | the session opened its STT stream |
+| `stt` | `connect` | none | the session opened an STT stream, at the start or on a reconnect |
+| `stt` | `reconnect` | none | the STT stream dropped and the session opened its one replacement |
 | `stt` | `error` | `kind` | the STT stream failed |
 | `llm` | `request` | `turn_id`, `attempt` | an answer attempt starts; `attempt` counts retries from 0 |
 | `llm` | `first_token` | none | the first answer token arrived |

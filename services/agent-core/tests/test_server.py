@@ -276,3 +276,18 @@ def test_metrics_endpoint_type_lines(tmp_path):
         p.send_signal(signal.SIGTERM)
         if p.wait(timeout=10) is None:
             p.kill()
+
+
+async def test_settle_bills_all_stt_streams():
+    from voicecore.providers.deepgram_stt import MAX_AUDIO_S, PRICE_PER_MIN
+    from voicecore.server import live_providers
+
+    p, settle = live_providers("s-r")
+    p["stt"].audio_s = 3.0  # the first stream dropped after 3 s of speech
+    second = p["stt_factory"]()
+    assert second.max_audio_s == MAX_AUDIO_S - 3.0  # one cap for the session, not one per stream
+    second.audio_s = 2.0
+    for s in settle:
+        s()
+    stt = next(e for e in json.loads(budget.ledger_file().read_text())["entries"] if e["label"] == "server stt s-r")
+    assert stt["status"] == "settled" and stt["amount"] == round(5.0 / 60 * PRICE_PER_MIN, 6)

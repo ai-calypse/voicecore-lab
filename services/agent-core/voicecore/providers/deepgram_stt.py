@@ -24,8 +24,9 @@ _CLOSED = object()
 
 
 class DeepgramSTT:
-    def __init__(self, reservation, key: str | None = None, url: str = URL):
-        self.reservation, self.url = reservation, url
+    def __init__(self, reservation, key: str | None = None, url: str = URL, max_audio_s: float = MAX_AUDIO_S):
+        """max_audio_s: this stream's share of the session cap (a reconnected stream gets what the first left)."""
+        self.reservation, self.url, self.max_audio_s = reservation, url, max_audio_s
         self._key = key or keys.key("DEEPGRAM_API_KEY") or ""
         self._ws = None
         self._reader = None
@@ -78,7 +79,7 @@ class DeepgramSTT:
     async def send(self, pcm: bytes) -> None:
         if self._closed:
             return
-        if self.audio_s + len(pcm) / 32000 > MAX_AUDIO_S:
+        if self.audio_s + len(pcm) / 32000 > self.max_audio_s:
             raise ProviderError("fatal", f"per-session STT cap of {MAX_AUDIO_S} s reached")
         if self._ws is None:
             await self._connect()

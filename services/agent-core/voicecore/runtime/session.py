@@ -62,9 +62,10 @@ class Session:
                  stt: STTStream | None = None, vad=None, policy: Policy = Policy(), tracer: Tracer | None = None,
                  answer: Answer | None = None, stall_s: float = 8.0, final_wait_s: float = 5.0,
                  tts_factory: Callable[[], TTSStream] | None = None, breakers: dict[str, Breaker] | None = None,
-                 turn_deadline_s: float = 20.0):
+                 turn_deadline_s: float = 20.0, stt_factory: Callable[[], STTStream] | None = None):
         """tts_factory: builds a fresh TTS stream for the one retry after a TTS failure.
-        breakers: the process's circuit breakers by provider kind (stt, llm, tts), shared by its sessions."""
+        breakers: the process's circuit breakers by provider kind (stt, llm, tts), shared by its sessions.
+        stt_factory: opens a new STT stream for the one reconnect after a drop (same reservation and audio cap)."""
         self.sid, self.llm, self.tts, self.stt, self.vad = sid, llm, tts, stt, vad
         self.tts_factory = tts_factory
         self._send = send
@@ -73,6 +74,10 @@ class Session:
         self.answer = answer or self._llm_answer
         self.stall_s, self.final_wait_s, self.turn_deadline_s = stall_s, final_wait_s, turn_deadline_s
         self.breakers = breakers or {}
+        self.stt_factory, self._stt_reconnects = stt_factory, 0
+        self._since_final: deque[bytes] = deque(maxlen=500)  # audio sent to STT since its last final (10 s), replayed on reconnect
+        self._stt_ok = asyncio.Event()  # cleared while a dropped stream is being replaced; the sender waits on it
+        self._stt_ok.set()
         self._probes: set[str] = set()  # providers whose half-open probe this session holds
         self._voice_input_down = False
         self._speech_down_said = False
@@ -541,28 +546,67 @@ class Session:
     # --- STT -------------------------------------------------------------------
 
     async def _stt_sender(self):
-        try:
-            while True:
-                await self.stt.send(await self.stt_q.get())
-        except ProviderError as err:  # ponytail: no STT reconnect; text keeps working. Add one if live sessions show socket drops
-            self._provider_error("stt", err.kind)
-            if err.kind == "fatal":  # e.g. the per-session STT cap: say so once, text still works
-                await self.start_generation(self.turn_id or "t0", "", reply=VOICE_LIMIT)
+        """Feeds queued speech to STT. On a drop it only waits: the reader owns reconnects, so one drop counts once."""
+        while self.stt:
+            chunk = await self.stt_q.get()
+            self._since_final.append(chunk)
+            try:
+                await self.stt.send(chunk)
+            except ProviderError as err:
+                if err.kind == "fatal":  # e.g. the per-session STT cap: say so once, text still works
+                    self._provider_error("stt", err.kind)
+                    await self.start_generation(self.turn_id or "t0", "", reply=VOICE_LIMIT)
+                    return
+                self._stt_ok.clear()
+                await self._stt_ok.wait()  # the reader replaced the stream (and replayed this chunk), or gave up
 
     async def _stt_reader(self):
-        try:
-            async for e in self.stt.events():
-                self._breaker("stt", failed=False)
-                if isinstance(e, Partial):
-                    self.transcript.partial(e.text)
-                elif isinstance(e, Final):
-                    self.transcript.final(e.text)
-                    self.trace.emit("stt", "final", text=e.text)
-                    for fe in self.floor.transcript_final(e.text):  # asr_assisted: the final itself ends the turn
-                        await self._on_floor(fe, capture_end_us=self._last_capture_end_us)
-                await self._event("transcript.partial", turn_id=self.turn_id or "t0", text=self.transcript.text())
-        except ProviderError as err:
-            self._provider_error("stt", err.kind)
+        while self.stt:
+            try:
+                async for e in self.stt.events():
+                    self._breaker("stt", failed=False)
+                    if isinstance(e, Partial):
+                        self.transcript.partial(e.text)
+                    elif isinstance(e, Final):
+                        self._since_final.clear()  # a reconnect replays only what this final has not covered
+                        self.transcript.final(e.text)
+                        self.trace.emit("stt", "final", text=e.text)
+                        for fe in self.floor.transcript_final(e.text):  # asr_assisted: the final itself ends the turn
+                            await self._on_floor(fe, capture_end_us=self._last_capture_end_us)
+                    await self._event("transcript.partial", turn_id=self.turn_id or "t0", text=self.transcript.text())
+                return  # the stream closed normally
+            except ProviderError as err:
+                self._provider_error("stt", err.kind)
+                if err.kind == "fatal" or not await self._stt_reconnect():
+                    return
+
+    async def _stt_reconnect(self) -> bool:
+        """One reconnect per session, 0.2 s after a drop. If the turn already ended, its partial becomes final now
+        (no 5 s wait and nothing to replay); otherwise the new stream hears the audio since the last final again."""
+        ended = self.state == State.THINKING
+        if ended and self.transcript.pending:
+            self.transcript.final(self.transcript.pending)
+        if ended:
+            self._since_final.clear()
+        with contextlib.suppress(Exception):
+            await self.stt.close()
+        if self._stt_reconnects >= 1 or not self.stt_factory or not self._allow("stt"):
+            self.stt, self._voice_input_down = None, True
+            self._stt_ok.set()  # releases the sender, which stops
+            await self.start_generation(self.turn_id or "t0", "", reply=VOICE_INPUT_DOWN)
+            return False
+        self._stt_reconnects += 1
+        await asyncio.sleep(0.2)
+        self.stt = self.stt_factory()
+        self.trace.emit("stt", "reconnect")
+        self.trace.emit("stt", "connect")
+        if hasattr(self.stt, "warm"):
+            await self.stt.warm()
+        for chunk in list(self._since_final):
+            with contextlib.suppress(ProviderError):  # a failing replay surfaces as the new stream's error
+                await self.stt.send(chunk)
+        self._stt_ok.set()
+        return True
 
     def _provider_error(self, provider: str, kind: str, gen: int | None = None):
         self.trace.emit(provider, "error", gen=gen, kind=kind)
