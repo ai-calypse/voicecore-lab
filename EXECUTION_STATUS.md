@@ -26,7 +26,7 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 | 2026-10-29 | S00-T03, S00-T04 | Claude Code (Opus 5.5) | `fixtures/`, `harness/build_fixtures.py`, `harness/build_local_fixtures.py`, `harness/tests/test_fixtures.py`, `docs/adr/0001-engine-ownership.md` | `uv run pytest harness/tests` → 10 passed; 8/8 manifest mutations caught; byte-identical rebuild; code-review findings fixed | Aura clips local only (terms unconfirmed); usd pool $0.598 of $5.00 |
 | 2026-10-30 | S01-T01..T07 | Claude Code (Opus 5.5) | `c5cc68e`..HEAD; `packages/`, `apps/demo/`, `services/realtime-gateway/`, `benchmarks/transport.md` | `make test` (Go 20 session + protocol, pytest 18, vitest 17) and `make e2e` (2 Playwright) pass | No sudo: shaped loss profile left to the user |
 | 2026-10-30 | S02-T01..T05 | Claude Code (Opus 5.5) | `voicecore/turntaking/`, `harness/{timeline,turn_sweep}.py`, `reports/turn_policy*`, `docs/adr/0002-turn-policy.md` | `uv run pytest -m 'not live'` → 38 passed; sweep + holdout run once | Fixtures rebuilt at −23 dBFS for mixed clips |
-| 2026-10-30 | S03-T01..T07 | Claude Code (Opus 5.5) | `voicecore/{providers,runtime}/`, `server.py`, `harness/{runner,latency.py,listen_repro.py}`, `reports/latency_breakdown.md` | `make test` (pytest 62, Go, vitest) + `make e2e` (3) pass; live contracts 7 passed; live latency n = 10 | usd pool $0.706, credits 1,279 |
+| 2026-10-30 | S03-T01..T07 | Claude Code (Opus 5.5) | `voicecore/{providers,runtime}/`, `server.py`, `harness/{runner,latency.py,listen_repro.py}`, `reports/latency_breakdown.md` | `make test` (pytest 65, Go, vitest) + `make e2e` (3) pass; code review (02–03) 10 findings fixed; live contracts 7 passed; live latency n = 10 | usd pool $0.706, credits 1,279 |
 
 ## Handoff history
 
@@ -34,6 +34,7 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 |---|---|---|---|
 | 2026-10-29 | 00 | Registers filled; `make test` 16 passed; CI green on `eb7ee6e`; code-review findings fixed. User declined own-voice recordings and waived listen/read checks | 01 |
 | 2026-10-30 | 01 (one blocked item) | Registers filled; `make test` + `make e2e` pass; CI green; code review (medium) 10 findings fixed. Open: S01-T05 loss profile needs sudo (user). User asked to complete all steps, so Step 02 proceeds; `/improve-codebase-architecture` and `/thermo-nuclear-code-quality-review` are user-run and not yet run | 02 |
-| 2026-10-30 | 02 (manual echo check open) | Registers filled; tests pass; ADR 0002 | 03 |
+| 2026-10-30 | 02 (manual echo check open) | Registers filled; tests pass; ADR 0002; code review done together with Step 03 | 03 |
+| 2026-10-30 | 03 | Registers filled; tests + e2e + live contracts pass; latency report; code review fixed | 04 |
 
 **Planning update (2026-10-28):** Documented initial STT/VAD/LLM/TTS provider recommendations in the master plan. No live integration, verification, measurements, or step completion is implied.

@@ -29,7 +29,9 @@ def played_power(clip, clips):
     n = len(read_frames(clip))
     track = np.zeros(n * 320, np.int16)
     track[off * 16 : off * 16 + len(ref)] = ref[: n * 320 - off * 16]
-    power = np.mean((track.reshape(-1, 320).astype(np.float64) / 32768) ** 2, axis=1)
+    from voicecore.turntaking.floor import power as frame_power
+
+    power = np.array([frame_power(x) for x in track.reshape(-1, 320)])
     playing = (np.arange(n) * 20 >= off) & (np.arange(n) * 20 < off + len(ref) // 16)
     return power, playing
 

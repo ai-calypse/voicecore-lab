@@ -23,3 +23,7 @@ def test_two_sentences_give_two_chunks_and_urls_and_citations_stay_whole():
 
 def test_speechify_drops_citations_and_raw_urls():
     assert speechify("Run `uv lock` [1]. See https://docs.astral.sh/uv/ [2, 3].") == "Run uv lock. See the link in the chat."
+
+
+def test_speechify_keeps_identifiers_with_underscores_and_hashes():
+    assert speechify("Set `UV_INDEX_URL` (see issue #12).") == "Set UV_INDEX_URL (see issue #12)."

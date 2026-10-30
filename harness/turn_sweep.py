@@ -8,11 +8,10 @@ import argparse
 import json
 from dataclasses import replace
 
-import numpy as np
 from fixtures import ROOT, load_manifest, played_power, read_frames
 from timeline import endpoint_scores
 
-from voicecore.turntaking.floor import Floor, Policy
+from voicecore.turntaking.floor import Floor, Policy, power
 from voicecore.turntaking.vad_silero import SileroVAD
 
 CATEGORIES = ("single", "noisy_10db", "noisy_5db", "slow_0_8x", "mid_pause_600ms")
@@ -43,7 +42,7 @@ def run(policy, clip, clips=None):
         if ref is None:
             events += floor.frame(p)
         else:
-            events += floor.frame(p, float(np.mean((mic[k] / 32768) ** 2)), ref[k] if playing[k] else None)
+            events += floor.frame(p, power(mic[k]), ref[k] if playing[k] else None)
     return events
 
 

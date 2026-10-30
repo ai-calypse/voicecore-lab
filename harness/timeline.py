@@ -46,8 +46,11 @@ def turn_breakdown(client, trace, turn_end_ms):
     def at(span, event, g=None):
         return next(e for e in trace if e["span"] == span and e["event"] == event and (g is None or e.get("generation_id") == g))
 
-    ep, tt = at("turn", "endpoint"), at("stt", "turn_text")
+    def last_before(span, event, t):  # the endpoint and transcript that led to this generation, not an earlier one
+        return [e for e in trace if e["span"] == span and e["event"] == event and e["t_mono_us"] <= t][-1]
+
     req, ft, fa = at("llm", "request", gen), at("llm", "first_token", gen), at("tts", "first_audio", gen)
+    ep, tt = last_before("turn", "endpoint", req["t_mono_us"]), last_before("stt", "turn_text", req["t_mono_us"])
     ms = lambda a, b: (b - a) / 1000  # noqa: E731
     b = {"endpoint_delay_ms": ms(speech_end, ep["attrs"]["capture_end_us"]), "stt_settle_ms": ms(ep["t_mono_us"], tt["t_mono_us"]),
          "llm_first_token_ms": ms(req["t_mono_us"], ft["t_mono_us"]), "tts_first_audio_ms": ms(ft["t_mono_us"], fa["t_mono_us"]),

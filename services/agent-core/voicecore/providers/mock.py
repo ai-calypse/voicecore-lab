@@ -90,7 +90,7 @@ class MockTTS:
         self.first_audio_ms, self.ms_per_char, self.item_delay_ms, self.error = first_audio_ms, ms_per_char, item_delay_ms, error
         self._jobs: asyncio.Queue = asyncio.Queue()
         self._out: asyncio.Queue = asyncio.Queue()
-        self._cancelled: set[int] = set()
+        self._fence = 0
         self._started: set[int] = set()
         self._worker = None
         self.chars = 0
@@ -104,7 +104,7 @@ class MockTTS:
     async def _run(self):
         while (job := await self._jobs.get()) is not _CLOSED:
             gen, text, last = job
-            if gen in self._cancelled:
+            if gen <= self._fence:
                 continue
             if self.error:
                 self._out.put_nowait(self.error)
@@ -115,11 +115,11 @@ class MockTTS:
             n_items = max(1, math.ceil(len(text) * self.ms_per_char / 20))
             t = np.arange(480) / 24000
             for _ in range(n_items):
-                if gen in self._cancelled:
+                if gen <= self._fence:
                     break
                 self._out.put_nowait(Audio(gen, (np.sin(2 * np.pi * 220 * t) * 6000).astype("<i2").tobytes()))
                 await asyncio.sleep(self.item_delay_ms / 1000)
-            if last and gen not in self._cancelled:
+            if last and gen > self._fence:
                 self._out.put_nowait(Audio(gen, b"", last=True))
         self._out.put_nowait(_CLOSED)
 
@@ -127,11 +127,11 @@ class MockTTS:
         while (a := await self._out.get()) is not _CLOSED:
             if isinstance(a, ProviderError):
                 raise a
-            if a.gen not in self._cancelled:  # adapter-side drop: nothing of a cancelled generation leaves
+            if a.gen > self._fence:  # adapter-side drop: nothing of a cancelled generation leaves
                 yield a
 
     async def cancel(self, gen: int) -> None:
-        self._cancelled.update(range(1, gen + 1))
+        self._fence = max(self._fence, gen)
 
     async def close(self) -> None:
         self._jobs.put_nowait(_CLOSED)

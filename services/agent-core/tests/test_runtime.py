@@ -159,12 +159,26 @@ async def test_llm_silent_for_8s_reprompts():
 
 async def test_mic_frames_keep_reaching_stt_while_the_llm_stalls():
     stt = MockSTT()
-    s, _ = await make(llm=MockLLM(LLMScript(tokens=["x"], stall_after=0)), stt=stt)
+    s, _ = await make(llm=MockLLM(LLMScript(tokens=["x"], stall_after=0)), stt=stt, vad=FixtureVAD([[0, 2000]]))
     await s.on_event({"type": "text.input", "text": "hello"})
-    for k in range(100):  # 2 s of audio while the LLM says nothing
+    for k in range(100):  # 2 s of speech while the LLM says nothing
         await s.on_frame(mic(k))
         await asyncio.sleep(0.02)
     assert stt.audio_ms == 2000 and s.stt_drops == 0
+    await s.close()
+
+
+async def test_silence_is_not_sent_to_stt_but_speech_is_with_300ms_preroll():
+    stt = MockSTT()
+    s, _ = await make(stt=stt, vad=FixtureVAD([[2000, 3000]]))
+    for k in range(100):  # 2 s of silence, then 1 s of speech
+        await s.on_frame(mic(k))
+        await asyncio.sleep(0.02)
+    assert stt.audio_ms == 0
+    for k in range(100, 150):
+        await s.on_frame(mic(k))
+        await asyncio.sleep(0.02)
+    assert stt.audio_ms == 300 + 1000
     await s.close()
 
 
@@ -180,4 +194,41 @@ async def test_first_agent_frame_logs_trace_span_tts_first_audio_and_frames_are_
     assert [(e["span"], e["event"]) for e in events if e["span"] == "tts"] == [("tts", "first_audio")]
     seqs = [f.sequence for f in out.frames()]
     assert seqs == list(range(len(seqs))) and out.frames()[-1].flags == 1
+    await s.close()
+
+
+# Code review 2026-10-30 regressions
+
+class BrokenLLM:
+    async def stream(self, messages, tools=None, max_tokens=80):
+        from voicecore.providers.base import TextDelta
+
+        yield TextDelta("Partly. ")
+        raise RuntimeError("upstream error event mid-stream")
+
+
+async def test_an_unexpected_llm_error_mid_stream_still_ends_the_turn_with_an_apology():
+    from voicecore.runtime.session import TROUBLE
+
+    s, out = await make(llm=BrokenLLM())
+    await s.on_event({"type": "text.input", "text": "hi"})
+    await asyncio.sleep(3)
+    assert out.events("agent.text") == [{"type": "agent.text", "gen": 1, "text": "Partly. " + TROUBLE}]
+    assert out.frames()[-1].flags == 1  # the generation's audio ends
+    await s.close()
+
+
+class CappedTTS(MockTTS):
+    async def synth(self, gen, text, last):
+        from voicecore.providers.base import ProviderError
+
+        raise ProviderError("fatal", "per-session TTS cap reached")
+
+
+async def test_a_tts_failure_still_delivers_the_text_and_frees_the_turn():
+    s, out = await make(tts=CappedTTS())
+    await s.on_event({"type": "text.input", "text": "hi"})
+    await asyncio.sleep(3)
+    assert [e["gen"] for e in out.events("agent.text")] == [1]
+    assert s.active_gen is None and s.state == State.LISTENING
     await s.close()

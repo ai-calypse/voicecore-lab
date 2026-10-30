@@ -29,9 +29,10 @@ class CartesiaTTS:
         self._ws = None
         self._reader = None
         self._out: asyncio.Queue = asyncio.Queue()
-        self._cancelled: set[int] = set()
+        self._fence = 0  # generations <= fence were cancelled
         self._lock = asyncio.Lock()
         self.chars = 0
+        self.errors: list[str] = []  # per-generation failures; that generation ends without more audio
 
     async def _connect(self):
         try:
@@ -43,7 +44,7 @@ class CartesiaTTS:
         self._reader = asyncio.create_task(self._read())
 
     async def synth(self, gen: int, text: str, last: bool) -> None:
-        if gen in self._cancelled:
+        if gen <= self._fence:
             return
         if self.chars + len(text) > MAX_CHARS:
             raise ProviderError("fatal", f"per-session TTS cap of {MAX_CHARS} characters reached")
@@ -69,8 +70,9 @@ class CartesiaTTS:
                     self._out.put_nowait(Audio(gen, base64.b64decode(m["data"])))
                 elif m.get("type") == "done":
                     self._out.put_nowait(Audio(gen, b"", last=True))
-                elif m.get("type") == "error" and gen not in self._cancelled:
-                    self._out.put_nowait(http_error(int(m.get("status_code", 500)), m.get("message", "cartesia error")))
+                elif m.get("type") == "error" and gen > self._fence:
+                    self.errors.append(f"g{gen}: {m.get('status_code')} {m.get('message')}")
+                    self._out.put_nowait(Audio(gen, b"", last=True))  # end this generation; the socket and later ones live on
         except ConnectionClosedOK:
             pass
         except ConnectionClosed as e:
@@ -82,11 +84,11 @@ class CartesiaTTS:
         while (a := await self._out.get()) is not _CLOSED:
             if isinstance(a, ProviderError):
                 raise a
-            if a.gen not in self._cancelled:
+            if a.gen > self._fence:
                 yield a
 
     async def cancel(self, gen: int) -> None:
-        self._cancelled.update(range(1, gen + 1))
+        self._fence = max(self._fence, gen)
         if self._ws is not None:
             try:
                 await self._ws.send(json.dumps({"context_id": f"g{gen}", "cancel": True}))

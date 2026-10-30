@@ -497,6 +497,62 @@
       "session": 0,
       "request_id": "01a18a5d-3b46-76b0-8be6-579f12bdd54c",
       "connected_seconds": 25.98
+    },
+    {
+      "id": "8d374930ddd9",
+      "pool": "usd",
+      "amount": 0.00097,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 0.01
+    },
+    {
+      "id": "5ead0b3a4248",
+      "pool": "usd",
+      "amount": 0,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 0.01
+    },
+    {
+      "id": "2fbfe0588f8f",
+      "pool": "usd",
+      "amount": 3.4e-05,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 0.01
+    },
+    {
+      "id": "3c982e3a53ac",
+      "pool": "usd",
+      "amount": 0,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 0.01
+    },
+    {
+      "id": "5baf0b766d62",
+      "pool": "cartesia_credits",
+      "amount": 27,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 150
+    },
+    {
+      "id": "6f31e71efab3",
+      "pool": "cartesia_credits",
+      "amount": 42,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 150
+    },
+    {
+      "id": "d84080c7fc92",
+      "pool": "cartesia_credits",
+      "amount": 0,
+      "label": "live contract test",
+      "status": "settled",
+      "reserved": 150
     }
   ],
   "caps": {
@@ -504,7 +560,7 @@
     "cartesia_credits": 16000
   },
   "totals": {
-    "usd": 0.705602,
-    "cartesia_credits": 1279
+    "usd": 0.706606,
+    "cartesia_credits": 1348
   }
 }

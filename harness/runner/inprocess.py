@@ -13,7 +13,6 @@ from fixtures import read_frames
 
 from voicecore import protocol
 from voicecore.clock import now_us
-from voicecore.providers.base import Final
 from voicecore.providers.mock import LLMScript, MockLLM, MockSTT, MockTTS
 from voicecore.runtime.session import Session, State
 from voicecore.trace import Tracer
@@ -86,11 +85,10 @@ class FakeClient:
                 self._gen = 0
 
 
-def scripted_stt(clip, delay_ms=300):
-    """Simulated STT: the clip's transcript as one final, delay_ms after the labelled turn end (audio time)."""
-    if not clip["labels"]["speech"]:
-        return MockSTT()
-    return MockSTT([(clip["labels"]["turn_end_ms"] + delay_ms, Final(clip["transcript"]))])
+def scripted_stt(clip):
+    """Simulated STT: the clip's transcript as the final returned by Finalize at our endpoint.
+    Live Deepgram behaved like this: transcript ready 0.6 ms after the endpoint (reports/latency_breakdown.md)."""
+    return MockSTT(canned=clip.get("transcript")) if clip["labels"]["speech"] else MockSTT()
 
 
 async def run_clip(clip, *, llm=None, tts=None, stt=None, vad=None, policy=Policy(), tail_s=20.0, trace_sink=None) -> dict:

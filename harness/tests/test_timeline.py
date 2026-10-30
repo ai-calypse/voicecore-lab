@@ -39,3 +39,19 @@ def test_turn_breakdown_uses_the_client_clock_for_the_total_and_the_server_clock
     b = turn_breakdown(client, trace, turn_end_ms=7000)  # speech ends at 1.0 s + 7.0 s = 8.0 s client time
     assert b == {"endpoint_delay_ms": 900.0, "stt_settle_ms": 100.0, "llm_first_token_ms": 500.0,
                  "tts_first_audio_ms": 300.0, "total_ms": 2200.0, "residual_ms": 400.0}
+
+
+def test_turn_breakdown_ignores_an_earlier_endpoint_that_started_no_generation():
+    from timeline import turn_breakdown
+
+    client = [{"type": "mic.start", "t0_us": 0}, {"type": "agent.generation_started", "gen": 1, "t_us": 0},
+              {"type": "playout.started", "gen": 1, "dir": "out", "t_us": 5_000_000}]
+    early = {"span": "turn", "event": "endpoint", "t_mono_us": 1_000, "attrs": {"capture_end_us": 2_000_000}}
+    trace = [early, {"span": "stt", "event": "turn_text", "t_mono_us": 1_100, "attrs": {}},
+             {"span": "turn", "event": "endpoint", "t_mono_us": 3_000_000, "attrs": {"capture_end_us": 4_000_000}},
+             {"span": "stt", "event": "turn_text", "t_mono_us": 3_000_500, "attrs": {}},
+             {"span": "llm", "event": "request", "generation_id": 1, "t_mono_us": 3_000_500, "attrs": {}},
+             {"span": "llm", "event": "first_token", "generation_id": 1, "t_mono_us": 3_400_000, "attrs": {}},
+             {"span": "tts", "event": "first_audio", "generation_id": 1, "t_mono_us": 3_800_000, "attrs": {}}]
+    b = turn_breakdown(client, trace, turn_end_ms=3200)
+    assert (b["endpoint_delay_ms"], b["stt_settle_ms"], b["residual_ms"]) == (800.0, 0.5, 200.0)

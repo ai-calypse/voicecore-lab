@@ -1,14 +1,9 @@
 """Echo gate on real Silero output: the fixtures mix the agent clip back in at -15 dB, 40 ms late."""
-import numpy as np
 import pytest
 from fixtures import played_power, read_frames
 
-from voicecore.turntaking.floor import Floor, Policy
+from voicecore.turntaking.floor import Floor, Policy, power
 from voicecore.turntaking.vad_silero import SileroVAD
-
-
-def power(frame):
-    return float(np.mean((frame.astype(np.float64) / 32768) ** 2))
 
 
 def run(manifest, cid):

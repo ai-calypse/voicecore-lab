@@ -12,6 +12,13 @@ import math
 from collections import deque
 from dataclasses import dataclass
 
+import numpy as np
+
+
+def power(pcm: np.ndarray) -> float:
+    """Mean power of PCM16 samples on a 0..1 scale (the echo gate compares these)."""
+    return float(np.mean((pcm.astype(np.float64) / 32768) ** 2)) if len(pcm) else 0.0
+
 
 @dataclass(frozen=True)
 class Policy:

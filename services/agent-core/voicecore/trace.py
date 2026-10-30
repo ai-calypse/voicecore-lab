@@ -22,7 +22,15 @@ class Tracer:
         return e
 
 
-def jsonl_sink(path: Path) -> Callable[[dict], None]:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    f = path.open("a", buffering=1)
-    return lambda e: f.write(json.dumps(e) + "\n")
+class JsonlSink:
+    """Appends one JSON line per event; close() when the session ends."""
+
+    def __init__(self, path: Path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self._f = path.open("a", buffering=1)
+
+    def __call__(self, e: dict):
+        self._f.write(json.dumps(e) + "\n")
+
+    def close(self):
+        self._f.close()

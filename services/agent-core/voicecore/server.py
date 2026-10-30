@@ -19,7 +19,7 @@ from voicecore.providers.deepgram_stt import MAX_AUDIO_S, PRICE_PER_MIN
 from voicecore.providers.factory import make_live
 from voicecore.providers.mock import LLMScript, MockLLM, MockSTT, MockTTS
 from voicecore.runtime.session import Session
-from voicecore.trace import Tracer, jsonl_sink
+from voicecore.trace import JsonlSink, Tracer
 from voicecore.turntaking.vad_silero import SileroVAD
 
 log = logging.getLogger("voicecore.server")
@@ -58,7 +58,7 @@ def handler_for(mode: str, trace_dir: Path | None):
             await ws.send(protocol.event("session.ended", reason="budget"))
             await ws.close()
             return
-        sink = jsonl_sink(trace_dir / f"{sid}.jsonl") if trace_dir else None
+        sink = JsonlSink(trace_dir / f"{sid}.jsonl") if trace_dir else None
         session = Session(sid, send=ws.send, vad=SileroVAD(), tracer=Tracer(sid, sink), **providers)
         await session.start()
         try:
@@ -73,6 +73,8 @@ def handler_for(mode: str, trace_dir: Path | None):
             log.info("session %s: %s", sid, e)
         finally:
             await session.close()
+            if sink:
+                sink.close()
             for s in settle:
                 with contextlib.suppress(Exception):
                     s()

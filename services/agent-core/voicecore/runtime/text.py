@@ -57,5 +57,6 @@ def speechify(text: str) -> str:
     """What TTS should say: no [n] citation markers, no raw URLs, no Markdown emphasis or code ticks."""
     text = _CITATION.sub("", text)
     text = _URL.sub("the link in the chat", text)
-    text = re.sub(r"[*_`#]", "", text)
+    text = re.sub(r"\*\*|\*|`", "", text)  # emphasis and code ticks; underscores and # stay (UV_INDEX_URL, issue #12)
+    text = re.sub(r"(?m)^#+\s*", "", text)  # Markdown headings
     return re.sub(r"\s+", " ", text).strip()
