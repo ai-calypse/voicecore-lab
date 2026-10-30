@@ -5,6 +5,8 @@ package fakeorch
 import (
 	"context"
 	"net/http"
+	"sync"
+	"sync/atomic"
 
 	"github.com/ai-calypse/voicecore-lab/services/realtime-gateway/protocol"
 	"github.com/coder/websocket"
@@ -23,18 +25,35 @@ type Orch struct {
 	Echo  bool          // send every mic frame back as generation 1 audio, upsampled to 24 kHz
 	Hold  chan struct{} // if set, wait for it to close before reading (simulates a stalled orchestrator)
 	Conns chan *Conn    // each new session
+
+	ready atomic.Int32 // GET /readyz status; 0 means 200
+	mu    sync.Mutex
+	live  map[*websocket.Conn]struct{}
 }
 
-func New() *Orch { return &Orch{Conns: make(chan *Conn, 16)} }
+func New() *Orch { return &Orch{Conns: make(chan *Conn, 16), live: map[*websocket.Conn]struct{}{}} }
 
 func (o *Orch) Handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /readyz", func(w http.ResponseWriter, r *http.Request) {
+		if code := int(o.ready.Load()); code != 0 {
+			w.WriteHeader(code)
+		}
+	})
 	mux.HandleFunc("GET /v1/session/{id}", func(w http.ResponseWriter, r *http.Request) {
 		ws, err := websocket.Accept(w, r, nil)
 		if err != nil {
 			return
 		}
 		ws.SetReadLimit(1 << 20)
+		o.mu.Lock()
+		o.live[ws] = struct{}{}
+		o.mu.Unlock()
+		defer func() {
+			o.mu.Lock()
+			delete(o.live, ws)
+			o.mu.Unlock()
+		}()
 		c := &Conn{ID: r.PathValue("id"), WS: ws, Frames: make(chan protocol.Frame, 256), Events: make(chan protocol.Event, 64), Closed: make(chan struct{})}
 		defer close(c.Closed)
 		select {
@@ -97,4 +116,16 @@ func Upsample(in []int16) []int16 {
 		out = append(out, int16(a), int16((a+2*b)/3), int16((2*b+c)/3))
 	}
 	return out
+}
+
+// SetReady sets the status GET /readyz returns (default 200).
+func (o *Orch) SetReady(code int) { o.ready.Store(int32(code)) }
+
+// Kill closes every live session connection, as if the orchestrator process died.
+func (o *Orch) Kill() {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	for ws := range o.live {
+		_ = ws.CloseNow()
+	}
 }

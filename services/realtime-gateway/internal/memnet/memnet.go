@@ -4,10 +4,10 @@ package memnet
 
 import (
 	"context"
-	"errors"
 	"net"
 	"net/http"
 	"sync"
+	"syscall"
 )
 
 type Network struct {
@@ -26,23 +26,44 @@ func (n *Network) Listen(addr string) *Listener {
 	return l
 }
 
-func (n *Network) DialContext(ctx context.Context, _, addr string) (net.Conn, error) {
+func (n *Network) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+	return n.dial(ctx, addr, "")
+}
+
+// refused is what a real TCP dial to a closed port returns, so errors.Is(err, syscall.ECONNREFUSED) holds.
+func refused(addr string) error {
+	return &net.OpError{Op: "dial", Net: "memnet", Addr: memAddr(addr), Err: syscall.ECONNREFUSED}
+}
+
+func (n *Network) dial(ctx context.Context, addr, from string) (net.Conn, error) {
 	n.mu.Lock()
 	l := n.listeners[addr]
 	n.mu.Unlock()
-	if l == nil {
-		return nil, errors.New("memnet: connection refused: " + addr)
+	if l == nil || l.refuse() {
+		return nil, refused(addr)
 	}
 	client, server := net.Pipe()
+	var conn net.Conn = server
+	if from != "" {
+		conn = fromConn{server, memAddr(from)}
+	}
 	select {
-	case l.conns <- server:
+	case l.conns <- conn:
 		return client, nil
 	case <-l.done:
-		return nil, errors.New("memnet: listener closed: " + addr)
+		return nil, refused(addr)
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	}
 }
+
+// fromConn is the server end of a pipe that reports the dialer's chosen address.
+type fromConn struct {
+	net.Conn
+	remote net.Addr
+}
+
+func (c fromConn) RemoteAddr() net.Addr { return c.remote }
 
 // HTTPClient dials through this network.
 func (n *Network) HTTPClient() *http.Client {
@@ -50,11 +71,23 @@ func (n *Network) HTTPClient() *http.Client {
 }
 
 type Listener struct {
-	addr  string
-	conns chan net.Conn
-	done  chan struct{}
-	once  sync.Once
-	net   *Network
+	addr    string
+	conns   chan net.Conn
+	done    chan struct{}
+	once    sync.Once
+	net     *Network
+	mu      sync.Mutex
+	refuseN int
+}
+
+func (l *Listener) refuse() bool {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.refuseN > 0 {
+		l.refuseN--
+		return true
+	}
+	return false
 }
 
 func (l *Listener) Accept() (net.Conn, error) {
@@ -76,9 +109,28 @@ func (l *Listener) Close() error {
 	return nil
 }
 
-func (l *Listener) Addr() net.Addr { return addr(l.addr) }
+func (l *Listener) Addr() net.Addr { return memAddr(l.addr) }
 
-type addr string
+type memAddr string
 
-func (a addr) Network() string { return "memnet" }
-func (a addr) String() string  { return string(a) }
+func (a memAddr) Network() string { return "memnet" }
+func (a memAddr) String() string  { return string(a) }
+
+// HTTPClientFrom dials through this network as a client at from ("ip:port"); the server sees it as r.RemoteAddr.
+func (n *Network) HTTPClientFrom(from string) *http.Client {
+	return &http.Client{Transport: &http.Transport{DialContext: func(ctx context.Context, _, addr string) (net.Conn, error) {
+		return n.dial(ctx, addr, from)
+	}}}
+}
+
+// DialContextFrom is DialContext for a client at from (for WebSocket dial options).
+func (n *Network) DialContextFrom(from string) func(context.Context, string, string) (net.Conn, error) {
+	return func(ctx context.Context, _, addr string) (net.Conn, error) { return n.dial(ctx, addr, from) }
+}
+
+// RefuseNext makes the next k dials to this listener fail with connection refused.
+func (l *Listener) RefuseNext(k int) {
+	l.mu.Lock()
+	l.refuseN = k
+	l.mu.Unlock()
+}
