@@ -8,6 +8,7 @@ import (
 	"net/netip"
 	"strings"
 	"testing"
+	"time"
 )
 
 func get(t *testing.T, h http.Handler, method, path string) (int, string) {
@@ -162,4 +163,32 @@ func TestValidateProdRejectsBroadAndLocalPatterns(t *testing.T) {
 			t.Errorf("-origins %q passed: %v", origins, err)
 		}
 	}
+}
+
+func TestPerIPDailyQuota(t *testing.T) {
+	runCfg(t, false, func(c *Config) { c.TokensPerMinute, c.SessionsPerIPPerDay = 0, 20 }, func(t *testing.T, r *rig) {
+		post := func() int {
+			resp, err := r.http.Post("http://gw:80/v1/session", "application/json", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			resp.Body.Close()
+			return resp.StatusCode
+		}
+		for i := 0; i < 20; i++ {
+			if c := post(); c != 200 {
+				t.Fatalf("token %d: %d", i+1, c)
+			}
+		}
+		if c := post(); c != 429 {
+			t.Fatalf("21st token today: %d, want 429", c)
+		}
+		time.Sleep(24 * time.Hour) // a new UTC day
+		if c := post(); c != 200 {
+			t.Fatalf("next day: %d, want 200", c)
+		}
+		if n := r.counters()["rejected_quota"]; n != 1 {
+			t.Fatalf("rejected_quota %d, want 1", n)
+		}
+	})
 }

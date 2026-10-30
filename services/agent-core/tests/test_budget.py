@@ -109,3 +109,30 @@ def test_total_waits_for_a_writer_instead_of_reading_a_half_written_ledger():
         fcntl.flock(f, fcntl.LOCK_UN)
     reader.join(2)
     assert got == [0.5]
+
+
+def test_public_counts_in_usd_and_public():
+    budget.reserve("usd", 0.10, "a public session", sub="public")
+    assert (budget.total("usd"), budget.total("public")) == (0.10, 0.10)
+
+
+def test_public_daily_cap(monkeypatch):
+    day = 1_793_318_400.0  # 2026-10-30 00:00 UTC
+    monkeypatch.setattr(budget, "now", lambda: day + 3600)
+    budget.reserve("usd", 0.45, "s1", sub="public")
+    with pytest.raises(budget.DailyCapReached):
+        budget.reserve("usd", 0.10, "s2", sub="public")  # 0.55 > the 0.50 daily public cap
+    budget.reserve("usd", 0.10, "a private session")  # the usd pool itself is not limited per day
+    monkeypatch.setattr(budget, "now", lambda: day + 86_400 + 60)  # the next UTC day
+    budget.reserve("usd", 0.10, "s3", sub="public")
+    assert budget.total("public") == 0.55
+
+
+def test_public_total_cap_holds_across_days(monkeypatch):
+    day = 1_793_318_400.0
+    for d in range(4):
+        monkeypatch.setattr(budget, "now", lambda d=d: day + d * 86_400)
+        budget.reserve("usd", 0.50, f"day {d}", sub="public")
+    monkeypatch.setattr(budget, "now", lambda: day + 4 * 86_400)
+    with pytest.raises(budget.BudgetExceeded):
+        budget.reserve("usd", 0.01, "day 4", sub="public")  # 2.00 is the public total

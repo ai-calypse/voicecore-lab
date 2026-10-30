@@ -19,6 +19,7 @@ Run the gateway with `go run ./cmd/gateway` from `services/realtime-gateway`, or
 | `-max-sessions-per-ip` | 4 | live sessions per client IP; 0 means no limit |
 | `-max-sessions` | 50 | live sessions in total; 0 means no limit |
 | `-tokens-per-minute` | 10 | `POST /v1/session` requests per client IP per minute; 0 means no limit |
+| `-sessions-per-ip-per-day` | 0 (no limit) | session tokens per client IP per UTC day; kept in memory, so a restart resets the count |
 | `-hosts` | `localhost,127.0.0.1,::1` | allowed `Host` header names, comma separated; empty allows any |
 | `-drain` | `25s` | on SIGTERM, how long open sessions may finish before they are ended with reason `shutdown` |
 | `-probe` | empty | GET this URL and exit 0 on HTTP 200, else 1; the container healthcheck, since the image has no curl |
@@ -64,6 +65,7 @@ Run the orchestrator with `uv run python -m voicecore.server` from the repositor
 | `--llm-provider` | `Cerebras` for the default model | OpenRouter provider to try first; `any` lets OpenRouter route |
 | `--llm-reasoning` | `low` for the default model | reasoning effort; `none` omits it, for models without reasoning |
 | `--tts` | `deepgram` | text-to-speech provider: `deepgram` (Aura-2, `usd` pool) or `cartesia` (sonic-3.6, `cartesia_credits` pool) |
+| `--pool` | `usd` | `public` makes every reservation also count against the public sub-cap; over it, sessions answer in text from the docs |
 | `--drain-s` | 25 | on SIGTERM, seconds open sessions may finish before they are ended with reason `shutdown` |
 | `--metrics-port` | 0 (off) | serve Prometheus `/metrics` on this port; docker compose uses 9464 and publishes it on 127.0.0.1 only |
 | `--metrics-host` | `0.0.0.0` | listen address for `/metrics`, so a scraper inside compose can reach it |
@@ -159,6 +161,9 @@ Every paid provider call is covered by a reservation in the spend ledger, `bench
 |---|---:|---|---|
 | `usd` | $5.00 | Deepgram STT and TTS, OpenRouter | STT: 300 s of audio × $0.0077 per minute = $0.0385; LLM: $0.02; TTS with `--tts deepgram`: 4,000 characters × $0.030 per 1,000 = $0.12, reserved when the session first speaks |
 | `cartesia_credits` | 16,000 credits | Cartesia, 1 credit per character | TTS with `--tts cartesia`: 1,500 characters, reserved when the session first speaks |
+| `public` (inside `usd`) | $2.00 in total, $0.50 per UTC day | sessions of an orchestrator started with `--pool public` | the same reservations, counted against both `usd` and `public` |
+
+A public deployment runs the orchestrator with `--pool public`. When a session would pass the public total or today's share, it is not refused. The assistant says "Today's voice demo budget is used up. I can still point you to the right page: ask a question by typing." It ignores the microphone, and answers each typed question with the closest docs section and a link to it, with no paid call at all. The `usd` cap of $5.00 still holds over everything.
 
 When a session ends, each reservation is settled to the amount actually used. The caps are a user decision from 2026-10-29: $5 for the whole project, and 16,000 of the 20,000 Cartesia credits owned. Benchmark scripts reserve from the same pools, for example $0.05 for one `llm_ttft.py` run.
 

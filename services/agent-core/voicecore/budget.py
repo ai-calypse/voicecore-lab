@@ -15,6 +15,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 CAPS = {"usd": 5.00, "cartesia_credits": 16000}
+# Sub-caps inside a pool (Step 09 Phase 9): what a public deployment may spend, checked under the same lock as the pool.
+SUBCAPS = {"public": {"pool": "usd", "total": 2.00, "daily": 0.50}}
 LEDGER = Path(__file__).resolve().parents[3] / "benchmarks/spend_ledger.json"  # default; VOICECORE_LEDGER overrides
 now = time.time  # wall clock for entry timestamps (daily caps); tests replace it
 
@@ -28,6 +30,10 @@ class BudgetExceeded(Exception):
     pass
 
 
+class DailyCapReached(BudgetExceeded):
+    """Today's share is used up; tomorrow (UTC) there is more."""
+
+
 @dataclass(frozen=True)
 class Reservation:
     id: str
@@ -36,9 +42,26 @@ class Reservation:
     label: str
 
 
-def _sum(entries, pool):
+def _sum(entries, pool, day=None):
+    """A pool's total, or a sub-cap's (entries tagged with it), or a sub-cap's total for one UTC day."""
     # Entries written before pools existed are USD estimates in `estimated_usd`.
-    return round(sum(e.get("amount", e.get("estimated_usd", 0.0)) for e in entries if e.get("pool", "usd") == pool), 6)
+    match = (lambda e: e.get("sub") == pool) if pool in SUBCAPS else (lambda e: e.get("pool", "usd") == pool)
+    return round(sum(e.get("amount", e.get("estimated_usd", 0.0)) for e in entries
+                     if match(e) and (day is None or int(e.get("ts", 0) // 86_400) == day)), 6)
+
+
+def _check(entries, pool, amount, sub, spent):
+    """Raise unless amount fits the pool and, with sub, the sub-cap's total and today's share. spent: running totals."""
+    for key, cap, exc in [(pool, CAPS[pool], BudgetExceeded)] + ([] if sub is None else [
+            (sub, SUBCAPS[sub]["total"], BudgetExceeded), ((sub, "today"), SUBCAPS[sub]["daily"], DailyCapReached)]):
+        if key not in spent:
+            spent[key] = _sum(entries, sub, day=int(now() // 86_400)) if isinstance(key, tuple) else _sum(entries, key)
+        if round(spent[key] + amount, 6) > cap:
+            raise exc(f"{key}: {spent[key]} spent + {amount} requested > cap {cap}")
+    if sub is not None and SUBCAPS[sub]["pool"] != pool:
+        raise BudgetExceeded(f"sub-cap {sub} belongs to pool {SUBCAPS[sub]['pool']}, not {pool}")
+    for key in [pool] + ([] if sub is None else [sub, (sub, "today")]):
+        spent[key] = round(spent[key] + amount, 6)
 
 
 @contextmanager
@@ -54,7 +77,7 @@ def _locked(path):
         data.pop("budget_usd", None)  # single-pool fields from the S00-T02 ledger
         data.pop("total_estimated_usd", None)
         data["caps"] = CAPS
-        data["totals"] = {pool: _sum(data["entries"], pool) for pool in CAPS}
+        data["totals"] = {pool: _sum(data["entries"], pool) for pool in [*CAPS, *SUBCAPS]}
         f.seek(0)
         f.truncate()
         f.write(json.dumps(data, indent=2) + "\n")
@@ -74,14 +97,9 @@ def total(pool, ledger_path=None):
     return _sum(_entries(ledger_file(ledger_path)), pool)
 
 
-def reserve(pool, amount, label="", ledger_path=None):
-    with _locked(ledger_file(ledger_path)) as data:
-        spent = _sum(data["entries"], pool)
-        if round(spent + amount, 6) > CAPS[pool]:
-            raise BudgetExceeded(f"{pool}: {spent} spent + {amount} requested > cap {CAPS[pool]}")
-        r = Reservation(uuid.uuid4().hex[:12], pool, amount, label)
-        data["entries"].append({"id": r.id, "pool": pool, "amount": amount, "label": label, "status": "reserved", "ts": now()})
-    return r
+def reserve(pool, amount, label="", ledger_path=None, sub=None):
+    """sub: a sub-cap inside the pool (e.g. "public"); the entry counts against both."""
+    return reserve_all([(pool, amount, label)], ledger_path, sub=sub)[0]
 
 
 def settle(reservation, actual, ledger_path=None, **meta):
@@ -93,19 +111,18 @@ def settle(reservation, actual, ledger_path=None, **meta):
         raise KeyError(f"reservation {reservation.id} not in ledger")
 
 
-def reserve_all(specs, ledger_path=None) -> list[Reservation]:
+def reserve_all(specs, ledger_path=None, sub=None) -> list[Reservation]:
     """Reserve several (pool, amount, label) atomically under one ledger lock: all are written, or none (an over-cap
-    or unknown pool raises before anything is written, so no partial reservation ever counts against a cap)."""
+    or unknown pool raises before anything is written, so no partial reservation ever counts against a cap).
+    sub: a sub-cap (e.g. "public") every one of them also counts against, in total and for today (UTC)."""
     with _locked(ledger_file(ledger_path)) as data:
         spent, out = {}, []
         for pool, amount, label in specs:
-            spent.setdefault(pool, _sum(data["entries"], pool))
-            if round(spent[pool] + amount, 6) > CAPS[pool]:
-                raise BudgetExceeded(f"{pool}: {spent[pool]} spent + {amount} requested > cap {CAPS[pool]}")
-            spent[pool] = round(spent[pool] + amount, 6)
+            _check(data["entries"], pool, amount, sub, spent)
             out.append(Reservation(uuid.uuid4().hex[:12], pool, amount, label))
         for r in out:
-            data["entries"].append({"id": r.id, "pool": r.pool, "amount": r.amount, "label": r.label, "status": "reserved", "ts": now()})
+            data["entries"].append({"id": r.id, "pool": r.pool, "amount": r.amount, "label": r.label, "status": "reserved", "ts": now(),
+                                    **({"sub": sub} if sub else {})})
     return out
 
 

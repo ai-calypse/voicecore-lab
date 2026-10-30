@@ -29,6 +29,7 @@ func main() {
 	tracePath := flag.String("trace", "", "append SPEC trace events (JSON lines) to this file")
 	perIP := flag.Int("max-sessions-per-ip", 4, "live sessions per client IP (0 = no limit)")
 	maxSessions := flag.Int("max-sessions", 50, "live sessions in total (0 = no limit)")
+	perDay := flag.Int("sessions-per-ip-per-day", 0, "session tokens per client IP per UTC day (0 = no limit; in memory until Redis)")
 	tokensPerMin := flag.Float64("tokens-per-minute", 10, "session tokens per client IP per minute (0 = no limit)")
 	hosts := flag.String("hosts", "localhost,127.0.0.1,::1", "allowed Host header names, comma separated; empty allows any (blocks DNS rebinding)")
 	copyID := flag.String("copy-id", "gw", "this gateway copy's id, inside every session id (routes resumes to the owner)")
@@ -77,7 +78,7 @@ func main() {
 		}
 	}
 	cfg.Origins = splitList(*origins)
-	cfg.MaxSessionsPerIP, cfg.MaxSessions, cfg.TokensPerMinute = *perIP, *maxSessions, *tokensPerMin
+	cfg.MaxSessionsPerIP, cfg.MaxSessions, cfg.TokensPerMinute, cfg.SessionsPerIPPerDay = *perIP, *maxSessions, *tokensPerMin, *perDay
 	if *hosts != "" {
 		cfg.Hosts = splitList(*hosts)
 	}

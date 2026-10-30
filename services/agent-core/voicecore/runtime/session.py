@@ -34,6 +34,7 @@ VOICE_OFF = "Spoken replies have reached their limit for this session, so I'll a
 BUSY = "I'm busy right now. Please try again in a moment."
 VOICE_INPUT_DOWN = "Voice input is unavailable right now; you can type your question."
 SPEECH_DOWN = "Spoken replies are unavailable right now, so I'll answer in text."
+BUDGET_TEXT_ONLY = "Today's voice demo budget is used up. I can still point you to the right page: ask a question by typing."
 
 
 class TurnDeadline(Exception):
@@ -61,10 +62,13 @@ class Session:
                  stt: STTStream | None = None, vad=None, policy: Policy = Policy(), tracer: Tracer | None = None,
                  answer: Answer | None = None, stall_s: float = 8.0, final_wait_s: float = 5.0,
                  tts_factory: Callable[[], TTSStream] | None = None, breakers: dict[str, Breaker] | None = None,
-                 turn_deadline_s: float = 20.0, stt_factory: Callable[[], STTStream] | None = None):
+                 turn_deadline_s: float = 20.0, stt_factory: Callable[[], STTStream] | None = None,
+                 text_only: Callable[[str], tuple[str, list[dict]]] | None = None):
         """tts_factory: builds a fresh TTS stream for the one retry after a TTS failure.
         breakers: the process's circuit breakers by provider kind (stt, llm, tts), shared by its sessions.
-        stt_factory: opens a new STT stream for the one reconnect after a drop (same reservation and audio cap)."""
+        stt_factory: opens a new STT stream for the one reconnect after a drop (same reservation and audio cap).
+        text_only: no paid provider at all (the public budget is used up): the microphone is ignored, nothing is spoken,
+        and each typed question gets text_only(question) -> (reply, sources), e.g. the closest docs section."""
         self.sid, self.llm, self.tts, self.stt, self.vad = sid, llm, tts, stt, vad
         self.tts_factory = tts_factory
         self._send = send
@@ -79,7 +83,8 @@ class Session:
         self._stt_ok.set()
         self._stt_lock = asyncio.Lock()
         self._probes: set[str] = set()  # providers whose half-open probe this session holds
-        self._voice_input_down = False
+        self.text_only = text_only
+        self._voice_input_down = text_only is not None
         self._speech_down_said = False
         self.state = State.LISTENING
         self.gen = 0  # newest generation id
@@ -119,7 +124,13 @@ class Session:
     # --- lifecycle -------------------------------------------------------------
 
     async def start(self):
-        if self.stt and not self._allow("stt"):  # voice input is down for new sessions; typing still works
+        if self.text_only:
+            if self.stt:
+                with contextlib.suppress(Exception):
+                    await self.stt.close()
+                self.stt = None
+            await self.start_generation("t0", "", reply=BUDGET_TEXT_ONLY)
+        elif self.stt and not self._allow("stt"):  # voice input is down for new sessions; typing still works
             with contextlib.suppress(Exception):
                 await self.stt.close()
             self.stt, self._voice_input_down = None, True
@@ -203,7 +214,11 @@ class Session:
             self.turn_id = f"t{next(self._turns)}"
             self._carry, self._last_voice_turn = "", None
             self.trace.emit("turn", "text_input", text=e["text"])
-            await self.start_generation(self.turn_id, e["text"], kind="text")
+            if self.text_only:
+                reply, sources = await asyncio.to_thread(self.text_only, e["text"])  # retrieval takes CPU: keep the loop free
+                await self.start_generation(self.turn_id, e["text"], reply=reply, kind="text", sources=sources)
+            else:
+                await self.start_generation(self.turn_id, e["text"], kind="text")
         elif t == "playout.started":
             if e["gen"] == self.gen and self.active_gen == e["gen"]:
                 self.playing = (e["gen"], e["t_us"])
@@ -313,7 +328,8 @@ class Session:
     def _alive(self, g: int) -> bool:
         return g == self.gen and g > self.fence and self.state != State.ENDED
 
-    async def start_generation(self, turn_id: str, text: str, reply: str | None = None, kind: str = "notice"):
+    async def start_generation(self, turn_id: str, text: str, reply: str | None = None, kind: str = "notice",
+                               sources: list[dict] | None = None):
         """kind: voice (an endpointed turn), text (typed) or notice (a reply the session sends by itself)."""
         if self.active_gen is not None:
             await self.cancel(self.active_gen, "superseded")
@@ -321,7 +337,7 @@ class Session:
         g = self.gen
         self.active_gen, self.state = g, State.THINKING
         self.played = {g: bytearray()}
-        self.task = asyncio.create_task(self._generate(g, turn_id, text, reply, kind))
+        self.task = asyncio.create_task(self._generate(g, turn_id, text, reply, kind, sources))
 
     async def cancel(self, g: int, reason: str):
         if g != self.active_gen:
@@ -343,8 +359,11 @@ class Session:
             if isinstance(e, TextDelta):
                 yield e.text
 
-    async def _generate(self, g: int, turn_id: str, text: str, reply: str | None, kind: str = "notice"):
+    async def _generate(self, g: int, turn_id: str, text: str, reply: str | None, kind: str = "notice",
+                        sources: list[dict] | None = None):
         await self._event("agent.generation_started", turn_id=turn_id, gen=g)
+        if sources:
+            await self._event("answer.sources", gen=g, sources=sources)
         chunker, said = Chunker(), []
 
         def sep() -> str:  # a space before an appended reply, unless the answer so far already ends with one
@@ -393,7 +412,7 @@ class Session:
             return
         kind = self._tts_failed.get(g)
         fatal = kind == "fatal"
-        if kind != "breaker" and not fatal and await self._retry_tts(g, self._answers.get(g, "")):
+        if kind not in ("breaker", "off") and not fatal and await self._retry_tts(g, self._answers.get(g, "")):
             return
         self.active_gen, self.state = None, State.LISTENING
         if kind == "breaker" and not self._speech_down_said:  # the TTS breaker is open: say so once, then text only
@@ -482,7 +501,10 @@ class Session:
     async def _synth(self, g: int, text: str, last: bool):
         if not self._alive(g):
             return
-        if self._tts_failed.get(g) == "breaker":
+        if self.text_only:
+            self._tts_failed[g] = "off"  # nothing is spoken; this ends the generation once its text is out
+            return
+        if self._tts_failed.get(g) in ("breaker", "off"):
             return
         spoken = speechify(text)
         if spoken or last:

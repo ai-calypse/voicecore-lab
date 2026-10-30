@@ -23,6 +23,7 @@ from websockets.exceptions import ConnectionClosed
 
 from voicecore import budget, logs, metrics, protocol
 from voicecore.answer.engine import AnswerEngine
+from voicecore.answer.extractive import closest_section
 from voicecore.answer.index import Index
 from voicecore.answer.ingest import docusaurus, ingest
 from voicecore.providers import cartesia_tts, deepgram_tts
@@ -51,10 +52,10 @@ def mock_providers():
 MOCK_BILLED_USD = {"stt": 0.001, "llm": 0.0005, "tts": 0.0002}  # per session; lets tests check ledger maths for free
 
 
-def mock_billed_providers(sid):
+def mock_billed_providers(sid, sub=None):
     """Mock providers that still reserve and settle fixed literal amounts, like a live session, at no cost."""
     providers, _ = mock_providers()
-    res = budget.reserve_all([("usd", v, f"mock-billed {k} {sid}") for k, v in MOCK_BILLED_USD.items()])
+    res = budget.reserve_all([("usd", v, f"mock-billed {k} {sid}") for k, v in MOCK_BILLED_USD.items()], sub=sub)
     return providers, [lambda r=r, v=v: budget.settle(r, v) for r, v in zip(res, MOCK_BILLED_USD.values())]
 
 
@@ -101,10 +102,11 @@ TTS = {  # factory kind, module, budget pool, reservation for MAX_CHARS characte
 }
 
 
-def live_providers(sid, llm_opts=None, tts_name="deepgram"):
+def live_providers(sid, llm_opts=None, tts_name="deepgram", sub=None):
+    """sub: a budget sub-cap every reservation also counts against (\"public\" for a public deployment)."""
     kind, mod, pool, amount, cost = TTS[tts_name]  # before reserving: an unknown name must not leak reservations
     stt_res, llm_res = budget.reserve_all([("usd", round(MAX_AUDIO_S / 60 * PRICE_PER_MIN, 6), f"server stt {sid}"),
-                                           ("usd", LLM_CAP_USD, f"server llm {sid}")])
+                                           ("usd", LLM_CAP_USD, f"server llm {sid}")], sub=sub)
     tts = {"res": None, "streams": []}
     stt_streams = []
 
@@ -115,7 +117,7 @@ def live_providers(sid, llm_opts=None, tts_name="deepgram"):
     def new_tts(ws=None):  # a retry opens a second stream; both bill one reservation and share its character cap
         if tts["res"] is None:
             try:
-                tts["res"] = budget.reserve(pool, amount, label=f"server tts {sid}")
+                tts["res"] = budget.reserve(pool, amount, label=f"server tts {sid}", sub=sub)
             except budget.BudgetExceeded as e:
                 raise ProviderError("fatal", f"TTS budget: {e}") from None
         used = sum(t.chars for t in tts["streams"])
@@ -193,11 +195,15 @@ def http_routes(state: AppState):
 
 
 def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Policy = Policy(), llm_opts: dict | None = None,
-                name: str = "VoiceCore", tts: str = "deepgram", make_providers=None):
-    """make_providers(sid) -> (providers, settle callables); defaults by mode. Tests inject their own."""
+                name: str = "VoiceCore", tts: str = "deepgram", make_providers=None, pool: str = "usd"):
+    """make_providers(sid) -> (providers, settle callables); defaults by mode. Tests inject their own.
+    pool "public": reservations also count against the public sub-cap, and a session refused by the budget is
+    served in text from the docs instead of ending."""
+    sub = "public" if pool == "public" else None
+
     def default_providers(sid):
-        return (live_providers(sid, llm_opts, tts) if mode == "live"
-                else mock_billed_providers(sid) if mode == "mock-billed" else mock_providers())
+        return (live_providers(sid, llm_opts, tts, sub=sub) if mode == "live"
+                else mock_billed_providers(sid, sub=sub) if mode == "mock-billed" else mock_providers())
 
     make_providers = make_providers or default_providers
 
@@ -213,12 +219,19 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
         try:
             providers, settle = make_providers(sid)
         except budget.BudgetExceeded as e:
-            log.warning("session refused: %s", e, extra={"session_id": sid, "reason": "budget"})
-            if state.metrics:
-                Tracer(sid, state.metrics).emit("session", "ended", reason="budget")
-            await ws.send(protocol.event("session.ended", reason="budget"))
-            await ws.close()
-            return
+            if sub:  # public deployment: no spend left today, but the docs can still point the way
+                log.info("budget used up, text only: %s", e, extra={"session_id": sid, "reason": "budget"})
+                providers, settle = {"llm": MockLLM(LLMScript(tokens=[])), "tts": MockTTS()}, []  # inert: text_only never calls them
+                text_only = closest_section(state.index)
+            else:
+                log.warning("session refused: %s", e, extra={"session_id": sid, "reason": "budget"})
+                if state.metrics:
+                    Tracer(sid, state.metrics).emit("session", "ended", reason="budget")
+                await ws.send(protocol.event("session.ended", reason="budget"))
+                await ws.close()
+                return
+        else:
+            text_only = None
         started, sink, session, reason = time.monotonic(), None, None, None
         sinks = [state.metrics] if state.metrics else []
         tracer = Tracer(sid, lambda e: [s(e) for s in sinks])
@@ -227,7 +240,7 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
                 sinks.append(sink := JsonlSink(trace_dir / f"{sid}.jsonl"))
             engine = AnswerEngine(state.index, providers["llm"], name=name)
             session = Session(sid, send=ws.send, vad=SileroVAD(), policy=policy, tracer=tracer, answer=engine.stream,
-                              breakers=state.breakers, **providers)
+                              breakers=state.breakers, text_only=text_only, **providers)
             tracer.emit("session", "started")
             await session.start()
             log.info("session started", extra={"session_id": sid})
@@ -284,6 +297,8 @@ async def main():
     ap.add_argument("--llm-reasoning", default=None, help="reasoning effort for reasoning models; 'none' to omit")
     ap.add_argument("--tts", choices=sorted(TTS), default="deepgram", help="speech synthesis provider (live mode)")
     ap.add_argument("--drain-s", type=float, default=25.0, help="on SIGTERM, seconds to let open sessions finish")
+    ap.add_argument("--pool", choices=["usd", "public"], default="usd",
+                    help="public: spend also counts against the public sub-cap (2 USD, 0.50 a day); over it, answer in text")
     ap.add_argument("--metrics-port", type=int, default=0, help="Prometheus /metrics port, e.g. 9464 (0 = off); keep it off the public internet")
     ap.add_argument("--metrics-host", default="0.0.0.0", help="listen address for /metrics (the scraper reaches it inside compose)")
     args = ap.parse_args()
@@ -300,7 +315,7 @@ async def main():
     state = AppState(providers=args.providers)
     if args.metrics_port:
         state.metrics = metrics.serve_metrics(args.metrics_port, args.metrics_host, state.breakers)
-    handler = handler_for(args.providers, args.trace_dir, state, policy, llm_opts, tts=args.tts)
+    handler = handler_for(args.providers, args.trace_dir, state, policy, llm_opts, tts=args.tts, pool=args.pool)
     async with serve(handler, args.host, args.port, max_size=1 << 20, process_request=http_routes(state)):
         log.info("orchestrator listening on ws://%s:%d (%s providers), loading models", args.host, args.port, args.providers)
 

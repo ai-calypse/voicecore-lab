@@ -294,3 +294,29 @@ async def test_settle_bills_all_stt_streams(monkeypatch):
         s()
     stt = next(e for e in json.loads(budget.ledger_file().read_text())["entries"] if e["label"] == "server stt s-r")
     assert stt["status"] == "settled" and stt["amount"] == round(5.0 / 60 * PRICE_PER_MIN, 6)
+
+
+async def test_public_pool_over_its_cap_answers_in_text_from_the_docs(small_index):
+    from voicecore.runtime.session import BUDGET_TEXT_ONLY
+    from voicecore.server import AppState, handler_for, http_routes
+
+    def broke(sid):
+        raise budget.DailyCapReached("public: today's share is used up")
+
+    state = AppState(providers="live", ready=True, index=small_index)
+    async with serve(handler_for("live", None, state, make_providers=broke, pool="public"), "127.0.0.1", 0,
+                     process_request=http_routes(state)) as server:
+        async with connect(f"ws://127.0.0.1:{server.sockets[0].getsockname()[1]}/v1/session/s-p") as ws:
+            first = await ask(ws, "anything")  # the notice comes first
+            assert first == BUDGET_TEXT_ONLY
+            answer = await ask(ws, "how does eager endpointing work?")
+    assert answer.startswith("Closest section: ")
+
+
+async def test_mock_billed_public_reservations_carry_the_sub_cap():
+    from voicecore.server import mock_billed_providers
+
+    _, settle = mock_billed_providers("s-1", sub="public")
+    assert budget.total("public") == 0.0017
+    for s in settle:
+        s()

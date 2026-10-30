@@ -59,6 +59,9 @@ type Config struct {
 	TextMaxChars     int           // text.input must be a string of at most this many characters
 	MaxQueuedEvents  int           // client events waiting for the orchestrator; more closes with 1008
 	TokensPerMinute  float64       // POST /v1/session per client IP (burst of the same size)
+	// Session tokens per client IP per UTC day. ponytail: in memory, so a restart resets it; Redis in Phase 10.
+	// Turnstile, the token bucket and the dollar caps still bound spend meanwhile.
+	SessionsPerIPPerDay int
 }
 
 func Defaults(secret []byte, upstream string) Config {
@@ -74,7 +77,7 @@ type Counters struct {
 	DropsDuplicate, DropsStale, DropsOverload, DropsOverloadOut, DropsFenced, DropsRateLimit, Gaps atomic.Int64
 	TokensIssued, RejectedRateLimit, RejectedHost, RejectedUpgrade, RejectedDraining               atomic.Int64
 	RejectedToken, RejectedBusy, RejectedUpstream                                                  atomic.Int64 // refused at hello
-	RejectedTurnstile, RejectedOrigin                                                              atomic.Int64
+	RejectedTurnstile, RejectedOrigin, RejectedQuota                                               atomic.Int64
 }
 
 type Server struct {
@@ -92,6 +95,8 @@ type Server struct {
 	nonces   map[string]int64   // used token nonces until their expiry (unix s): a token starts one session
 	upstream *breaker           // the orchestrator dial's circuit breaker
 	swept    int64              // unix s of the last nonce sweep
+	daily    map[string]int     // tokens per client IP today, keyed ip|day (UTC)
+	day      int64              // the UTC day daily counts
 }
 
 // bucket is a token bucket: rate per second, up to burst.
@@ -184,7 +189,7 @@ func New(cfg Config) *Server {
 		cfg.CopyID = "gw"
 	}
 	return &Server{cfg: cfg, start: time.Now(), sessions: map[string]*session{}, perIP: map[string]int{}, tokens: map[string]*bucket{},
-		nonces: map[string]int64{}, upstream: newBreaker()}
+		nonces: map[string]int64{}, upstream: newBreaker(), daily: map[string]int{}}
 }
 
 func (s *Server) Handler() http.Handler {
@@ -229,10 +234,16 @@ func (s *Server) Handler() http.Handler {
 			s.tokens[ip] = b
 		}
 		allowed := s.cfg.TokensPerMinute <= 0 || b.take(time.Now(), s.cfg.TokensPerMinute/60, s.cfg.TokensPerMinute)
+		quota := allowed && s.takeDaily(ip)
 		s.mu.Unlock()
 		if !allowed {
 			s.c.RejectedRateLimit.Add(1)
 			http.Error(w, "too many session requests", http.StatusTooManyRequests)
+			return
+		}
+		if !quota {
+			s.c.RejectedQuota.Add(1)
+			http.Error(w, "daily session limit reached for this address", http.StatusTooManyRequests)
 			return
 		}
 		if s.cfg.TurnstileSecret != "" { // after the rate limit, so nobody can make us hammer siteverify
@@ -257,6 +268,21 @@ func (s *Server) Handler() http.Handler {
 }
 
 // Snapshot returns the counters, live sessions and queue depths.
+// takeDaily counts one token against this IP's daily quota (caller holds s.mu). A new UTC day starts every count over.
+func (s *Server) takeDaily(ip string) bool {
+	if s.cfg.SessionsPerIPPerDay <= 0 {
+		return true
+	}
+	if day := time.Now().UTC().Unix() / 86_400; day != s.day {
+		s.day, s.daily = day, map[string]int{}
+	}
+	if s.daily[ip] >= s.cfg.SessionsPerIPPerDay {
+		return false
+	}
+	s.daily[ip]++
+	return true
+}
+
 func (s *Server) serveCounters(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(s.Snapshot())
@@ -277,7 +303,8 @@ func (s *Server) Snapshot() map[string]int64 {
 		"tokens_issued": s.c.TokensIssued.Load(), "rejected_ratelimit": s.c.RejectedRateLimit.Load(), "rejected_host": s.c.RejectedHost.Load(),
 		"rejected_upgrade": s.c.RejectedUpgrade.Load(), "rejected_draining": s.c.RejectedDraining.Load(),
 		"rejected_token": s.c.RejectedToken.Load(), "rejected_busy": s.c.RejectedBusy.Load(), "rejected_upstream": s.c.RejectedUpstream.Load(),
-		"rejected_turnstile": s.c.RejectedTurnstile.Load(), "rejected_origin": s.c.RejectedOrigin.Load()}
+		"rejected_turnstile": s.c.RejectedTurnstile.Load(), "rejected_origin": s.c.RejectedOrigin.Load(),
+		"rejected_quota": s.c.RejectedQuota.Load()}
 }
 
 // Close ends every session and waits for their goroutines.
