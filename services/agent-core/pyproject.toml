@@ -5,6 +5,7 @@ description = "VoiceCore Lab orchestrator: turn-taking, generation runtime, prov
 requires-python = ">=3.12"
 dependencies = [
     "numpy>=2.5.4",
+    "onnxruntime>=1.31.1",
     "websockets>=15",
 ]
 

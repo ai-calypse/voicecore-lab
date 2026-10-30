@@ -1,6 +1,6 @@
 # Step 02: Voice Activity And Turn Detection
 
-**Status:** Planned; no implementation or test evidence yet.  
+**Status:** Complete (2026-10-30), except the manual speaker/AEC check in S02-T03, which needs a person and speakers (open).  
 **Estimated engineering effort:** 30 hours.  
 **Task owner:** Implementation agent; user confirms external paid credentials.  
 
@@ -89,23 +89,30 @@ Require both deterministic tests and controlled real-provider measurements where
 
 | Decision / rationale | Owner/source section | Actual code/config location | Evidence path | Status |
 |---|---|---|---|---|
-| TBD | This step | TBD | TBD | Unstarted |
+| VAD: Silero v6.2.3 ONNX (MIT, sha256 `1a153a22…8788e3`, committed next to the adapter) on onnxruntime, 1 thread; 20 ms frames buffered into 512-sample windows with 64 samples of context and a [2,1,128] state (interface checked in Context7 `/snakers4/silero-vad`, 2026-10-29) | S02-T01 | `voicecore/turntaking/vad_silero.py` | `test_vad.py` | Done |
+| Label-driven fixture VAD for frame-exact floor tests | S02-T01 | `voicecore/turntaking/vad_fixture.py` | `test_floor.py` | Done |
+| Floor = one class, policies = config (`fixed`, `adaptive`, `asr_assisted`), time = sample position, decisions stamped at the end of the frame | S02-T02 | `voicecore/turntaking/floor.py` | `test_floor.py` (8) | Done |
+| Echo gate while playing: threshold +0.2, 160 ms min speech (plan said 200 ms; that alone exceeds the 200 ms barge-in target), mic 100 ms power ≥ played power − 6 dB (plan said "+6 dB over the reference"; the reference is the played signal, so the echo-loss assumption is folded into −6 dB), 200 ms echo tail after playout stops (found: the echo outlives playout by its 40 ms delay) | S02-T03 | `floor.py` | `test_echo.py` | Done |
+| Fixture fix: agent clips and interrupting users set to −23 dBFS; one dev user was 16 dB below the agent, i.e. under the echo | S02-T03 (S00-T03 artifact) | `harness/build_fixtures.py` | rebuilt manifest; `harness/tests` pass | Done |
+| Evaluator: nearest-rank percentiles; first endpoint decides early cutoff / miss / delay | S02-T04 | `harness/timeline.py` | `harness/tests/test_timeline.py` (4) | Done |
+| Default policy fixed 800 ms | S02-T05 | `Policy()` defaults | `docs/adr/0002-turn-policy.md` | Done |
 
 ## Execution record
 
 | Task ID | Status | Output paths | Test command/results | Blocker |
 |---|---|---|---|---|
-| S02-T01 | Not started | — | — | — |
-| S02-T02 | Not started | — | — | — |
-| S02-T03 | Not started | — | — | — |
-| S02-T04 | Not started | — | — | — |
-| S02-T05 | Not started | — | — | — |
+| S02-T01 | Done 2026-10-30 | `voicecore/turntaking/vad_silero.py`, `vad_fixture.py`, `silero_vad.onnx` | `uv run pytest services/agent-core/tests/test_vad.py` → 5 passed: silence < 0.2 on ≥ 95 % of frames (both adapters); prob > 0.5 on ≥ 80 % of speech frames for single, noisy 10 dB, noisy 5 dB, slow 0.8× (both); reset gives identical probabilities | — |
+| S02-T02 | Done 2026-10-30 | `voicecore/turntaking/floor.py` | `test_floor.py` → 8 passed: start after 3 voiced frames not 2; fixed 700 ends at ceil20(label end) + 700; mid-pause cut by fixed 400 not adaptive; adaptive 400/700/1000 by speech length; 15 s cap; asr_assisted 400 ms before adaptive; unpunctuated final falls back; late final ends at once | — |
+| S02-T03 | Done 2026-10-30 (fixtures); manual check open | `floor.py`, `benchmarks/turntaking/echo.md` | `test_echo.py` → 3 passed: 0 events on both dev echo-only clips; dev interrupts barge in 180/440/160 ms after onset (all ≤ 500, median ≤ 200). Holdout: 0/2 false barge-ins, 180/200 ms | Manual speaker + AEC on/off check needs the user |
+| S02-T04 | Done 2026-10-30 | `harness/timeline.py` | `harness/tests/test_timeline.py` → 4 passed (median 200 of [100,300,200]; 50 ms early = cutoff; no endpoint = missed; nearest rank) | — |
+| S02-T05 | Done 2026-10-30 | `harness/turn_sweep.py`, `reports/turn_policy.{json,txt,png}`, `reports/turn_policy_holdout.json`, `docs/adr/0002-turn-policy.md` | 13 policies on 12 dev turns; fixed 800: median 860, p95 980, 0 early; holdout once: median 820, p95 880, 1/10 early (long natural pause) | asr_assisted numbers are simulated |
 
 ## Source and artifact change record
 
 | Consumed artifact | Revision or hash | Affected task(s) | Revalidation decision |
 |---|---|---|---|
-| TBD | TBD | TBD | TBD |
+| `fixtures/audio/manifest.json` | rebuilt 2026-10-30 with `level_dbfs: -23` | S02-T01..T05 | all fixture tests re-run and pass |
+| Silero VAD | v6.2.3, commit `5cd79456`, model sha256 `1a153a22…` | S02-T01 | committed with MIT licence notice in the adapter docstring |
 
 ## Handoff
 

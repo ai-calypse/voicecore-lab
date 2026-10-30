@@ -8,6 +8,7 @@
     1500
   ],
   "seed": 42,
+  "level_dbfs": -23,
   "agent_speakers": {
     "dev": "1272",
     "holdout": "1089"
@@ -16,7 +17,7 @@
     {
       "id": "ref_agent_dev_01",
       "file": "ref/agent_dev_01.wav",
-      "sha256": "d6d0296bab87e049614d1c981a1a609cb938c5a5a434d7049e5cdaad8fb861e8",
+      "sha256": "c58e09d77a617d8cc91a624abc355f67454337adced9a5e1642b03a0a29cbcce",
       "split": "ref",
       "category": "agent_dev",
       "duration_ms": 4960,
@@ -41,7 +42,7 @@
     {
       "id": "ref_agent_dev_02",
       "file": "ref/agent_dev_02.wav",
-      "sha256": "8dbfa09714b413142eff0fb773964514e1711deaf27c9414e47b84cde115e7eb",
+      "sha256": "f085c355375cf694c7198f837bad101347ffcdb5c4052d88dff0a92ddac7f900",
       "split": "ref",
       "category": "agent_dev",
       "duration_ms": 4940,
@@ -66,7 +67,7 @@
     {
       "id": "ref_agent_dev_03",
       "file": "ref/agent_dev_03.wav",
-      "sha256": "bb1be0c21831537b9ddb5b046290af9f1d623a01c0d91d2379178aa1dabfc023",
+      "sha256": "037f457a4c8a103980c03e8dd44eaccf9b74549e86bba4a4e5ec054b5fa3d350",
       "split": "ref",
       "category": "agent_dev",
       "duration_ms": 6000,
@@ -91,7 +92,7 @@
     {
       "id": "ref_agent_dev_04",
       "file": "ref/agent_dev_04.wav",
-      "sha256": "2898820570a751f91f46e811058c81b75afe0b9025747ac3000c1f2f8d8908fd",
+      "sha256": "57e163f18002e942f80c7c557c1a4477449b80235218cc6f4de550a27cc198a9",
       "split": "ref",
       "category": "agent_dev",
       "duration_ms": 6700,
@@ -116,7 +117,7 @@
     {
       "id": "ref_agent_dev_05",
       "file": "ref/agent_dev_05.wav",
-      "sha256": "d734580f95b13297f2f6c2d60751a428242d2abe937906e46352528349d3b1a7",
+      "sha256": "c0a86f71f89cdc82da45d6a8e852b745320343a8886810f043fc1c9e31246797",
       "split": "ref",
       "category": "agent_dev",
       "duration_ms": 6180,
@@ -141,7 +142,7 @@
     {
       "id": "ref_agent_holdout_01",
       "file": "ref/agent_holdout_01.wav",
-      "sha256": "57374205ec967a235a584e00ddcd5b38c3383a582b2d6e237aab5e5a4187287d",
+      "sha256": "52cfaa84d32af152ec3e55264cea2085900e957fc1d55ee3ae012baf656c00f3",
       "split": "ref",
       "category": "agent_holdout",
       "duration_ms": 4780,
@@ -166,7 +167,7 @@
     {
       "id": "ref_agent_holdout_02",
       "file": "ref/agent_holdout_02.wav",
-      "sha256": "c350c7a76e133bc5ae504c613f898353a920dcd3e0048d7d5d593defc51fe938",
+      "sha256": "02e82ea6a2049578131f760b1ed07bfe3c80082b5bca79495055902aa50f8783",
       "split": "ref",
       "category": "agent_holdout",
       "duration_ms": 3800,
@@ -191,7 +192,7 @@
     {
       "id": "ref_agent_holdout_03",
       "file": "ref/agent_holdout_03.wav",
-      "sha256": "082cead7aa9134b45a531bd977656f854386792a00e31c945b6a432c6d8049ad",
+      "sha256": "52a17e4ea91d1b18606fab957943bf6f7e5b1561e87b16c30214250c48c4b46f",
       "split": "ref",
       "category": "agent_holdout",
       "duration_ms": 5340,
@@ -216,7 +217,7 @@
     {
       "id": "ref_agent_holdout_04",
       "file": "ref/agent_holdout_04.wav",
-      "sha256": "f89f42e9547ed33d3bd9f018671eb7367d4f12beb4de93b746ce2133d657feca",
+      "sha256": "47755ef0d1339add599fd1c515791ce9406f902f361249619c9afd206e8bec88",
       "split": "ref",
       "category": "agent_holdout",
       "duration_ms": 5720,
@@ -241,7 +242,7 @@
     {
       "id": "ref_agent_holdout_05",
       "file": "ref/agent_holdout_05.wav",
-      "sha256": "082ef9636888769bfcbf8a24abf79f888de6f1f9695b7a5e7beb61adbf7da0e8",
+      "sha256": "ceb06b6a7645c6358983747a0db20489e986d29ac884d6e97b3a3bd892869e43",
       "split": "ref",
       "category": "agent_holdout",
       "duration_ms": 7920,
@@ -608,7 +609,7 @@
     {
       "id": "dev_interrupt_01",
       "file": "dev/interrupt_01.wav",
-      "sha256": "e115e5d3cf01d88a39f499a86f6ee293cae54ff57fbcdbda0fe434cd61107bf1",
+      "sha256": "62e463ff546f7ae96eb7dd3c7c82a80b0b13b3159877b2ab6ffc07dee49c3a1d",
       "split": "dev",
       "category": "interrupt",
       "duration_ms": 7000,
@@ -641,7 +642,7 @@
     {
       "id": "dev_interrupt_02",
       "file": "dev/interrupt_02.wav",
-      "sha256": "8a629af025cabda07be1a651e407a1662ae3ca08139216ce623e8b63a254add2",
+      "sha256": "c9a62447ba543f1419b115f0b013b2555bd6ff3fe6119721066aa78d2fea193e",
       "split": "dev",
       "category": "interrupt",
       "duration_ms": 8360,
@@ -674,7 +675,7 @@
     {
       "id": "dev_interrupt_03",
       "file": "dev/interrupt_03.wav",
-      "sha256": "1daa718432838e74d74a65acd6f65679b221445ff3bebc35623b80cd05cb3b11",
+      "sha256": "91cc1ae5014615758986287223d433ec846211bed83a0b8cf098ddabc9946ff1",
       "split": "dev",
       "category": "interrupt",
       "duration_ms": 13460,
@@ -707,7 +708,7 @@
     {
       "id": "dev_echo_only_01",
       "file": "dev/echo_only_01.wav",
-      "sha256": "d4723de9c3dfa28e46f3be534ac7636d0369bba2cc598e6dc2e7561facf5a6c2",
+      "sha256": "8fd631a678f150ea6e7da1dcb77bf0923a3400f807c2f53619ae64aa8dcd14d1",
       "split": "dev",
       "category": "echo_only",
       "duration_ms": 8740,
@@ -728,7 +729,7 @@
     {
       "id": "dev_echo_only_02",
       "file": "dev/echo_only_02.wav",
-      "sha256": "05e91fbaeb17e490bc0fed0d30eb4f1bba1b65ec777cff6d6e6f88c769ed847e",
+      "sha256": "1c071c6c2a9ca2550450508678db36037a425cf8088d63e92011c1ed173dc461",
       "split": "dev",
       "category": "echo_only",
       "duration_ms": 8220,
@@ -1055,7 +1056,7 @@
     {
       "id": "holdout_interrupt_01",
       "file": "holdout/interrupt_01.wav",
-      "sha256": "31803c0972d0f593db318e78c1f7a65803f5197073259553fbea1dd94e3dba6a",
+      "sha256": "8a5e3ea061aee848706506e3b9b14d8e570f5a676b54c3462ecd120a7bb987ef",
       "split": "holdout",
       "category": "interrupt",
       "duration_ms": 9360,
@@ -1088,7 +1089,7 @@
     {
       "id": "holdout_interrupt_02",
       "file": "holdout/interrupt_02.wav",
-      "sha256": "0e67a131e75d5bfc4c119b449d8556209a9360c8a7e58023467e327c6e3a2163",
+      "sha256": "eef17ea7484372e1182a8ee9c85395282324270a0eb5c6154d87b35014a211d2",
       "split": "holdout",
       "category": "interrupt",
       "duration_ms": 7560,
@@ -1121,7 +1122,7 @@
     {
       "id": "holdout_echo_only_01",
       "file": "holdout/echo_only_01.wav",
-      "sha256": "a773f10d97cc648c613a30007fc00770f051372b9b26f72ad76ea5cefc894512",
+      "sha256": "bc8fc04de3ecbab708c4fac581df8bb41eea311c2b01f035c706fd5d04d7bf9f",
       "split": "holdout",
       "category": "echo_only",
       "duration_ms": 7380,
@@ -1142,7 +1143,7 @@
     {
       "id": "holdout_echo_only_02",
       "file": "holdout/echo_only_02.wav",
-      "sha256": "17673bec27525c87e73090cf14b04bd4a9ae7e528f4a61374b772485c1816c9b",
+      "sha256": "3349ff46b370f6d9bc6a6ccd1d2cf4333728cd1ca7a0b1ac155606595a55e7fe",
       "split": "holdout",
       "category": "echo_only",
       "duration_ms": 7760,

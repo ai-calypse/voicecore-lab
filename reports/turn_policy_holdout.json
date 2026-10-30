@@ -1,0 +1,38 @@
+{
+  "fixed_800": {
+    "n": 10,
+    "delays_ms": [
+      820,
+      860,
+      500,
+      500,
+      760,
+      820,
+      880,
+      820,
+      860
+    ],
+    "early_cutoffs": 1,
+    "missed": 0,
+    "early_cutoff_rate": 0.1,
+    "missed_rate": 0.0,
+    "median_ms": 820,
+    "p95_ms": 880,
+    "failures": [
+      {
+        "clip": "holdout_mid_pause_600ms_01",
+        "endpoints_ms": [
+          16040,
+          19000
+        ],
+        "turn_end_ms": 18120
+      }
+    ],
+    "false_starts_silence": "0/1",
+    "false_barge_ins_echo_only": "0/2",
+    "barge_in_delay_ms": [
+      180,
+      200
+    ]
+  }
+}

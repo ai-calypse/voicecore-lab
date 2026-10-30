@@ -33,6 +33,7 @@ PLAN = {"single": (4, 3), "noisy_10db": (2, 2), "noisy_5db": (2, 2), "slow_0_8x"
         "mid_pause_600ms": (2, 2), "interrupt": (3, 2), "echo_only": (2, 2), "silence": (1, 1)}
 AGENT_CLIPS = 5
 AGENT_OFFSET_MS, INTERRUPT_AFTER_MS, ECHO_DELAY_MS, ECHO_GAIN_DB = 500, 1200, 40, -15
+LEVEL_DBFS = -23  # agent clips and interrupting users are set to this RMS so the echo sits 15 dB under the user
 
 
 def ms(n_samples):
@@ -103,6 +104,10 @@ def rms(x):
     return float(np.sqrt(np.mean(x.astype(np.float64) ** 2)))
 
 
+def level(x):
+    return to_int16(scale_to_rms(x.astype(np.float64), 32768 * 10 ** (LEVEL_DBFS / 20)))
+
+
 def pad(x):
     return np.concatenate([np.zeros(samples(PAD_START_MS), np.int16), x, np.zeros(samples(PAD_END_MS), np.int16)])
 
@@ -167,7 +172,7 @@ def main():
         extract(src[split], agent_pool, CACHE / "extracted" / split)
         agents[split] = []
         for u in agent_pool:
-            a = trim(decode(flac(split, u)))
+            a = level(trim(decode(flac(split, u))))
             if ms(len(a)) >= 2500:
                 agents[split].append((f"ref_agent_{split}_{len(agents[split]) + 1:02d}", a))
                 add("ref", f"agent_{split}", len(agents[split]), a, {"speech": [[0, ms(len(a))]]}, source(split, [u]),
@@ -200,6 +205,7 @@ def main():
                         transcript=f"{text[uids[0]]} {text[uids[1]]}")
                     continue
                 if c == "interrupt":
+                    u = level(u)
                     ref_id, agent = split_agents[n - 1]
                     onset = AGENT_OFFSET_MS + INTERRUPT_AFTER_MS
                     length = samples(max(AGENT_OFFSET_MS + ECHO_DELAY_MS + ms(len(agent)), onset + ms(len(u))) + PAD_END_MS)
@@ -237,7 +243,7 @@ def main():
 
     manifest = {"version": 1, "sample_rate": RATE, "format": "wav mono pcm16le",
                 "trim_rule": f"first/last {WIN}-sample window with peak >= {PEAK}",
-                "padding_ms": [PAD_START_MS, PAD_END_MS], "seed": SEED, "agent_speakers": agent_spk, "clips": clips}
+                "padding_ms": [PAD_START_MS, PAD_END_MS], "seed": SEED, "level_dbfs": LEVEL_DBFS, "agent_speakers": agent_spk, "clips": clips}
     (OUT / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(f"{len(clips)} clips, {sum((OUT / c['file']).stat().st_size for c in clips) / 1e6:.1f} MB")
 
