@@ -1,0 +1,17 @@
+.git
+.venv
+.cache
+node_modules
+**/node_modules
+.env
+.env.*
+fixtures/audio
+benchmarks/raw
+reports
+test-results
+playwright-report
+**/dist
+apps/demo/public/embed
+.hypothesis
+.pytest_cache
+**/__pycache__

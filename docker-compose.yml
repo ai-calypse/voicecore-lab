@@ -1,0 +1,19 @@
+# Local stack: docker compose up --build, then open http://localhost:5173
+# Mock providers by default (no keys, no spend). Live: PROVIDERS=live docker compose up, with keys in .env;
+# every live session reserves budget in benchmarks/spend_ledger.json first (mounted below).
+services:
+  agent-core:
+    build: { context: ., dockerfile: services/agent-core/Dockerfile }
+    command: ["--providers", "${PROVIDERS:-mock}"]
+    env_file: [{ path: .env, required: false }]
+    volumes: ["./benchmarks:/app/benchmarks"]
+  gateway:
+    build: services/realtime-gateway
+    command: ["-addr", "0.0.0.0:8080", "-upstream", "ws://agent-core:8765", "-origins", "localhost:*,127.0.0.1:*"]
+    environment: ["GATEWAY_SECRET=${GATEWAY_SECRET:-}"]
+    ports: ["127.0.0.1:8080:8080"]
+    depends_on: [agent-core]
+  demo:
+    build: { context: ., dockerfile: apps/demo/Dockerfile }
+    ports: ["127.0.0.1:5173:80"]
+    depends_on: [gateway]

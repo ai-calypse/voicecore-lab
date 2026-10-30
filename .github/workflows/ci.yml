@@ -78,3 +78,22 @@ jobs:
           key: answer-vectors-${{ hashFiles('fixtures/docs/uv/**', 'services/agent-core/voicecore/answer/ingest.py') }}
       - run: pnpm --filter @voicecore/demo exec playwright install --with-deps chromium
       - run: pnpm --filter @voicecore/demo e2e
+
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose build
+      - run: docker compose up -d
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - name: smoke test (token, WebSocket, grounded answer)
+        run: |
+          for i in $(seq 1 60); do curl -sf http://localhost:8080/debug/counters >/dev/null && break; sleep 2; done
+          for i in $(seq 1 60); do docker compose logs agent-core | grep -q listening && break; sleep 2; done
+          uv run python harness/smoke.py
+          curl -sf http://localhost:5173/embed/voicecore.js >/dev/null
+      - if: failure()
+        run: docker compose logs

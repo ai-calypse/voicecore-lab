@@ -58,7 +58,8 @@ class Index:
         path = CACHE / f"answer_vectors_{key}.npy"
         if path.exists():
             return np.load(path)
-        v = np.array(list(self._embedder().passage_embed([p.text[:2000] for p in self.passages])), np.float32)
+        texts = [p.text[:2000] for p in self.passages]  # small batches: the default (256) ran out of memory in a 2 GB container
+        v = np.array(list(self._embedder().passage_embed(texts, batch_size=16)), np.float32)
         v /= np.linalg.norm(v, axis=1, keepdims=True)
         path.parent.mkdir(parents=True, exist_ok=True)
         np.save(path, v)

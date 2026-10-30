@@ -8,6 +8,7 @@ if (params.get("lab") === "1") {
   void (async () => {
     const [{ renderLab }] = await Promise.all([import("./lab.ts"), import("./lab.css")]);
     document.title = "VoiceCore Lab · timeline";
+    document.querySelector("[data-landing]")?.remove();
     const root = document.createElement("main");
     document.body.append(root);
     const show = (t: Parameters<typeof renderLab>[1]) => renderLab(root, t, show); // throws on a non-timeline; the caller reports it

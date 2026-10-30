@@ -4,8 +4,25 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>VoiceCore Lab</title>
+    <style>
+      body { margin: 0; font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; color: #1d1f23; background: #f7f7f5; }
+      @media (prefers-color-scheme: dark) { body { color: #e8e9ec; background: #131417; } a { color: #6ea0f2; } }
+      .intro { max-width: 640px; margin: 0 auto; padding: 56px 20px; }
+      .intro h1 { font-size: 28px; letter-spacing: -0.01em; margin: 0 0 12px; }
+      .intro li { margin: 4px 0; }
+    </style>
   </head>
   <body>
+    <main class="intro" data-landing>
+      <h1>VoiceCore Lab</h1>
+      <p>A real-time voice agent for the uv documentation, built to show the engineering underneath: browser capture and playout, a Go real-time gateway, turn-taking, barge-in and a grounded answer engine.</p>
+      <ul>
+        <li>Talk to it with the <strong>Ask the uv docs</strong> button in the corner, or type a question.</li>
+        <li>See how a session's time is spent in the <a href="/?lab=1">lab timeline</a>.</li>
+      </ul>
+      <p>This local stack runs on mock speech and language providers unless it was started with live providers.</p>
+    </main>
     <script type="module" src="/src/main.ts"></script>
+    <script src="/embed/voicecore.js" data-endpoint="http://localhost:8080" defer></script>
   </body>
 </html>
