@@ -4,6 +4,13 @@ import { startPlayout, VoiceClient } from "@voicecore/web-sdk";
 (window as unknown as { voicecore: unknown }).voicecore = { VoiceClient, startPlayout };
 
 const params = new URLSearchParams(location.search);
+if (params.get("lab") !== "1" && document.querySelector("[data-landing]")) {
+  // the landing page embeds the widget the same way any site would (the lab page does not)
+  const s = document.createElement("script");
+  s.src = "/embed/voicecore.js";
+  s.dataset.endpoint = import.meta.env.VITE_GATEWAY ?? "http://localhost:8080";
+  document.body.append(s);
+}
 if (params.get("lab") === "1") {
   void (async () => {
     const [{ renderLab }] = await Promise.all([import("./lab.ts"), import("./lab.css")]);

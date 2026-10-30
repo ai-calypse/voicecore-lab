@@ -1,6 +1,6 @@
 # Step 08: Portfolio Release
 
-**Status:** Planned; no implementation or test evidence yet.  
+**Status:** Complete (2026-10-30) for T01–T04. Going public waits on the user: hosting choice, the security review findings, and the decision to make the repository public.  
 **Estimated engineering effort:** 18 hours.  
 **Task owner:** Implementation agent; user confirms external paid credentials.  
 
@@ -76,22 +76,30 @@ Require both deterministic tests and controlled real-provider measurements where
 
 | Decision / rationale | Owner/source section | Actual code/config location | Evidence path | Status |
 |---|---|---|---|---|
-| TBD | This step | TBD | TBD | Unstarted |
+| Widget = one classic script (`voicecore.js`, 18 KB / 7 KB gzip, Vite library build) reading `data-endpoint`; Shadow DOM so host CSS selectors cannot reach it, base font set on its own elements because inheritance crosses the boundary (found with a hostile test page); session token from the gateway only | S08-T01 | `apps/demo/src/widget.ts`, `widget.css`, `vite.widget.config.ts`, `public/embed-test.html` | Playwright `widget.spec.ts` (4) | Done |
+| Look: launcher pill + orb and an open panel with a central orb and mic, modelled on the interaction in `docs/assets/*_reference.png` with an original palette, copy and icons (no ElevenLabs branding); `ui-taste` skill, no image tool authorised; inspected at 1280×760 light/dark and 390×844 | S08-T01 | `widget.css` | screenshots in the session log | Done |
+| Deployment: 3 images (distroless Go gateway; Python orchestrator with the embedding model and docs vectors baked in, non-root, batch size 16 after an out-of-memory at build; nginx demo), ports bound to 127.0.0.1, mock providers by default, ledger mounted for live mode | S08-T02 | `docker-compose.yml`, `services/*/Dockerfile`, `apps/demo/Dockerfile`, `.dockerignore`, `.env.example` | CI `compose` job | Done |
+| `harness/smoke.py`: token → WebSocket → typed question → cited answer; used in the README and CI | S08-T02 | `harness/smoke.py` | CI run 40994096269 | Done |
+| Hosting a public demo is not done: it needs the user's choice of host and a decision on a capped live pool (the plan keeps it on mocks) | S08-T02 | — | — | Waits on user |
+| Portfolio documents with every number labelled and linked to its report; chart rendered for light and dark GitHub themes (`dataviz` skill, palette validated) | S08-T03 | `docs/architecture.md`, `docs/portfolio_story.md`, `docs/writeups/01..03`, `docs/video_script.md`, `harness/latency_chart.py`, `reports/latency_chart_{light,dark}.png` | — | Done |
+| Requirements re-check (matrix and notes kept outside the public repository) | S08-T04 | private | — | Done |
 
 ## Execution record
 
 | Task ID | Status | Output paths | Test command/results | Blocker |
 |---|---|---|---|---|
-| S08-T01 | Not started | — | — | — |
-| S08-T02 | Not started | — | — | — |
-| S08-T03 | Not started | — | — | — |
-| S08-T04 | Not started | — | — | — |
+| S08-T01 | Done 2026-10-30 | `apps/demo/src/widget.*`, `apps/demo/index.html` | Playwright on a plain page with hostile CSS: embed + isolation, typed question → cited answer with docs links, spoken question → transcript, answer, playback; blocked mic → message, mic disabled, text answers. Same widget verified against the compose stack | — |
+| S08-T02 | Done 2026-10-30 (local + CI); public hosting open | `docker-compose.yml`, Dockerfiles, `.env.example`, `README.md`, `harness/smoke.py` | Local `docker compose up --build` → smoke exit 0 (cited answer, 2 docs URLs), widget + lab page in Chromium; CI `compose` job from a clean checkout passed (run 40994096269) | Host and live-pool decision: user |
+| S08-T03 | Done 2026-10-30 | `docs/architecture.md`, `docs/portfolio_story.md`, `docs/writeups/`, `docs/video_script.md`, `reports/latency_chart_*.png` | every number links to a report with its label; video shots map to real screens | Video not recorded (needs the user) |
+| S08-T04 | Done 2026-10-30 | requirements matrix and notes (kept private) | every proof row has a path, test and evidence with an honest status; 2 OSS ideas marked not submitted | — |
 
 ## Source and artifact change record
 
 | Consumed artifact | Revision or hash | Affected task(s) | Revalidation decision |
 |---|---|---|---|
-| TBD | TBD | TBD | TBD |
+| Code review (medium, `04206da..c48c722`, Steps 07–08): 10 findings, all fixed: widget close during connect left a live session; failed connect leaked AudioContexts; mic double-click orphaned a capture; citations carried into a reopened session; barge-in stop overwrote "Listening…"; compose ledger not writable on Linux in live mode (now `HOST_UID`/`HOST_GID`); RTP jitter not wrap-safe (new test); Pion PeerConnections never closed; widget loaded on the lab page; chart used a hard-coded value | review 2026-10-30 | S07-T01..T02, S08-T01..T03 | tests + e2e re-run |
+| `docs/assets/voice_*_reference.png` | 2026-10-28 | S08-T01 | interaction pattern only, no branding copied |
+| Reports from Steps 01–07 | as committed | S08-T03 | numbers copied with links, not retyped from memory |
 
 ## Handoff
 

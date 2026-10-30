@@ -22,6 +22,26 @@ THEMES = {
 }
 
 
+def decision_ms(run):
+    """Median speech end -> LLM request on the client clock (agent clock moved by its derived offset),
+    over turns answered in one piece. Used for asr_assisted, whose asr-triggered endpoints have no frame time."""
+    from runner.wss import all_clips
+    from timeline import percentile
+
+    by_id, xs = {c["id"]: c for c in all_clips()}, []
+    for log in sorted((RAW / run / "clients").glob("*.jsonl")):
+        cl = [json.loads(line) for line in log.read_text().splitlines()]
+        if sum(e["type"] == "agent.generation_started" for e in cl) != 1:
+            continue
+        sid = next(e["session_id"] for e in cl if e["type"] == "welcome")
+        tr = [json.loads(line) for line in (RAW / run / "traces" / f"{sid}.jsonl").read_text().splitlines()]
+        off = -min(e["attrs"]["client_to_agent_us"] for e in tr if e["span"] == "clock")
+        end = next(e["t0_us"] for e in cl if e["type"] == "mic.start") + by_id[log.stem.split("_", 1)[1]]["labels"]["turn_end_ms"] * 1000
+        req = next(e for e in tr if e["span"] == "llm" and e["event"] == "request")
+        xs.append((req["t_mono_us"] + off - end) / 1000)
+    return percentile(xs, 50)
+
+
 def stages(run, first=None):
     s = json.loads((RAW / run / "latency.json").read_text())["summary"]
     p = {k: v["p50"] for k, v in s.items() if isinstance(v, dict)}
@@ -31,7 +51,7 @@ def stages(run, first=None):
 
 ROWS = [
     ("Live, fixed 800 ms endpoint (n = 15)", *stages("wss_live_fixed_20261030T020448Z")),
-    ("Live, ASR-assisted endpoint (n = 12)", *stages("wss_live_asr_assisted_20261030T020917Z", first=523.4)),
+    ("Live, ASR-assisted endpoint (n = 12)", *stages("wss_live_asr_assisted_20261030T020917Z", first=decision_ms("wss_live_asr_assisted_20261030T020917Z"))),
     ("Mock providers, 40 sessions (n = 40)", *stages("wss_mock_fixed_20261030T022315Z")),
 ]
 

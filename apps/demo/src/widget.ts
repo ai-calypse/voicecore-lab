@@ -52,7 +52,9 @@ function mount() {
   let client: VoiceClient | null = null;
   let playout: PlayoutHandle | null = null;
   let micOn = false;
+  let micBusy = false; // a start or stop is in flight (getUserMedia can take seconds)
   let connecting: Promise<void> | null = null;
+  let epoch = 0; // bumped by end(): an older connect() that finishes later cleans up after itself
   const sources = new Map<number, Source[]>();
   let partial: HTMLLIElement | null = null;
 
@@ -95,7 +97,9 @@ function mount() {
       case "answer.sources": sources.set(Number(e.gen), e.sources as Source[]); break;
       case "agent.text": answer(Number(e.gen), String(e.text)); break;
       case "playout.started": setState("speaking", "Speaking… start talking to interrupt."); break;
-      case "playout.stopped": setState("ready", micOn ? "Listening. Ask another question." : "Ask another question."); break;
+      case "playout.stopped": // after a barge-in the user is still talking: keep "Listening…"
+        if (e.reason === "done") setState("ready", micOn ? "Listening. Ask another question." : "Ask another question.");
+        break;
       case "agent.cancel": setState("listening", "Listening…"); break;
       case "session.ended": setState("ended", "The session ended. Close and reopen to start again."); break;
       case "socket.closed": if (client) setState("ended", "Disconnected. Close and reopen to start again."); break;
@@ -103,29 +107,47 @@ function mount() {
   };
 
   const connect = () => (connecting ??= (async () => {
-    setState("connecting", "Connecting…");
-    const res = await fetch(`${endpoint}/v1/session`, { method: "POST" });
-    if (!res.ok) throw new Error(`token request failed (${res.status})`);
-    const { token } = await res.json();
-    client = new VoiceClient({ url: endpoint.replace(/^http/, "ws") + "/v1/ws", token });
-    client.onEvent = onEvent;
-    playout = await startPlayout((e) => { onEvent(e); client?.send(e); });
-    client.playout = playout;
-    await client.connect();
-    setState("ready", "Ready. Tap the mic or type a question.");
-  })().catch((err) => {
-    connecting = null;
-    setState("error", `Could not connect: ${err instanceof Error ? err.message : err}`);
-    throw err;
-  }));
+    const mine = epoch;
+    let c: VoiceClient | null = null, p: PlayoutHandle | null = null;
+    const stale = () => mine !== epoch;
+    try {
+      setState("connecting", "Connecting…");
+      const res = await fetch(`${endpoint}/v1/session`, { method: "POST" });
+      if (!res.ok) throw new Error(`token request failed (${res.status})`);
+      const { token } = await res.json();
+      if (stale()) throw new Error("closed");
+      p = await startPlayout((e) => { onEvent(e); c?.send(e); });
+      if (stale()) throw new Error("closed");
+      c = new VoiceClient({ url: endpoint.replace(/^http/, "ws") + "/v1/ws", token });
+      c.onEvent = onEvent;
+      c.playout = p;
+      await c.connect();
+      if (stale()) throw new Error("closed");
+      client = c;
+      playout = p;
+      setState("ready", "Ready. Tap the mic or type a question.");
+    } catch (err) {
+      c?.close(); // nothing half-open survives a failure or a close during connect
+      p?.close();
+      if (!stale()) {
+        connecting = null;
+        setState("error", `Could not connect: ${err instanceof Error ? err.message : err}`);
+      }
+      throw err;
+    }
+  })());
 
-  const end = () => { // session cleanup: mic off, audio closed, socket closed
+  const end = () => { // session cleanup: mic off, audio closed, socket closed, nothing carried into the next session
+    epoch++;
     if (micOn) client?.stopMic();
     client?.close();
     playout?.close();
     client = playout = null;
     connecting = null;
-    micOn = false;
+    micOn = micBusy = false;
+    sources.clear();
+    partial = null;
+    log.replaceChildren();
     mic.setAttribute("aria-pressed", "false");
     mic.innerHTML = ICON.mic;
   };
@@ -145,7 +167,8 @@ function mount() {
     launcher.focus();
   });
   mic.addEventListener("click", async () => {
-    if (mic.hasAttribute("disabled")) return;
+    if (mic.hasAttribute("disabled") || micBusy) return;
+    micBusy = true;
     try {
       await connect();
       if (micOn) {
@@ -168,6 +191,8 @@ function mount() {
         setState("no-mic", "Microphone access was blocked. You can still type your question below.");
         input.focus();
       }
+    } finally {
+      micBusy = false;
     }
   });
   form.addEventListener("submit", async (ev) => {

@@ -81,15 +81,16 @@ func (b *Buffer) Pop(now time.Time) []Packet {
 // Jitter is the RFC 3550 section 6.4.1 interarrival jitter estimate, in RTP timestamp units.
 type Jitter struct {
 	J           float64
-	prevTransit int64
+	prevTransit uint32
 	have        bool
 }
 
 // Update takes a packet's arrival time and RTP timestamp, both in the stream's clock-rate units.
+// Differences are taken modulo 2^32, so a timestamp wrapping past 0xFFFFFFFF is not a 4e9 jump.
 func (j *Jitter) Update(arrival, rtpTimestamp uint32) {
-	transit := int64(arrival) - int64(rtpTimestamp)
+	transit := arrival - rtpTimestamp
 	if j.have {
-		d := transit - j.prevTransit
+		d := int64(int32(transit - j.prevTransit))
 		if d < 0 {
 			d = -d
 		}

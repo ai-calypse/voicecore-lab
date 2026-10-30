@@ -44,6 +44,7 @@ type peer struct {
 	steps []map[string]any
 	rtp   *stream
 	ws    *stream
+	pc    *webrtc.PeerConnection // the current call; a new offer replaces and closes it
 }
 
 func (p *peer) step(s string, kv ...any) {
@@ -82,6 +83,12 @@ func (p *peer) offer(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	ok := false
+	defer func() {
+		if !ok {
+			_ = pc.Close()
+		}
+	}()
 	pc.OnICEConnectionStateChange(func(s webrtc.ICEConnectionState) { p.step("ice " + s.String()) })
 	pc.OnConnectionStateChange(func(s webrtc.PeerConnectionState) { p.step("connection " + s.String()) })
 	pc.OnTrack(func(tr *webrtc.TrackRemote, rec *webrtc.RTPReceiver) {
@@ -120,6 +127,14 @@ func (p *peer) offer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	<-gathered // one signalling round trip: no trickle ICE
+	ok = true
+	p.mu.Lock()
+	old := p.pc
+	p.pc = pc
+	p.mu.Unlock()
+	if old != nil {
+		_ = old.Close() // its track reader ends with it
+	}
 	p.step("answer sent")
 	_ = json.NewEncoder(w).Encode(pc.LocalDescription())
 }

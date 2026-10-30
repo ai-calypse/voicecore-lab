@@ -6,6 +6,9 @@ services:
     build: { context: ., dockerfile: services/agent-core/Dockerfile }
     command: ["--providers", "${PROVIDERS:-mock}"]
     env_file: [{ path: .env, required: false }]
+    # Live mode writes the shared budget ledger in ./benchmarks. On Linux, run as your own user so it can:
+    #   HOST_UID=$(id -u) HOST_GID=$(id -g) PROVIDERS=live docker compose up
+    user: "${HOST_UID:-10001}:${HOST_GID:-10001}"
     volumes: ["./benchmarks:/app/benchmarks"]
   gateway:
     build: services/realtime-gateway

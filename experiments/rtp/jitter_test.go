@@ -69,3 +69,14 @@ func TestDuplicatesAreCountedOnce(t *testing.T) {
 		t.Fatalf("got %v dup %d", got, b.Duplicate)
 	}
 }
+
+func TestJitterIsUnchangedWhenTheRTPTimestampWraps(t *testing.T) {
+	var plain, wrapped Jitter
+	for i, arrival := range []uint32{1000, 1170, 1310, 1500} {
+		plain.Update(arrival, uint32(160*i))
+		wrapped.Update(arrival, uint32(160*i)+0xFFFFFF00) // same stream, starting 256 units before the wrap
+	}
+	if wrapped.J != plain.J {
+		t.Fatalf("wrapped %v plain %v", wrapped.J, plain.J)
+	}
+}
