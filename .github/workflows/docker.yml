@@ -12,6 +12,7 @@ on:
       - apps/**
       - packages/**
       - harness/smoke.py
+      - scripts/**
       - harness/tests/test_monitoring.py
       - uv.lock
       - pnpm-lock.yaml

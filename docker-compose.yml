@@ -25,7 +25,7 @@ services:
   gateway:
     build: { context: services/realtime-gateway, args: { VERSION: "${VERSION:-dev}" } }  # VERSION=$(git rev-parse --short HEAD)
     command: ["-addr", "0.0.0.0:8080", "-upstream", "ws://agent-core:8765", "-origins", "localhost:*,127.0.0.1:*", "-admin-addr", "0.0.0.0:9091"]
-    environment: ["GATEWAY_SECRET=${GATEWAY_SECRET:-}", "LOG_FORMAT=json"]
+    environment: ["GATEWAY_SECRET=${GATEWAY_SECRET:-}", "TURNSTILE_SECRET=${TURNSTILE_SECRET:-}", "LOG_FORMAT=json"]
     ports: ["127.0.0.1:8080:8080", "127.0.0.1:9091:9091"]  # 9091: /metrics and /debug/counters, localhost only; a prod overlay must use `ports: !override` to drop it
     stop_grace_period: 35s
     restart: unless-stopped

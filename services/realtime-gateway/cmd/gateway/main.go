@@ -39,6 +39,10 @@ func main() {
 	turnstileURL := flag.String("turnstile-url", "", "Turnstile siteverify URL (default Cloudflare's); the secret comes from TURNSTILE_SECRET")
 	adminAddr := flag.String("admin-addr", "", "operator listener for /metrics and /debug/counters, e.g. :9091 (empty = off); keep it off the public internet")
 	flag.Parse()
+	if *env != "dev" && *env != "prod" { // a typo must not silently mean dev
+		slog.Error("-env must be dev or prod", "env", *env)
+		os.Exit(2)
+	}
 	if *probe != "" {
 		os.Exit(session.Probe(*probe))
 	}
@@ -72,10 +76,10 @@ func main() {
 			cfg.TrustedProxies = append(cfg.TrustedProxies, p)
 		}
 	}
-	cfg.Origins = strings.Split(*origins, ",")
+	cfg.Origins = splitList(*origins)
 	cfg.MaxSessionsPerIP, cfg.MaxSessions, cfg.TokensPerMinute = *perIP, *maxSessions, *tokensPerMin
 	if *hosts != "" {
-		cfg.Hosts = strings.Split(*hosts, ",")
+		cfg.Hosts = splitList(*hosts)
 	}
 	if *tracePath != "" {
 		f, err := os.OpenFile(*tracePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
@@ -123,4 +127,15 @@ func main() {
 		os.Exit(1)
 	}
 	<-done // ListenAndServe returns as soon as Shutdown starts; wait for the drain and shutdown to finish
+}
+
+// splitList splits a comma-separated flag, trimming spaces: "a.example, b.example" is two entries.
+func splitList(v string) []string {
+	var out []string
+	for _, x := range strings.Split(v, ",") {
+		if x = strings.TrimSpace(x); x != "" {
+			out = append(out, x)
+		}
+	}
+	return out
 }

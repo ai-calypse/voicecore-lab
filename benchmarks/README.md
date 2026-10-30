@@ -19,7 +19,8 @@ sudo pfctl -E
 
 sudo dnctl pipe 1 config delay 50ms               # profile "50 ms"
 sudo dnctl pipe 1 config delay 150ms plr 0.01     # profile "150 ms + 1% loss"
-(cd services/realtime-gateway && go run ./cmd/wsload -n 1 -duration 30s -label dummynet-150ms-1pct)
+# the gateway under test runs with -admin-addr 127.0.0.1:9091, so the result records its drop and gap counters
+(cd services/realtime-gateway && go run ./cmd/wsload -n 1 -duration 30s -admin 127.0.0.1:9091 -label dummynet-150ms-1pct)
 
 # undo
 sudo pfctl -a voicecore -F all && sudo dnctl -q flush && sudo pfctl -f /etc/pf.conf

@@ -130,3 +130,36 @@ func TestDebugCountersNotOnPublicMux(t *testing.T) {
 		t.Fatalf("admin /debug/counters: %d", code)
 	}
 }
+
+func TestTokenOriginCheckMatchesTheWebSocketRules(t *testing.T) {
+	cfg := Defaults([]byte("k"), "ws://x")
+	cfg.Origins, cfg.Hosts = []string{"https://voicecore.example"}, nil // a pattern with a scheme, like coder/websocket allows
+	h := New(cfg).Handler()
+	post := func(host, origin string) int {
+		req := httptest.NewRequest("POST", "/v1/session", nil)
+		req.Host, req.Header["Origin"] = host, []string{origin}
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, req)
+		return w.Code
+	}
+	if c := post("gw.example", "https://voicecore.example"); c != 200 {
+		t.Errorf("scheme pattern: %d, want 200", c)
+	}
+	if c := post("gw.example", "http://voicecore.example"); c != 403 {
+		t.Errorf("wrong scheme: %d, want 403", c)
+	}
+	if c := post("docs.example", "https://docs.example"); c != 200 {
+		t.Errorf("same origin as the gateway: %d, want 200", c)
+	}
+}
+
+func TestValidateProdRejectsBroadAndLocalPatterns(t *testing.T) {
+	for _, origins := range [][]string{{"*.*"}, {"**"}, {"?*"}, {"http://localhost:*"}, {"voicecore.example", " localhost:*"}, {"0.0.0.0:*"}} {
+		c := Defaults([]byte(strings.Repeat("k", 32)), "ws://x")
+		c.TurnstileSecret, c.Hosts, c.Origins = "ts", []string{"voicecore.example"}, origins
+		c.TrustedProxies = []netip.Prefix{netip.MustParsePrefix("172.16.0.0/12")}
+		if err := c.ValidateProd(); err == nil || !strings.Contains(err.Error(), "-origins") {
+			t.Errorf("-origins %q passed: %v", origins, err)
+		}
+	}
+}

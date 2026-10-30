@@ -121,14 +121,22 @@ func clientIP(remoteAddr string) string {
 	return remoteAddr
 }
 
-// originAllowed matches an Origin header's host against the same patterns the WebSocket upgrade uses.
-func (s *Server) originAllowed(origin string) bool {
+// originAllowed applies the WebSocket upgrade's rules (coder/websocket) to an Origin header: same origin as the
+// request is allowed; a pattern matches the host, or scheme://host when the pattern names a scheme.
+func (s *Server) originAllowed(r *http.Request, origin string) bool {
 	u, err := url.Parse(origin)
 	if err != nil || u.Host == "" {
 		return false
 	}
+	if strings.EqualFold(u.Host, r.Host) {
+		return true
+	}
 	for _, pat := range s.cfg.Origins {
-		if ok, _ := path.Match(strings.ToLower(pat), strings.ToLower(u.Host)); ok {
+		target := u.Host
+		if strings.Contains(pat, "://") {
+			target = u.Scheme + "://" + u.Host
+		}
+		if ok, _ := path.Match(strings.ToLower(pat), strings.ToLower(target)); ok {
 			return true
 		}
 	}
@@ -197,7 +205,7 @@ func (s *Server) Handler() http.Handler {
 	})
 	mux.HandleFunc("POST /v1/session", func(w http.ResponseWriter, r *http.Request) {
 		if origin := r.Header.Get("Origin"); origin != "" { // browsers send it; curl and the harness do not
-			if !s.originAllowed(origin) {
+			if !s.originAllowed(r, origin) {
 				s.c.RejectedOrigin.Add(1)
 				http.Error(w, "origin not allowed", http.StatusForbidden)
 				return

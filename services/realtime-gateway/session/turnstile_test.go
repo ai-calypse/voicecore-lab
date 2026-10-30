@@ -3,6 +3,7 @@ package session
 import (
 	"encoding/json"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"strings"
@@ -88,6 +89,27 @@ func TestResumeNeedsNoTurnstile(t *testing.T) { // a resume proves itself with r
 		mode = "fail" // Cloudflare would now say no: the resume must not ask
 		if id2, _, resumed := welcomeOf(r.connect(map[string]any{"token": tok.Token, "session_id": id, "resume_key": key}, nil)); id2 != id || !resumed {
 			t.Fatalf("resume: %s %v", id2, resumed)
+		}
+	})
+}
+
+func TestTurnstileTokenInMultipartForm(t *testing.T) { // fetch(url, {method: "POST", body: new FormData()}) sends multipart
+	runCfg(t, false, func(c *Config) {
+		c.TurnstileSecret, c.TurnstileURL = "test-turnstile-secret", "http://cf:80/siteverify"
+	}, func(t *testing.T, r *rig) {
+		mode := "pass"
+		defer fakeSiteverify(r, &mode)()
+		var body strings.Builder
+		mw := multipart.NewWriter(&body)
+		_ = mw.WriteField("cf-turnstile-response", "widget-token")
+		_ = mw.Close()
+		resp, err := r.http.Post("http://gw:80/v1/session", mw.FormDataContentType(), strings.NewReader(body.String()))
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != 200 {
+			t.Fatalf("multipart: %d, want 200", resp.StatusCode)
 		}
 	})
 }

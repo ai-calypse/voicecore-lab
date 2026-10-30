@@ -32,7 +32,7 @@ The client IP is the connection's peer address. `X-Forwarded-For` is believed on
 The secret comes from the `GATEWAY_SECRET` environment variable. When it is unset, the gateway generates a random 32-byte secret at start, so tokens do not survive a restart.
 
 :::warning
-The token is not bound to a user. A browser request whose `Origin` matches the `-origins` patterns gets that origin back in `Access-Control-Allow-Origin`; any other origin gets 403, so another site cannot mint tokens from its visitors' browsers. Requests without an `Origin`, such as curl or the test harness, are served without CORS headers. Issuance is limited by the per-IP rate of 10 tokens per minute, the host allow-list and, when configured, Turnstile.
+The token is not bound to a user. A browser request whose `Origin` passes the WebSocket's own rules (the same origin as the request, or a match for an `-origins` pattern, against `scheme://host` when the pattern names a scheme) gets that origin back in `Access-Control-Allow-Origin`; any other origin gets 403, so another site cannot mint tokens from its visitors' browsers. Requests without an `Origin`, such as curl or the test harness, are served without CORS headers. Issuance is limited by the per-IP rate of 10 tokens per minute, the host allow-list and, when configured, Turnstile.
 :::
 
 ## The hello and welcome handshake
