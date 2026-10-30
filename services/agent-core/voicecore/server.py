@@ -148,10 +148,12 @@ class AppState:
         deadline = loop.time() + drain_s
         while self.sessions and loop.time() < deadline:
             await asyncio.sleep(0.05)
-        for ws in list(self.sessions):
-            with contextlib.suppress(ConnectionClosed):
-                await ws.send(protocol.event("session.ended", reason="shutdown"))
-                await ws.close(1001, "shutdown")
+        async def end(ws):  # in parallel and bounded: a slow peer must not push past the container's grace period
+            with contextlib.suppress(ConnectionClosed, TimeoutError):
+                await asyncio.wait_for(ws.send(protocol.event("session.ended", reason="shutdown")), 2)
+                await asyncio.wait_for(ws.close(1001, "shutdown"), 2)
+
+        await asyncio.gather(*(end(ws) for ws in list(self.sessions)))
         deadline = loop.time() + 5
         while self.sessions and loop.time() < deadline:
             await asyncio.sleep(0.05)
@@ -189,6 +191,13 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
 
     async def handler(ws):  # ponytail: VAD runs inline on the event loop (~0.3 ms per window); move to a thread if sessions x frames saturate one core
         sid = ws.request.path.rsplit("/", 1)[-1]
+        state.sessions.add(ws)  # first, so a shutdown that starts while providers are being built still sees it
+        try:
+            await serve_session(ws, sid)
+        finally:
+            state.sessions.discard(ws)
+
+    async def serve_session(ws, sid):
         try:
             providers, settle = make_providers(sid)
         except budget.BudgetExceeded as e:
@@ -199,7 +208,6 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
         sink = JsonlSink(trace_dir / f"{sid}.jsonl") if trace_dir else None
         engine = AnswerEngine(state.index, providers["llm"], name=name)
         session = Session(sid, send=ws.send, vad=SileroVAD(), policy=policy, tracer=Tracer(sid, sink), answer=engine.stream, **providers)
-        state.sessions.add(ws)
         await session.start()
         try:
             async for m in ws:
@@ -218,7 +226,6 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
             for s in settle:
                 with contextlib.suppress(Exception):
                     s()
-            state.sessions.discard(ws)
 
     return handler
 
@@ -256,19 +263,30 @@ async def main():
     async with serve(handler, args.host, args.port, max_size=1 << 20, process_request=http_routes(state)):
         log.info("orchestrator listening on ws://%s:%d (%s providers), loading models", args.host, args.port, args.providers)
 
+        loop = asyncio.get_running_loop()
+        stop = asyncio.Event()
+
+        def on_signal():  # first signal: drain; then restore defaults so a second Ctrl-C quits at once
+            stop.set()
+            for sig in (signal.SIGTERM, signal.SIGINT):
+                loop.remove_signal_handler(sig)
+
+        for sig in (signal.SIGTERM, signal.SIGINT):  # before loading, so a stop during startup still exits 0
+            loop.add_signal_handler(sig, on_signal)  # (PID 1 in a container ignores SIGTERM without a handler)
+
         def load():  # serving already: /healthz answers and /readyz says 503 until this finishes
             SileroVAD()  # load the model now: loading it inside the first session stalls its mic frames
             index = Index(ingest(args.docs_dir, site=docusaurus(args.docs_url)))  # vectors are cached under .cache
             index.dense("warm up", 1)
             return index
 
-        state.index = await asyncio.to_thread(load)
-        state.ready = True
-        log.info("orchestrator ready")
-        stop = asyncio.Event()
-        for sig in (signal.SIGTERM, signal.SIGINT):  # PID 1 in a container ignores SIGTERM without a handler
-            asyncio.get_running_loop().add_signal_handler(sig, stop.set)
-        await stop.wait()
+        loading = asyncio.ensure_future(asyncio.to_thread(load))
+        await asyncio.wait([loading, asyncio.ensure_future(stop.wait())], return_when=asyncio.FIRST_COMPLETED)
+        if loading.done():
+            state.index = loading.result()
+            state.ready = True
+            log.info("orchestrator ready")
+            await stop.wait()
         log.info("draining (up to %.0f s)", args.drain_s)
         await state.shutdown(args.drain_s)
 

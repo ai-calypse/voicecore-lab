@@ -112,3 +112,19 @@ func TestProbeExitCodes(t *testing.T) {
 		}
 	}
 }
+
+// The orchestrator answers HTTP 503 while starting or draining: that is "try again later", not an internal error.
+func TestUpstreamHandshake503ClosesWith1013BeforeWelcome(t *testing.T) {
+	run(t, false, func(t *testing.T, r *rig) {
+		r.orch.SetReady(503)
+		c := r.connect(nil, nil)
+		if s := c.closeStatus(); s != websocket.StatusTryAgainLater {
+			t.Fatalf("close %d, want 1013", s)
+		}
+		for len(c.events) > 0 {
+			if e := <-c.events; e.Type() == "welcome" {
+				t.Fatal("got welcome for a session the orchestrator refused")
+			}
+		}
+	})
+}

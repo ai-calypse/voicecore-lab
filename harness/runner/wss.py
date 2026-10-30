@@ -27,9 +27,13 @@ ORCH_READY_URL = "http://127.0.0.1:8765/readyz"  # 503 until the VAD and docs in
 GATEWAY = ROOT / "services/realtime-gateway"
 
 
-def wait_http(url, timeout=60):
+def wait_http(url, timeout=60, alive=None):
+    """Poll url until it answers 2xx/3xx. alive: a Popen that must still run (a crashed or port-clashing process
+    fails fast instead of after the timeout)."""
     end = time.monotonic() + timeout
     while time.monotonic() < end:
+        if alive is not None and alive.poll() is not None:
+            raise RuntimeError(f"{url}: its process exited with {alive.returncode}")
         try:
             urllib.request.urlopen(url, timeout=1)
             return
@@ -51,8 +55,7 @@ def start_stack(providers, trace_dir, logs, policy="fixed", server_args=()):
                          stdout=open(logs / "gateway.log", "w"), stderr=subprocess.STDOUT),
     ]
     wait_http(COUNTERS_URL)
-    wait_http(ORCH_READY_URL, timeout=600)  # the orchestrator serves at once but loads models before it takes sessions
-    time.sleep(1)  # orchestrator loads the VAD model
+    wait_http(ORCH_READY_URL, timeout=600, alive=procs[0])  # it serves at once but loads models before taking sessions
     if any(p.poll() is not None for p in procs):  # e.g. a docker stack already holds :8080 and would answer instead
         for p in procs:
             p.kill()

@@ -178,3 +178,27 @@ def test_sigterm_exits_0_within_5s(tmp_path):
     finally:
         if p.poll() is None:
             p.kill()
+
+
+@pytest.mark.timeout(180)
+def test_sigterm_right_after_start_exits_0(tmp_path):
+    """A stop that lands while models load (handlers are installed before loading) still exits 0."""
+    (tmp_path / "endpointing.md").write_text(DOCS_PAGE)
+    port = free_port()
+    p = subprocess.Popen([sys.executable, "-m", "voicecore.server", "--providers", "mock", "--port", str(port),
+                          "--docs-dir", str(tmp_path), "--drain-s", "1"], env=os.environ.copy(),
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        deadline = time.time() + 120
+        while time.time() < deadline:  # serving, not necessarily ready
+            try:
+                if http_get(f"http://127.0.0.1:{port}/healthz")[0] == 200:
+                    break
+            except OSError:
+                pass
+            time.sleep(0.05)
+        p.send_signal(signal.SIGTERM)
+        assert p.wait(timeout=60) == 0
+    finally:
+        if p.poll() is None:
+            p.kill()

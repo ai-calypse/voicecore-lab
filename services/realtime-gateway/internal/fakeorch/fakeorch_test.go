@@ -29,11 +29,6 @@ func TestFakeorchReadyzAndKill(t *testing.T) {
 	if got := status(); got != 200 {
 		t.Fatalf("readyz = %d, want 200", got)
 	}
-	o.SetReady(503)
-	if got := status(); got != 503 {
-		t.Fatalf("readyz after SetReady(503) = %d, want 503", got)
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	ws, _, err := websocket.Dial(ctx, "ws://orch:1/v1/session/s1", &websocket.DialOptions{HTTPClient: hc})
@@ -41,6 +36,13 @@ func TestFakeorchReadyzAndKill(t *testing.T) {
 		t.Fatal(err)
 	}
 	c := <-o.Conns
+	o.SetReady(503)
+	if got := status(); got != 503 {
+		t.Fatalf("readyz after SetReady(503) = %d, want 503", got)
+	}
+	if _, resp, err := websocket.Dial(ctx, "ws://orch:1/v1/session/s2", &websocket.DialOptions{HTTPClient: hc}); err == nil || resp == nil || resp.StatusCode != 503 {
+		t.Fatalf("new session while not ready: want an HTTP 503 handshake refusal, got err=%v", err)
+	}
 	o.Kill()
 	if _, _, err := ws.Read(ctx); err == nil {
 		t.Fatal("client read after Kill: want an error")

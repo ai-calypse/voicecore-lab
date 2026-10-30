@@ -41,6 +41,10 @@ func (o *Orch) Handler() http.Handler {
 		}
 	})
 	mux.HandleFunc("GET /v1/session/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if code := int(o.ready.Load()); code >= 500 { // like the real orchestrator: no handshake while not ready
+			w.WriteHeader(code)
+			return
+		}
 		ws, err := websocket.Accept(w, r, nil)
 		if err != nil {
 			return

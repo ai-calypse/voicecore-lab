@@ -65,6 +65,7 @@ func main() {
 	go func() {
 		defer close(done)
 		<-ctx.Done()
+		stop() // a second Ctrl-C now kills the process instead of waiting out the drain
 		slog.Info("draining", "for", drain.String())
 		gw.Drain(*drain) // new sessions get 503/1013; open ones finish or end with reason "shutdown"
 		sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

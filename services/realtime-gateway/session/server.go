@@ -283,7 +283,11 @@ func (s *Server) serveWS(w http.ResponseWriter, r *http.Request) {
 	ss.attach(c, resumed)
 }
 
-var errBusy = errors.New("session limit reached")
+var (
+	errBusy             = errors.New("session limit reached")
+	errDraining         = errors.New("draining")
+	errUpstreamNotReady = errors.New("orchestrator not ready")
+)
 
 func (s *Server) hello(c *websocket.Conn, ip string) (ss *session, resumed bool, code websocket.StatusCode, reason string) {
 	ctx, cancel := context.WithTimeout(context.Background(), s.cfg.HelloTimeout)
@@ -310,11 +314,13 @@ func (s *Server) hello(c *websocket.Conn, ip string) (ss *session, resumed bool,
 			return old, true, 0, ""
 		}
 	}
-	if s.draining.Load() { // resumes above still work; new sessions go to another copy
+	ss, err = s.newSession(ip) // resumes above still work while draining; new sessions do not
+	switch {
+	case errors.Is(err, errDraining):
 		return nil, false, websocket.StatusTryAgainLater, "draining"
-	}
-	ss, err = s.newSession(ip)
-	if errors.Is(err, errBusy) {
+	case errors.Is(err, errUpstreamNotReady):
+		return nil, false, websocket.StatusTryAgainLater, "orchestrator not ready"
+	case errors.Is(err, errBusy):
 		return nil, false, websocket.StatusTryAgainLater, "too many sessions"
 	}
 	if err != nil {
@@ -325,7 +331,11 @@ func (s *Server) hello(c *websocket.Conn, ip string) (ss *session, resumed bool,
 }
 
 func (s *Server) newSession(ip string) (*session, error) {
-	s.mu.Lock() // reserve a slot before dialling, so concurrent hellos cannot overshoot the caps
+	s.mu.Lock()            // reserve a slot before dialling, so concurrent hellos cannot overshoot the caps
+	if s.draining.Load() { // checked under the lock that Drain's count reads, so no session slips past a drain
+		s.mu.Unlock()
+		return nil, errDraining
+	}
 	if (s.cfg.MaxSessions > 0 && len(s.sessions)+s.pending >= s.cfg.MaxSessions) ||
 		(s.cfg.MaxSessionsPerIP > 0 && s.perIP[ip] >= s.cfg.MaxSessionsPerIP) {
 		s.mu.Unlock()
@@ -348,8 +358,11 @@ func (s *Server) newSession(ip string) (*session, error) {
 	sid := "s-" + hex.EncodeToString(id)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	up, _, err := websocket.Dial(ctx, s.cfg.Upstream+"/v1/session/"+sid, &websocket.DialOptions{HTTPClient: s.cfg.HTTPClient})
+	up, resp, err := websocket.Dial(ctx, s.cfg.Upstream+"/v1/session/"+sid, &websocket.DialOptions{HTTPClient: s.cfg.HTTPClient})
 	if err != nil {
+		if resp != nil && resp.StatusCode == http.StatusServiceUnavailable { // starting or draining: retry shortly
+			return nil, errUpstreamNotReady
+		}
 		return nil, fmt.Errorf("dial %s: %w", s.cfg.Upstream, err)
 	}
 	up.SetReadLimit(1 << 20)
