@@ -15,8 +15,8 @@ func (c Config) ValidateProd() error {
 	if c.TurnstileSecret == "" {
 		errs = append(errs, errors.New("TURNSTILE_SECRET must be set (the human check on new sessions)"))
 	}
-	if len(c.Origins) == 0 || anyLocal(c.Origins) {
-		errs = append(errs, errors.New("-origins must list the public site and nothing local"))
+	if len(c.Origins) == 0 || anyLocal(c.Origins) || anyWildcard(c.Origins) {
+		errs = append(errs, errors.New("-origins must list the public site, nothing local and no bare *"))
 	}
 	if len(c.Hosts) == 0 || anyLocal(c.Hosts) {
 		errs = append(errs, errors.New("-hosts must list the public host name and nothing local"))
@@ -31,6 +31,15 @@ func anyLocal(names []string) bool {
 	for _, n := range names {
 		h := strings.ToLower(n)
 		if strings.HasPrefix(h, "localhost") || strings.HasPrefix(h, "127.") || strings.HasPrefix(h, "::1") || strings.HasPrefix(h, "[::1]") {
+			return true
+		}
+	}
+	return false
+}
+
+func anyWildcard(patterns []string) bool {
+	for _, p := range patterns {
+		if strings.TrimSpace(p) == "*" {
 			return true
 		}
 	}

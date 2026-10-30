@@ -115,6 +115,10 @@ func TestValidateProd(t *testing.T) {
 	if err := good.ValidateProd(); err != nil {
 		t.Fatalf("a complete prod config: %v", err)
 	}
+	good.Origins = []string{"*"} // any site could mint tokens from its visitors' browsers
+	if err := good.ValidateProd(); err == nil || !strings.Contains(err.Error(), "-origins") {
+		t.Fatalf("-origins * passed: %v", err)
+	}
 }
 
 func TestDebugCountersNotOnPublicMux(t *testing.T) {
