@@ -1,13 +1,16 @@
 """Build the local-only docs-question clips (S00-T03); they are gitignored, never committed.
 
     uv run python harness/build_local_fixtures.py
+    uv run python harness/build_local_fixtures.py --key fixtures/docs/voicecore_key.json   # live load clips vc_a01...
 
 Speaks every answer-key question with Deepgram Aura-2 (dev and holdout use different voices)
 and processes the user's own recordings from fixtures/audio/local/raw/user_qNN.wav. Aura output
 is kept local because its redistribution terms were not confirmed. Spends from the usd pool.
 """
 import json
+import sys
 import urllib.request
+from pathlib import Path
 
 import numpy as np
 
@@ -37,7 +40,42 @@ def entry(q, rel, speech, voice):
             "committed": False}
 
 
+def voicecore_clips(key_path, speak_fn=speak, api_key=None) -> dict:
+    """The answer questions of a VoiceCore answer key (cases, one turn each) as local clips vc_a01... in the dev voice,
+    for the live load test. Own folder and manifest, so ids never collide with the docs-question clips."""
+    cases = [c for c in json.loads(Path(key_path).read_text())["cases"] if c["expect"] == "answer"]
+    out = LOCAL / "voicecore"
+    manifest_path = out / "manifest.json"
+    clips = {c["id"]: c for c in json.loads(manifest_path.read_text())["clips"]} if manifest_path.exists() else {}
+
+    def save():  # after every clip, so a failure never loses audio that was already paid for
+        out.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text(json.dumps({"version": 1, "clips": sorted(clips.values(), key=lambda c: c["id"])}, indent=2) + "\n")
+
+    todo = [c for c in cases if f"vc_{c['id']}" not in clips]
+    if todo:
+        key = api_key or load_key()
+        chars = sum(len(c["turns"][0]) for c in todo)
+        res = budget.reserve("usd", round(chars * PRICE_PER_CHAR * 1.2, 4), label=f"aura voicecore clips {len(todo)} questions")
+        used = 0
+        try:
+            for c in todo:
+                pcm, n = speak_fn(c["turns"][0], VOICES["dev"], key)
+                used += n
+                e = entry({"split": "dev", "id": c["id"]}, f"local/voicecore/{c['id']}.wav", trim(pcm), VOICES["dev"])
+                clips[f"vc_{c['id']}"] = {**e, "id": f"vc_{c['id']}", "category": "voicecore_question"}
+                save()
+        finally:
+            budget.settle(res, round(used * PRICE_PER_CHAR, 6), chars=used, provider="deepgram aura-2")
+    save()
+    return clips
+
+
 def main():
+    if sys.argv[1:2] == ["--key"]:
+        clips = voicecore_clips(sys.argv[2])
+        print(f"{len(clips)} VoiceCore clips; usd pool total ${budget.total('usd')}")
+        return
     questions = json.loads((OUT.parent / "docs/answer_key.json").read_text())["questions"]
     manifest_path = LOCAL / "manifest.json"
     clips = {c["id"]: c for c in json.loads(manifest_path.read_text())["clips"]} if manifest_path.exists() else {}

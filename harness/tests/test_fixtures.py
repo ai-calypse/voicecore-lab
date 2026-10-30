@@ -2,6 +2,7 @@ import array
 import hashlib
 import json
 import wave
+from pathlib import Path
 
 import pytest
 
@@ -143,3 +144,25 @@ def test_every_docs_question_has_local_audio_in_a_split_specific_voice():
         assert hashlib.sha256((ROOT / "fixtures/audio" / c["file"]).read_bytes()).hexdigest() == c["sha256"]
     assert {c["voice"] for c in tts.values() if c["split"] == "dev"}.isdisjoint(
         {c["voice"] for c in tts.values() if c["split"] == "holdout"})
+
+
+def test_voicecore_key_produces_vc_clip_ids(tmp_path, monkeypatch):
+    """Phase 10 live load: the VoiceCore answer key's questions become local clips vc_a01..., TTS mocked (no spend)."""
+    import json
+
+    import numpy as np
+
+    import build_fixtures
+    import build_local_fixtures as blf
+
+    monkeypatch.setattr(build_fixtures, "OUT", tmp_path)
+    monkeypatch.setattr(blf, "LOCAL", tmp_path / "local")
+    tone = (np.sin(np.arange(16000) / 5) * 8000).astype(np.int16)  # one second of "speech"
+    spoken = []
+    key_file = Path(__file__).resolve().parents[2] / "fixtures/docs/voicecore_key.json"
+    clips = blf.voicecore_clips(key_file, speak_fn=lambda text, voice, key: (spoken.append(text) or tone, len(text)), api_key="test-key")
+    ids = sorted(clips)
+    assert ids[:2] == ["vc_a01", "vc_a02"] and len(ids) == 14 and len(spoken) == 14
+    manifest = json.loads((tmp_path / "local/voicecore/manifest.json").read_text())
+    assert {c["id"] for c in manifest["clips"]} == set(ids)
+    assert all((tmp_path / c["file"]).exists() and c["committed"] is False for c in manifest["clips"])

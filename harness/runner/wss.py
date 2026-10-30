@@ -79,10 +79,11 @@ def run_clients(clips, out_dir, tail_s, sequential=False, gateway=None):
 
 
 def all_clips():
-    """Committed clips plus the local-only docs-question clips when present."""
+    """Committed clips plus every local-only set present (docs questions, VoiceCore questions)."""
     clips = load_manifest()["clips"]
-    local = MANIFEST.parent / "local/manifest.json"
-    return clips + (load_manifest(local)["clips"] if local.exists() else [])
+    for local in sorted((MANIFEST.parent / "local").rglob("manifest.json")):
+        clips += load_manifest(local)["clips"]
+    return clips
 
 
 def main():
