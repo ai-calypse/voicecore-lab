@@ -271,6 +271,12 @@ func (ss *session) readUpstream() {
 		if e.Type() == "session.ended" { // the orchestrator ended it (e.g. budget): that is the reason, said once
 			var reason string
 			_ = e.Get("reason", &reason)
+			if reason == "" {
+				reason = "ended"
+			}
+			if len(reason) > 100 { // a WebSocket close reason must fit 123 bytes
+				reason = reason[:100]
+			}
 			ss.finish(reason, false)
 			return
 		}

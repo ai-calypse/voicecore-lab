@@ -85,14 +85,16 @@ def settle(reservation, actual, ledger_path=None, **meta):
 
 
 def reserve_all(specs, ledger_path=None) -> list[Reservation]:
-    """Reserve several (pool, amount, label) in order, all or nothing: if one is refused, the ones already made are
-    settled at 0 (nothing was used) and BudgetExceeded is raised, so no reservation is left counting forever."""
-    done = []
-    try:
+    """Reserve several (pool, amount, label) atomically under one ledger lock: all are written, or none (an over-cap
+    or unknown pool raises before anything is written, so no partial reservation ever counts against a cap)."""
+    with _locked(ledger_file(ledger_path)) as data:
+        spent, out = {}, []
         for pool, amount, label in specs:
-            done.append(reserve(pool, amount, label, ledger_path=ledger_path))
-    except BudgetExceeded:
-        for r in done:
-            settle(r, 0, ledger_path=ledger_path, refused_with_session=True)
-        raise
-    return done
+            spent.setdefault(pool, _sum(data["entries"], pool))
+            if round(spent[pool] + amount, 6) > CAPS[pool]:
+                raise BudgetExceeded(f"{pool}: {spent[pool]} spent + {amount} requested > cap {CAPS[pool]}")
+            spent[pool] = round(spent[pool] + amount, 6)
+            out.append(Reservation(uuid.uuid4().hex[:12], pool, amount, label))
+        for r in out:
+            data["entries"].append({"id": r.id, "pool": r.pool, "amount": r.amount, "label": r.label, "status": "reserved", "ts": now()})
+    return out

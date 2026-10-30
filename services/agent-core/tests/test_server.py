@@ -28,4 +28,4 @@ def test_mock_billed_refused_leaves_nothing_reserved(tmp_path, monkeypatch):
     monkeypatch.setenv("VOICECORE_LEDGER", str(path))
     with pytest.raises(budget.BudgetExceeded):
         mock_billed_providers("s-2")
-    assert [e.get("status") for e in json.loads(path.read_text())["entries"] if "label" in e] == ["settled"]
+    assert [e for e in json.loads(path.read_text())["entries"] if "label" in e] == []

@@ -93,9 +93,9 @@ TTS = {  # factory kind, module, budget pool, reservation for MAX_CHARS characte
 
 
 def live_providers(sid, llm_opts=None, tts_name="deepgram"):
+    kind, mod, pool, amount, cost = TTS[tts_name]  # before reserving: an unknown name must not leak reservations
     stt_res, llm_res = budget.reserve_all([("usd", round(MAX_AUDIO_S / 60 * PRICE_PER_MIN, 6), f"server stt {sid}"),
                                            ("usd", LLM_CAP_USD, f"server llm {sid}")])
-    kind, mod, pool, amount, cost = TTS[tts_name]
     tts = {"res": None, "streams": []}
 
     def new_tts(ws=None):  # a retry opens a second stream; both bill one reservation and share its character cap
@@ -108,8 +108,13 @@ def live_providers(sid, llm_opts=None, tts_name="deepgram"):
         tts["streams"].append(make_live(kind, tts["res"], max_chars=mod.MAX_CHARS - used, ws=ws))
         return tts["streams"][-1]
 
-    p = {"stt": make_live("stt", stt_res), "llm": make_live("llm", llm_res, **(llm_opts or {})),
-         "tts": OnDemandTTS(new_tts, mod.open_socket), "tts_factory": lambda: OnDemandTTS(new_tts, mod.open_socket)}
+    try:
+        p = {"stt": make_live("stt", stt_res), "llm": make_live("llm", llm_res, **(llm_opts or {})),
+             "tts": OnDemandTTS(new_tts, mod.open_socket), "tts_factory": lambda: OnDemandTTS(new_tts, mod.open_socket)}
+    except Exception:  # nothing was used: release the reservations instead of leaving them counting
+        for r in (stt_res, llm_res):
+            budget.settle(r, 0)
+        raise
     settle = [lambda: budget.settle(stt_res, p["stt"].cost_usd(), request_id=p["stt"].request_id),
               lambda: budget.settle(llm_res, round(p["llm"].cost_usd, 6), calls=p["llm"].calls),
               lambda: tts["res"] and budget.settle(tts["res"], cost(sum(t.chars for t in tts["streams"])),

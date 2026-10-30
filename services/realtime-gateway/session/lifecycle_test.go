@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"reflect"
+	"strings"
 	"testing"
 	"testing/synctest"
 	"time"
@@ -248,6 +249,27 @@ func TestBudgetRefusalReachesClientOnce(t *testing.T) {
 		}
 		if len(reasons) != 1 || reasons[0] != "budget" {
 			t.Fatalf("session.ended reasons = %v, want [budget]", reasons)
+		}
+	})
+}
+
+// A 300-byte reason would overflow a WebSocket close reason (123 bytes); the session still ends cleanly.
+func TestUpstreamSessionEndedWithLongReasonEndsCleanly(t *testing.T) {
+	run(t, false, func(t *testing.T, r *rig) {
+		c := r.connect(nil, nil)
+		c.next("welcome")
+		oc := r.upstream()
+		_ = oc.WS.Write(context.Background(), websocket.MessageText, protocol.NewEvent("session.ended", map[string]any{"reason": strings.Repeat("x", 300)}))
+		if s := c.closeStatus(); s != websocket.StatusNormalClosure {
+			t.Fatalf("client close %d, want 1000", s)
+		}
+		select {
+		case <-oc.Closed:
+		case <-time.After(time.Minute):
+			t.Fatal("upstream not closed")
+		}
+		if n := r.counters()["sessions"]; n != 0 {
+			t.Fatalf("sessions = %d, want 0", n)
 		}
 	})
 }

@@ -12,9 +12,13 @@ def key(name: str) -> str | None:
     if ENV.exists():
         for line in ENV.read_text().splitlines():
             k, _, v = line.partition("=")
-            if k.strip() == name:
-                v = re.sub(r"(^|\s+)#.*$", "", v).strip()  # a comment starts at '#' after whitespace (.env.example has them)
-                if len(v) >= 2 and v[0] == v[-1] and v[0] in "'\"":
-                    v = v[1:-1]
-                return v or None
+            if k.strip() != name:
+                continue
+            q = v.strip()
+            if q[:1] in ("'", '"') and q[0] in q[1:]:
+                v = q[1:q.index(q[0], 1)]  # quoted: everything up to the closing quote, '#' included
+            else:
+                v = re.sub(r"\s+#.*$", "", v).strip()  # unquoted: '#' after whitespace (even right after '=') starts a comment
+            if v:
+                return v  # an empty placeholder (e.g. copied from .env.example) does not hide a later line
     return None
