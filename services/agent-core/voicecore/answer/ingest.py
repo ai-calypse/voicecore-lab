@@ -120,9 +120,13 @@ def ingest(root: Path, extra: list[Path] = (), skipped: list | None = None) -> l
 
 def check_url(url: str, allowed: set[str] = ALLOWED_HOSTS) -> str:
     """Refuse anything but https to an allowlisted host that resolves to public addresses (SSRF guard)."""
+    if "\\" in url or any(ord(ch) < 33 for ch in url):  # parsers disagree on these (WHATWG reads \ as /)
+        raise UnsafeURL(f"backslash or control character in URL: {url!r}")
     u = urlsplit(url)
     if u.scheme != "https" or not u.hostname:
         raise UnsafeURL(f"only https URLs: {url}")
+    if u.username or u.password or u.port not in (None, 443):
+        raise UnsafeURL(f"no userinfo and no port other than 443: {url}")
     host = u.hostname
     try:
         literal = ipaddress.ip_address(host)

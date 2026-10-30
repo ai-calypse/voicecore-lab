@@ -20,6 +20,7 @@ from voicecore.answer.index import Index
 from voicecore.answer.ingest import ingest
 from voicecore.providers.cartesia_tts import MAX_CHARS
 from voicecore.providers.deepgram_stt import MAX_AUDIO_S, PRICE_PER_MIN
+from voicecore.providers.base import ProviderError
 from voicecore.providers.factory import make_live
 from voicecore.providers.mock import LLMScript, MockLLM, MockSTT, MockTTS
 from voicecore.runtime.session import Session
@@ -38,25 +39,54 @@ def mock_providers():
             "tts": MockTTS(), "tts_factory": MockTTS}, []
 
 
+class OnDemandTTS:
+    """Builds the live TTS stream (and reserves its credits) when the session first speaks, so idle sockets do
+    not hold the credit pool (security review 2026-10-30). A refused reservation becomes a fatal TTS error:
+    the session then answers in text only."""
+
+    def __init__(self, make):
+        self._make, self._tts, self._ready = make, None, asyncio.Event()
+
+    async def synth(self, gen, text, last):
+        if self._tts is None:
+            self._tts = self._make()
+            self._ready.set()
+        await self._tts.synth(gen, text, last)
+
+    async def audio(self):
+        await self._ready.wait()
+        async for a in self._tts.audio():
+            yield a
+
+    async def cancel(self, gen):
+        if self._tts:
+            await self._tts.cancel(gen)
+
+    async def close(self):
+        if self._tts:
+            await self._tts.close()
+
+
 def live_providers(sid):
     stt_res = budget.reserve("usd", round(MAX_AUDIO_S / 60 * PRICE_PER_MIN, 6), label=f"server stt {sid}")
     llm_res = budget.reserve("usd", LLM_CAP_USD, label=f"server llm {sid}")
-    try:
-        tts_res = budget.reserve("cartesia_credits", MAX_CHARS, label=f"server tts {sid}")
-    except budget.BudgetExceeded:
-        budget.settle(stt_res, 0.0)
-        budget.settle(llm_res, 0.0)
-        raise
-    tts_streams = []
+    tts = {"res": None, "streams": []}
 
-    def new_tts():  # the session may open a second stream for its one TTS retry; both bill the same reservation
-        tts_streams.append(make_live("tts", tts_res, max_chars=MAX_CHARS - sum(t.chars for t in tts_streams)))
-        return tts_streams[-1]
+    def new_tts():  # a retry opens a second stream; both bill one reservation and share its character cap
+        if tts["res"] is None:
+            try:
+                tts["res"] = budget.reserve("cartesia_credits", MAX_CHARS, label=f"server tts {sid}")
+            except budget.BudgetExceeded as e:
+                raise ProviderError("fatal", f"TTS budget: {e}") from None
+        used = sum(t.chars for t in tts["streams"])
+        tts["streams"].append(make_live("tts", tts["res"], max_chars=MAX_CHARS - used))
+        return tts["streams"][-1]
 
-    p = {"stt": make_live("stt", stt_res), "llm": make_live("llm", llm_res), "tts": new_tts(), "tts_factory": new_tts}
+    p = {"stt": make_live("stt", stt_res), "llm": make_live("llm", llm_res), "tts": OnDemandTTS(new_tts),
+         "tts_factory": lambda: OnDemandTTS(new_tts)}
     settle = [lambda: budget.settle(stt_res, p["stt"].cost_usd(), request_id=p["stt"].request_id),
               lambda: budget.settle(llm_res, round(p["llm"].cost_usd, 6), calls=p["llm"].calls),
-              lambda: budget.settle(tts_res, sum(t.chars for t in tts_streams), streams=len(tts_streams))]
+              lambda: tts["res"] and budget.settle(tts["res"], sum(t.chars for t in tts["streams"]), streams=len(tts["streams"]))]
     return p, settle
 
 

@@ -1,6 +1,9 @@
 name: evals
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   gate:
     runs-on: ubuntu-latest

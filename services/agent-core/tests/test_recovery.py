@@ -164,3 +164,12 @@ async def test_revoking_the_mic_mid_utterance_drops_the_half_turn():
     await s.on_event({"type": "mic.revoked"})
     assert s.state == State.LISTENING and s.transcript.text() == ""
     await s.close()
+
+
+async def test_text_input_that_is_not_a_short_string_is_ignored():
+    s, out = await make()
+    for bad in ([{"type": "image_url", "image_url": {"url": "https://x"}}], "a" * 501, "   ", None):
+        await s.on_event({"type": "text.input", "text": bad})
+    await asyncio.sleep(2)
+    assert out.events("agent.generation_started") == [] and s.history == []
+    await s.close()

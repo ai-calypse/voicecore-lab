@@ -44,7 +44,9 @@ def start_stack(providers, trace_dir, logs, policy="fixed"):
     procs = [
         subprocess.Popen([sys.executable, "-m", "voicecore.server", "--providers", providers, "--trace-dir", str(trace_dir), "--policy", policy],
                          cwd=ROOT, stdout=open(logs / "orchestrator.log", "w"), stderr=subprocess.STDOUT),
-        subprocess.Popen([str(binary), "-addr", "127.0.0.1:8080", "-upstream", "ws://127.0.0.1:8765", "-trace", str(logs / "gateway_trace.jsonl")],
+        # all benchmark clients share one IP: lift the per-IP abuse limits for this local run only
+        subprocess.Popen([str(binary), "-addr", "127.0.0.1:8080", "-upstream", "ws://127.0.0.1:8765", "-trace", str(logs / "gateway_trace.jsonl"),
+                          "-max-sessions-per-ip", "0", "-tokens-per-minute", "0"],
                          stdout=open(logs / "gateway.log", "w"), stderr=subprocess.STDOUT),
     ]
     wait_http(COUNTERS_URL)

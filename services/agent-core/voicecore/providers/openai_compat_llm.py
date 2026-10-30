@@ -9,7 +9,6 @@ from .base import Done, ProviderError, TextDelta, ToolCall, http_error
 BASE_URL = "https://openrouter.ai/api/v1"
 MODEL = "openai/gpt-4.1-nano"
 PRICE_IN, PRICE_OUT = 0.10 / 1e6, 0.40 / 1e6  # USD per token, OpenRouter /models 2026-10-29
-CALL_ESTIMATE_USD = 0.0002  # a call is refused unless this much of the reservation is left
 
 
 def _estimate(messages, out_chars):
@@ -26,7 +25,7 @@ class OpenAICompatLLM:
         self.calls = 0
 
     async def stream(self, messages, tools=None, max_tokens=80):
-        if self.cost_usd + CALL_ESTIMATE_USD > self.reservation.amount:
+        if self.cost_usd + _estimate(messages, max_tokens * 4) > self.reservation.amount:  # this prompt, worst-case output
             raise ProviderError("fatal", f"LLM budget for this session (${self.reservation.amount}) is used up")
         self.calls += 1
         extra = {"tools": tools} if tools else {}

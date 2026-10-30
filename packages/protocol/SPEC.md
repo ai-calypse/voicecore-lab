@@ -76,6 +76,7 @@ The orchestrator learns the session ID from the upstream URL `ws://<orchestrator
 | 4001 | token invalid or expired |
 | 4002 | unsupported `version` or audio format |
 | 4003 | heartbeat missed (no message for 10 s) |
+| 1013 | session limit reached (global or per client IP); try again later |
 
 ## 3. Generation fencing
 
@@ -90,6 +91,15 @@ Every agent frame carries `generation_id`. When generation `g` is cancelled, eac
 - No message from the client for 10 s → close 4003.
 - Resume: a `hello` with the `session_id` of a disconnected session within 10 s keeps the session (and its upstream connection), fences the newest agent generation (audio queued while the client was away is dropped) and sends `client.resumed` upstream; later, a new session starts. Clients pick a random first `stream_id` so a resumed session never sees a reused stream.
 - `GET /debug/counters` returns the counters and queue depth as JSON.
+- Abuse limits (defaults; flags on `cmd/gateway`):
+  - Requests whose `Host` is not allow-listed are refused with 421 (`localhost`, `127.0.0.1`, `::1`).
+  - `POST /v1/session` is limited to 10 per minute per IP (429 beyond that).
+  - At most 50 sessions in total and 4 per IP (beyond that, close 1013).
+  - A session ends after 15 minutes (`session.ended{reason:"expired"}`).
+  - Per connection, mic frames pass at real-time pace with a 2 s burst; more are dropped and counted in `drops_ratelimit`.
+  - `text.input` events pass at 1 per second with a burst of 5; more are dropped.
+  - `text.input.text` must be a string of at most 500 characters (close 1008 otherwise).
+  - At most 256 client events may wait for the orchestrator (close 1008 beyond that).
 
 ## 5. Trace event
 

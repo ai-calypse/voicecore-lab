@@ -9,9 +9,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -36,16 +38,27 @@ type Config struct {
 	OutCap       int // agent frames buffered towards the client (1500 = 30 s)
 	Log          *slog.Logger
 	Trace        io.Writer // SPEC.md section 5 JSON lines; nil = off
+
+	// Abuse limits (security review 2026-10-30). Zero means no limit.
+	Hosts            []string      // allowed Host header names (DNS rebinding); empty = any
+	MaxSessions      int           // live sessions in total
+	MaxSessionsPerIP int           // live sessions per client IP
+	MaxSessionAge    time.Duration // a session ends after this long
+	TextMaxChars     int           // text.input must be a string of at most this many characters
+	MaxQueuedEvents  int           // client events waiting for the orchestrator; more closes with 1008
+	TokensPerMinute  float64       // POST /v1/session per client IP (burst of the same size)
 }
 
 func Defaults(secret []byte, upstream string) Config {
 	return Config{Secret: secret, Upstream: upstream, TokenTTL: 60 * time.Second, HelloTimeout: 5 * time.Second,
-		Heartbeat: 10 * time.Second, ResumeWindow: 10 * time.Second, QueueCap: 50, OutCap: 1500, Log: slog.Default()}
+		Heartbeat: 10 * time.Second, ResumeWindow: 10 * time.Second, QueueCap: 50, OutCap: 1500, Log: slog.Default(),
+		MaxSessions: 50, MaxSessionsPerIP: 4, MaxSessionAge: 15 * time.Minute, TextMaxChars: 500, MaxQueuedEvents: 256,
+		TokensPerMinute: 10}
 }
 
 // Counters are totals across sessions, exposed at GET /debug/counters.
 type Counters struct {
-	DropsDuplicate, DropsStale, DropsOverload, DropsOverloadOut, DropsFenced, Gaps atomic.Int64
+	DropsDuplicate, DropsStale, DropsOverload, DropsOverloadOut, DropsFenced, DropsRateLimit, Gaps atomic.Int64
 }
 
 type Server struct {
@@ -56,6 +69,51 @@ type Server struct {
 	mu       sync.Mutex
 	sessions map[string]*session
 	traceMu  sync.Mutex
+	perIP    map[string]int     // live and pending sessions per client IP
+	pending  int                // sessions being dialled
+	tokens   map[string]*bucket // token issuance per client IP
+}
+
+// bucket is a token bucket: rate per second, up to burst.
+type bucket struct {
+	tokens float64
+	last   time.Time
+}
+
+func (b *bucket) take(now time.Time, rate, burst float64) bool {
+	if b.last.IsZero() {
+		b.tokens = burst
+	} else {
+		b.tokens = min(burst, b.tokens+now.Sub(b.last).Seconds()*rate)
+	}
+	b.last = now
+	if b.tokens < 1 {
+		return false
+	}
+	b.tokens--
+	return true
+}
+
+func clientIP(remoteAddr string) string {
+	if host, _, err := net.SplitHostPort(remoteAddr); err == nil {
+		return host
+	}
+	return remoteAddr
+}
+
+func (s *Server) hostAllowed(host string) bool {
+	if len(s.cfg.Hosts) == 0 {
+		return true
+	}
+	if h, _, err := net.SplitHostPort(host); err == nil {
+		host = h
+	}
+	for _, ok := range s.cfg.Hosts {
+		if host == ok {
+			return true
+		}
+	}
+	return false
 }
 
 // trace writes one SPEC trace event (process "gateway", this server's monotonic clock).
@@ -80,13 +138,29 @@ func New(cfg Config) *Server {
 	if cfg.HTTPClient == nil {
 		cfg.HTTPClient = http.DefaultClient
 	}
-	return &Server{cfg: cfg, start: time.Now(), sessions: map[string]*session{}}
+	return &Server{cfg: cfg, start: time.Now(), sessions: map[string]*session{}, perIP: map[string]int{}, tokens: map[string]*bucket{}}
 }
 
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/session", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*") // development only: the token is not bound to a user
+		ip := clientIP(r.RemoteAddr)
+		s.mu.Lock()
+		if len(s.tokens) > 10_000 { // ponytail: crude reset bounds memory; use an LRU if this ever serves the internet
+			s.tokens = map[string]*bucket{}
+		}
+		b := s.tokens[ip]
+		if b == nil {
+			b = &bucket{}
+			s.tokens[ip] = b
+		}
+		allowed := s.cfg.TokensPerMinute <= 0 || b.take(time.Now(), s.cfg.TokensPerMinute/60, s.cfg.TokensPerMinute)
+		s.mu.Unlock()
+		if !allowed {
+			http.Error(w, "too many session requests", http.StatusTooManyRequests)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]string{"token": s.Token()})
 	})
@@ -95,7 +169,13 @@ func (s *Server) Handler() http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(s.Snapshot())
 	})
-	return mux
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !s.hostAllowed(r.Host) { // a DNS-rebinding page arrives with its own host name
+			http.Error(w, "unknown host", http.StatusMisdirectedRequest)
+			return
+		}
+		mux.ServeHTTP(w, r)
+	})
 }
 
 // Snapshot returns the counters, live sessions and queue depths.
@@ -110,7 +190,7 @@ func (s *Server) Snapshot() map[string]int64 {
 	s.mu.Unlock()
 	return map[string]int64{"sessions": n, "depth": depth, "depth_out": out,
 		"drops_duplicate": s.c.DropsDuplicate.Load(), "drops_stale": s.c.DropsStale.Load(),
-		"drops_overload": s.c.DropsOverload.Load(), "drops_overload_out": s.c.DropsOverloadOut.Load(), "drops_fenced": s.c.DropsFenced.Load(), "gaps": s.c.Gaps.Load()}
+		"drops_overload": s.c.DropsOverload.Load(), "drops_overload_out": s.c.DropsOverloadOut.Load(), "drops_ratelimit": s.c.DropsRateLimit.Load(), "drops_fenced": s.c.DropsFenced.Load(), "gaps": s.c.Gaps.Load()}
 }
 
 // Close ends every session and waits for their goroutines.
@@ -179,7 +259,7 @@ func (s *Server) serveWS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c.SetReadLimit(64 << 10)
-	ss, resumed, code, reason := s.hello(c)
+	ss, resumed, code, reason := s.hello(c, clientIP(r.RemoteAddr))
 	if code != 0 {
 		_ = c.Close(code, reason)
 		return
@@ -187,7 +267,9 @@ func (s *Server) serveWS(w http.ResponseWriter, r *http.Request) {
 	ss.attach(c, resumed)
 }
 
-func (s *Server) hello(c *websocket.Conn) (ss *session, resumed bool, code websocket.StatusCode, reason string) {
+var errBusy = errors.New("session limit reached")
+
+func (s *Server) hello(c *websocket.Conn, ip string) (ss *session, resumed bool, code websocket.StatusCode, reason string) {
 	ctx, cancel := context.WithTimeout(context.Background(), s.cfg.HelloTimeout)
 	defer cancel()
 	typ, b, err := c.Read(ctx)
@@ -212,7 +294,10 @@ func (s *Server) hello(c *websocket.Conn) (ss *session, resumed bool, code webso
 			return old, true, 0, ""
 		}
 	}
-	ss, err = s.newSession()
+	ss, err = s.newSession(ip)
+	if errors.Is(err, errBusy) {
+		return nil, false, websocket.StatusTryAgainLater, "too many sessions"
+	}
 	if err != nil {
 		s.cfg.Log.Warn("upstream dial failed", "err", err)
 		return nil, false, websocket.StatusInternalError, "orchestrator unavailable"
@@ -220,7 +305,25 @@ func (s *Server) hello(c *websocket.Conn) (ss *session, resumed bool, code webso
 	return ss, false, 0, ""
 }
 
-func (s *Server) newSession() (*session, error) {
+func (s *Server) newSession(ip string) (*session, error) {
+	s.mu.Lock() // reserve a slot before dialling, so concurrent hellos cannot overshoot the caps
+	if (s.cfg.MaxSessions > 0 && len(s.sessions)+s.pending >= s.cfg.MaxSessions) ||
+		(s.cfg.MaxSessionsPerIP > 0 && s.perIP[ip] >= s.cfg.MaxSessionsPerIP) {
+		s.mu.Unlock()
+		return nil, errBusy
+	}
+	s.pending++
+	s.perIP[ip]++
+	s.mu.Unlock()
+	registered := false
+	defer func() {
+		s.mu.Lock()
+		s.pending--
+		if !registered {
+			s.releaseIP(ip)
+		}
+		s.mu.Unlock()
+	}()
 	id := make([]byte, 8)
 	_, _ = rand.Read(id)
 	sid := "s-" + hex.EncodeToString(id)
@@ -232,15 +335,26 @@ func (s *Server) newSession() (*session, error) {
 	}
 	up.SetReadLimit(1 << 20)
 	upCtx, cancelUp := context.WithCancel(context.Background())
-	ss := &session{id: sid, srv: s, up: up, upCtx: upCtx, cancelUp: cancelUp, claimed: true,
-		upq: newQueue(s.cfg.QueueCap, &s.c.DropsOverload), outq: newQueue(s.cfg.OutCap, &s.c.DropsOverloadOut),
+	ss := &session{id: sid, ip: ip, srv: s, up: up, upCtx: upCtx, cancelUp: cancelUp, claimed: true,
+		upq: newQueue(s.cfg.QueueCap, &s.c.DropsOverload, s.cfg.MaxQueuedEvents), outq: newQueue(s.cfg.OutCap, &s.c.DropsOverloadOut, 0),
 		lastSeq: map[uint32]uint32{}, revoked: map[uint32]bool{}}
 	s.mu.Lock()
 	s.sessions[sid] = ss
+	registered = true
 	s.mu.Unlock()
+	if s.cfg.MaxSessionAge > 0 {
+		ss.ageTimer = time.AfterFunc(s.cfg.MaxSessionAge, func() { ss.end("expired") })
+	}
 	s.trace(sid, "session_started", 0, nil)
 	s.wg.Add(2)
 	go func() { defer s.wg.Done(); ss.writeUpstream() }()
 	go func() { defer s.wg.Done(); ss.readUpstream() }()
 	return ss, nil
+}
+
+// releaseIP gives back one session slot of ip; the caller holds s.mu.
+func (s *Server) releaseIP(ip string) {
+	if s.perIP[ip]--; s.perIP[ip] <= 0 {
+		delete(s.perIP, ip)
+	}
 }

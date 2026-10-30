@@ -32,7 +32,8 @@ def test_passages_carry_canonical_urls_with_heading_fragments(passages):
 
 
 @pytest.mark.parametrize("url", ["http://127.0.0.1/docs", "https://10.1.2.3/", "http://169.254.169.254/latest/meta-data/",
-                                 "file:///etc/passwd", "https://evil.example.com/uv/", "http://docs.astral.sh/uv/", "https://localhost/"])
+                                 "file:///etc/passwd", "https://evil.example.com/uv/", "http://docs.astral.sh/uv/", "https://localhost/",
+                                 "https://evil.com\\@docs.astral.sh/uv/", "https://user@docs.astral.sh/uv/", "https://docs.astral.sh:8443/uv/"])
 def test_unsafe_or_unlisted_urls_are_refused(url):
     with pytest.raises(UnsafeURL):
         check_url(url)

@@ -29,6 +29,7 @@ VOICE_LIMIT = "Voice input has reached its limit for this session. You can keep 
 BUSY = "I'm busy right now. Please try again in a moment."
 BACKOFF_S = (1, 2, 4)  # after an HTTP 429 before any answer text
 PAUSE_CANCEL_S = 30  # a generation paused this long on the client is cancelled
+TEXT_MAX_CHARS = 500  # same limit as the gateway
 PREROLL_FRAMES, STT_HANGOVER_FRAMES = 15, 30  # STT hears 300 ms before speech and 600 ms after the last voiced frame
 FRAME_BYTES = 960  # 20 ms at 24 kHz, PCM16
 
@@ -147,6 +148,10 @@ class Session:
     async def on_event(self, e: dict):
         t = e["type"]
         if t == "text.input":
+            text = e.get("text")
+            if not isinstance(text, str) or not text.strip() or len(text) > TEXT_MAX_CHARS:  # it becomes prompt and history
+                self.trace.emit("turn", "text_input_rejected", kind=type(text).__name__, chars=len(text) if isinstance(text, str) else None)
+                return
             self.turn_id = f"t{next(self._turns)}"
             self.trace.emit("turn", "text_input", text=e["text"])
             await self.start_generation(self.turn_id, e["text"])

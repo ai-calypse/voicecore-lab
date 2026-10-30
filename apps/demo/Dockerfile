@@ -8,6 +8,6 @@ COPY apps/demo ./apps/demo
 RUN pnpm install --frozen-lockfile --filter "@voicecore/demo..."
 RUN pnpm --filter @voicecore/demo build:widget && pnpm --filter @voicecore/demo build
 
-FROM nginx:1.27-alpine
+FROM nginxinc/nginx-unprivileged:1.27-alpine
 COPY --from=build /src/apps/demo/dist /usr/share/nginx/html
-EXPOSE 80
+EXPOSE 8080

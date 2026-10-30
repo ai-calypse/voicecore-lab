@@ -5,6 +5,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"unicode/utf8"
 
 	"github.com/ai-calypse/voicecore-lab/services/realtime-gateway/protocol"
 	"github.com/coder/websocket"
@@ -18,6 +19,8 @@ var clientEvents = map[string]bool{"ping": true, "text.input": true, "mic.revoke
 // for the resume window after the client drops.
 type session struct {
 	id        string
+	ip        string
+	ageTimer  *time.Timer
 	srv       *Server
 	up        *websocket.Conn
 	upq, outq *queue
@@ -62,20 +65,21 @@ func (ss *session) attach(c *websocket.Conn, resumed bool) {
 	ss.mu.Unlock()
 	ss.srv.trace(ss.id, "client_attached", 0, map[string]any{"resumed": resumed})
 
+	if resumed {
+		// The orchestrator will cancel the live generation; fence it here too so audio queued while the
+		// client was away is not played. This happens before welcome: once the client has welcome, a new
+		// generation may already be on its way and must not be caught by this fence (found as a test flake).
+		ss.mu.Lock()
+		ss.fence = max(ss.fence, ss.lastGen)
+		fence := ss.fence
+		ss.mu.Unlock()
+		ss.srv.c.DropsFenced.Add(int64(ss.outq.purge(fence)))
+		ss.upq.push(item{data: protocol.NewEvent("client.resumed", nil)})
+	}
 	welcome := protocol.NewEvent("welcome", map[string]any{"session_id": ss.id,
 		"resume_window_ms": ss.srv.cfg.ResumeWindow.Milliseconds(), "resumed": resumed})
 	end := false
 	if c.Write(context.Background(), websocket.MessageText, welcome) == nil {
-		if resumed {
-			// The orchestrator will cancel the live generation; fence it here too so audio queued
-			// while the client was away is not played on the new connection.
-			ss.mu.Lock()
-			ss.fence = max(ss.fence, ss.lastGen)
-			fence := ss.fence
-			ss.mu.Unlock()
-			ss.srv.c.DropsFenced.Add(int64(ss.outq.purge(fence)))
-			ss.upq.push(item{data: protocol.NewEvent("client.resumed", nil)})
-		}
 		ctx, stop := context.WithCancel(context.Background())
 		writerDone := make(chan struct{})
 		go func() { defer close(writerDone); ss.writeClient(ctx, c) }()
@@ -102,6 +106,7 @@ func (ss *session) readClient(c *websocket.Conn) bool {
 	hb := ss.srv.cfg.Heartbeat
 	watchdog := time.AfterFunc(hb, func() { _ = c.Close(statusHeartbeat, "heartbeat missed") })
 	defer watchdog.Stop()
+	var micRate, textRate bucket // per connection: audio at real-time pace (2 s burst), typed questions 1/s (burst 5)
 	for {
 		typ, b, err := c.Read(context.Background())
 		if err != nil {
@@ -114,6 +119,10 @@ func (ss *session) readClient(c *websocket.Conn) bool {
 			if err != nil || f.Kind != protocol.KindMic || len(f.Payload) != 320 || f.GenerationID != 0 {
 				_ = c.Close(statusInvalidFrame, "invalid frame")
 				return true
+			}
+			if !micRate.take(time.Now(), 50, 100) { // faster than real time: the VAD and STT behind us pay for it
+				ss.srv.c.DropsRateLimit.Add(1)
+				continue
 			}
 			if ss.acceptMic(f) {
 				ss.upq.push(item{data: b, binary: true, audio: true})
@@ -137,8 +146,23 @@ func (ss *session) readClient(c *websocket.Conn) bool {
 				ss.revoked[id] = true
 			}
 			ss.mu.Unlock()
+		case "text.input":
+			// The text goes into an LLM prompt and its history: a string of bounded length, nothing else
+			// (security review: a list of content parts could make provider calls cost far more than the guard counts).
+			var text string
+			if e.Get("text", &text) != nil || (ss.srv.cfg.TextMaxChars > 0 && utf8.RuneCountInString(text) > ss.srv.cfg.TextMaxChars) {
+				_ = c.Close(statusPolicy, "text.input text must be a short string")
+				return true
+			}
+			if !textRate.take(time.Now(), 1, 5) {
+				ss.srv.c.DropsRateLimit.Add(1)
+				continue
+			}
 		}
-		ss.upq.push(item{data: b})
+		if !ss.upq.push(item{data: b}) {
+			_ = c.Close(statusPolicy, "too many queued events")
+			return true
+		}
 	}
 }
 
@@ -260,7 +284,11 @@ func (ss *session) end(reason string) {
 		ss.resumeTimer.Stop()
 	}
 	ss.mu.Unlock()
+	if ss.ageTimer != nil {
+		ss.ageTimer.Stop()
+	}
 	ss.srv.mu.Lock()
+	ss.srv.releaseIP(ss.ip)
 	delete(ss.srv.sessions, ss.id)
 	ss.srv.mu.Unlock()
 	ss.srv.trace(ss.id, "session_ended", 0, map[string]any{"reason": reason})
@@ -287,23 +315,28 @@ func (it item) typ() websocket.MessageType {
 	return websocket.MessageText
 }
 
-// queue holds events (never dropped) and audio (at most cap; the oldest is dropped beyond it).
-// ponytail: events are unbounded; bound them if a client can flood text faster than the orchestrator reads.
+// queue holds events (never dropped; at most maxEvents) and audio (at most cap; the oldest is dropped beyond it).
 type queue struct {
-	mu    sync.Mutex
-	items []item
-	audio int
-	cap   int
-	drops *atomic.Int64
-	ready chan struct{}
+	mu        sync.Mutex
+	items     []item
+	audio     int
+	cap       int
+	maxEvents int // 0 = unlimited
+	drops     *atomic.Int64
+	ready     chan struct{}
 }
 
-func newQueue(cap int, drops *atomic.Int64) *queue {
-	return &queue{cap: cap, drops: drops, ready: make(chan struct{}, 1)}
+func newQueue(cap int, drops *atomic.Int64, maxEvents int) *queue {
+	return &queue{cap: cap, drops: drops, maxEvents: maxEvents, ready: make(chan struct{}, 1)}
 }
 
-func (q *queue) push(it item) {
+// push returns false (and queues nothing) when an event would exceed maxEvents.
+func (q *queue) push(it item) bool {
 	q.mu.Lock()
+	if !it.audio && q.maxEvents > 0 && len(q.items)-q.audio >= q.maxEvents {
+		q.mu.Unlock()
+		return false
+	}
 	if it.audio && q.audio >= q.cap {
 		for i := range q.items {
 			if q.items[i].audio {
@@ -320,6 +353,7 @@ func (q *queue) push(it item) {
 	}
 	q.mu.Unlock()
 	q.signal()
+	return true
 }
 
 func (q *queue) pushFront(it item) {

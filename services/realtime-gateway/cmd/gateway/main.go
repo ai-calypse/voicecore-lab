@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/ai-calypse/voicecore-lab/services/realtime-gateway/session"
 )
@@ -20,6 +21,10 @@ func main() {
 	upstream := flag.String("upstream", "ws://127.0.0.1:8765", "orchestrator base URL")
 	origins := flag.String("origins", "localhost:*,127.0.0.1:*", "allowed browser origins, comma separated")
 	tracePath := flag.String("trace", "", "append SPEC trace events (JSON lines) to this file")
+	perIP := flag.Int("max-sessions-per-ip", 4, "live sessions per client IP (0 = no limit)")
+	maxSessions := flag.Int("max-sessions", 50, "live sessions in total (0 = no limit)")
+	tokensPerMin := flag.Float64("tokens-per-minute", 10, "session tokens per client IP per minute (0 = no limit)")
+	hosts := flag.String("hosts", "localhost,127.0.0.1,::1", "allowed Host header names, comma separated; empty allows any (blocks DNS rebinding)")
 	flag.Parse()
 
 	secret := []byte(os.Getenv("GATEWAY_SECRET"))
@@ -29,6 +34,10 @@ func main() {
 	}
 	cfg := session.Defaults(secret, *upstream)
 	cfg.Origins = strings.Split(*origins, ",")
+	cfg.MaxSessionsPerIP, cfg.MaxSessions, cfg.TokensPerMinute = *perIP, *maxSessions, *tokensPerMin
+	if *hosts != "" {
+		cfg.Hosts = strings.Split(*hosts, ",")
+	}
 	if *tracePath != "" {
 		f, err := os.OpenFile(*tracePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
 		if err != nil {
@@ -39,7 +48,7 @@ func main() {
 		cfg.Trace = f
 	}
 	gw := session.New(cfg)
-	srv := &http.Server{Addr: *addr, Handler: gw.Handler()}
+	srv := &http.Server{Addr: *addr, Handler: gw.Handler(), ReadHeaderTimeout: 10 * time.Second}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

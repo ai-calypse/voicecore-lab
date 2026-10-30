@@ -1,6 +1,6 @@
 # VoiceCore Lab — Execution Status
 
-**Status as of 2026-10-30:** Steps 00–07 complete (open items listed per row); Step 08 in progress. This file is a live execution register for the implementing agent.
+**Status as of 2026-10-30:** All steps 00–08 complete. The open items below need a person or a decision: dummynet runs (sudo), manual acoustic and AEC checks, the 20-answer audit, hosting, video, going public. This file is a live execution register for the implementing agent.
 
 Do not mark a step Complete until task-level actual evidence, objective tests and handoff checks are recorded in the corresponding step doc. Track fake and real provider results separately.
 
@@ -14,7 +14,7 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 | [05](docs/step_05_barge_in_and_recovery.md) | Complete except manual loopback | 26 | Barge-in end to end, recovery rules, chaos reproducibility, fake + live interruption benchmark (kill gate passed) | Open: 5 manual acoustic runs (user). Cartesia credits over plan (6,446 used) |
 | [06](docs/step_06_observability_evals_and_load.md) | Complete except manual answer audit | 40 | Trace timeline across 3 processes, lab panel, scenario simulator, fake + live perf, WER, load, CI eval gate | Open: 20-answer manual audit (user). Credits 10,877 / 16,000 |
 | [07](docs/step_07_media_internals_and_optional_telephony.md) | Complete within timebox except shaped runs | 35 | RTP jitter buffer + RFC 3550 jitter, Pion WebRTC spike, loopback WS vs WebRTC, telephony design, media write-up | Open: dummynet WS vs WebRTC runs (sudo, user) |
-| [08](docs/step_08_portfolio_release.md) | Not started | 18 | None | Begin step 08 after prerequisites |
+| [08](docs/step_08_portfolio_release.md) | Complete (T01–T04); going public waits on user | 18 | Embeddable widget, compose stack verified in CI, portfolio docs + chart | User: hosting choice, make repo public, record video |
 
 ## Actual execution updates
 
@@ -31,6 +31,7 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 | 2026-10-30 | S05-T01..T05 | Claude Code (Opus 5.5) | `voicecore/runtime/session.py`, `harness/{barge_bench,barge_live}.py`, `harness/runner/{inprocess,chaos}.py`, `reports/barge_in.md` | `make test` pass; live barge-in 8/8 silenced, 0/4 false | Credits 6,446 of 16,000 (Step 05 used ~4,950 vs 3,000 planned) |
 | 2026-10-30 | S06-T01..T06 | Claude Code (Opus 5.5) | `harness/{timeline,session_timeline,bench,gate,wer_eval,lab_sample}.py`, `apps/demo/src/lab.*`, gateway trace, `reports/{perf,quality_eval}.md` | `make test` + `make e2e` (4) pass; evals gate pass on main, fail on proof branch | usd $0.82, credits 10,877 |
 | 2026-10-30 | S07-T01..T05 | Claude Code (Opus 5.5) | `experiments/`, `apps/demo/e2e/webrtc.spec.ts`, `docs/{media_internals,telephony_extension}.md` | `make test-go` (incl. experiments) + Playwright webrtc pass; BENCH comparison run once | — |
+| 2026-10-30 | S08-T01..T04 | Claude Code (Opus 5.5) | `apps/demo/src/widget.*`, `docker-compose.yml`, Dockerfiles, `harness/smoke.py`, `docs/{architecture,portfolio_story,video_script}.md`, `docs/writeups/` | `make test`, `make e2e` (10), CI incl. `compose` job pass; code review (07–08) fixed | Spend: usd $0.82 / $5, credits 10,877 / 16,000 |
 
 ## Handoff history
 
@@ -44,5 +45,6 @@ Do not mark a step Complete until task-level actual evidence, objective tests an
 | 2026-10-30 | 05 (manual loopback open) | Registers filled; tests pass; kill gate passed; barge-in report; code review (04–05) 10 findings fixed | 06 |
 | 2026-10-30 | 06 (manual audit open) | Registers filled; tests, e2e and eval gate pass; reports; code review fixed | 07 |
 | 2026-10-30 | 07 (shaped runs open) | Registers filled; tests and Playwright pass; write-ups | 08 |
+| 2026-10-30 | 08 | Registers filled; CI green incl. clean-checkout compose smoke; code review fixed; security review: 1 high, 2 medium, 3 low findings fixed (see Step 08 register) | Release decisions: user |
 
 **Planning update (2026-10-28):** Documented initial STT/VAD/LLM/TTS provider recommendations in the master plan. No live integration, verification, measurements, or step completion is implied.
