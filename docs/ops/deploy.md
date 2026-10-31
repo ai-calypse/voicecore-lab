@@ -1,6 +1,13 @@
 # Deploy guide
 
-**Status:** Step 09 Phase 11, 2026-10-30. **Ready, not deployed.** Everything below is prepared and tested locally. Nothing has been deployed, and nothing should be until the owner decides to. A deploy costs money once the machine runs and providers are called.
+**Status:** deployed 2026-10-31 on the owner's go-ahead.
+
+- **Docs site with the voice widget:** https://voicecore-docs.fly.dev (app `voicecore-docs`).
+- **Gateway:** https://voicecore.fly.dev (app `voicecore`), with the orchestrator on the same machine.
+- **Checked after deploy:** `/readyz` returns `{"ready":true}`; a token request without the human check gets 403; `/debug/counters` is 404 on the public port; the docs site loads the widget with the Turnstile sitekey and no console errors; Fly's proxy reaches the machine from `172.19.x.x`, inside the trusted range.
+- **Not yet checked:** a full spoken session from a real browser.
+
+Each app runs one machine that stops when idle, so the first request after a quiet spell waits a few seconds for it to start.
 
 ## What gets deployed
 
@@ -33,7 +40,7 @@ Tested locally by `harness/tests/test_fly_image.py` (`make fly-image-test`):
    - Use a Deepgram project made for this deploy, with usage alerts.
    - The ledger caps are VoiceCore's own guard; these are the second line.
 2. **Rotate the keys** that were used during development; see [key rotation](key-rotation.md).
-3. **Look up Fly's proxy address range** and set it as `TRUSTED_PROXIES`. Until it is set, `-env prod` refuses to start. That is deliberate: without it every visitor would share the proxy's address for rate limits.
+3. **Set `TRUSTED_PROXIES`** (in `fly.toml`). Until it is set, `-env prod` refuses to start: without it every visitor would share the proxy's address for rate limits. Fly's proxy connects from the machine's private range (`172.16.0.0/12`) and appends the app's own public IPs as the rightmost `X-Forwarded-For` hops, so the list holds that range and the app's IPs (`fly ips list -a voicecore`).
 4. **Create a Turnstile widget** for the docs site's host and keep its sitekey and secret.
 5. **Check current Fly pricing** for the machine and a 1 GB volume. Stopped machines cost nothing for CPU, but a volume is billed while it exists, a few cents a month.
 
@@ -44,10 +51,13 @@ From the repository root:
 ```sh
 fly apps create voicecore
 fly volumes create voicecore_data --size 1 --region iad -a voicecore
-fly secrets set -a voicecore \
+fly secrets set --stage -a voicecore \
   DEEPGRAM_API_KEY=... OPENROUTER_API_KEY=... \
-  GATEWAY_SECRET="$(openssl rand -hex 32)" TURNSTILE_SECRET=... TRUSTED_PROXIES=...
-fly deploy . -c deploy/fly/fly.toml
+  GATEWAY_SECRET="$(openssl rand -hex 32)" TURNSTILE_SECRET=...
+fly deploy . -c deploy/fly/fly.toml --ha=false
+
+fly apps create voicecore-docs
+fly deploy . -c deploy/fly/docs.fly.toml --ha=false
 ```
 
 Or, once the `FLY_API_TOKEN` repository secret exists, run the `deploy` workflow by hand. It deploys and then runs a prod smoke check:
@@ -72,9 +82,10 @@ The ledger is on the volume, so a rollback keeps the money record. To stop every
 
 ## The docs site
 
-The docs site is static: `apps/docs` builds to plain files, served by its nginx image with the security headers. Deploy it as a second small Fly app or on any static host.
-- Build it with `PUBLIC_GATEWAY=https://voicecore.fly.dev` (as `VOICECORE_GATEWAY` for the widget). That sets the widget's endpoint and the page's `connect-src`.
-- Set `data-turnstile-sitekey` in `src/theme/Root.jsx` to the widget's sitekey.
+The docs site is static: `apps/docs` builds to plain files, served by its nginx image with the security headers. It runs as the second Fly app, `voicecore-docs`, from [`deploy/fly/docs.fly.toml`](../../deploy/fly/docs.fly.toml). Its build arguments set:
+- `VOICECORE_GATEWAY=https://voicecore.fly.dev`: the widget's endpoint and the page's `connect-src`;
+- `TURNSTILE_SITEKEY`: the public sitekey of the Turnstile widget for `voicecore-docs.fly.dev`, passed to the widget as `data-turnstile-sitekey`;
+- `DOCS_URL`: the site's own address.
 
 ## Scaling to two machines (documented, not deployed)
 

@@ -61,6 +61,7 @@ export default function Root({ children }) {
       s.dataset.title = "Ask the docs";
       s.dataset.name = "VoiceCore docs assistant";
       s.dataset.privacyUrl = "/privacy";
+      if (siteConfig.customFields.turnstileSitekey) s.dataset.turnstileSitekey = siteConfig.customFields.turnstileSitekey;
       document.body.append(s);
     }
     const onNavigate = (e) => {

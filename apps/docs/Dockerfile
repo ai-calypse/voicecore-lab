@@ -9,7 +9,9 @@ COPY apps/docs ./apps/docs
 COPY scripts ./scripts
 RUN pnpm install --frozen-lockfile --filter "@voicecore/docs..." --filter "@voicecore/demo..."
 ARG VOICECORE_GATEWAY=http://localhost:8080
-ENV VOICECORE_GATEWAY=$VOICECORE_GATEWAY
+ARG TURNSTILE_SITEKEY=
+ARG DOCS_URL=http://localhost:3000
+ENV VOICECORE_GATEWAY=$VOICECORE_GATEWAY TURNSTILE_SITEKEY=$TURNSTILE_SITEKEY DOCS_URL=$DOCS_URL
 RUN pnpm --filter @voicecore/docs build && node scripts/csp.mjs apps/docs/build "$VOICECORE_GATEWAY" apps/docs/csp.conf
 
 FROM nginxinc/nginx-unprivileged:1.27-alpine

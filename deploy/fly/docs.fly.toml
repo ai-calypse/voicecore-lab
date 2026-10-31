@@ -1,0 +1,23 @@
+# Fly app "voicecore-docs": the static docs site with the voice widget (apps/docs/Dockerfile, nginx).
+# From the repository root: fly deploy . -c deploy/fly/docs.fly.toml
+app = "voicecore-docs"
+primary_region = "iad"
+
+[build]
+  dockerfile = "../../apps/docs/Dockerfile"  # relative to this file; the build context is the repository root
+
+  [build.args]
+    VOICECORE_GATEWAY = "https://voicecore.fly.dev"
+    DOCS_URL = "https://voicecore-docs.fly.dev"
+    TURNSTILE_SITEKEY = "0x4AAAAAAFuRyEEpXO8YZCvW"  # public: the Turnstile widget for voicecore-docs.fly.dev
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

@@ -4,6 +4,8 @@ const { themes } = require("prism-react-renderer");
 
 // The gateway the embedded widget talks to. The browser only ever gets a short-lived session token from it.
 const GATEWAY = process.env.VOICECORE_GATEWAY ?? "http://localhost:8080";
+// The Cloudflare Turnstile sitekey (public). Unset locally: the widget then skips the human check.
+const TURNSTILE_SITEKEY = process.env.TURNSTILE_SITEKEY ?? "";
 
 module.exports = {
   title: "VoiceCore Docs",
@@ -15,7 +17,7 @@ module.exports = {
   // .md is CommonMark (no JSX, so "<" and "{" are plain text); .mdx would be MDX
   markdown: { format: "detect", hooks: { onBrokenMarkdownLinks: "throw" } },
   i18n: { defaultLocale: "en", locales: ["en"] },
-  customFields: { gateway: GATEWAY },
+  customFields: { gateway: GATEWAY, turnstileSitekey: TURNSTILE_SITEKEY },
   stylesheets: [
     { href: "https://fonts.googleapis.com/css2?family=Inter:wght@400..700&family=JetBrains+Mono:wght@400..600&display=swap", rel: "stylesheet" },
   ],

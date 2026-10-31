@@ -1,7 +1,7 @@
 # VoiceCore Lab — Master Agent Guide and Document Index
 
 > **START HERE. This is the single entry point for human collaborators, Claude Code, coding subagents, and other implementation agents.**  
-> **Document set assembled:** 2026-10-28. **Project state (2026-10-31):** Steps 00–08 complete; Step 09 built, with the live load test and the deploy waiting on the user. [EXECUTION_STATUS.md](EXECUTION_STATUS.md) is the record; never assert more than it shows.  
+> **Document set assembled:** 2026-10-28. **Project state (2026-10-31):** Steps 00–08 complete; Step 09 built and deployed to Fly.io on 2026-10-31 ([deploy guide](docs/ops/deploy.md)); the live load test is waiting on the user. [EXECUTION_STATUS.md](EXECUTION_STATUS.md) is the record; never assert more than it shows.  
 > **Primary objective:** demonstrate deep, interview-verifiable real-time Voice AI software engineering. **Not a SaaS to sell.**
 
 ## 1. Mission and boundary
