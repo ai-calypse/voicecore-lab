@@ -15,7 +15,8 @@ WORKDIR /app
 ENV UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1 UV_NO_DEV=1
 COPY pyproject.toml uv.lock .python-version ./
 COPY services/agent-core ./services/agent-core
-RUN uv sync --locked --no-dev
+COPY services/console ./services/console
+RUN uv sync --locked --no-dev --package voicecore  # the voice side only; the console member must exist for uv's lock
 COPY apps/docs/docs ./apps/docs/docs
 # Bake the embedding model and the docs vectors in, so a cold start (a stopped machine waking up) takes seconds.
 RUN uv run python -c "from pathlib import Path; from voicecore.answer.ingest import docusaurus, ingest; from voicecore.answer.index import Index; Index(ingest(Path('apps/docs/docs'), site=docusaurus('http://localhost:3000/'))).dense('warm up', 1)"
