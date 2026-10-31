@@ -46,7 +46,8 @@ module.exports = {
       title: "VoiceCore",
       logo: { alt: "", src: "img/favicon.svg" },
       items: [
-        { to: "/", label: "Docs", position: "left", activeBaseRegex: "^/(?!reference)" },
+        { to: "/", label: "Docs", position: "left", activeBaseRegex: "^/(?!reference|results)" },
+        { to: "/results", label: "Results", position: "left" },
         { to: "/reference/wire-protocol", label: "Reference", position: "left", activeBaseRegex: "^/reference" },
       ],
     },

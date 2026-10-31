@@ -58,7 +58,7 @@
 
 ## Deploy (proposed, Phase 11)
 
-- **Fly app `voicecore`**, ready but not deployed: one machine running the gateway and the orchestrator.
+- **Fly app `voicecore`**, deployed 2026-10-31 ([deploy guide](../ops/deploy.md)): one machine running the gateway and the orchestrator.
 - **Signals.** `kill_signal` SIGTERM and `kill_timeout` 45 s, for the ordered drain.
 - **Ledger.** It lives on a mounted volume; prod refuses to start without one.
 - **Deploying** needs the user's go-ahead.

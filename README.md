@@ -2,6 +2,8 @@
 
 **A voice assistant you can talk to, and interrupt, built from the microphone to the speaker and measured at every step.**
 
+**Try it:** [voicecore-docs.fly.dev](https://voicecore-docs.fly.dev) (click "Ask the docs" and speak or type). **Results at a glance:** [voicecore-docs.fly.dev/results](https://voicecore-docs.fly.dev/results).
+
 You ask a documentation website a question out loud. VoiceCore listens, works out when you have finished speaking, finds the answer in the docs, and speaks it back with a link that opens the exact section it came from. The live median is **0.84 seconds** from the end of your question to the start of its answer. If you start talking while it is speaking, it goes quiet in about **0.3 seconds**.
 
 The three AI models are rented through small, swappable adapters: speech-to-text (Deepgram), the language model (gpt-oss-120b on Cerebras, via OpenRouter) and text-to-speech (Deepgram Aura-2). **Everything between the microphone and the speaker is written in this repository:**
@@ -63,7 +65,7 @@ Each area links to a deeper explanation in the [project tour](docs/portfolio_sto
 | [**Security and abuse protection**](docs/portfolio_story.md#14-security-and-abuse-protection) | single-use IP-bound tokens, resume keys, Turnstile, CSP, origin checks, CI secret and dependency scanning |
 | [**Cost control**](docs/portfolio_story.md#15-cost-control) | every paid call reserves money first; hard caps, daily caps, a free text-only fallback |
 | [**Scaling**](docs/portfolio_story.md#16-scaling-to-several-machines) | two gateways and two orchestrators behind nginx with shared Redis state; load and 30-minute soak tests |
-| [**Delivery and operations**](docs/portfolio_story.md#17-delivery-and-operations) | Docker Compose, five CI workflows, a ready Fly.io deploy, incident write-ups |
+| [**Delivery and operations**](docs/portfolio_story.md#17-delivery-and-operations) | Docker Compose, five CI workflows, a live Fly.io deploy, incident write-ups |
 | [**Media internals**](docs/portfolio_story.md#18-media-internals-webrtc-and-rtp) | an RTP jitter buffer (RFC 3550), a Pion WebRTC spike, WebSocket vs WebRTC measured |
 | [**Product and frontend**](docs/portfolio_story.md#19-the-product-a-docs-site-that-talks) | an embeddable widget, a Docusaurus docs site that scrolls to and highlights the cited section |
 
@@ -159,7 +161,7 @@ Design decisions are recorded as ADRs (architecture decision records): [what is 
 ## Status and honest limits
 
 - **Built:** Steps 00–09, from browser audio through production readiness. CI runs on every push: tests, end-to-end tests, the latency and quality gate, Docker profiles and security scans.
-- **Not hosted.** The Fly.io deploy is configured and tested locally but not run, so there is no public live demo yet. `docker compose up` runs everything locally.
+- **One small machine.** The live demo runs on one Fly.io machine that stops when nobody is using it, so the first visit after a quiet spell waits a few seconds while it starts. Visitor spend is capped at $0.50 a day and $2 in total; past that, answers come back in text. Each session speaks about 15 answers, then switches to text.
 - **Waiting on a person:**
   - a live load test (about $0.17);
   - network-shaping runs that need `sudo`;

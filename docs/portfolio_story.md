@@ -262,7 +262,7 @@ With live models (keys in `.env`, `PROVIDERS=live`), also ask something off-topi
   - an ordered shutdown;
   - a volume for the ledger;
   - private metrics.
-  - It is ready but not deployed, by choice.
+  - It runs live at [voicecore-docs.fly.dev](https://voicecore-docs.fly.dev) on one machine that stops when idle.
 - **Run it like a service:**
   - [service targets](ops/slos.md);
   - [runbooks](ops/runbooks.md);

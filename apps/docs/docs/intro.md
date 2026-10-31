@@ -49,11 +49,13 @@ The hosted Deepgram Voice Agent API is used only as a latency baseline. ADR 0001
 
 ## Headline measured results
 
+The [results page](/results) shows these at a glance.
+
 Every number carries its conditions. Live means real providers over a residential network, with every process on one Apple M4 laptop. Mock means scripted providers on the same machine. Each number comes from a report in the repository's `reports/` folder, where the commands to reproduce it are listed.
 
 | What | Result |
 |---|---|
-| You stop speaking until the first agent audio plays | p50 841 ms, p95 1,520 ms (live, n = 15); p50 2,317 ms before tuning (live, n = 15) |
+| You stop speaking until the first agent audio plays | p50 841 ms, p95 1,520 ms (live, n = 15) |
 | Detecting the end of your turn | p50 340 ms (live, n = 15) |
 | Same path with mock providers | p50 1,320 ms, p95 1,440 ms (mock, n = 216) |
 | You start talking until the agent goes silent | p50 303 ms, 8 of 8 silenced (live, n = 8) |
