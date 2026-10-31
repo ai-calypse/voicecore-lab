@@ -1,5 +1,7 @@
 """Hybrid retrieval (S04-T02): SQLite FTS5 BM25 + fastembed dense vectors, fused with reciprocal rank fusion."""
+import functools
 import hashlib
+import os
 import re
 import sqlite3
 import threading
@@ -11,6 +13,19 @@ from .ingest import Passage
 
 CACHE = Path(__file__).resolve().parents[4] / ".cache"
 MODEL = "BAAI/bge-small-en-v1.5"
+
+
+@functools.cache
+def embedder():
+    """One embedding model per process, shared by every index (each agent has its own index)."""
+    from fastembed import TextEmbedding
+
+    return TextEmbedding(MODEL, cache_dir=str(CACHE / "fastembed"))
+
+
+def vectors_dir() -> Path:
+    """Where computed vectors are cached; VOICECORE_VECTORS_DIR when the image's own cache is read-only."""
+    return Path(os.environ.get("VOICECORE_VECTORS_DIR") or CACHE)
 
 
 def rrf(rankings: list[list[str]], k: int = 60) -> list[str]:
@@ -35,27 +50,23 @@ def fts_query(q: str) -> str:
 
 
 class Index:
-    def __init__(self, passages: list[Passage]):
+    def __init__(self, passages: list[Passage], vectors: np.ndarray | None = None):
+        """vectors: prebuilt, one row per passage (an agent bundle); otherwise embedded here, cached by corpus."""
         self.passages = passages
         self.by_id = {p.id: p for p in passages}
         self.db = sqlite3.connect(":memory:", check_same_thread=False)
         self._db_lock = threading.Lock()  # retrieval runs in worker threads; one sqlite connection is shared
         self.db.execute("CREATE VIRTUAL TABLE p USING fts5(id UNINDEXED, title, body, tokenize='porter unicode61')")
         self.db.executemany("INSERT INTO p VALUES (?, ?, ?)", [(p.id, p.title, p.text) for p in passages])
-        self._model = None
-        self.vectors = self._embed_passages()
+        self.vectors = self._embed_passages() if vectors is None else vectors
 
     def _embedder(self):
-        if self._model is None:
-            from fastembed import TextEmbedding
-
-            self._model = TextEmbedding(MODEL, cache_dir=str(CACHE / "fastembed"))
-        return self._model
+        return embedder()
 
     def _embed_passages(self) -> np.ndarray:
         """Vectors are cached per corpus hash: re-embedding ~1,000 passages takes about 20 s on CPU."""
         key = hashlib.sha256("".join(p.sha256 for p in self.passages).encode()).hexdigest()[:16]
-        path = CACHE / f"answer_vectors_{key}.npy"
+        path = vectors_dir() / f"answer_vectors_{key}.npy"
         if path.exists():
             return np.load(path)
         texts = [p.text[:2000] for p in self.passages]  # small batches: the default (256) ran out of memory in a 2 GB container

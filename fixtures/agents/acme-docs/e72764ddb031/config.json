@@ -1,0 +1,10 @@
+{
+  "docs_url": "https://docs.acme.test/",
+  "first_message": null,
+  "format": 1,
+  "instructions": "",
+  "keyterms": [],
+  "llm": "openai/gpt-oss-120b",
+  "name": "Acme Docs",
+  "voice": "aura-2-thalia-en"
+}
