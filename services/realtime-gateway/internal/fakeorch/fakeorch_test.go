@@ -14,7 +14,8 @@ func TestFakeorchReadyzAndKill(t *testing.T) {
 	n := memnet.New()
 	o := New()
 	srv := &http.Server{Handler: o.Handler()}
-	go func() { _ = srv.Serve(n.Listen("orch:1")) }()
+	ln := n.Listen("orch:1") // before the goroutine: the first request must not race the listener
+	go func() { _ = srv.Serve(ln) }()
 	defer srv.Close()
 	hc := n.HTTPClient()
 
