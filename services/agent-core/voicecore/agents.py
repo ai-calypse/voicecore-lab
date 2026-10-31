@@ -115,11 +115,19 @@ def publish(root: Path, agent: str, config: dict, passages: list[Passage], vecto
         os.rename(tmp, target)
     else:
         os.utime(target)  # republishing an old version makes it the newest again for pruning
+    activate(root, agent, version)
+    prune(root, agent)
+    return version
+
+
+def activate(root: Path, agent: str, version: str) -> None:
+    """Point `current` at an existing version (publishing, re-enabling, or rolling back)."""
+    home = Path(root) / agent
+    if not (home / version / "config.json").exists():
+        raise FileNotFoundError(f"no version {version} of {agent}")
     pointer = home / f".{POINTER}.tmp"
     pointer.write_text(version + "\n")
     os.replace(pointer, home / POINTER)
-    prune(root, agent)
-    return version
 
 
 def current(root: Path, agent: str) -> str | None:

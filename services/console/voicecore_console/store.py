@@ -121,9 +121,89 @@ class Store:
         with self.db() as db:
             return db.execute("SELECT 1 FROM api_keys WHERE key_hash = ? AND revoked IS NULL", (key_hash,)).fetchone() is not None
 
-    # --- agents (Step 10 P5) ------------------------------------------------------------
+    # --- agents ----------------------------------------------------------------------------
 
     def agent(self, agent_id: str) -> dict | None:
         with self.db() as db:
             row = db.execute("SELECT * FROM agents WHERE id = ?", (agent_id,)).fetchone()
         return row and {**dict(row), "config": json.loads(row["config"]), "enabled": bool(row["enabled"])}
+
+    def agents(self) -> list[dict]:
+        with self.db() as db:
+            rows = db.execute("SELECT * FROM agents ORDER BY created").fetchall()
+        return [{**dict(r), "config": json.loads(r["config"]), "enabled": bool(r["enabled"])} for r in rows]
+
+    def add_agent(self, base_id: str, config: dict, now: float) -> str:
+        """Stores the agent under base_id, or base_id-2, -3... if taken. Returns the id used."""
+        with self.db() as db:
+            agent_id, n = base_id, 1
+            while db.execute("SELECT 1 FROM agents WHERE id = ?", (agent_id,)).fetchone():
+                n += 1
+                agent_id = f"{base_id}-{n}"
+            db.execute("INSERT INTO agents (id, config, created, updated) VALUES (?, ?, ?, ?)",
+                       (agent_id, json.dumps(config), now, now))
+        return agent_id
+
+    def set_config(self, agent_id: str, config: dict, now: float) -> None:
+        with self.db() as db:
+            db.execute("UPDATE agents SET config = ?, updated = ? WHERE id = ?", (json.dumps(config), now, agent_id))
+
+    def set_enabled(self, agent_id: str, enabled: bool) -> None:
+        with self.db() as db:
+            db.execute("UPDATE agents SET enabled = ? WHERE id = ?", (int(enabled), agent_id))
+
+    def delete_agent(self, agent_id: str) -> None:
+        with self.db() as db:
+            db.execute("DELETE FROM agents WHERE id = ?", (agent_id,))
+
+    # --- sources ---------------------------------------------------------------------------
+
+    def add_source(self, source_id: str, agent_id: str, kind: str, label: str, ref: str | None, files: int, now: float) -> None:
+        with self.db() as db:
+            db.execute("INSERT INTO sources (id, agent, kind, label, ref, files, created) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                       (source_id, agent_id, kind, label, ref, files, now))
+
+    def sources(self, agent_id: str) -> list[dict]:
+        with self.db() as db:
+            rows = db.execute("SELECT id, kind, label, ref, files, created FROM sources WHERE agent = ? ORDER BY created, id",
+                              (agent_id,)).fetchall()
+        return [dict(r) for r in rows]
+
+    def delete_source(self, agent_id: str, source_id: str) -> bool:
+        with self.db() as db:
+            return db.execute("DELETE FROM sources WHERE id = ? AND agent = ?", (source_id, agent_id)).rowcount == 1
+
+    # --- builds ----------------------------------------------------------------------------
+
+    def new_build(self, agent_id: str, now: float) -> int | None:
+        """None while another build of this agent is queued or running."""
+        with self.db() as db:
+            if db.execute("SELECT 1 FROM builds WHERE agent = ? AND status IN ('queued', 'running')", (agent_id,)).fetchone():
+                return None
+            return db.execute("INSERT INTO builds (agent, status, created) VALUES (?, 'queued', ?)", (agent_id, now)).lastrowid
+
+    def build_progress(self, build_id: int, done: int, total: int) -> None:
+        with self.db() as db:
+            db.execute("UPDATE builds SET status = 'running', done = ?, total = ? WHERE id = ?", (done, total, build_id))
+
+    def finish_build(self, build_id: int, status: str, version: str | None, log: str, now: float) -> None:
+        with self.db() as db:
+            db.execute("UPDATE builds SET status = ?, version = ?, log = ?, finished = ? WHERE id = ?",
+                       (status, version, log, now, build_id))
+
+    def latest_build(self, agent_id: str) -> dict | None:
+        with self.db() as db:
+            row = db.execute("SELECT * FROM builds WHERE agent = ? ORDER BY id DESC LIMIT 1", (agent_id,)).fetchone()
+        return row and dict(row)
+
+    def last_version(self, agent_id: str) -> str | None:
+        with self.db() as db:
+            row = db.execute("SELECT version FROM builds WHERE agent = ? AND status = 'done' ORDER BY id DESC LIMIT 1",
+                             (agent_id,)).fetchone()
+        return row and row["version"]
+
+    def fail_interrupted_builds(self, now: float) -> None:
+        """At start: a build still queued or running was cut off by a restart."""
+        with self.db() as db:
+            db.execute("UPDATE builds SET status = 'failed', log = 'interrupted by restart', finished = ? "
+                       "WHERE status IN ('queued', 'running')", (now,))

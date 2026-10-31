@@ -3,15 +3,22 @@
 create_app is the one composition root: folders, the setup token and the edges (clock, git) come in as arguments,
 so tests run it on temporary folders with a fake clock.
 """
+import secrets
+import shutil
 import time
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from . import auth
+from voicecore import agents
+from voicecore.providers import deepgram_tts, openai_compat_llm
+
+from . import auth, publish, sources
 from .store import Store
 
 COOKIE = "vc_session"
@@ -31,12 +38,37 @@ class KeyIn(BaseModel):
     label: str = Field(min_length=1, max_length=80)
 
 
+class AgentIn(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+
+
+class SettingsIn(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    docs_url: str = Field("", max_length=300)
+    instructions: str = Field("", max_length=2000)
+    first_message: str | None = Field(None, max_length=300)
+    voice: str = deepgram_tts.MODEL
+    llm: str = openai_compat_llm.MODEL
+    keyterms: list[str] = []
+
+
+class TextIn(BaseModel):
+    title: str = Field(min_length=1, max_length=120)
+    text: str = Field(min_length=1, max_length=200_000)
+
+
+def default_config(name: str) -> dict:
+    return SettingsIn(name=name).model_dump()
+
+
 def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None, now: Callable[[], float] = time.time,
-               run_git=None, ledger: Path | None = None) -> FastAPI:
+               run_git=None, ledger: Path | None = None, max_passages: int = publish.MAX_PASSAGES) -> FastAPI:
     data_dir, agents_dir = Path(data_dir), Path(agents_dir)
     store = Store(data_dir / "console.db")
+    store.fail_interrupted_builds(now())
     if setup_token:
         store.offer_setup(auth.digest(setup_token))
+    builds = ThreadPoolExecutor(max_workers=1, thread_name_prefix="build")  # one at a time: embedding is CPU-bound
     logins = auth.RateLimit()
     app = FastAPI(title="VoiceCore console", docs_url="/api/docs", redoc_url=None, openapi_url="/api/openapi.json")
     app.state.store, app.state.agents_dir, app.state.data_dir, app.state.now = store, agents_dir, data_dir, now
@@ -111,5 +143,119 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
         if not store.revoke_key(key_id, now()):
             raise HTTPException(404, "no such key")
 
-    app.state.admin = admin  # the agents and publishing routes (P5) use the same dependency
+    # --- agents ---------------------------------------------------------------------------
+
+    def agent_or_404(agent_id: str) -> dict:
+        if (a := store.agent(agent_id)) is None:
+            raise HTTPException(404, "no such agent")
+        return a
+
+    @app.get("/api/catalog", dependencies=[Depends(admin)])
+    def catalog():
+        return {"voices": deepgram_tts.VOICES, "llms": list(openai_compat_llm.PRICES)}
+
+    @app.get("/api/agents", dependencies=[Depends(admin)])
+    def list_agents():
+        return [{"id": a["id"], "name": a["config"]["name"], "enabled": a["enabled"],
+                 "live_version": agents.current(agents_dir, a["id"]),
+                 "build": (b := store.latest_build(a["id"])) and b["status"]} for a in store.agents()]
+
+    @app.post("/api/agents", status_code=201, dependencies=[Depends(admin)])
+    def create_agent(body: AgentIn):
+        config = default_config(body.name.strip())
+        agent_id = store.add_agent(sources.slug(body.name, 36) or "agent", config, now())
+        return {"id": agent_id, "config": config}
+
+    @app.get("/api/agents/{agent_id}", dependencies=[Depends(admin)])
+    def get_agent(agent_id: str):
+        a = agent_or_404(agent_id)
+        return {"id": agent_id, "config": a["config"], "enabled": a["enabled"], "live_version": agents.current(agents_dir, agent_id),
+                "sources": store.sources(agent_id), "build": store.latest_build(agent_id)}
+
+    @app.put("/api/agents/{agent_id}/settings", dependencies=[Depends(admin)])
+    def settings(agent_id: str, body: SettingsIn):
+        agent_or_404(agent_id)
+        config = body.model_dump()
+        try:
+            agents.validate(config)
+        except ValueError as e:
+            raise HTTPException(422, str(e)) from None
+        store.set_config(agent_id, config, now())
+        return {"config": config}  # takes effect at the next Publish
+
+    @app.delete("/api/agents/{agent_id}", status_code=204, dependencies=[Depends(admin)])
+    def delete_agent(agent_id: str):
+        agent_or_404(agent_id)
+        agents.disable(agents_dir, agent_id)
+        shutil.rmtree(agents_dir / agent_id, ignore_errors=True)
+        shutil.rmtree(data_dir / "sources" / agent_id, ignore_errors=True)
+        store.delete_agent(agent_id)
+
+    def new_source_dir(agent_id: str) -> tuple[str, Path]:
+        sid = "src_" + secrets.token_hex(6)
+        return sid, data_dir / "sources" / agent_id / sid
+
+    @app.put("/api/agents/{agent_id}/sources/upload", status_code=201, dependencies=[Depends(admin)])
+    async def upload(agent_id: str, request: Request, name: str = "upload.zip"):
+        agent_or_404(agent_id)
+        body = bytearray()
+        async for chunk in request.stream():  # counted as it arrives: a huge body is refused before it is all held
+            body += chunk
+            if len(body) > sources.MAX_BODY:
+                raise HTTPException(413, "upload larger than 20 MB")
+        sid, dest = new_source_dir(agent_id)
+        try:
+            result = await run_in_threadpool(sources.save_upload, bytes(body), name, dest)
+        except sources.Rejected as e:
+            shutil.rmtree(dest, ignore_errors=True)
+            raise HTTPException(e.status, e.message) from None
+        store.add_source(sid, agent_id, "upload", name[:200], None, result["files"], now())
+        return {"id": sid, **result}
+
+    @app.post("/api/agents/{agent_id}/sources/text", status_code=201, dependencies=[Depends(admin)])
+    def paste(agent_id: str, body: TextIn):
+        agent_or_404(agent_id)
+        sid, dest = new_source_dir(agent_id)
+        result = sources.save_text(body.title, body.text, dest)
+        store.add_source(sid, agent_id, "text", body.title, None, result["files"], now())
+        return {"id": sid, **result}
+
+    @app.delete("/api/agents/{agent_id}/sources/{source_id}", status_code=204, dependencies=[Depends(admin)])
+    def delete_source(agent_id: str, source_id: str):
+        if not store.delete_source(agent_id, source_id):
+            raise HTTPException(404, "no such source")
+        shutil.rmtree(data_dir / "sources" / agent_id / source_id, ignore_errors=True)
+
+    @app.post("/api/agents/{agent_id}/publish", status_code=202, dependencies=[Depends(admin)])
+    def start_publish(agent_id: str):
+        agent_or_404(agent_id)
+        if (build_id := store.new_build(agent_id, now())) is None:
+            raise HTTPException(409, "a build is already running")
+        builds.submit(publish.build, store, data_dir, agents_dir, agent_id, build_id, now, max_passages)
+        return {"build": build_id}
+
+    @app.get("/api/agents/{agent_id}/builds/latest", dependencies=[Depends(admin)])
+    def latest_build(agent_id: str):
+        agent_or_404(agent_id)
+        return store.latest_build(agent_id) or {"status": "none"}
+
+    @app.post("/api/agents/{agent_id}/disable", dependencies=[Depends(admin)])
+    def disable(agent_id: str):
+        agent_or_404(agent_id)
+        agents.disable(agents_dir, agent_id)  # new sessions are refused; open ones finish
+        store.set_enabled(agent_id, False)
+        return {"enabled": False}
+
+    @app.post("/api/agents/{agent_id}/enable", dependencies=[Depends(admin)])
+    def enable(agent_id: str):
+        agent_or_404(agent_id)
+        if not (version := store.last_version(agent_id)):
+            raise HTTPException(409, "publish first")
+        try:
+            agents.activate(agents_dir, agent_id, version)
+        except FileNotFoundError:
+            raise HTTPException(409, "the last version is gone: publish again") from None
+        store.set_enabled(agent_id, True)
+        return {"enabled": True, "live_version": version}
+
     return app

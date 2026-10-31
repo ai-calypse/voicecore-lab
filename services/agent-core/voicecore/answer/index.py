@@ -23,6 +23,26 @@ def embedder():
     return TextEmbedding(MODEL, cache_dir=str(CACHE / "fastembed"))
 
 
+def embed(passages: list[Passage], cache: Path, progress=None) -> np.ndarray:
+    """Unit vectors, one row per passage, cached per corpus hash: re-embedding ~1,000 passages takes about 20 s on CPU.
+    progress(done, total) is called after each batch (the console shows it while an agent builds)."""
+    key = hashlib.sha256("".join(p.sha256 for p in passages).encode()).hexdigest()[:16]
+    path = cache / f"answer_vectors_{key}.npy"
+    if path.exists():
+        progress and progress(len(passages), len(passages))
+        return np.load(path)
+    texts = [p.text[:2000] for p in passages]  # small batches: the default (256) ran out of memory in a 2 GB container
+    rows: list = []
+    for i in range(0, len(texts), 16):
+        rows.extend(embedder().passage_embed(texts[i:i + 16], batch_size=16))
+        progress and progress(len(rows), len(texts))
+    v = np.array(rows, np.float32).reshape(len(texts), -1)
+    v /= np.linalg.norm(v, axis=1, keepdims=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    np.save(path, v)
+    return v
+
+
 def vectors_dir() -> Path:
     """Where computed vectors are cached; VOICECORE_VECTORS_DIR when the image's own cache is read-only."""
     return Path(os.environ.get("VOICECORE_VECTORS_DIR") or CACHE)
@@ -64,17 +84,7 @@ class Index:
         return embedder()
 
     def _embed_passages(self) -> np.ndarray:
-        """Vectors are cached per corpus hash: re-embedding ~1,000 passages takes about 20 s on CPU."""
-        key = hashlib.sha256("".join(p.sha256 for p in self.passages).encode()).hexdigest()[:16]
-        path = vectors_dir() / f"answer_vectors_{key}.npy"
-        if path.exists():
-            return np.load(path)
-        texts = [p.text[:2000] for p in self.passages]  # small batches: the default (256) ran out of memory in a 2 GB container
-        v = np.array(list(self._embedder().passage_embed(texts, batch_size=16)), np.float32)
-        v /= np.linalg.norm(v, axis=1, keepdims=True)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        np.save(path, v)
-        return v
+        return embed(self.passages, vectors_dir())
 
     def lexical(self, q: str, k: int = 10) -> list[Passage]:
         query = fts_query(q)
