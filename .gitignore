@@ -18,3 +18,4 @@ apps/docs/.docusaurus/
 apps/docs/static/embed/
 apps/docs/csp.conf
 apps/demo/csp.conf
+.e2e-data/

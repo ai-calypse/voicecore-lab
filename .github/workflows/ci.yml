@@ -93,6 +93,32 @@ jobs:
       - run: pnpm --filter @voicecore/demo exec playwright install --with-deps chromium
       - run: pnpm --filter @voicecore/demo e2e
 
+  console-e2e:  # Step 10: setup, upload, publish, a cited answer in the Test tab, the snippet (free mode, no keys)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: "1.27.x"
+          cache-dependency-path: services/realtime-gateway/go.sum
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .cache/fastembed
+          key: fastembed-bge-small-en-v1.5
+      - run: pnpm --filter @voicecore/console exec playwright install --with-deps chromium
+      - run: pnpm --filter @voicecore/console e2e
+
   docs:
     runs-on: ubuntu-latest
     timeout-minutes: 15

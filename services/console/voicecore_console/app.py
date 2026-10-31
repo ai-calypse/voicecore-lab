@@ -3,6 +3,7 @@
 create_app is the one composition root: folders, the setup token and the edges (clock, git) come in as arguments,
 so tests run it on temporary folders with a fake clock.
 """
+import html
 import json
 import os
 import re
@@ -15,7 +16,8 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from voicecore import agents, budget
@@ -26,6 +28,23 @@ from .store import Store
 
 COOKIE = "vc_session"
 SAFE = {"GET", "HEAD", "OPTIONS"}
+# The console's own pages: nothing from elsewhere, and no other site may frame them.
+CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+       "connect-src 'self'; frame-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'")
+PREVIEW = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test: {name}</title>
+<style>body {{ margin: 0; padding: 20px; font: 15px/1.5 system-ui, sans-serif; color: #57606a; }}</style>
+</head>
+<body>
+<p>This page holds exactly the snippet from the Embed tab. Open the assistant in the corner and ask it something.</p>
+{snippet}
+</body>
+</html>
+"""
 
 
 class SetupIn(BaseModel):
@@ -81,7 +100,10 @@ def default_config(name: str) -> dict:
 
 
 def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None, now: Callable[[], float] = time.time,
-               run_git=None, ledger: Path | None = None, max_passages: int = publish.MAX_PASSAGES) -> FastAPI:
+               run_git=None, ledger: Path | None = None, max_passages: int = publish.MAX_PASSAGES, providers: str = "free",
+               voice_url: str = "http://localhost:8080", static_dir: Path | None = None) -> FastAPI:
+    """providers: the voice side's mode (free shows the 'voice is off' banner). voice_url: the gateway's public address,
+    which the embed snippet loads the widget from. static_dir: the built console UI (apps/console/dist)."""
     data_dir, agents_dir = Path(data_dir), Path(agents_dir)
     store = Store(data_dir / "console.db")
     store.fail_interrupted_builds(now())
@@ -101,7 +123,11 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
         origin = request.headers.get("origin")
         if request.method not in SAFE and origin and origin != f"{request.url.scheme}://{request.url.netloc}":
             return JSONResponse({"detail": "cross-origin request"}, status_code=403)
-        return await call_next(request)
+        response = await call_next(request)
+        response.headers.setdefault("content-security-policy", CSP)
+        response.headers.setdefault("x-content-type-options", "nosniff")
+        response.headers.setdefault("referrer-policy", "same-origin")
+        return response
 
     def admin(request: Request) -> None:
         bearer = request.headers.get("authorization", "")
@@ -117,6 +143,15 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
         store.add_session(auth.digest(token), now() + auth.SESSION_S)
         response.set_cookie(COOKIE, token, max_age=auth.SESSION_S, httponly=True, samesite="strict",
                             secure=request.url.scheme == "https")
+
+    voice_url = voice_url.rstrip("/")
+
+    def snippet(agent_id: str) -> str:
+        return f'<script src="{voice_url}/widget.js" data-agent="{agent_id}" async></script>'
+
+    @app.get("/api/status")
+    def status():
+        return {"setup_needed": store.admin_password() is None, "providers": providers, "voice_url": voice_url}
 
     @app.post("/api/setup", status_code=201)
     def setup(body: SetupIn, request: Request, response: Response):
@@ -213,7 +248,18 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
     def get_agent(agent_id: str):
         a = agent_or_404(agent_id)
         return {"id": agent_id, "config": a["config"], "enabled": a["enabled"], "live_version": agents.current(agents_dir, agent_id),
-                "sources": store.sources(agent_id), "build": store.latest_build(agent_id)}
+                "sources": store.sources(agent_id), "build": store.latest_build(agent_id), "snippet": snippet(agent_id)}
+
+    @app.get("/preview/{agent_id}", response_class=HTMLResponse, dependencies=[Depends(admin)])
+    def preview(agent_id: str):
+        """The Test tab's frame: a page holding exactly the snippet a site would paste."""
+        a = agent_or_404(agent_id)
+        voice = voice_url.replace("http", "ws", 1)
+        csp = (f"default-src 'none'; script-src {voice_url} blob: https://challenges.cloudflare.com; "  # blob: the audio worklets
+               f"style-src 'unsafe-inline'; connect-src {voice_url} {voice}; frame-src https://challenges.cloudflare.com; "
+               "frame-ancestors 'self'")
+        page = PREVIEW.format(name=html.escape(a["config"]["name"]), snippet=snippet(agent_id))
+        return HTMLResponse(page, headers={"content-security-policy": csp})
 
     @app.put("/api/agents/{agent_id}/settings", dependencies=[Depends(admin)])
     def settings(agent_id: str, body: SettingsIn):
@@ -301,4 +347,6 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
         store.set_enabled(agent_id, True)
         return {"enabled": True, "live_version": version}
 
+    if static_dir:  # last: the API routes above win
+        app.mount("/", StaticFiles(directory=static_dir, html=True), name="ui")
     return app

@@ -36,8 +36,12 @@ def main(argv: list[str] | None = None) -> None:
     from .app import create_app
 
     ledger = os.environ.get("VOICECORE_LEDGER")
+    static = os.environ.get("CONSOLE_STATIC")
     app = create_app(args.data_dir, args.agents_dir, setup_token=os.environ.get("CONSOLE_SETUP_TOKEN"),
-                     ledger=Path(ledger) if ledger and not ledger.startswith("redis") else None)
+                     ledger=Path(ledger) if ledger and not ledger.startswith("redis") else None,
+                     providers=os.environ.get("VOICECORE_PROVIDERS", "free"),
+                     voice_url=os.environ.get("PUBLIC_VOICE_URL", "http://localhost:8080"),
+                     static_dir=Path(static) if static else None)
     uvicorn.run(app, host=args.host, port=args.port, proxy_headers=True, forwarded_allow_ips=os.environ.get("FORWARDED_ALLOW_IPS", "127.0.0.1"))
 
 
