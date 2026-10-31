@@ -91,7 +91,7 @@ export default function Results() {
           <p className={styles.heroLabel}>from the moment you stop talking to the first sound of the answer</p>
           <ul className={styles.heroFacts}>
             <li><strong>2.8× faster</strong> than the first live build</li>
-            <li><strong>Faster</strong> than Deepgram's hosted Voice Agent in our test (972 ms)</li>
+            <li><strong>On par</strong> with Deepgram's hosted Voice Agent (972 ms)</li>
             <li><strong>13 of 15</strong> turns under one second</li>
           </ul>
           <p className={styles.heroNote}>Median of 15 spoken questions, real providers over a home network.</p>
