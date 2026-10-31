@@ -2,16 +2,17 @@
 name = "voicecore-lab"
 version = "0.0.0"
 requires-python = ">=3.12"
-dependencies = ["voicecore"]
+dependencies = ["voicecore", "voicecore-console"]
 
 [tool.uv]
 package = false
 
 [tool.uv.workspace]
-members = ["services/agent-core"]
+members = ["services/agent-core", "services/console"]
 
 [tool.uv.sources]
 voicecore = { workspace = true }
+voicecore-console = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -26,7 +27,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["services/agent-core/tests", "harness/tests"]
+testpaths = ["services/agent-core/tests", "services/console/tests", "harness/tests"]
 pythonpath = ["harness"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
