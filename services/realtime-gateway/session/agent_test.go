@@ -1,6 +1,7 @@
 package session
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -9,6 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/coder/websocket"
 )
 
 // Step 10 (ADR 0005): the widget names an agent; the gateway signs it into the token and passes it upstream.
@@ -120,6 +124,64 @@ func TestWidgetJS(t *testing.T) {
 		}
 		if ct := resp.Header.Get("Content-Type"); !strings.HasPrefix(ct, "text/javascript") {
 			t.Fatalf("content type %q", ct)
+		}
+	})
+}
+
+// writeOrigins publishes the console's "Websites allowed to embed" list, as the console does.
+func writeOrigins(t *testing.T, dir string, origins ...string) {
+	t.Helper()
+	b, _ := json.Marshal(map[string]any{"origins": origins})
+	if err := os.MkdirAll(filepath.Join(dir, "_site"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "_site", "origins.json"), b, 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestOriginsFileReload(t *testing.T) {
+	dir := agentsDir(t, "acme-docs")
+	runCfg(t, false, func(c *Config) { c.AgentsDir = dir }, func(t *testing.T, r *rig) {
+		post := func() int {
+			req, _ := http.NewRequest("POST", "http://gw:80/v1/session", nil)
+			req.Header.Set("Origin", "https://acme.com")
+			resp, err := r.http.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			resp.Body.Close()
+			return resp.StatusCode
+		}
+		if code := post(); code != 403 {
+			t.Fatalf("before: %d, want 403", code)
+		}
+		writeOrigins(t, dir, "acme.com")
+		time.Sleep(1100 * time.Millisecond) // the file is looked at again at most once a second
+		if code := post(); code != 200 {
+			t.Fatalf("after: %d, want 200", code)
+		}
+	})
+}
+
+func TestWSAcceptUsesReloadedOrigins(t *testing.T) {
+	dir := agentsDir(t, "acme-docs")
+	runCfg(t, false, func(c *Config) { c.AgentsDir = dir }, func(t *testing.T, r *rig) {
+		dial := func() error {
+			ws, _, err := websocket.Dial(context.Background(), "ws://gw:80/v1/ws",
+				&websocket.DialOptions{HTTPClient: r.http, HTTPHeader: http.Header{"Origin": {"https://acme.com"}}})
+			if err == nil {
+				ws.CloseNow()
+			}
+			return err
+		}
+		if dial() == nil {
+			t.Fatal("upgrade from an unlisted site was accepted")
+		}
+		writeOrigins(t, dir, "acme.com")
+		time.Sleep(1100 * time.Millisecond)
+		if err := dial(); err != nil {
+			t.Fatalf("upgrade from a listed site refused: %v", err)
 		}
 	})
 }

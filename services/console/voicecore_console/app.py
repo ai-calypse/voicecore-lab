@@ -3,6 +3,9 @@
 create_app is the one composition root: folders, the setup token and the edges (clock, git) come in as arguments,
 so tests run it on temporary folders with a fake clock.
 """
+import json
+import os
+import re
 import secrets
 import shutil
 import time
@@ -15,7 +18,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from voicecore import agents
+from voicecore import agents, budget
 from voicecore.providers import deepgram_tts, openai_compat_llm
 
 from . import auth, publish, sources
@@ -57,6 +60,22 @@ class TextIn(BaseModel):
     text: str = Field(min_length=1, max_length=200_000)
 
 
+class SiteIn(BaseModel):
+    origins: list[str] = Field(default_factory=list, max_length=50)
+
+
+WEBSITE = re.compile(r"(https?://)?(\*\.)?[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*(:\d{1,5})?")
+
+
+def publish_site(agents_dir: Path, origins: list[str]) -> None:
+    """The gateway reads this file (re-read at most once a second): allowed websites need no restart."""
+    d = agents_dir / "_site"
+    d.mkdir(parents=True, exist_ok=True)
+    tmp = d / ".origins.json.tmp"
+    tmp.write_text(json.dumps({"origins": origins}))
+    os.replace(tmp, d / "origins.json")
+
+
 def default_config(name: str) -> dict:
     return SettingsIn(name=name).model_dump()
 
@@ -69,6 +88,8 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
     if setup_token:
         store.offer_setup(auth.digest(setup_token))
     builds = ThreadPoolExecutor(max_workers=1, thread_name_prefix="build")  # one at a time: embedding is CPU-bound
+    if origins := store.site_origins():  # the gateway's copy always matches the console's record
+        publish_site(agents_dir, origins)
     logins = auth.RateLimit()
     app = FastAPI(title="VoiceCore console", docs_url="/api/docs", redoc_url=None, openapi_url="/api/openapi.json")
     app.state.store, app.state.agents_dir, app.state.data_dir, app.state.now = store, agents_dir, data_dir, now
@@ -142,6 +163,28 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
     def revoke_key(key_id: str):
         if not store.revoke_key(key_id, now()):
             raise HTTPException(404, "no such key")
+
+    # --- install-wide settings -------------------------------------------------------------
+
+    @app.get("/api/site", dependencies=[Depends(admin)])
+    def get_site():
+        return {"origins": store.site_origins()}
+
+    @app.put("/api/site", dependencies=[Depends(admin)])
+    def put_site(body: SiteIn):
+        origins = [o.strip().lower().rstrip("/") for o in body.origins if o.strip()]
+        for o in origins:
+            if not WEBSITE.fullmatch(o):
+                raise HTTPException(422, f"not a website: {o} (use a host such as docs.example.com)")
+        store.set_site_origins(origins)
+        publish_site(agents_dir, origins)
+        return {"origins": origins}
+
+    @app.get("/api/usage", dependencies=[Depends(admin)])
+    def usage():
+        if ledger is None:
+            return {"spent_usd": None, "cap_usd": None, "today_usd": None, "daily_cap_usd": None}
+        return budget.read_totals(ledger)
 
     # --- agents ---------------------------------------------------------------------------
 

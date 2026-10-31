@@ -103,6 +103,13 @@ def _entries(path) -> list[dict]:
     return json.loads(text).get("entries", []) if text.strip() else []
 
 
+def read_totals(ledger_path) -> dict:
+    """What the console shows (it mounts the ledger read-only): one read under the shared lock, never a write."""
+    entries = _entries(Path(ledger_path))
+    return {"spent_usd": _sum(entries, "usd"), "cap_usd": CAPS["usd"],
+            "today_usd": _sum(entries, "public", day=int(now() // 86_400)), "daily_cap_usd": SUBCAPS["public"]["daily"]}
+
+
 def total(pool, ledger_path=None):
     if url := _redis_url(ledger_path):
         from voicecore import budget_redis

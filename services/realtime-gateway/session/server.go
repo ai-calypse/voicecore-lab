@@ -21,6 +21,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -108,6 +109,8 @@ type Server struct {
 	tokens   map[string]*bucket // token issuance per client IP
 	draining atomic.Bool        // no new sessions; open ones (and their resumes) continue
 	ups      []*upstream        // the orchestrators, each with its own breaker
+
+	site site // the console's "Websites allowed to embed", added to cfg.Origins
 	rot      int                // rotates the start among upstreams with equal load
 }
 
@@ -140,6 +143,40 @@ func clientIP(remoteAddr string) string {
 
 // originAllowed applies the WebSocket upgrade's rules (coder/websocket) to an Origin header: same origin as the
 // request is allowed; a pattern matches the host, or scheme://host when the pattern names a scheme.
+// site is the console's published list of websites allowed to embed (AgentsDir/_site/origins.json, ADR 0005).
+type site struct {
+	mu      sync.Mutex
+	checked time.Time // the file is looked at again at most once a second
+	mtime   time.Time
+	origins []string
+}
+
+// origins is -origins plus the console's list, so adding a website in the console needs no gateway restart.
+// A pattern that would match any site is dropped, as ValidateProd refuses it in -origins.
+func (s *Server) origins() []string {
+	if s.cfg.AgentsDir == "" {
+		return s.cfg.Origins
+	}
+	s.site.mu.Lock()
+	defer s.site.mu.Unlock()
+	if now := time.Now(); now.Sub(s.site.checked) >= time.Second {
+		s.site.checked = now
+		path := filepath.Join(s.cfg.AgentsDir, "_site", "origins.json")
+		if st, err := os.Stat(path); err != nil {
+			s.site.origins, s.site.mtime = nil, time.Time{}
+		} else if !st.ModTime().Equal(s.site.mtime) {
+			var f struct {
+				Origins []string `json:"origins"`
+			}
+			if b, err := os.ReadFile(path); err == nil && json.Unmarshal(b, &f) == nil {
+				s.site.origins = slices.DeleteFunc(f.Origins, func(o string) bool { return broad(strings.ToLower(o)) })
+				s.site.mtime = st.ModTime()
+			}
+		}
+	}
+	return append(slices.Clone(s.cfg.Origins), s.site.origins...)
+}
+
 func (s *Server) originAllowed(r *http.Request, origin string) bool {
 	u, err := url.Parse(origin)
 	if err != nil || u.Host == "" {
@@ -148,7 +185,7 @@ func (s *Server) originAllowed(r *http.Request, origin string) bool {
 	if strings.EqualFold(u.Host, r.Host) {
 		return true
 	}
-	for _, pat := range s.cfg.Origins {
+	for _, pat := range s.origins() {
 		target := u.Host
 		if strings.Contains(pat, "://") {
 			target = u.Scheme + "://" + u.Host
@@ -460,7 +497,7 @@ const (
 )
 
 func (s *Server) serveWS(w http.ResponseWriter, r *http.Request) {
-	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: s.cfg.Origins})
+	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{OriginPatterns: s.origins()})
 	if err != nil {
 		s.c.RejectedUpgrade.Add(1) // mostly a disallowed origin
 		return

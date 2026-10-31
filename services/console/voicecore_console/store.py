@@ -24,6 +24,9 @@ SCHEMA = [
                          status TEXT NOT NULL, done INTEGER NOT NULL DEFAULT 0, total INTEGER NOT NULL DEFAULT 0,
                          version TEXT, log TEXT NOT NULL DEFAULT '', created REAL NOT NULL, finished REAL);
     """,
+    """
+    CREATE TABLE site (id INTEGER PRIMARY KEY CHECK (id = 1), origins TEXT NOT NULL DEFAULT '[]');
+    """,
 ]
 
 
@@ -120,6 +123,18 @@ class Store:
     def key_valid(self, key_hash: str) -> bool:
         with self.db() as db:
             return db.execute("SELECT 1 FROM api_keys WHERE key_hash = ? AND revoked IS NULL", (key_hash,)).fetchone() is not None
+
+    # --- install-wide settings --------------------------------------------------------------
+
+    def site_origins(self) -> list[str]:
+        with self.db() as db:
+            row = db.execute("SELECT origins FROM site").fetchone()
+        return json.loads(row["origins"]) if row else []
+
+    def set_site_origins(self, origins: list[str]) -> None:
+        with self.db() as db:
+            db.execute("INSERT INTO site (id, origins) VALUES (1, ?) ON CONFLICT (id) DO UPDATE SET origins = excluded.origins",
+                       (json.dumps(origins),))
 
     # --- agents ----------------------------------------------------------------------------
 

@@ -72,3 +72,53 @@ def test_disable_removes_pointer(tmp_path):
     agents.publish(tmp_path, "acme-docs", CONFIG, acme_passages(), np.ones((3, 384), np.float32))
     agents.disable(tmp_path, "acme-docs")
     assert agents.current(tmp_path, "acme-docs") is None
+
+
+def test_bundle_format_too_new(tmp_path):
+    import json
+
+    import pytest
+
+    from voicecore import agents
+
+    version = agents.publish(tmp_path, "acme-docs", CONFIG, acme_passages(), np.ones((3, 384), np.float32))
+    cfg = tmp_path / "acme-docs" / version / "config.json"
+    cfg.write_text(json.dumps({**json.loads(cfg.read_text()), "format": 2}))
+    with pytest.raises(ValueError, match="^bundle format 2 needs a newer voicecore image$"):
+        agents.read(tmp_path, "acme-docs", version)
+    agents.load.cache_clear()
+    assert agents.resolve(tmp_path, "acme-docs") is None  # the session is refused, not crashed
+
+
+def test_read_totals_shared_lock(tmp_path, monkeypatch):
+    """A writer process reserving and settling for 2 s; a reader never sees a half-written file."""
+    import subprocess
+    import sys
+    import threading
+    import time
+
+    from voicecore import budget
+
+    path = tmp_path / "ledger.json"
+    monkeypatch.setenv("VOICECORE_LEDGER", str(path))
+    writer = subprocess.Popen([sys.executable, "-c", (
+        "import time; from voicecore import budget\n"
+        "end = time.time() + 2\n"
+        "while time.time() < end:\n"
+        "    r = budget.reserve('usd', 0.0001, 'w'); budget.settle(r, 0.0001)\n")], env={**__import__("os").environ})
+    seen, errors = [], []
+
+    def read():
+        while writer.poll() is None:
+            try:
+                seen.append(budget.read_totals(path)["spent_usd"])
+            except Exception as e:  # noqa: BLE001
+                errors.append(e)
+            time.sleep(0.005)
+
+    t = threading.Thread(target=read)
+    t.start()
+    t.join(10)
+    writer.wait(10)
+    assert errors == [] and len(seen) > 10
+    assert seen == sorted(seen)  # totals only grow: each reservation settles at its full amount

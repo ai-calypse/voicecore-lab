@@ -8,6 +8,7 @@ module is the only owner of the format.
 import functools
 import hashlib
 import json
+import logging
 import os
 import re
 import tempfile
@@ -20,6 +21,7 @@ from voicecore.answer.index import Index
 from voicecore.answer.ingest import Passage
 from voicecore.providers import deepgram_tts, openai_compat_llm
 
+log = logging.getLogger("voicecore.agents")
 FORMAT = 1
 KEEP = 5  # versions kept per agent, the live one always among them
 POINTER = "current"
@@ -91,6 +93,9 @@ def resolve(root: Path, agent: str) -> Agent | None:
         return load(Path(root), agent, version) if version else None
     except FileNotFoundError:
         return None
+    except ValueError as e:  # a bundle this image cannot read: refuse the session, say why in the log
+        log.warning("agent %s not served: %s", agent, e)
+        return None
 
 
 def version_of(config: dict, passages: list[Passage]) -> str:
@@ -140,6 +145,8 @@ def current(root: Path, agent: str) -> str | None:
 def read(root: Path, agent: str, version: str) -> Bundle:
     d = Path(root) / agent / version
     config = json.loads((d / "config.json").read_text())
+    if config.get("format", FORMAT) > FORMAT:  # a console newer than this image published it: upgrade the voice side
+        raise ValueError(f"bundle format {config['format']} needs a newer voicecore image")
     passages = [Passage(**json.loads(line)) for line in (d / "passages.jsonl").read_text().splitlines() if line]
     return Bundle(agent, version, config, passages, np.load(d / "vectors.npy"))
 
