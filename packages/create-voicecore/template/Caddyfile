@@ -1,0 +1,11 @@
+# VoiceCore behind one HTTPS host (create-voicecore --mode public). Caddy gets and renews the certificate.
+{$DOMAIN} {
+	encode gzip
+	@voice path /v1/* /widget.js /healthz /readyz
+	handle @voice {
+		reverse_proxy gateway:8080
+	}
+	handle {
+		reverse_proxy console:8000
+	}
+}

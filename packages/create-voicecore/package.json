@@ -1,0 +1,14 @@
+{
+  "name": "create-voicecore",
+  "version": "0.1.0",
+  "description": "Install VoiceCore, a self-hosted voice assistant for your docs, with Docker in one command.",
+  "type": "module",
+  "bin": { "create-voicecore": "index.mjs" },
+  "files": ["index.mjs", "template/"],
+  "engines": { "node": ">=20" },
+  "repository": { "type": "git", "url": "git+https://github.com/ai-calypse/voicecore-lab.git", "directory": "packages/create-voicecore" },
+  "homepage": "https://voicecore-docs.fly.dev/getting-started/install",
+  "keywords": ["voice", "assistant", "docs", "self-hosted", "installer"],
+  "scripts": { "test": "vitest run" },
+  "devDependencies": { "vitest": "5.0.5" }
+}

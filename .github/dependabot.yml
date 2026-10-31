@@ -18,7 +18,7 @@ updates:
     open-pull-requests-limit: 2
     groups: { javascript: { patterns: ["*"] } }
   - package-ecosystem: docker
-    directories: ["/services/agent-core", "/services/realtime-gateway", "/apps/demo", "/apps/docs"]
+    directories: ["/services/agent-core", "/services/realtime-gateway", "/apps/demo", "/apps/docs", "/deploy/fly", "/deploy/platform"]
     schedule: { interval: monthly }
     open-pull-requests-limit: 2
     groups: { images: { patterns: ["*"] } }

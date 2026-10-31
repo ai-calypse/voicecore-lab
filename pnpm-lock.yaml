@@ -93,6 +93,12 @@ importers:
         specifier: 1.64.1
         version: 1.64.1
 
+  packages/create-voicecore:
+    devDependencies:
+      vitest:
+        specifier: 5.0.5
+        version: 5.0.5(@types/node@24.19.2)(vite@8.3.5(@types/node@24.19.2)(jiti@1.21.7)(terser@5.51.2))
+
   packages/protocol: {}
 
   packages/web-sdk:

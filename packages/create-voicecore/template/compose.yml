@@ -1,0 +1,93 @@
+# VoiceCore, installed by create-voicecore (https://github.com/ai-calypse/voicecore-lab).
+# Settings live in .env next to this file. After changing it: docker compose up -d
+# Upgrade: npx create-voicecore@latest upgrade. Provider keys: npx create-voicecore keys.
+name: voicecore
+
+x-image: &image ghcr.io/ai-calypse/voicecore:${VOICECORE_VERSION:?run create-voicecore}
+
+services:
+  orchestrator:  # the voice side: turn-taking, answers, speech; reads published agents, never calls the console
+    image: *image
+    command: ["python", "-m", "voicecore.server", "--host", "0.0.0.0", "--providers", "${PROVIDERS:-free}",
+              "--agents-dir", "/data/agents", "--default-agent", "off", "--pool", "public", "--env", "${GATEWAY_ENV:-dev}"]
+    environment:
+      VOICECORE_LEDGER: /data/ledger/spend_ledger.json
+      DEEPGRAM_API_KEY: ${DEEPGRAM_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      VOICECORE_CAP_USD: ${VOICECORE_CAP_USD:-5}
+      VOICECORE_PUBLIC_TOTAL: ${VOICECORE_PUBLIC_TOTAL:-2}
+      VOICECORE_PUBLIC_DAILY: ${VOICECORE_PUBLIC_DAILY:-0.5}
+      LOG_FORMAT: json
+    volumes: ["agents:/data/agents:ro", "ledger:/data/ledger"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/readyz', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 3
+      start_period: 90s
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 35s
+
+  gateway:  # the one public voice endpoint: tokens, the WebSocket, /widget.js
+    image: ghcr.io/ai-calypse/voicecore-gateway:${VOICECORE_VERSION:?run create-voicecore}
+    command: ["-addr", "0.0.0.0:8080", "-upstream", "ws://orchestrator:8765", "-agents-dir", "/data/agents",
+              "-widget", "/app/widget.js", "-origins", "${ORIGINS:?}", "-hosts", "${HOSTS:?}", "-env", "${GATEWAY_ENV:-dev}",
+              "-human-check", "${HUMAN_CHECK:-on}", "-trusted-proxies", "${TRUSTED_PROXIES:-}", "-sessions-per-ip-per-day", "50"]
+    environment:
+      GATEWAY_SECRET: ${GATEWAY_SECRET:?run create-voicecore}
+      TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
+      LOG_FORMAT: json
+    ports: ["${BIND:-127.0.0.1}:${VOICE_PORT:-8080}:8080"]
+    volumes: ["agents:/data/agents:ro"]
+    depends_on:
+      orchestrator: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "/app/gateway", "-probe", "http://127.0.0.1:8080/healthz"]
+      interval: 5s
+      timeout: 4s
+      retries: 3
+    restart: unless-stopped
+    stop_grace_period: 35s
+
+  console:  # the control plane: agents, docs, publishing; port 8000 on this machine only unless behind Caddy
+    image: *image
+    command: ["python", "-m", "voicecore_console", "serve", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      CONSOLE_DATA_DIR: /data/console
+      VOICECORE_AGENTS_DIR: /data/agents
+      VOICECORE_VECTORS_DIR: /data/console/vectors
+      VOICECORE_LEDGER: /data/ledger/spend_ledger.json
+      CONSOLE_SETUP_TOKEN: ${CONSOLE_SETUP_TOKEN:-}
+      CONSOLE_STATIC: /app/console-ui
+      VOICECORE_PROVIDERS: ${PROVIDERS:-free}
+      PUBLIC_VOICE_URL: ${PUBLIC_VOICE_URL:?}
+      TURNSTILE_SITEKEY: ${TURNSTILE_SITEKEY:-}
+      FORWARDED_ALLOW_IPS: "*"  # reachable only from this machine or through Caddy
+    ports: ["${BIND:-127.0.0.1}:${CONSOLE_PORT:-8000}:8000"]
+    volumes: ["console:/data/console", "agents:/data/agents", "ledger:/data/ledger:ro"]
+    cpus: 1.0  # embedding a large upload must not take the CPU the voice side needs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/status', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 3
+      start_period: 30s
+    init: true
+    restart: unless-stopped
+
+  caddy:  # --mode public: automatic HTTPS for one host, routed by path
+    profiles: ["public"]
+    image: caddy:2.10
+    environment:
+      DOMAIN: ${DOMAIN:-}
+    ports: ["80:80", "443:443"]
+    volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro", "caddy:/data"]
+    depends_on: [gateway, console]
+    restart: unless-stopped
+
+volumes:
+  agents:
+  console:
+  ledger:
+  caddy:

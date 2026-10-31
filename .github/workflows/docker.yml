@@ -18,6 +18,9 @@ on:
       - harness/tests/test_fly_image.py
       - Makefile
       - harness/tests/test_monitoring.py
+      - harness/tests/test_install.py
+      - harness/install_smoke.py
+      - fixtures/docs/acme.zip
       - uv.lock
       - pnpm-lock.yaml
       - .github/workflows/docker.yml
@@ -127,3 +130,19 @@ jobs:
           GATEWAY_SECRET=x TURNSTILE_SECRET=x PUBLIC_GATEWAY=x PUBLIC_HOST=x PUBLIC_ORIGIN=x TRUSTED_PROXIES=x PUBLIC_DOCS_URL=x
           docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile monitoring config --quiet
 
+
+  installer:  # Step 10: both platform images built here, then create-voicecore to a cited answer, timed
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: docker build -t ghcr.io/ai-calypse/voicecore:ci -f deploy/platform/voicecore.Dockerfile --build-arg VERSION=ci .
+      - run: docker build -t ghcr.io/ai-calypse/voicecore-gateway:ci -f deploy/platform/gateway.Dockerfile --build-arg VERSION=ci .
+      - run: VOICECORE_IMAGE_TAG=ci uv run pytest harness/tests/test_install.py -m docker -v
