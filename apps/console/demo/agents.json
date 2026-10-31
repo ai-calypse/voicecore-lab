@@ -1,0 +1,9 @@
+[
+  {
+    "build": "done",
+    "enabled": true,
+    "id": "voicecore-docs",
+    "live_version": "64e2e45a0de3",
+    "name": "VoiceCore docs"
+  }
+]

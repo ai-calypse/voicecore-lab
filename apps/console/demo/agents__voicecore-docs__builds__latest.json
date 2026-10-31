@@ -1,0 +1,11 @@
+{
+  "agent": "voicecore-docs",
+  "created": 1793491200.0,
+  "done": 363,
+  "finished": 1793491200.0,
+  "id": 1,
+  "log": "363 sections from 32 pages\n1 section skipped: it reads like instructions to the assistant\npublished version 64e2e45a0de3",
+  "status": "done",
+  "total": 363,
+  "version": "64e2e45a0de3"
+}

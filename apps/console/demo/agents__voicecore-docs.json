@@ -1,0 +1,49 @@
+{
+  "build": {
+    "agent": "voicecore-docs",
+    "created": 1793491200.0,
+    "done": 363,
+    "finished": 1793491200.0,
+    "id": 1,
+    "log": "363 sections from 32 pages\n1 section skipped: it reads like instructions to the assistant\npublished version 64e2e45a0de3",
+    "status": "done",
+    "total": 363,
+    "version": "64e2e45a0de3"
+  },
+  "config": {
+    "docs_url": "https://voicecore-docs.fly.dev/",
+    "first_message": "Hi. I answer from the VoiceCore docs: ask about latency, turn-taking or the widget.",
+    "instructions": "Keep answers short. Say the section's name when it helps someone find it.",
+    "keyterms": [
+      "VoiceCore",
+      "endpointing",
+      "barge-in",
+      "Silero"
+    ],
+    "llm": "openai/gpt-oss-120b",
+    "name": "VoiceCore docs",
+    "voice": "aura-2-thalia-en"
+  },
+  "enabled": true,
+  "id": "voicecore-docs",
+  "live_version": "64e2e45a0de3",
+  "snippet": "<script src=\"https://voicecore.fly.dev/widget.js\" data-agent=\"voicecore-docs\" async></script>",
+  "sources": [
+    {
+      "created": 1793491200.0,
+      "files": 31,
+      "id": "src_74562e2cbe3a",
+      "kind": "upload",
+      "label": "voicecore-docs.zip",
+      "ref": null
+    },
+    {
+      "created": 1793491200.0,
+      "files": 1,
+      "id": "src_c2448d030d01",
+      "kind": "text",
+      "label": "Support hours",
+      "ref": null
+    }
+  ]
+}

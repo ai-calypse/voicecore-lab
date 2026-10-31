@@ -389,10 +389,33 @@ function Settings({ agent, reload }: { agent: Agent; reload: () => void }) {
   );
 }
 
+function DemoAssistant() {
+  // The docs site forbids framing, so the demo loads the real widget into this page instead, talking to the live
+  // VoiceCore docs assistant (the same docs this demo agent was published from).
+  useEffect(() => {
+    if (document.querySelector("script[data-voicecore]")) return;
+    const s = document.createElement("script");
+    s.src = "/embed/voicecore.js";
+    s.dataset.voicecore = "";
+    s.dataset.endpoint = import.meta.env.VITE_DEMO_GATEWAY ?? "https://voicecore.fly.dev";
+    if (import.meta.env.VITE_DEMO_SITEKEY) s.dataset.turnstileSitekey = import.meta.env.VITE_DEMO_SITEKEY;
+    s.dataset.title = "Ask the docs";
+    s.dataset.name = "VoiceCore docs assistant";
+    document.body.append(s);
+  }, []);
+  return (
+    <div className="stack">
+      <p>In this read-only demo, the Test tab is the live VoiceCore docs assistant, answering from the same docs this agent was published from. Open it with <strong>Ask the docs</strong> in the corner and ask by voice or text.</p>
+      <p className="muted small">On your own install, this tab frames a test page holding exactly your agent's snippet.</p>
+    </div>
+  );
+}
+
 function TestTab({ agent, status, onSeen }: { agent: Agent; status: Status; onSeen: () => void }) {
   useEffect(() => { onSeen(); }, [agent.live_version]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!agent.live_version) return <div className="empty"><h2>Publish first</h2><p>Once the agent is live, you can talk to it here.</p></div>;
-  const src = DEMO ? `${import.meta.env.BASE_URL}preview.html` : `/preview/${agent.id}`;
+  if (DEMO) return <DemoAssistant />;
+  const src = `/preview/${agent.id}`;
   return (
     <div className="stack">
       <p>This frame holds the exact snippet from the Embed tab. Open the assistant in its corner and ask a question from your docs.</p>
@@ -408,6 +431,7 @@ function Embed({ agent, onCopied }: { agent: Agent; onCopied: () => void }) {
     <div className="stack form-wide">
       <h2>Add it to your website</h2>
       <p>Paste this line before <code>&lt;/body&gt;</code> on every page where the assistant should appear.</p>
+      {DEMO && <Alert kind="info">Illustrative: this demo publishes nothing, so this snippet does not start a session. Install VoiceCore to get a working one.</Alert>}
       <div className="snippet">
         <pre><code>{agent.snippet}</code></pre>
         <CopyButton text={agent.snippet} label="Copy snippet" onCopied={onCopied} />

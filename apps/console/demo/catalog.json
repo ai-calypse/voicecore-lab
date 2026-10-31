@@ -1,0 +1,19 @@
+{
+  "llms": [
+    "openai/gpt-4.1-nano",
+    "openai/gpt-oss-120b"
+  ],
+  "voices": {
+    "aura-2-andromeda-en": "Andromeda: American, casual and expressive",
+    "aura-2-apollo-en": "Apollo: American, confident and casual",
+    "aura-2-arcas-en": "Arcas: American, natural and smooth",
+    "aura-2-aries-en": "Aries: American, warm and energetic",
+    "aura-2-asteria-en": "Asteria: American, clear and knowledgeable",
+    "aura-2-athena-en": "Athena: American, calm and professional",
+    "aura-2-callista-en": "Callista: American, clear and professional",
+    "aura-2-draco-en": "Draco: British, warm and trustworthy",
+    "aura-2-electra-en": "Electra: American, professional and engaging",
+    "aura-2-helena-en": "Helena: American, caring and friendly",
+    "aura-2-thalia-en": "Thalia: American, clear and confident"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "providers": "live",
+  "setup_needed": false,
+  "voice_url": "https://voicecore.fly.dev"
+}

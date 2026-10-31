@@ -26,9 +26,12 @@ Run the gateway with `go run ./cmd/gateway` from `services/realtime-gateway`, or
 | `-probe` | empty | GET this URL and exit 0 on HTTP 200, else 1; the container healthcheck, since the image has no curl |
 | `-turnstile-url` | Cloudflare's siteverify | where Turnstile tokens are checked; tests point it at a fake |
 | `-admin-addr` | empty (off) | operator listener for `/metrics` (Prometheus) and `/debug/counters`; docker compose uses `0.0.0.0:9091` and publishes it on 127.0.0.1 only |
-| `-env` | `dev` | `prod` refuses to start, listing every gap, unless `GATEWAY_SECRET` (32+ bytes), `TURNSTILE_SECRET`, non-local `-origins` and `-hosts` without catch-all patterns, and `-trusted-proxies` are set |
+| `-env` | `dev` | `prod` refuses to start, listing every gap, unless `GATEWAY_SECRET` (32+ bytes), `TURNSTILE_SECRET` (or `-human-check off`), non-local `-origins` and `-hosts` without catch-all patterns, and `-trusted-proxies` are set |
 | `-copy-id` | `gw` | this gateway copy's id; every session id is `s-<copy id>-<16 hex>`, so a load balancer can route a resume to its owner |
 | `-trusted-proxies` | empty | comma-separated CIDRs, such as a load balancer's, whose `X-Forwarded-For` header is believed for the client IP; empty ignores the header |
+| `-agents-dir` | empty | the console's published agent bundles, mounted read-only; a token request may then name an agent with a live version there, and `agents/_site/origins.json` adds the console's allowed websites to `-origins`, read again within a second of a change |
+| `-widget` | empty (not served) | the built `voicecore.js`, served at `/widget.js`, so a site's snippet loads the widget from the gateway |
+| `-human-check` | `on` | `off` lets `-env prod` start without `TURNSTILE_SECRET`, on purpose, with a warning; the rate limits and spend caps still apply |
 
 The `-hosts` check refuses other host names with HTTP 421, which blocks DNS rebinding. The benchmark runner starts the gateway with `-max-sessions-per-ip 0 -tokens-per-minute 0`, because all its clients share one IP.
 
@@ -56,7 +59,9 @@ Run the orchestrator with `uv run python -m voicecore.server` from the repositor
 
 | Flag | Default | What it sets |
 |---|---|---|
-| `--providers` | `mock` | `mock` (no keys, no spend), `mock-billed` (mock providers that reserve and settle small fixed amounts, for ledger tests) or `live` (Deepgram, OpenRouter and the `--tts` provider; spends money) |
+| `--providers` | `mock` | `mock` (no keys, no spend), `mock-billed` (mock providers that reserve and settle small fixed amounts, for ledger tests), `free` (no paid provider: each typed question gets the closest docs section, as text) or `live` (Deepgram, OpenRouter and the `--tts` provider; spends money) |
+| `--agents-dir` | none | the console's published agent bundles; the gateway's `X-VoiceCore-Agent` header picks one per session ([control plane](../architecture/control-plane.md)) |
+| `--default-agent` | `on` | `off`: every session must name a published agent, and the `--docs-dir` corpus is not indexed at startup (a console install) |
 | `--host` | `127.0.0.1` | listen address; the Docker image passes `0.0.0.0` |
 | `--port` | 8765 | listen port for `ws://HOST:PORT/v1/session/{id}` |
 | `--trace-dir` | none (off) | write one trace file per session, `<dir>/<session id>.jsonl` |
@@ -117,6 +122,10 @@ VoiceCore reads the environment variables below. The three provider keys, `GATEW
 | `VITE_GATEWAY` | demo app build | gateway URL for the demo page's widget; default `http://localhost:8080` |
 | `VOICECORE_GATEWAY` | docs site build | gateway URL for this site's widget; default `http://localhost:8080` |
 | `DOCS_URL` | docs site build | the site's public URL; default `http://localhost:3000` |
+| `VOICECORE_CAP_USD` | orchestrator, console | the install's total cap in US dollars; default 5 |
+| `VOICECORE_PUBLIC_TOTAL`, `VOICECORE_PUBLIC_DAILY` | orchestrator, console | the public sub-cap in total and per UTC day; defaults 2 and 0.50 |
+| `VOICECORE_VECTORS_DIR` | orchestrator, console | where computed vectors are cached when the image's own cache is read-only |
+| `CONSOLE_SETUP_TOKEN`, `PUBLIC_VOICE_URL`, `VOICECORE_PROVIDERS`, `CONSOLE_STATIC`, `TURNSTILE_SITEKEY` | console | the first-run setup token, the voice server's public address for the snippet, the provider mode for the banner, the built UI folder, and the sitekey added to the snippet; `create-voicecore` writes them ([install](../getting-started/install.md)) |
 
 `.env.example` lists the four that a live setup can use. `CARTESIA_API_KEY` is only needed with `--tts cartesia`. Copy it to `.env` (it is gitignored) and fill in the keys.
 
@@ -166,7 +175,7 @@ Every paid provider call is covered by a reservation in the spend ledger, `bench
 
 | Pool | Project cap | Covers | Reserved per session |
 |---|---:|---|---|
-| `usd` | $5.00 | Deepgram STT and TTS, OpenRouter | STT: 300 s of audio × $0.0077 per minute = $0.0385; LLM: $0.02; TTS with `--tts deepgram`: 4,000 characters × $0.030 per 1,000 = $0.12, reserved when the session first speaks |
+| `usd` | $5.00 (`VOICECORE_CAP_USD` on an install) | Deepgram STT and TTS, OpenRouter | STT: 300 s of audio × $0.0077 per minute = $0.0385; LLM: $0.02; TTS with `--tts deepgram`: 4,000 characters × $0.030 per 1,000 = $0.12, reserved when the session first speaks |
 | `cartesia_credits` | 16,000 credits | Cartesia, 1 credit per character | TTS with `--tts cartesia`: 1,500 characters, reserved when the session first speaks |
 | `public` (inside `usd`) | $2.00 in total, $0.50 per UTC day | sessions of an orchestrator started with `--pool public` | the same reservations, counted against both `usd` and `public` |
 

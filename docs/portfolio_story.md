@@ -292,6 +292,19 @@ With live models (keys in `.env`, `PROVIDERS=live`), also ask something off-topi
   - A docs site that opens and highlights the cited section.
 - **Proof.** The 22-case assistant eval and the Playwright widget tests.
 
+### 20. The platform: any team in ten minutes
+
+**In one sentence:** one command installs VoiceCore for any company's docs, and a console turns their Markdown into a working voice assistant on their site.
+
+- **The problem.** Integrating meant cloning the repository, swapping a docs folder and editing a deploy. A team evaluating a voice assistant gives it minutes, not a day.
+- **What I built:**
+  - `npx create-voicecore`: checks Docker, picks free ports, writes private settings with generated secrets, starts three services, and prints a setup link; `keys`, `upgrade` and `uninstall` after that.
+  - A console (FastAPI and React): agents, docs from uploads, Git or pasted text, Publish with progress, a Test tab holding the exact embed snippet, allowed websites, API keys.
+  - A control plane / data plane split: the console publishes immutable, content-addressed agent bundles to a volume the voice side mounts read-only, so voice keeps answering with the console stopped.
+  - Agent ids signed into the session token, an upstream header, per-agent voice, model, first message and instructions, and a free mode with no keys.
+- **The hard part.** Keeping the real-time path independent of the management path, and the install honest: a zip-slip, zip bomb or a Git URL to a private address is refused with a reason; the embedding work runs CPU-capped away from the audio loop.
+- **Proof.** Installer tests with a fake Docker; a console end-to-end test from setup to a cited answer in the Test tab; a timed install from real images to a cited answer, then again with the console stopped (13.5 s locally with the images present; CI fails it past ten minutes). [Install guide](../apps/docs/docs/getting-started/install.md), [ADR 0005](adr/0005-voicecore-platform.md).
+
 ---
 
 ## How the work was run

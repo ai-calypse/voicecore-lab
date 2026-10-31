@@ -20,11 +20,12 @@ The script mounts as soon as the page has a body, or on `DOMContentLoaded` if it
 
 ## Widget attributes
 
-The script tag takes two attributes:
+The script tag takes these attributes:
 
 | Attribute | What it sets | Default |
 |---|---|---|
-| `data-endpoint` | the gateway's base URL; a trailing slash is removed | the page's own origin |
+| `data-endpoint` | the gateway's base URL; a trailing slash is removed | the origin the script was loaded from (the gateway, when it serves `/widget.js`), else the page's own origin |
+| `data-agent` | which published agent answers, on an install with the console ([install](./install.md)); the gateway signs it into the session token | none: the gateway's default agent |
 | `data-title` | the label on the launcher button | "Ask the docs" |
 | `data-name` | the assistant's name, shown at the top of the open panel and used as the dialog's accessible name | "Docs assistant" |
 | `data-turnstile-sitekey` | a Cloudflare Turnstile sitekey. The widget then runs the human check before each new session and sends its token with the token request. Use it when the gateway has `TURNSTILE_SECRET`. The check appears only if Cloudflare needs the visitor to act; if it fails, the widget says "Couldn't verify you're human. Reload and try again." | none: no check |
@@ -37,7 +38,7 @@ The widget derives both gateway addresses from `data-endpoint`:
 
 If the connection drops, the widget says "Reconnecting…" and resumes the same session, so an answer in progress is not lost. It retries after 0.5, 1, 2, 4 and 4 s, which outlasts the gateway's 10 s resume window. After the window it starts a new session with a fresh token and says that it no longer remembers the earlier questions. A close for a broken rule, such as an invalid message, is not retried.
 
-Leave `data-endpoint` out only when the gateway serves the same origin as the page. This docs site sets it from `VOICECORE_GATEWAY`, default `http://localhost:8080`. The demo app sets it from `VITE_GATEWAY`, with the same default.
+Leave `data-endpoint` out when the page loads the widget from the gateway itself (`<script src="https://voice.example.com/widget.js" ...>`, as the console's snippet does), or when the gateway serves the same origin as the page. This docs site sets it from `VOICECORE_GATEWAY`, default `http://localhost:8080`. The demo app sets it from `VITE_GATEWAY`, with the same default.
 
 ## How the widget gets a session token
 

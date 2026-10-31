@@ -2,7 +2,7 @@
 
 **A voice assistant you can talk to, and interrupt, built from the microphone to the speaker and measured at every step.**
 
-**Try it:** [voicecore-docs.fly.dev](https://voicecore-docs.fly.dev) (click "Ask the docs" and speak or type). **Results at a glance:** [voicecore-docs.fly.dev/results](https://voicecore-docs.fly.dev/results).
+**Try it:** [voicecore-docs.fly.dev](https://voicecore-docs.fly.dev) (click "Ask the docs" and speak or type). **Results at a glance:** [voicecore-docs.fly.dev/results](https://voicecore-docs.fly.dev/results). **Console demo:** [voicecore-docs.fly.dev/console/](https://voicecore-docs.fly.dev/console/) (read-only).
 
 You ask a documentation website a question out loud. VoiceCore listens, works out when you have finished speaking, finds the answer in the docs, and speaks it back with a link that opens the exact section it came from. The live median is **0.84 seconds** from the end of your question to the start of its answer. If you start talking while it is speaking, it goes quiet in about **0.3 seconds**.
 
@@ -68,6 +68,7 @@ Each area links to a deeper explanation in the [project tour](docs/portfolio_sto
 | [**Delivery and operations**](docs/portfolio_story.md#17-delivery-and-operations) | Docker Compose, five CI workflows, a live Fly.io deploy, incident write-ups |
 | [**Media internals**](docs/portfolio_story.md#18-media-internals-webrtc-and-rtp) | an RTP jitter buffer (RFC 3550), a Pion WebRTC spike, WebSocket vs WebRTC measured |
 | [**Product and frontend**](docs/portfolio_story.md#19-the-product-a-docs-site-that-talks) | an embeddable widget, a Docusaurus docs site that scrolls to and highlights the cited section |
+| [**Platform and developer experience**](docs/portfolio_story.md#20-the-platform-any-team-in-ten-minutes) | `npx create-voicecore`, a self-hosted console (agents, docs upload or Git, publish, test, embed), control plane / data plane split, measured time to first answer |
 
 ## Results
 
@@ -91,6 +92,14 @@ Each area links to a deeper explanation in the [project tour](docs/portfolio_sto
 | 30-minute soak, 1,390 sessions | no failed round; memory growth under 5 % per process | fake-provider | [load](reports/load.md#soak) |
 
 The hosted Deepgram Voice Agent, measured as a baseline, took 972 ms (n = 3, [breakdown](reports/latency_breakdown.md)). The [tuning report](reports/latency_tuning.md) shows what closed the gap: a faster end-of-turn decision, a faster model route and a pre-opened voice connection.
+
+## Use it for your own docs
+
+```bash
+npx create-voicecore    # checks Docker, asks free / live / public, starts it and prints the console's setup link
+```
+
+In the console: create an agent, upload your Markdown (or point it at a Git folder), press Publish, try it on the Test tab, and paste the one-line snippet into your site. Free mode needs no keys; `npx create-voicecore keys` turns on voice. The [install guide](apps/docs/docs/getting-started/install.md) has the details, the [control-plane page](apps/docs/docs/architecture/control-plane.md) the design. Until the first release is published to npm and GHCR, run it from a clone with the images built locally ([deploy/platform](deploy/platform/README.md)).
 
 ## Run it yourself (no keys, no spend)
 
@@ -150,9 +159,11 @@ Design decisions are recorded as ADRs (architecture decision records): [what is 
 | [`services/agent-core/voicecore/`](services/agent-core/voicecore) | the Python orchestrator: `turntaking/`, `runtime/`, `providers/`, `answer/`, budget, metrics, `server.py` |
 | [`apps/docs/`](apps/docs) | the Docusaurus docs site, which is the assistant's only knowledge source |
 | [`apps/demo/`](apps/demo) | landing page, embeddable widget (`voicecore.js`), `?lab=1` timeline panel, Playwright suites |
+| [`services/console/`](services/console), [`apps/console/`](apps/console) | the self-hosted console: FastAPI API (agents, sources, builds, keys) and its React UI |
+| [`packages/create-voicecore/`](packages/create-voicecore) | the one-command installer and its compose template |
 | [`harness/`](harness) | fixture builders, runners, timeline, benchmarks, evals, load and soak, the CI gate |
 | [`monitoring/`](monitoring) | Prometheus rules and tests, Alertmanager routes, Loki, Alloy, the Grafana dashboard |
-| [`deploy/`](deploy) | the Fly.io image and config, the scale profile's nginx |
+| [`deploy/`](deploy) | the Fly.io image and config, the platform images, the scale profile's nginx |
 | [`experiments/`](experiments) | RTP jitter buffer and RFC 3550 jitter; Pion WebRTC spike |
 | [`fixtures/`](fixtures) | LibriSpeech-derived audio (CC BY 4.0, [attribution](fixtures/audio/ATTRIBUTION.md)), a uv docs snapshot, answer keys, adversarial pages |
 | [`docs/`](docs) | architecture, project tour, ADRs, write-ups, operations, step plans |
@@ -160,7 +171,7 @@ Design decisions are recorded as ADRs (architecture decision records): [what is 
 
 ## Status and honest limits
 
-- **Built:** Steps 00–09, from browser audio through production readiness. CI runs on every push: tests, end-to-end tests, the latency and quality gate, Docker profiles and security scans.
+- **Built:** Steps 00–10, from browser audio through production readiness and a self-hosted platform. CI runs on every push: tests, end-to-end tests, the latency and quality gate, Docker profiles and security scans.
 - **One small machine.** The live demo runs on one Fly.io machine that stops when nobody is using it, so the first visit after a quiet spell waits a few seconds while it starts. Visitor spend is capped at $0.50 a day and $2 in total; past that, answers come back in text. Each session speaks about 15 answers, then switches to text.
 - **Waiting on a person:**
   - a live load test (about $0.17);

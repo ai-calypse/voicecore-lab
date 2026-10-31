@@ -5,9 +5,10 @@ WORKDIR /src
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY packages ./packages
 COPY apps/demo ./apps/demo
+COPY apps/console ./apps/console
 COPY apps/docs ./apps/docs
 COPY scripts ./scripts
-RUN pnpm install --frozen-lockfile --filter "@voicecore/docs..." --filter "@voicecore/demo..."
+RUN pnpm install --frozen-lockfile --filter "@voicecore/docs..." --filter "@voicecore/demo..." --filter "@voicecore/console..."
 ARG VOICECORE_GATEWAY=http://localhost:8080
 ARG TURNSTILE_SITEKEY=
 ARG DOCS_URL=http://localhost:3000

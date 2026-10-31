@@ -16,6 +16,8 @@ public/embed/
 apps/docs/build/
 apps/docs/.docusaurus/
 apps/docs/static/embed/
+apps/docs/static/console/
+dist-demo/
 apps/docs/csp.conf
 apps/demo/csp.conf
 .e2e-data/

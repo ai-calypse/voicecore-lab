@@ -1,7 +1,7 @@
 // Page ids are file paths under docs/ without ".md".
 module.exports = {
   docs: [
-    { type: "category", label: "Getting started", collapsed: false, items: ["intro", "getting-started/quickstart", "getting-started/live-providers", "getting-started/embed-the-widget"] },
+    { type: "category", label: "Getting started", collapsed: false, items: ["intro", "getting-started/install", "getting-started/quickstart", "getting-started/live-providers", "getting-started/embed-the-widget"] },
     {
       type: "category",
       label: "Concepts",
@@ -20,19 +20,19 @@ module.exports = {
       type: "category",
       label: "Architecture",
       collapsed: false,
-      items: ["architecture/overview", "architecture/browser-sdk", "architecture/realtime-gateway", "architecture/orchestrator", "architecture/websocket-vs-webrtc"],
+      items: ["architecture/overview", "architecture/browser-sdk", "architecture/realtime-gateway", "architecture/orchestrator", "architecture/control-plane", "architecture/websocket-vs-webrtc"],
     },
     {
       type: "category",
       label: "Guides",
       collapsed: false,
-      items: ["guides/measure-latency", "guides/tune-latency", "guides/add-your-own-docs", "guides/telephony", "guides/troubleshooting"],
+      items: ["guides/console", "guides/measure-latency", "guides/tune-latency", "guides/add-your-own-docs", "guides/telephony", "guides/troubleshooting"],
     },
     {
       type: "category",
       label: "Reference",
       collapsed: false,
-      items: ["reference/wire-protocol", "reference/configuration", "reference/trace-events", "reference/providers", "reference/benchmarks", "faq"],
+      items: ["reference/wire-protocol", "reference/configuration", "reference/console-api", "reference/trace-events", "reference/providers", "reference/benchmarks", "faq"],
     },
   ],
 };

@@ -48,6 +48,7 @@ module.exports = {
       items: [
         { to: "/", label: "Docs", position: "left", activeBaseRegex: "^/(?!reference|results)" },
         { to: "/results", label: "Results", position: "left" },
+        { href: "pathname:///console/", label: "Console demo", position: "left", target: "_self" },
         { to: "/reference/wire-protocol", label: "Reference", position: "left", activeBaseRegex: "^/reference" },
       ],
     },
