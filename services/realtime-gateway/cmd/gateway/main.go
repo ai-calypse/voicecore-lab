@@ -40,6 +40,8 @@ func main() {
 	env := flag.String("env", "dev", "dev, or prod: refuse to start unless every public-deployment setting is present")
 	turnstileURL := flag.String("turnstile-url", "", "Turnstile siteverify URL (default Cloudflare's); the secret comes from TURNSTILE_SECRET")
 	adminAddr := flag.String("admin-addr", "", "operator listener for /metrics and /debug/counters, e.g. :9091 (empty = off); keep it off the public internet")
+	agentsDir := flag.String("agents-dir", "", "the console's published agent bundles (read-only); token requests may name an agent there")
+	widget := flag.String("widget", "", "the built voicecore.js, served at /widget.js (empty = not served)")
 	flag.Parse()
 	if *env != "dev" && *env != "prod" { // a typo must not silently mean dev
 		slog.Error("-env must be dev or prod", "env", *env)
@@ -79,6 +81,7 @@ func main() {
 		}
 	}
 	cfg.Origins = splitList(*origins)
+	cfg.AgentsDir, cfg.Widget = *agentsDir, *widget
 	cfg.MaxSessionsPerIP, cfg.MaxSessions, cfg.TokensPerMinute, cfg.SessionsPerIPPerDay = *perIP, *maxSessions, *tokensPerMin, *perDay
 	if *hosts != "" {
 		cfg.Hosts = splitList(*hosts)

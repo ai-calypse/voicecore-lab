@@ -56,7 +56,7 @@ JSON text messages with a `type` field. Fields listed below are **required**; re
 | `agent.text` | `gen`, `text` | answer text (also sent for voice turns) |
 | `agent.cancel` | `gen` | stop and flush generation `gen` and every older one |
 | `answer.sources` | `gen`, `sources[]` | citations: each `{id, url, title}` |
-| `session.ended` | `reason` | `client`, `expired`, `budget`, `error`, `shutdown` |
+| `session.ended` | `reason` | `client`, `expired`, `budget`, `error`, `shutdown`, `unavailable` (the named agent has no live version) |
 
 **Gateway → orchestrator only:**
 
@@ -90,7 +90,7 @@ Every agent frame carries `generation_id`. When generation `g` is cancelled, eac
 - Mic frames per stream: `sequence` equal to the last one → dropped, counted `drops_duplicate`; lower → dropped, counted `drops_stale`; higher than last + 1 → forwarded, the missing count is added to `gaps`.
 - The upstream queue holds at most 50 frames (1 s); when full the oldest frame is dropped and counted `drops_overload`. The client-bound queue holds at most 1,500 agent frames (30 s); overflow is counted `drops_overload_out`.
 - No message from the client for 10 s → close 4003.
-- Tokens: `POST /v1/session` returns `<expiry>.<nonce>.<HMAC(expiry.nonce.client IP)>`. A token starts **one** session, only from the IP it was minted for (4001 otherwise). A `hello` refused with 1013 or 1011 does not use it up. The client IP is the peer address, or `X-Forwarded-For` only through `-trusted-proxies`.
+- Tokens: `POST /v1/session` returns `<expiry>.<nonce>.<HMAC(expiry.nonce.client IP)>`. With the form field `agent` (Step 10, ADR 0005) it returns `<expiry>.<nonce>.<agent>.<HMAC(expiry.nonce.agent.client IP)>`: the signature covers the agent, so a token cannot be pointed at another agent. An agent id matches `^[a-z0-9][a-z0-9-]{0,39}$` (else 400 `bad agent id`) and must have a live version in the gateway's `-agents-dir` (else 404 `unknown agent`). The gateway dials the orchestrator with the header `X-VoiceCore-Agent: <agent>` for such a session. A token starts **one** session, only from the IP it was minted for (4001 otherwise). A `hello` refused with 1013 or 1011 does not use it up. The client IP is the peer address, or `X-Forwarded-For` only through `-trusted-proxies`.
 - Resume: a `hello` with the `session_id` and matching `resume_key` of a disconnected session within 10 s keeps the session (and its upstream connection). The token may already be spent then. A wrong or missing key, or a `hello` after the window, is a new session and needs an unused token: a spent one gets 4001, so the client fetches a fresh token. The resume fences the newest agent generation (audio queued while the client was away is dropped) and sends `client.resumed` upstream. Clients pick a random first `stream_id` so a resumed session never sees a reused stream.
 - `GET /debug/counters` returns the counters and queue depth as JSON, on the admin listener only (`-admin-addr`).
 - Abuse limits (defaults; flags on `cmd/gateway`):

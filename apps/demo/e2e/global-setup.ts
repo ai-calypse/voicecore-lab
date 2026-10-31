@@ -3,4 +3,5 @@ import { checkMockOnly } from "./check-mock-only.ts";
 
 export default async function globalSetup() {
   await checkMockOnly("http://127.0.0.1:18766");
+  await checkMockOnly("http://127.0.0.1:18768");
 }

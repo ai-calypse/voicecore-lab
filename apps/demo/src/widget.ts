@@ -11,7 +11,9 @@ type Ev = { type: string; [k: string]: unknown };
 type Source = { n: number; title: string; url: string };
 
 const script = document.currentScript as HTMLScriptElement | null;
-const endpoint = (script?.dataset.endpoint ?? location.origin).replace(/\/$/, "");
+// The gateway: data-endpoint, else whoever served this script (the console's snippet loads it from the gateway).
+const endpoint = (script?.dataset.endpoint ?? (script?.src ? new URL(script.src).origin : location.origin)).replace(/\/$/, "");
+const agent = script?.dataset.agent; // data-agent: which published agent answers (the gateway signs it into the token)
 const label = script?.dataset.title ?? "Ask the docs";
 const name = script?.dataset.name ?? "Docs assistant";
 const sitekey = script?.dataset.turnstileSitekey; // data-turnstile-sitekey: ask Cloudflare Turnstile before each new session
@@ -114,6 +116,7 @@ function mount() {
   const open = (s: Source) => // true when the host page opened the section itself
     !dispatchEvent(new CustomEvent("voicecore:navigate", { detail: { url: s.url, title: s.title }, cancelable: true }));
   const link = (s: Source, attrs: Record<string, string>, text: string) => {
+    if (!s.url) return h("span", attrs, text); // docs uploaded without a published URL: name the section, link nowhere
     const a = h("a", { href: s.url, target: "_blank", rel: "noopener", ...attrs }, text);
     a.addEventListener("click", (ev) => { if (open(s)) ev.preventDefault(); });
     return a;
@@ -147,7 +150,7 @@ function mount() {
       case "answer.sources": { // arrives while the answer is spoken: open the first cited section now
         const src = e.sources as Source[];
         sources.set(Number(e.gen), src);
-        if (src[0]) open(src[0]);
+        if (src[0]?.url) open(src[0]);
         break;
       }
       case "agent.text": answer(Number(e.gen), String(e.text)); break;
@@ -169,7 +172,10 @@ function mount() {
 
   const newToken = async (): Promise<string> => { // a short-lived token from the gateway; the reconnect asks again if needed
     // a form body keeps the request a CORS "simple request": no preflight
-    const body = sitekey ? new URLSearchParams({ "cf-turnstile-response": await humanCheck() }) : undefined;
+    const form = new URLSearchParams();
+    if (agent) form.set("agent", agent);
+    if (sitekey) form.set("cf-turnstile-response", await humanCheck());
+    const body = form.size ? form : undefined;
     const res = await fetch(`${endpoint}/v1/session`, { method: "POST", body });
     if (res.status === 403 && sitekey) throw new HumanCheckFailed();
     if (!res.ok) throw new Error(`token request failed (${res.status})`);

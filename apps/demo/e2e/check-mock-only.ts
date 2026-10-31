@@ -1,6 +1,6 @@
 // Playwright globalSetup guard (Step 09): e2e must never talk to an orchestrator with live (paid) providers.
 // A dev's live orchestrator once sat on the port the e2e stack used; reusing it would have spent money.
-const NO_SPEND = new Set(["mock", "mock-billed"]);
+const NO_SPEND = new Set(["mock", "mock-billed", "free"]); // free: no paid provider at all
 
 export async function checkMockOnly(orchestrator: string, timeoutMs = 5000): Promise<void> {
   let health: { providers?: string };

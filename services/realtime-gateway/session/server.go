@@ -17,7 +17,10 @@ import (
 	"net/http"
 	"net/netip"
 	"net/url"
+	"os"
 	"path"
+	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -64,7 +67,17 @@ type Config struct {
 	// Turnstile, the token bucket and the dollar caps still bound spend meanwhile.
 	SessionsPerIPPerDay int
 	Store               Store // shared nonces and daily counts; nil = this process's memory
+
+	// Step 10 (ADR 0005). AgentsDir: the console's published agent bundles (read-only here); a token request may name
+	// an agent that has a live version there. Widget: the built voicecore.js, served at /widget.js; "" = not served.
+	AgentsDir string
+	Widget    string
 }
+
+// AgentHeader carries the token's agent to the orchestrator, which picks that agent's bundle.
+const AgentHeader = "X-VoiceCore-Agent"
+
+var agentID = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,39}$`) // same rule as voicecore/agents.py: never a dot or a slash
 
 func Defaults(secret []byte, upstream string) Config {
 	return Config{Secret: secret, Upstream: upstream, TokenTTL: 60 * time.Second, HelloTimeout: 5 * time.Second,
@@ -260,6 +273,11 @@ func (s *Server) Handler() http.Handler {
 				return
 			}
 		}
+		agent, code, msg := s.requestedAgent(w, r)
+		if code != 0 {
+			http.Error(w, msg, code)
+			return
+		}
 		quota := s.takeDaily(ip) // only a request that passed every check spends the day's quota
 		if !quota {
 			s.c.RejectedQuota.Add(1)
@@ -268,9 +286,16 @@ func (s *Server) Handler() http.Handler {
 		}
 		w.Header().Set("Content-Type", "application/json")
 		s.c.TokensIssued.Add(1)
-		_ = json.NewEncoder(w).Encode(map[string]string{"token": s.Token(ip)})
+		_ = json.NewEncoder(w).Encode(map[string]string{"token": s.TokenFor(ip, agent)})
 	})
 	mux.HandleFunc("GET /v1/ws", s.serveWS)
+	if s.cfg.Widget != "" {
+		mux.HandleFunc("GET /widget.js", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Cache-Control", "public, max-age=300")
+			w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+			http.ServeFile(w, r, s.cfg.Widget)
+		})
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !s.hostAllowed(r.Host) { // a DNS-rebinding page arrives with its own host name
 			s.c.RejectedHost.Add(1)
@@ -279,6 +304,29 @@ func (s *Server) Handler() http.Handler {
 		}
 		mux.ServeHTTP(w, r)
 	})
+}
+
+// requestedAgent reads the optional form field "agent": "" (the default agent), or an id with a live version in
+// AgentsDir. It returns a status and message when the request names a bad or unknown agent.
+func (s *Server) requestedAgent(w http.ResponseWriter, r *http.Request) (string, int, string) {
+	r.Body = http.MaxBytesReader(w, r.Body, 4<<10)
+	if err := r.ParseForm(); err != nil {
+		return "", http.StatusBadRequest, "bad form"
+	}
+	agent := r.PostForm.Get("agent")
+	if agent == "" {
+		return "", 0, ""
+	}
+	if !agentID.MatchString(agent) {
+		return "", http.StatusBadRequest, "bad agent id"
+	}
+	if s.cfg.AgentsDir == "" {
+		return "", http.StatusNotFound, "unknown agent"
+	}
+	if _, err := os.Stat(filepath.Join(s.cfg.AgentsDir, agent, "current")); err != nil {
+		return "", http.StatusNotFound, "unknown agent"
+	}
+	return agent, 0, ""
 }
 
 // takeDaily counts one token against this IP's daily quota. A store error lets the request through with a warning:
@@ -337,12 +385,19 @@ func (s *Server) Close() {
 }
 
 // Token is "<expiry unix s>.<nonce>.<hex HMAC-SHA256 of expiry.nonce.client IP>": it starts one session, from that IP.
-func (s *Server) Token(ip string) string {
+func (s *Server) Token(ip string) string { return s.TokenFor(ip, "") }
+
+// TokenFor is Token for a named agent: "<expiry>.<nonce>.<agent>.<HMAC of expiry.nonce.agent.IP>". The signature
+// covers the agent, so a token cannot be pointed at another agent's settings and budget. No agent: today's 3 parts.
+func (s *Server) TokenFor(ip, agent string) string {
 	exp := strconv.FormatInt(time.Now().Add(s.cfg.TokenTTL).Unix(), 10)
 	n := make([]byte, 8)
 	_, _ = rand.Read(n)
-	nonce := hex.EncodeToString(n)
-	return exp + "." + nonce + "." + s.sign(exp+"."+nonce+"."+ip)
+	head := exp + "." + hex.EncodeToString(n)
+	if agent != "" {
+		head += "." + agent
+	}
+	return head + "." + s.sign(head+"."+ip)
 }
 
 func (s *Server) sign(msg string) string {
@@ -352,19 +407,26 @@ func (s *Server) sign(msg string) string {
 }
 
 // useToken checks a token for this client IP and spends its nonce: valid once, from the IP it was minted for.
-// It returns the spent nonce, which the caller gives back with unspend when no session was started. err: the store
-// could not say whether the nonce is fresh, so the caller refuses (fail closed).
-func (s *Server) useToken(tok, ip string) (string, bool, error) {
+// It returns the spent nonce, which the caller gives back with unspend when no session was started, and the token's
+// agent ("" for the default). err: the store could not say whether the nonce is fresh, so the caller refuses (fail closed).
+func (s *Server) useToken(tok, ip string) (nonce, agent string, ok bool, err error) {
 	parts := strings.Split(tok, ".")
-	if len(parts) != 3 || !hmac.Equal([]byte(parts[2]), []byte(s.sign(parts[0]+"."+parts[1]+"."+ip))) {
-		return "", false, nil
+	if len(parts) != 3 && len(parts) != 4 {
+		return "", "", false, nil
+	}
+	head, sig := strings.Join(parts[:len(parts)-1], "."), parts[len(parts)-1]
+	if !hmac.Equal([]byte(sig), []byte(s.sign(head+"."+ip))) {
+		return "", "", false, nil
+	}
+	if len(parts) == 4 {
+		agent = parts[2]
 	}
 	exp, err := strconv.ParseInt(parts[0], 10, 64)
 	if err != nil || time.Now().Unix() >= exp {
-		return "", false, nil
+		return "", "", false, nil
 	}
 	fresh, err := s.cfg.Store.UseNonce(context.Background(), parts[1], time.Unix(exp, 0))
-	return parts[1], fresh && err == nil, err
+	return parts[1], agent, fresh && err == nil, err
 }
 
 func (s *Server) unspend(nonce string) {
@@ -441,7 +503,7 @@ func (s *Server) hello(c *websocket.Conn, ip string) (ss *session, resumed bool,
 			return old, true, 0, ""
 		}
 	}
-	nonce, ok, err := s.useToken(h.Token, ip)
+	nonce, agent, ok, err := s.useToken(h.Token, ip)
 	if err != nil {
 		s.cfg.Log.Warn("token store unavailable", "err", err)
 		return nil, false, websocket.StatusTryAgainLater, "unavailable"
@@ -450,7 +512,7 @@ func (s *Server) hello(c *websocket.Conn, ip string) (ss *session, resumed bool,
 		s.c.RejectedToken.Add(1)
 		return nil, false, statusBadToken, "invalid, expired or already used token"
 	}
-	ss, err = s.newSession(ip) // resumes above still work while draining; new sessions do not
+	ss, err = s.newSession(ip, agent) // resumes above still work while draining; new sessions do not
 	if err != nil {
 		s.unspend(nonce) // no session started, so "try again later" can reuse the token
 	}
@@ -476,7 +538,7 @@ func (s *Server) hello(c *websocket.Conn, ip string) (ss *session, resumed bool,
 	return ss, false, 0, ""
 }
 
-func (s *Server) newSession(ip string) (*session, error) {
+func (s *Server) newSession(ip, agent string) (*session, error) {
 	s.mu.Lock()            // reserve a slot before dialling, so concurrent hellos cannot overshoot the caps
 	if s.draining.Load() { // checked under the lock that Drain's count reads, so no session slips past a drain
 		s.mu.Unlock()
@@ -512,7 +574,7 @@ func (s *Server) newSession(ip string) (*session, error) {
 		if !u.br.allow() {
 			continue
 		}
-		if up, err = s.dial(u, sid); err == nil {
+		if up, err = s.dial(u, sid, agent); err == nil {
 			chosen = u
 			break
 		}
@@ -542,7 +604,7 @@ func (s *Server) newSession(ip string) (*session, error) {
 	chosen.sessions++
 	registered = true
 	s.mu.Unlock()
-	s.cfg.Log.Info("session started", "session_id", sid)
+	s.cfg.Log.Info("session started", "session_id", sid, "agent", agent)
 	if s.cfg.MaxSessionAge > 0 {
 		ss.ageTimer = time.AfterFunc(s.cfg.MaxSessionAge, func() { ss.end("expired") })
 	}
@@ -570,11 +632,15 @@ func (s *Server) candidates() []*upstream {
 
 // dial opens a session on one upstream. A refused dial is retried once after 300 ms: nothing reached the
 // orchestrator, so nothing was reserved. A timed-out dial is never retried (it may have reserved budget there).
-func (s *Server) dial(u *upstream, sid string) (*websocket.Conn, error) {
+func (s *Server) dial(u *upstream, sid, agent string) (*websocket.Conn, error) {
+	opts := &websocket.DialOptions{HTTPClient: s.cfg.HTTPClient}
+	if agent != "" { // a header, not a query string: the orchestrator reads the session id from the path
+		opts.HTTPHeader = http.Header{AgentHeader: {agent}}
+	}
 	dial := func() (*websocket.Conn, *http.Response, error) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) // bounds the handshake only
 		defer cancel()
-		return websocket.Dial(ctx, u.url+"/v1/session/"+sid, &websocket.DialOptions{HTTPClient: s.cfg.HTTPClient})
+		return websocket.Dial(ctx, u.url+"/v1/session/"+sid, opts)
 	}
 	up, resp, err := dial()
 	if err != nil && errors.Is(err, syscall.ECONNREFUSED) {

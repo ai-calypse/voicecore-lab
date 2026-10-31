@@ -18,6 +18,11 @@ describe("checkMockOnly (e2e must never reach a live orchestrator)", () => {
     await expect(checkMockOnly("http://127.0.0.1:18766")).resolves.toBeUndefined();
   });
 
+  it("accepts free (no paid provider at all)", async () => {
+    vi.stubGlobal("fetch", answer({ status: "ok", providers: "free" }));
+    await expect(checkMockOnly("http://127.0.0.1:18768")).resolves.toBeUndefined();
+  });
+
   it("treats a non-JSON or error answer as no orchestrator, and never waits forever", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("Upgrade Required", { status: 426 })));
     await expect(checkMockOnly("http://127.0.0.1:18766")).rejects.toThrow("no orchestrator at http://127.0.0.1:18766 (HTTP 426)");

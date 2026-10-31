@@ -15,6 +15,7 @@ import (
 // Conn is one upstream session as the orchestrator sees it.
 type Conn struct {
 	ID     string
+	Agent  string // the X-VoiceCore-Agent header the gateway sent ("" for the default agent)
 	WS     *websocket.Conn
 	Frames chan protocol.Frame
 	Events chan protocol.Event
@@ -58,7 +59,7 @@ func (o *Orch) Handler() http.Handler {
 			delete(o.live, ws)
 			o.mu.Unlock()
 		}()
-		c := &Conn{ID: r.PathValue("id"), WS: ws, Frames: make(chan protocol.Frame, 256), Events: make(chan protocol.Event, 64), Closed: make(chan struct{})}
+		c := &Conn{ID: r.PathValue("id"), Agent: r.Header.Get("X-VoiceCore-Agent"), WS: ws, Frames: make(chan protocol.Frame, 256), Events: make(chan protocol.Event, 64), Closed: make(chan struct{})}
 		defer close(c.Closed)
 		select {
 		case o.Conns <- c:
