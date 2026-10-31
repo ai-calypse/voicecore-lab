@@ -296,6 +296,21 @@ async def test_settle_bills_all_stt_streams(monkeypatch):
     assert stt["status"] == "settled" and stt["amount"] == round(5.0 / 60 * PRICE_PER_MIN, 6)
 
 
+async def test_live_providers_are_built_off_the_event_loop(monkeypatch):
+    # serve_session builds providers in a worker thread (a slow ledger must not stall the loop); a constructor that
+    # needs the running loop broke every live session on the first deploy while mock CI stayed green.
+    from voicecore.server import live_providers
+
+    for k in ("DEEPGRAM_API_KEY", "OPENROUTER_API_KEY"):  # clients are only built, never called: no real key, no spend
+        monkeypatch.setenv(k, "test-key")
+
+    p, settle = await asyncio.to_thread(live_providers, "s-t")
+    for s in settle:
+        s()
+    entries = {e["label"]: e for e in json.loads(budget.ledger_file().read_text())["entries"]}
+    assert entries["server llm s-t"]["status"] == "settled" and entries["server llm s-t"]["amount"] == 0
+
+
 async def test_public_pool_over_its_cap_answers_in_text_from_the_docs(small_index):
     from voicecore.runtime.session import BUDGET_TEXT_ONLY
     from voicecore.server import AppState, handler_for, http_routes

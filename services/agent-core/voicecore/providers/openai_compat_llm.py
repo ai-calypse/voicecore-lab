@@ -1,5 +1,6 @@
 """OpenAI-compatible streaming chat through OpenRouter (see MODEL below). SDK retries are off: retry policy is ours."""
 import asyncio
+import functools
 import httpx
 import openai
 from openai import AsyncOpenAI
@@ -46,9 +47,14 @@ class OpenAICompatLLM:
         self.provider = provider if model == MODEL or provider != PROVIDER else None  # the Cerebras pin belongs to the default model
         self.reasoning = reasoning if model == MODEL or reasoning != REASONING else None
         self._key = key or keys.key("OPENROUTER_API_KEY") or ""
-        self.client = AsyncOpenAI(api_key=self._key, base_url=base_url, max_retries=0, http_client=_http())
         self.cost_usd = 0.0
         self.calls = 0
+
+    @functools.cached_property
+    def client(self) -> AsyncOpenAI:
+        # Built on first use, on the event loop: sessions construct providers in a worker thread, where the
+        # per-loop connection pool cannot be looked up.
+        return AsyncOpenAI(api_key=self._key, base_url=self.base_url, max_retries=0, http_client=_http())
 
     async def warm(self) -> None:
         """Open the HTTPS connection to OpenRouter before the first turn (a free key-info request)."""
