@@ -165,8 +165,9 @@ def ingest(root: Path, extra: list[Path] = (), skipped: list | None = None, site
     return unique
 
 
-def check_url(url: str, allowed: set[str] = ALLOWED_HOSTS) -> str:
-    """Refuse anything but https to an allowlisted host that resolves to public addresses (SSRF guard)."""
+def check_url(url: str, allowed: set[str] | None = ALLOWED_HOSTS) -> str:
+    """Refuse anything but https to an allowlisted host that resolves to public addresses (SSRF guard).
+    allowed=None: any host name (never an address literal) that resolves only to public addresses."""
     if "\\" in url or any(ord(ch) < 33 for ch in url):  # parsers disagree on these (WHATWG reads \ as /)
         raise UnsafeURL(f"backslash or control character in URL: {url!r}")
     u = urlsplit(url)
@@ -179,7 +180,7 @@ def check_url(url: str, allowed: set[str] = ALLOWED_HOSTS) -> str:
         literal = ipaddress.ip_address(host)
     except ValueError:
         literal = None
-    if literal is not None or host not in allowed:
+    if literal is not None or (allowed is not None and host not in allowed):
         raise UnsafeURL(f"host not allowed: {host}")
     for *_, addr in socket.getaddrinfo(host, 443, proto=socket.IPPROTO_TCP):
         ip = ipaddress.ip_address(addr[0])

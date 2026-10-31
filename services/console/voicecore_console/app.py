@@ -74,6 +74,12 @@ class SettingsIn(BaseModel):
     keyterms: list[str] = []
 
 
+class GitIn(BaseModel):
+    url: str = Field(min_length=8, max_length=300)
+    folder: str = Field("", max_length=200)
+    ref: str = Field("", max_length=100)
+
+
 class TextIn(BaseModel):
     title: str = Field(min_length=1, max_length=120)
     text: str = Field(min_length=1, max_length=200_000)
@@ -308,6 +314,31 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
         result = sources.save_text(body.title, body.text, dest)
         store.add_source(sid, agent_id, "text", body.title, None, result["files"], now())
         return {"id": sid, **result}
+
+    def git_fetch(body: GitIn, dest: Path) -> dict:
+        try:
+            return sources.fetch_git(body.url, body.folder, dest, body.ref, **({"run_git": run_git} if run_git else {}))
+        except sources.Rejected as e:
+            raise HTTPException(e.status, e.message) from None
+
+    @app.post("/api/agents/{agent_id}/sources/git", status_code=201, dependencies=[Depends(admin)])
+    def add_git(agent_id: str, body: GitIn):
+        agent_or_404(agent_id)
+        sid, dest = new_source_dir(agent_id)
+        result = git_fetch(body, dest)
+        label = body.url + (f" / {body.folder.strip('/')}" if body.folder.strip("/") else "")
+        store.add_source(sid, agent_id, "git", label[:200], json.dumps(body.model_dump()), result["files"], now())
+        return {"id": sid, **result}
+
+    @app.post("/api/agents/{agent_id}/sources/{source_id}/sync", dependencies=[Depends(admin)])
+    def sync_git(agent_id: str, source_id: str):
+        """Fetch the repository folder again; the new files replace the old ones (Publish to put them live)."""
+        source = next((s for s in store.sources(agent_id) if s["id"] == source_id and s["kind"] == "git"), None)
+        if source is None:
+            raise HTTPException(404, "no such Git source")
+        result = git_fetch(GitIn(**json.loads(source["ref"])), data_dir / "sources" / agent_id / source_id)
+        store.set_source_files(source_id, result["files"])
+        return result
 
     @app.delete("/api/agents/{agent_id}/sources/{source_id}", status_code=204, dependencies=[Depends(admin)])
     def delete_source(agent_id: str, source_id: str):

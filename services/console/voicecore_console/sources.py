@@ -2,9 +2,14 @@
 with a reason the console can show. A new kind of source is one more function in FETCHERS."""
 import io
 import re
+import shutil
 import stat
+import subprocess
+import tempfile
 import zipfile
 from pathlib import Path, PurePosixPath
+
+from voicecore.answer.ingest import UnsafeURL, check_url
 
 MAX_BODY = 20 << 20  # one upload
 MAX_EXPANDED = 50 << 20  # what an archive may unpack to
@@ -99,4 +104,85 @@ def save_text(title: str, text: str, dest: Path) -> dict:
     return {"files": 1, "skipped": []}
 
 
-FETCHERS = {"upload": save_upload, "text": save_text}  # "git" joins in P7
+GIT_TIMEOUT_S = 60
+
+
+def git_command(url: str, ref: str, workdir, protocols=("https",)) -> list[str]:
+    """A shallow, sparse, single-branch clone that refuses every other protocol, redirects and symlinks."""
+    allow = [arg for p in protocols for arg in ("-c", f"protocol.{p}.allow=always")]
+    return ["git", "-c", "protocol.allow=never", *allow, "-c", "http.followRedirects=false", "-c", "core.symlinks=false",
+            "clone", "--depth", "1", "--filter=blob:none", "--sparse", "--single-branch", "--no-tags",
+            *(["--branch", ref] if ref else []), url, str(workdir)]
+
+
+def git_env(home) -> dict:
+    """No prompts, no LFS downloads, no system or user git config (a hook or credential helper there must not run)."""
+    return {"PATH": "/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin", "HOME": str(home), "GIT_TERMINAL_PROMPT": "0",
+            "GIT_LFS_SKIP_SMUDGE": "1", "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": "/dev/null"}
+
+
+def public_url(url: str) -> str:
+    return check_url(url, allowed=None)
+
+
+def fetch_git(url: str, folder: str, dest: Path, ref: str = "", run_git=subprocess.run, check=public_url,
+              protocols=("https",), max_bytes: int = MAX_BODY) -> dict:
+    """Clone one folder of a public repository and keep its Markdown and text files. A re-sync replaces dest."""
+    try:
+        check(url)
+    except UnsafeURL as e:
+        raise Rejected(400, str(e)) from None
+    sub = PurePosixPath(folder.strip().strip("/"))
+    if sub.is_absolute() or ".." in sub.parts:
+        raise Rejected(400, "the folder must be a path inside the repository")
+    if ref and not re.fullmatch(r"[\w./-]{1,100}", ref) or ref.startswith("-"):
+        raise Rejected(400, f"not a branch or tag name: {ref}")
+    with tempfile.TemporaryDirectory() as tmp:
+        home, wd = Path(tmp) / "home", Path(tmp) / "repo"
+        home.mkdir()
+        env = git_env(home)
+
+        def git(cmd):
+            try:
+                return run_git(cmd, env=env, capture_output=True, text=True, check=True, timeout=GIT_TIMEOUT_S)
+            except subprocess.TimeoutExpired:
+                raise Rejected(504, f"the clone took longer than {GIT_TIMEOUT_S} s") from None
+            except subprocess.CalledProcessError as e:
+                reason = (e.stderr or "").strip().splitlines()[-1:] or ["git failed"]
+                raise Rejected(400, f"could not clone {url}: {reason[0]}") from None
+
+        git(git_command(url, ref, wd, protocols))
+        git(["git", "-C", str(wd), "sparse-checkout", "set", "--no-cone", f"/{sub}/" if str(sub) != "." else "/*"])
+        listing = git(["git", "-C", str(wd), "ls-files", "-s", "--", str(sub)]).stdout
+        new = dest.with_name(dest.name + ".new")
+        shutil.rmtree(new, ignore_errors=True)
+        paths, skipped, total = [], [], 0
+        for line in listing.splitlines():
+            meta, _, path = line.partition("\t")
+            rel = PurePosixPath(path).relative_to(sub) if str(sub) != "." else PurePosixPath(path)
+            if meta.startswith("120000"):
+                skipped.append(f"{rel} (a link)")
+                continue
+            if rel.suffix.lower() not in PAGES | TEXT:
+                skipped.append(str(rel))
+                continue
+            data = (wd / path).read_bytes()
+            total += len(data)
+            if total > max_bytes:
+                shutil.rmtree(new, ignore_errors=True)
+                raise Rejected(413, "folder larger than 20 MB")
+            page = _page(rel, data)
+            if page is None:
+                skipped.append(f"{rel} (not UTF-8)")
+                continue
+            _write(new, *page)
+            paths.append(path)
+        if not paths:
+            shutil.rmtree(new, ignore_errors=True)
+            raise Rejected(400, "no Markdown or text files in that folder")
+        shutil.rmtree(dest, ignore_errors=True)
+        new.rename(dest)
+    return {"files": len(paths), "skipped": skipped, "paths": paths}
+
+
+FETCHERS = {"upload": save_upload, "text": save_text, "git": fetch_git}

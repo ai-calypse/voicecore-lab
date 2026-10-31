@@ -239,7 +239,20 @@ function Knowledge({ agent, build, reload }: { agent: Agent; build: Agent["build
   const [over, setOver] = useState(false);
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
+  const [repo, setRepo] = useState({ url: "", folder: "docs", ref: "" });
+  const [cloning, setCloning] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  const clone = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(""); setResult(null); setCloning(true);
+    try {
+      const r = await api.git(agent.id, repo.url.trim(), repo.folder, repo.ref.trim());
+      setResult(<>Added {r.files} {r.files === 1 ? "page" : "pages"} from the repository.{r.skipped.length > 0 && <> Skipped: {r.skipped.join(", ")}.</>}</>);
+      setRepo({ url: "", folder: "docs", ref: "" });
+      reload();
+    } catch (err) { setError(message(err)); }
+    setCloning(false);
+  };
   const send = async (files: FileList | null) => {
     setError(""); setResult(null);
     for (const f of Array.from(files ?? [])) {
@@ -281,6 +294,21 @@ function Knowledge({ agent, build, reload }: { agent: Agent; build: Agent["build
           </Field>
           <button className="button" disabled={DEMO}>Add text</button>
         </form>
+        <form onSubmit={clone} className="stack">
+          <h3>Or a Git repository</h3>
+          <Field label="Repository URL" help="A public repository over https, for example https://github.com/acme/docs.">
+            <input type="url" required placeholder="https://github.com/acme/docs" value={repo.url} onChange={(e) => setRepo({ ...repo, url: e.target.value })} disabled={DEMO} />
+          </Field>
+          <div className="grid-2 tight">
+            <Field label="Folder" help="Where the Markdown lives. Empty: the whole repository.">
+              <input value={repo.folder} onChange={(e) => setRepo({ ...repo, folder: e.target.value })} disabled={DEMO} />
+            </Field>
+            <Field label="Branch or tag" help="Empty: the default branch.">
+              <input value={repo.ref} onChange={(e) => setRepo({ ...repo, ref: e.target.value })} disabled={DEMO} />
+            </Field>
+          </div>
+          <button className="button" disabled={DEMO || cloning}>{cloning ? "Cloning…" : "Add repository"}</button>
+        </form>
         {result && <Alert kind="success">{result}</Alert>}
         {error && <Alert kind="error">{error}</Alert>}
       </div>
@@ -291,7 +319,16 @@ function Knowledge({ agent, build, reload }: { agent: Agent; build: Agent["build
             {agent.sources.map((s) => (
               <li key={s.id}>
                 <span><span className="row-title">{s.label}</span> <span className="muted small">{s.kind === "text" ? "pasted text" : `${s.files} ${s.files === 1 ? "page" : "pages"}`}</span></span>
-                <button className="button button-quiet" disabled={DEMO} onClick={async () => { await api.removeSource(agent.id, s.id).catch((e) => setError(message(e))); reload(); }}>Remove</button>
+                <span className="actions">
+                  {s.kind === "git" && (
+                    <button className="button button-quiet" disabled={DEMO} onClick={async () => {
+                      try { const r = await api.sync(agent.id, s.id); setResult(<>Synced: {r.files} {r.files === 1 ? "page" : "pages"}. Publish to put them live.</>); }
+                      catch (e) { setError(message(e)); }
+                      reload();
+                    }}>Sync</button>
+                  )}
+                  <button className="button button-quiet" disabled={DEMO} onClick={async () => { await api.removeSource(agent.id, s.id).catch((e) => setError(message(e))); reload(); }}>Remove</button>
+                </span>
               </li>
             ))}
           </ul>

@@ -68,6 +68,8 @@ export const api = {
   saveSettings: (id: string, config: Config) => call<{ config: Config }>("PUT", `/api/agents/${id}/settings`, { json: config }),
   upload: (id: string, file: File) => call<{ files: number; skipped: string[] }>("PUT", `/api/agents/${id}/sources/upload?name=${encodeURIComponent(file.name)}`, { raw: file }),
   paste: (id: string, title: string, text: string) => call("POST", `/api/agents/${id}/sources/text`, { json: { title, text } }),
+  git: (id: string, url: string, folder: string, ref: string) => call<{ files: number; skipped: string[] }>("POST", `/api/agents/${id}/sources/git`, { json: { url, folder, ref } }),
+  sync: (id: string, source: string) => call<{ files: number; skipped: string[] }>("POST", `/api/agents/${id}/sources/${source}/sync`),
   removeSource: (id: string, source: string) => call("DELETE", `/api/agents/${id}/sources/${source}`),
   publish: (id: string) => call<{ build: number }>("POST", `/api/agents/${id}/publish`),
   latestBuild: (id: string) => call<Build | { status: "none" }>("GET", `/api/agents/${id}/builds/latest`),

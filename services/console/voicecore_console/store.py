@@ -184,6 +184,10 @@ class Store:
                               (agent_id,)).fetchall()
         return [dict(r) for r in rows]
 
+    def set_source_files(self, source_id: str, files: int) -> None:
+        with self.db() as db:
+            db.execute("UPDATE sources SET files = ? WHERE id = ?", (files, source_id))
+
     def delete_source(self, agent_id: str, source_id: str) -> bool:
         with self.db() as db:
             return db.execute("DELETE FROM sources WHERE id = ? AND agent = ?", (source_id, agent_id)).rowcount == 1
