@@ -109,10 +109,14 @@ jobs:
   fly-image:  # deploy/fly built and run here, never deployed
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}  # flyctl config validate needs a login; skipped until the deploy token exists
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: superfly/flyctl-actions/setup-flyctl@dfdfedc86b296f5e5384f755a18bf400409a15d0 # v1.4
+        if: env.FLY_API_TOKEN != ''
       - run: flyctl config validate -c deploy/fly/fly.toml
+        if: env.FLY_API_TOKEN != ''
       - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
         with:
           enable-cache: true
