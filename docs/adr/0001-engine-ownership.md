@@ -40,6 +40,8 @@ The Deepgram Voice Agent API (hosted STT → LLM → TTS) was measured in S00-T0
 
 Commercial billing and pricing, SaaS plans, tenant isolation, complex admin UI, CRM integrations, private org knowledge sources, voice cloning, training speech foundation models, a distributed SFU, a 99.99% production SLO, telephone carrier certification, on-device inference as core delivery, and unmeasured latency claims (from the master plan's explicit non-goals). SIP/telephony stays a design document unless a real integration is built and tested.
 
+**Amendment 2026-10-31:** a self-hosted, single-organisation console that indexes the organisation's own docs on its own hardware is in scope ([ADR 0005](0005-voicecore-platform.md), Step 10). Still out: SaaS plans, billing, tenant isolation, user accounts beyond one admin, and knowledge hosted by this project.
+
 ## Architecture decisions 2026-10-29
 
 Adopted by the user after an improve-codebase-architecture review of the planned layout:

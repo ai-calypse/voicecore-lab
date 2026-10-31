@@ -29,6 +29,7 @@ The [master plan](voicecore_lab_career_aligned_plan.md) owns the scope, non-goal
 - [07. media internals and optional telephony](step_07_media_internals_and_optional_telephony.md) (35 h)
 - [08. portfolio release](step_08_portfolio_release.md) (18 h)
 - [09. production readiness](step_09_production_readiness.md) (about 110 h; plan: [PRODUCTION_PLAN.md](PRODUCTION_PLAN.md))
+- [10. VoiceCore platform](step_10_voicecore_platform.md) (about 87 h; plan: [PLATFORM_PLAN.md](PLATFORM_PLAN.md))
 
 The test-first build plan for Steps 01–08 is [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Hours are planning estimates, not time logged. [EXECUTION_STATUS.md](../EXECUTION_STATUS.md) records what was done, with evidence.
 

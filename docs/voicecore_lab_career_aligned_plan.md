@@ -1,6 +1,6 @@
 # VoiceCore Lab — Career-Aligned Engineering Plan
 
-**Status:** Proposed portfolio project, not implemented.  
+**Status:** Implemented through Step 09 and deployed (see [EXECUTION_STATUS.md](../EXECUTION_STATUS.md)); Step 10 (self-hosted platform) planned 2026-10-31.  
 **Researched:** 2026-10-28.  
 **Supersedes:** the commercial SaaS emphasis and selected third-party agent runtime in the earlier `docs_voice_sdk_mvp_plan.md`. Preserve its sample documentation assistant UX, privacy-minimal operation, and citations; do **not** inherit its tenant billing, customer admin, SaaS onboarding, or enterprise go-to-market requirements.  
 **Goal:** Demonstrate hands-on engineering skill for non-research roles at voice AI infrastructure, voice agent, developer tools, and applied AI companies. It is **not** a product we intend to sell.
@@ -146,7 +146,9 @@ Repository must contain: (1) package-level source map and architecture diagram; 
 
 ## Explicit non-goals
 
-Commercial billing and pricing, SaaS plans, tenant isolation across paid accounts, complex admin UI, CRM integrations, private org knowledge sources, voice cloning, training new speech foundation models, full distributed SFU, 99.99% production SLO, full telephone carrier certification, on-device inference as core delivery, unmeasured claims of superhuman latency.
+Commercial billing and pricing, SaaS plans, tenant isolation across paid accounts, a multi-user admin UI, CRM integrations, knowledge sources hosted by this project, voice cloning, training new speech foundation models, full distributed SFU, 99.99% production SLO, full telephone carrier certification, on-device inference as core delivery, unmeasured claims of superhuman latency.
+
+**Amended 2026-10-31 (owner decision, [ADR 0005](adr/0005-voicecore-platform.md)):** a self-hosted, single-organisation console that indexes the organisation's own docs on its own hardware is in scope (Step 10). Still out: SaaS plans, billing, tenant isolation, user accounts beyond one admin, and knowledge hosted by this project.
 
 ## Security and privacy
 

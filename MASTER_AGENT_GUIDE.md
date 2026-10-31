@@ -1,14 +1,14 @@
 # VoiceCore Lab — Master Agent Guide and Document Index
 
 > **START HERE. This is the single entry point for human collaborators, Claude Code, coding subagents, and other implementation agents.**  
-> **Document set assembled:** 2026-10-28. **Project state (2026-10-31):** Steps 00–08 complete; Step 09 built and deployed to Fly.io on 2026-10-31 ([deploy guide](docs/ops/deploy.md)); the live load test is waiting on the user. [EXECUTION_STATUS.md](EXECUTION_STATUS.md) is the record; never assert more than it shows.  
+> **Document set assembled:** 2026-10-28. **Project state (2026-10-31):** Steps 00–08 complete; Step 09 built and deployed to Fly.io on 2026-10-31 ([deploy guide](docs/ops/deploy.md)); the live load test is waiting on the user. Step 10 (self-hosted platform) in progress. [EXECUTION_STATUS.md](EXECUTION_STATUS.md) is the record; never assert more than it shows.  
 > **Primary objective:** demonstrate deep, interview-verifiable real-time Voice AI software engineering. **Not a SaaS to sell.**
 
 ## 1. Mission and boundary
 
 Build an **interruptible real-time voice AI runtime** and use a **voice-plus-text documentation assistant** as its public demo. The code you own must include audio capture/framing, transport/session management, turn decisions, async STT→LLM→TTS orchestration, barge-in/cancellation, traces, and evaluation/benchmarks. Pretrained speech/LLM inference can come from replaceable providers. A hosted end-to-end agent is a **baseline comparison**, **not** the core implementation.
 
-**Do not pivot into** SaaS billing, tenant admin, account management, sales dashboards, or an oversized product UI. Make realistic trade-offs for a portfolio project: correctness, deterministic tests, reproducing failure modes, and inspectable evidence matter more than feature count.
+**Do not pivot into** SaaS billing, tenant admin, account management, sales dashboards, or an oversized product UI. The one exception, approved 2026-10-31, is Step 10's self-hosted single-organisation console ([ADR 0005](docs/adr/0005-voicecore-platform.md)): one admin, no tenants, no billing. Make realistic trade-offs for a portfolio project: correctness, deterministic tests, reproducing failure modes, and inspectable evidence matter more than feature count.
 
 ## Reference voice stack (read before live implementation)
 
@@ -40,7 +40,7 @@ No older plan, role description, README, agent message, or vendor sample overrid
 
 ## 4. Step-by-step execution index
 
-**Run in numerical order, one dependency gate at a time.** Estimates are planning assumptions, not time spent. Total **256 engineering hours** across nine steps; prioritize Steps 00–06 if time is constrained.
+**Run in numerical order, one dependency gate at a time.** Estimates are planning assumptions, not time spent. Steps 00–08 were planned at **256 engineering hours**; Step 09 added about 110 h and Step 10 about 87 h. Prioritize Steps 00–06 if time is constrained.
 
 | Step | Owns | Estimated effort | Required output/proof |
 |---|---|---:|---|
@@ -53,9 +53,10 @@ No older plan, role description, README, agent message, or vendor sample overrid
 | 06 | [Observability, evaluation and load](docs/step_06_observability_evals_and_load.md) | 40 h | traces, latency percentiles, evals and concurrency/load scenarios |
 | 07 | [Media internals and optional telephony](docs/step_07_media_internals_and_optional_telephony.md) | 35 h | packet-level media experiments and timeboxed optional telephony |
 | 08 | [Portfolio release](docs/step_08_portfolio_release.md) | 18 h | reproducible demo, technical write-ups and interview-ready evidence |
-| 09 | [Production readiness](docs/step_09_production_readiness.md) | ~110 h | health and drain, logs/metrics/alerts, resilience and breakers, abuse protection, multi-copy scaling, load, deploy ready (not run) |
+| 09 | [Production readiness](docs/step_09_production_readiness.md) | ~110 h | health and drain, logs/metrics/alerts, resilience and breakers, abuse protection, multi-copy scaling, load, deploy (live on Fly.io since 2026-10-31) |
+| 10 | [VoiceCore platform](docs/step_10_voicecore_platform.md) | ~87 h | self-hosted console, agent bundles, `npx create-voicecore`, 10-minute integration measured in CI |
 
-**Build plan:** [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) breaks every remaining task into test-first slices (approved 2026-10-29). Step docs keep task IDs and evidence registers. Step 09 has its own: [docs/PRODUCTION_PLAN.md](docs/PRODUCTION_PLAN.md) (approved 2026-10-30, two independent reviews applied).
+**Build plan:** [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) breaks every remaining task into test-first slices (approved 2026-10-29). Step docs keep task IDs and evidence registers. Step 09 has its own: [docs/PRODUCTION_PLAN.md](docs/PRODUCTION_PLAN.md) (approved 2026-10-30, two independent reviews applied). Step 10 has [docs/PLATFORM_PLAN.md](docs/PLATFORM_PLAN.md) (approved 2026-10-31).
 
 **Core rule:** each `docs/step_XX_*.md` already contains phases, stable task IDs, inputs, explicit dependencies, evidence criteria, decision/output registers, and handoff requirements. **Execute its tasks**, not a paraphrased checklist from this index. Each step is **unstarted** unless its execution record has actual evidence.
 
