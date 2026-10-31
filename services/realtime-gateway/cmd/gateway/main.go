@@ -42,6 +42,7 @@ func main() {
 	adminAddr := flag.String("admin-addr", "", "operator listener for /metrics and /debug/counters, e.g. :9091 (empty = off); keep it off the public internet")
 	agentsDir := flag.String("agents-dir", "", "the console's published agent bundles (read-only); token requests may name an agent there")
 	widget := flag.String("widget", "", "the built voicecore.js, served at /widget.js (empty = not served)")
+	humanCheck := flag.String("human-check", "on", "off: allow a prod install without TURNSTILE_SECRET (any visitor can start a session; the spend caps still apply)")
 	flag.Parse()
 	if *env != "dev" && *env != "prod" { // a typo must not silently mean dev
 		slog.Error("-env must be dev or prod", "env", *env)
@@ -82,6 +83,14 @@ func main() {
 	}
 	cfg.Origins = splitList(*origins)
 	cfg.AgentsDir, cfg.Widget = *agentsDir, *widget
+	if *humanCheck != "on" && *humanCheck != "off" {
+		slog.Error("-human-check must be on or off", "human_check", *humanCheck)
+		os.Exit(2)
+	}
+	cfg.HumanCheckOff = *humanCheck == "off" && cfg.TurnstileSecret == ""
+	if cfg.HumanCheckOff && *env == "prod" {
+		slog.Warn("human check off: any visitor can start a session; only the rate limits and spend caps bound it")
+	}
 	cfg.MaxSessionsPerIP, cfg.MaxSessions, cfg.TokensPerMinute, cfg.SessionsPerIPPerDay = *perIP, *maxSessions, *tokensPerMin, *perDay
 	if *hosts != "" {
 		cfg.Hosts = splitList(*hosts)

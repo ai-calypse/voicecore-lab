@@ -13,8 +13,8 @@ func (c Config) ValidateProd() error {
 	if len(c.Secret) < 32 {
 		errs = append(errs, errors.New("GATEWAY_SECRET must be set, at least 32 bytes (a random one would not survive a restart)"))
 	}
-	if c.TurnstileSecret == "" {
-		errs = append(errs, errors.New("TURNSTILE_SECRET must be set (the human check on new sessions)"))
+	if c.TurnstileSecret == "" && !c.HumanCheckOff {
+		errs = append(errs, errors.New("TURNSTILE_SECRET must be set (the human check on new sessions), or -human-check off on purpose"))
 	}
 	if len(c.Origins) == 0 || anyOf(c.Origins, local) || anyOf(c.Origins, broad) {
 		errs = append(errs, errors.New("-origins must list the public site, nothing local, and no pattern that matches any site"))

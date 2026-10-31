@@ -55,6 +55,7 @@ type Config struct {
 	// Turnstile (Cloudflare's bot check) on new session tokens. Empty secret = off. Resumes are never challenged.
 	TurnstileSecret string
 	TurnstileURL    string // siteverify endpoint; Defaults sets Cloudflare's, tests point it at a fake
+	HumanCheckOff   bool   // -human-check off: a public install without Turnstile, on purpose (the spend caps still bound it)
 
 	// Abuse limits (security review 2026-10-30). Zero means no limit.
 	Hosts            []string      // allowed Host header names (DNS rebinding); empty = any

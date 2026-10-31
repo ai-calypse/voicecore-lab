@@ -48,3 +48,11 @@ def test_built_ui_is_served(tmp_path):
     assert r.status_code == 200 and "VoiceCore console" in r.text
     assert "frame-ancestors 'none'" in r.headers["content-security-policy"]
     assert c.get("/assets/app.js").text == "console.log(1)"
+
+
+def test_snippet_carries_the_turnstile_sitekey(tmp_path):
+    c = TestClient(app(tmp_path, turnstile_sitekey="0x4AAAAAAAtest"), base_url="http://localhost:8000")
+    c.post("/api/setup", json={"token": "s", "password": PASSWORD})
+    c.post("/api/agents", json={"name": "Acme Docs"})
+    assert c.get("/api/agents/acme-docs").json()["snippet"] == (
+        '<script src="http://127.0.0.1:18082/widget.js" data-agent="acme-docs" data-turnstile-sitekey="0x4AAAAAAAtest" async></script>')

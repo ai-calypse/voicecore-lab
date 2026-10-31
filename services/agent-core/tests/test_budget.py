@@ -142,3 +142,18 @@ def test_a_sub_cap_counts_only_reservations_in_its_own_pool():
     r = budget.reserve("cartesia_credits", 1500, "cartesia tts", sub="public")  # credits are not dollars
     assert (budget.total("cartesia_credits"), budget.total("public")) == (1500, 0.0)
     budget.settle(r, 0)
+
+
+def test_caps_from_env():
+    """A self-hosted install sets its own caps (Step 10); unset, the project's own caps stay."""
+    import subprocess
+    import sys
+
+    def cap(env):
+        code = "from voicecore import budget; print(budget.CAPS['usd'], budget.SUBCAPS['public']['daily'], budget.SUBCAPS['public']['total'])"
+        return subprocess.run([sys.executable, "-c", code], env={**__import__("os").environ, **env}, capture_output=True,
+                              text=True, check=True).stdout.split()
+
+    assert cap({"VOICECORE_CAP_USD": "20"})[0] == "20.0"
+    assert cap({})[:3] == ["5.0", "0.5", "2.0"]
+    assert cap({"VOICECORE_PUBLIC_DAILY": "1", "VOICECORE_PUBLIC_TOTAL": "10"})[1:] == ["1.0", "10.0"]

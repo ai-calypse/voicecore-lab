@@ -14,9 +14,10 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
-CAPS = {"usd": 5.00, "cartesia_credits": 16000}
+CAPS = {"usd": float(os.environ.get("VOICECORE_CAP_USD") or 5.00), "cartesia_credits": 16000}  # an install sets its own
 # Sub-caps inside a pool (Step 09 Phase 9): what a public deployment may spend, checked under the same lock as the pool.
-SUBCAPS = {"public": {"pool": "usd", "total": 2.00, "daily": 0.50}}
+SUBCAPS = {"public": {"pool": "usd", "total": float(os.environ.get("VOICECORE_PUBLIC_TOTAL") or 2.00),
+                      "daily": float(os.environ.get("VOICECORE_PUBLIC_DAILY") or 0.50)}}
 LEDGER = Path(__file__).resolve().parents[3] / "benchmarks/spend_ledger.json"  # default; VOICECORE_LEDGER overrides
 now = time.time  # wall clock for entry timestamps (daily caps); tests replace it
 

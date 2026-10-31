@@ -192,3 +192,15 @@ func TestPerIPDailyQuota(t *testing.T) {
 		}
 	})
 }
+
+func TestValidateProdHumanCheckOff(t *testing.T) {
+	c := Config{Secret: make([]byte, 32), Origins: []string{"docs.acme.com"}, Hosts: []string{"voice.acme.com"},
+		TrustedProxies: []netip.Prefix{netip.MustParsePrefix("172.16.0.0/12")}, HumanCheckOff: true}
+	if err := c.ValidateProd(); err != nil {
+		t.Fatalf("human check turned off on purpose: %v", err)
+	}
+	c.HumanCheckOff = false
+	if err := c.ValidateProd(); err == nil || !strings.Contains(err.Error(), "TURNSTILE_SECRET") {
+		t.Fatalf("without the switch a missing secret must still fail: %v", err)
+	}
+}

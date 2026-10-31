@@ -41,7 +41,8 @@ def main(argv: list[str] | None = None) -> None:
                      ledger=Path(ledger) if ledger and not ledger.startswith("redis") else None,
                      providers=os.environ.get("VOICECORE_PROVIDERS", "free"),
                      voice_url=os.environ.get("PUBLIC_VOICE_URL", "http://localhost:8080"),
-                     static_dir=Path(static) if static else None)
+                     static_dir=Path(static) if static else None,
+                     turnstile_sitekey=os.environ.get("TURNSTILE_SITEKEY", ""))
     uvicorn.run(app, host=args.host, port=args.port, proxy_headers=True, forwarded_allow_ips=os.environ.get("FORWARDED_ALLOW_IPS", "127.0.0.1"))
 
 

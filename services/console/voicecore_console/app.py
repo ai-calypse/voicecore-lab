@@ -107,7 +107,7 @@ def default_config(name: str) -> dict:
 
 def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None, now: Callable[[], float] = time.time,
                run_git=None, ledger: Path | None = None, max_passages: int = publish.MAX_PASSAGES, providers: str = "free",
-               voice_url: str = "http://localhost:8080", static_dir: Path | None = None) -> FastAPI:
+               voice_url: str = "http://localhost:8080", static_dir: Path | None = None, turnstile_sitekey: str = "") -> FastAPI:
     """providers: the voice side's mode (free shows the 'voice is off' banner). voice_url: the gateway's public address,
     which the embed snippet loads the widget from. static_dir: the built console UI (apps/console/dist)."""
     data_dir, agents_dir = Path(data_dir), Path(agents_dir)
@@ -153,7 +153,8 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
     voice_url = voice_url.rstrip("/")
 
     def snippet(agent_id: str) -> str:
-        return f'<script src="{voice_url}/widget.js" data-agent="{agent_id}" async></script>'
+        human = f' data-turnstile-sitekey="{html.escape(turnstile_sitekey)}"' if turnstile_sitekey else ""
+        return f'<script src="{voice_url}/widget.js" data-agent="{agent_id}"{human} async></script>'
 
     @app.get("/api/status")
     def status():
