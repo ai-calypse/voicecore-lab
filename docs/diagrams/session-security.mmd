@@ -1,0 +1,19 @@
+sequenceDiagram
+  participant B as Browser
+  participant C as Cloudflare Turnstile
+  participant G as Gateway
+  participant O as Orchestrator
+  B->>C: human check (when a sitekey is set)
+  C-->>B: challenge token
+  B->>G: POST /v1/session (origin checked)
+  G->>C: siteverify
+  G->>G: per-IP rate limit and daily quota
+  G-->>B: single-use token, 60 s, bound to IP
+  B->>G: WebSocket hello + token
+  G->>G: verify HMAC, spend nonce once
+  G->>O: open upstream session
+  O->>O: reserve budget before any paid call
+  G-->>B: welcome: session_id + resume_key
+  Note over B,G: network drops
+  B->>G: reconnect ?resume=session_id + resume_key
+  G-->>B: resumed, same call continues

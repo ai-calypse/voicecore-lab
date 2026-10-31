@@ -1,0 +1,23 @@
+sequenceDiagram
+  participant B as Browser
+  participant G as Gateway
+  participant O as Orchestrator
+  participant S as Speech-to-text
+  participant L as LLM
+  participant T as Text-to-speech
+  B->>G: mic frames every 20 ms
+  G->>O: mic frames, sequence-checked
+  O->>S: speech audio only
+  O-->>B: user.speech_started
+  Note over O: 200 ms of silence: Finalize
+  S-->>O: final transcript ending in "?"
+  Note over O: turn ends (median 340 ms)
+  O->>O: search the docs locally
+  O->>L: question + cited passages
+  L-->>O: first token (median 340 ms)
+  O->>T: first cited sentence
+  T-->>O: first audio (median 145 ms)
+  O->>G: agent frames, generation 1
+  G->>B: agent frames + sources + text
+  B-->>O: playout.started
+  Note over B: first sound 841 ms after you stop

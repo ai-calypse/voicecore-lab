@@ -27,3 +27,15 @@ Domain words used in code, tests and docs. Use these names; add a term here befo
 | **Live provider** | Real STT/LLM/TTS adapter that spends money or credits. |
 | **Pool** | A spending budget: `usd` (Deepgram + OpenRouter, $5.00 total) or `cartesia_credits` (≤ 16,000 used). |
 | **Reservation** | Permission from the budget guard to spend up to an amount from a pool; live adapters cannot be built without one. |
+| **STT, LLM, TTS** | Speech-to-text (Deepgram nova-3), the language model (gpt-oss-120b on Cerebras via OpenRouter) and text-to-speech (Deepgram Aura-2). The three rented models. |
+| **VAD** | Voice activity detection: a small local model (Silero) that says, frame by frame, whether someone is speaking. |
+| **Echo gate** | The check that stops the agent's own voice, leaking from the speakers into the mic, from counting as the user talking. |
+| **Grounding** | Releasing an answer sentence only once it carries a valid citation to a retrieved docs passage. |
+| **Hybrid search** | Keyword search (SQLite FTS5) and vector search (local embeddings) run on the same question; their ranked lists are merged by **reciprocal rank fusion (RRF)**. |
+| **Session token** | A single-use, 60-second credential the gateway issues to a browser, bound to its IP by an HMAC. Provider keys never leave the server. |
+| **Resume key** | A 32-byte secret sent in `welcome`. A reconnect must present it to rejoin a session; knowing the session id alone is not enough. |
+| **Circuit breaker** | After repeated failures from one provider or orchestrator, stop calling it for a while and fail fast instead of slowly. |
+| **Liveness / readiness** | `/healthz` answers "the process is alive"; `/readyz` answers "send me new users". |
+| **Drain** | Graceful shutdown: take no new sessions, let open ones finish, settle their spend, then exit. |
+| **Copy** | One running gateway or orchestrator process when several run behind a load balancer. |
+| **Public pool** | A capped sub-budget inside `usd` for a public demo ($2 total, $0.50 a day). When it is spent, answers switch to a free text-only mode. |

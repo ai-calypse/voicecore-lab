@@ -1,0 +1,14 @@
+graph LR
+  E["Trace events<br/>gateway, orchestrator, client"] --> J[JSONL traces]
+  J --> TL["Session timeline<br/>one clock"]
+  TL --> LAB["?lab=1 panel"]
+  TL --> GATE[CI regression gate]
+  E --> MS["Metrics sink<br/>one latency definition"]
+  MS --> PM[(Prometheus)]
+  PM --> AR[Alert rules]
+  AR --> AM[Alertmanager]
+  AM --> SINK[Alert sink + runbook link]
+  LOG["JSON logs<br/>allow-listed fields, redacted"] --> AL[Alloy]
+  AL --> LK[(Loki, 7 days)]
+  PM --> GR[Grafana]
+  LK --> GR

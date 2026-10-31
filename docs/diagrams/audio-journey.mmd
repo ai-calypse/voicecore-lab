@@ -1,0 +1,13 @@
+graph TD
+  M[Microphone] -->|"48 kHz float"| AW[AudioWorklet]
+  AW -->|"64-tap resampler"| F["16 kHz PCM16<br/>20 ms frames"]
+  F -->|"28-byte header:<br/>stream, seq, time"| WS[WebSocket]
+  WS --> GQ["Gateway<br/>bounded queue"]
+  GQ -->|"duplicate / stale / gap<br/>checked"| VAD[Silero VAD]
+  VAD -->|"speech only<br/>+ 300 ms pre-roll"| STT[Speech-to-text]
+  STT -->|text| LLM[LLM]
+  LLM -->|cited sentences| TTS[Text-to-speech]
+  TTS -->|"frames tagged with<br/>generation id"| GF["Gateway<br/>fence"]
+  GF --> PQ["Playout queue<br/>24 kHz"]
+  PQ --> S[Speaker]
+  PQ -.->|"playout.started / stopped"| VAD

@@ -1,0 +1,12 @@
+graph LR
+  U([Person on the docs site]) -->|speaks or types| W["Browser widget + SDK<br/>TypeScript"]
+  W <-->|"WebSocket: binary audio + JSON events"| G["Real-time gateway<br/>Go"]
+  G <-->|same protocol| T["Turn-taking<br/>Python orchestrator"]
+  T -->|end of turn / barge-in| R["Generation runtime<br/>Python orchestrator"]
+  R -->|question| A["Answer engine<br/>Python orchestrator"]
+  A -->|cited passages| R
+  R <-->|speech-to-text| STT[Deepgram nova-3]
+  R <-->|tokens| LLM[gpt-oss-120b on Cerebras]
+  R <-->|voice| TTS[Deepgram Aura-2]
+  R -->|reserve, settle| L[(Budget ledger)]
+  D[Docs site pages] -->|ingested at build| A

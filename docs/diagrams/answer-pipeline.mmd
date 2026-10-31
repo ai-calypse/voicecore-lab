@@ -1,0 +1,14 @@
+graph LR
+  P[Docs pages] --> I["Ingest<br/>SSRF guard, host allow-list"]
+  I -->|"flag instruction-like text"| IX[("Index<br/>SQLite FTS5 + bge-small vectors")]
+  Q([Question]) --> K[Keyword search]
+  Q --> V[Vector search]
+  IX --> K
+  IX --> V
+  K --> RRF[Reciprocal rank fusion]
+  V --> RRF
+  RRF -->|"official pages only,<br/>flagged passages never quoted"| PR[Grounded prompt]
+  PR --> LLM[LLM stream]
+  LLM --> GR{"Sentence has a<br/>valid citation?"}
+  GR -->|yes| OUT["Spoken + shown,<br/>section opens"]
+  GR -->|no| X["Held back or<br/>'not in the docs'"]

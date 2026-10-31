@@ -1,0 +1,18 @@
+sequenceDiagram
+  participant U as Person
+  participant B as Browser playout
+  participant G as Gateway
+  participant O as Orchestrator
+  O->>G: agent audio, generation 3
+  G->>B: agent audio, generation 3
+  U->>B: starts talking over the agent
+  B->>G: mic frames
+  G->>O: mic frames
+  Note over O: VAD hears speech, echo gate checks it is not the agent's own voice
+  O->>O: barge_in: fence = 3, stop LLM and TTS
+  O->>G: agent.cancel(3)
+  G->>G: purge queued frames with generation 3 or lower
+  G->>B: agent.cancel(3)
+  B->>B: flush playout queue
+  B-->>O: cancel.ack(played_until_seq)
+  Note over U,O: silence in median 303 ms, then generation 4 answers the new question

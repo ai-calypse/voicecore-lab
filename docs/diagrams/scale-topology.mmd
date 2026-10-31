@@ -1,0 +1,13 @@
+graph TD
+  C1([Clients]) --> LB["nginx load balancer"]
+  LB -->|"new session:<br/>round robin"| G1[Gateway gw1]
+  LB -->|"new session:<br/>round robin"| G2[Gateway gw2]
+  LB -.->|"resume s-gw1-...<br/>goes to its owner"| G1
+  G1 -->|"least-loaded ready copy"| O1[Orchestrator 1]
+  G1 --> O2[Orchestrator 2]
+  G2 --> O1
+  G2 --> O2
+  O1 -->|"atomic reserve (Lua)"| R[("Redis<br/>ledger, nonces, quotas")]
+  O2 --> R
+  G1 -->|"single-use nonces,<br/>daily quotas"| R
+  G2 --> R
