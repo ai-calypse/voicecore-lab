@@ -5,20 +5,46 @@ version. A version is a hash of config and corpus, so the same content always ge
 writes a temporary folder, renames it, then replaces the pointer, so a reader never sees half a bundle. This
 module is the only owner of the format.
 """
+import functools
 import hashlib
 import json
 import os
+import re
 import tempfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
 import numpy as np
 
+from voicecore.answer.index import Index
 from voicecore.answer.ingest import Passage
+from voicecore.providers import deepgram_tts, openai_compat_llm
 
 FORMAT = 1
 KEEP = 5  # versions kept per agent, the live one always among them
 POINTER = "current"
+ID = re.compile(r"[a-z0-9][a-z0-9-]{0,39}")  # also checked by the gateway; never a path separator or a dot
+LIMITS = {"name": 80, "instructions": 2000, "first_message": 300}
+
+
+def validate(config: dict) -> dict:
+    """The settings a bundle may carry. Voice and model come from fixed catalogs, so cost estimates stay right."""
+    if config.get("llm") not in openai_compat_llm.PRICES:
+        raise ValueError(f"llm not in catalog: {config.get('llm')}")
+    if config.get("voice") not in deepgram_tts.VOICES:
+        raise ValueError(f"voice not in catalog: {config.get('voice')}")
+    if not str(config.get("name") or "").strip():
+        raise ValueError("name is required")
+    for field, limit in LIMITS.items():
+        if len(config.get(field) or "") > limit:
+            raise ValueError(f"{field} is longer than {limit} characters")
+    url = config.get("docs_url") or ""
+    if url and not re.match(r"https?://[^\s/]+", url):
+        raise ValueError(f"docs_url must be an http(s) URL: {url}")
+    terms = config.get("keyterms") or []
+    if len(terms) > 50 or any(not isinstance(t, str) or len(t) > 40 for t in terms):
+        raise ValueError("keyterms: at most 50 words of up to 40 characters")
+    return config
 
 
 @dataclass(frozen=True)
@@ -30,6 +56,43 @@ class Bundle:
     vectors: np.ndarray
 
 
+@dataclass(frozen=True)
+class Agent:
+    """What a session needs from an agent. The default agent (the --docs-dir corpus) has the same shape."""
+    id: str | None
+    version: str
+    name: str
+    instructions: str
+    first_message: str | None
+    voice: str
+    llm: str
+    keyterms: tuple[str, ...] | None  # None: the recognizer's default key terms
+    index: Index
+
+
+def default_agent(index: Index, name: str) -> Agent:
+    return Agent(None, "default", name, "", None, deepgram_tts.MODEL, openai_compat_llm.MODEL, None, index)
+
+
+@functools.lru_cache(maxsize=16)
+def load(root: Path, agent: str, version: str) -> Agent:
+    b = read(root, agent, version)
+    c = b.config
+    return Agent(agent, version, c["name"], c.get("instructions") or "", c.get("first_message") or None, c["voice"],
+                 c["llm"], tuple(c.get("keyterms") or ()) or None, Index(b.passages, vectors=b.vectors))
+
+
+def resolve(root: Path, agent: str) -> Agent | None:
+    """The agent's live version, or None (unknown, disabled, or pruned between reading the pointer and loading)."""
+    if not ID.fullmatch(agent or ""):
+        return None
+    version = current(root, agent)
+    try:
+        return load(Path(root), agent, version) if version else None
+    except FileNotFoundError:
+        return None
+
+
 def version_of(config: dict, passages: list[Passage]) -> str:
     h = hashlib.sha256(json.dumps(config, sort_keys=True).encode())
     for p in passages:
@@ -39,7 +102,7 @@ def version_of(config: dict, passages: list[Passage]) -> str:
 
 def publish(root: Path, agent: str, config: dict, passages: list[Passage], vectors: np.ndarray) -> str:
     """Write the bundle (if new), point `current` at it, prune old versions. Returns the version."""
-    config = {**config, "format": FORMAT}
+    config = {**validate(config), "format": FORMAT}
     version = version_of(config, passages)
     home = Path(root) / agent
     target = home / version

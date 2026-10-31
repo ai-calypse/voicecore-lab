@@ -23,7 +23,27 @@ from voicecore import keys
 from .base import Audio, ProviderError, http_error
 
 MODEL = "aura-2-thalia-en"
-URL = "wss://api.deepgram.com/v1/speak?" + urlencode({"model": MODEL, "encoding": "linear16", "sample_rate": 24000})
+# Voices an agent may use (Deepgram's Aura-2 English list, Context7 /websites/developers_deepgram, 2026-10-31).
+VOICES = {
+    "aura-2-thalia-en": "Thalia: American, clear and confident",
+    "aura-2-andromeda-en": "Andromeda: American, casual and expressive",
+    "aura-2-helena-en": "Helena: American, caring and friendly",
+    "aura-2-apollo-en": "Apollo: American, confident and casual",
+    "aura-2-arcas-en": "Arcas: American, natural and smooth",
+    "aura-2-aries-en": "Aries: American, warm and energetic",
+    "aura-2-asteria-en": "Asteria: American, clear and knowledgeable",
+    "aura-2-athena-en": "Athena: American, calm and professional",
+    "aura-2-callista-en": "Callista: American, clear and professional",
+    "aura-2-draco-en": "Draco: British, warm and trustworthy",
+    "aura-2-electra-en": "Electra: American, professional and engaging",
+}
+
+
+def url_for(voice: str = MODEL) -> str:
+    return "wss://api.deepgram.com/v1/speak?" + urlencode({"model": voice, "encoding": "linear16", "sample_rate": 24000})
+
+
+URL = url_for(MODEL)
 PRICE_PER_CHAR = 0.030 / 1000  # Aura-2 pay as you go, deepgram.com/pricing 2026-10-30
 MAX_CHARS = 4000  # per-session cap (budget): about 15 spoken answers, $0.12
 SPEAK_MAX = 2000  # Deepgram's limit per Speak message

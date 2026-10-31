@@ -132,7 +132,7 @@ async def test_shutdown_ends_open_sessions_and_settles_each_once(small_index):
 
     settled = []
 
-    def make(sid):
+    def make(sid, agent=None):
         providers, _ = mock_providers()
         return providers, [lambda: settled.append(sid)]
 
@@ -153,7 +153,7 @@ async def test_session_setup_failure_still_settles_the_reservations(small_index)
 
     settled = []
 
-    def make(sid):
+    def make(sid, agent=None):
         providers, _ = mock_providers()
         return {**providers, "no_such_option": 1}, [lambda: settled.append(sid)]  # Session(...) raises TypeError
 
@@ -315,7 +315,7 @@ async def test_public_pool_over_its_cap_answers_in_text_from_the_docs(small_inde
     from voicecore.runtime.session import BUDGET_TEXT_ONLY
     from voicecore.server import AppState, handler_for, http_routes
 
-    def broke(sid):
+    def broke(sid, agent=None):
         raise budget.DailyCapReached("public: today's share is used up")
 
     state = AppState(providers="live", ready=True, index=small_index)
@@ -353,7 +353,7 @@ async def test_a_ledger_outage_ends_a_public_session_with_error_not_text_only(sm
     """Redis down or never seeded is not "today's budget is used up": no text-only notice, an error end."""
     from voicecore.server import AppState, handler_for, http_routes
 
-    def down(sid):
+    def down(sid, agent=None):
         raise budget.BudgetUnavailable("ledger unreachable: ConnectionError")
 
     state = AppState(providers="live", ready=True, index=small_index)
@@ -372,7 +372,7 @@ async def test_reservations_are_made_off_the_event_loop(small_index):
 
     threads = []
 
-    def make(sid):
+    def make(sid, agent=None):
         threads.append(threading.get_ident())
         return mock_providers()
 

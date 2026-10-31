@@ -130,11 +130,14 @@ class Result:
 
 class AnswerEngine:
     def __init__(self, index: Index, llm: LLM, k: int = 5, max_tokens: int = 200, official_only: bool = True,  # gpt-oss counts reasoning tokens here
-                 name: str = "uv", topics: list[str] | None = None):
+                 name: str = "uv", topics: list[str] | None = None, notes: str = ""):
+        """notes: the operator's own instructions (an agent's settings), appended after the rules, never instead of them."""
         self.index, self.llm, self.k, self.max_tokens, self.official_only = index, llm, k, max_tokens, official_only
         if topics is None:  # page titles in index order, enough to say what the docs cover
             topics = list(dict.fromkeys(p.title.split(" > ")[0] for p in index.passages if p.official))[:40]
         self.system = SYSTEM.format(name=name, topics="; ".join(topics))
+        if notes.strip():
+            self.system += f"\nOperator notes: {notes.strip()}"
         self.last: Result | None = None
 
     def retrieve(self, question: str) -> list[Passage]:

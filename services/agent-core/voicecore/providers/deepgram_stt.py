@@ -17,7 +17,15 @@ PARAMS = {"model": "nova-3", "encoding": "linear16", "sample_rate": 16000, "chan
           # ("uv", "uvx", "uv sync", "uv lock", "pyproject.toml"): without them "uv" was heard as "of" or "OV" in 5/10.
           "keyterm": ["VoiceCore", "endpointing", "barge-in", "Silero", "VAD", "Deepgram", "Cartesia", "OpenRouter",
                       "Cerebras", "gpt-oss", "WebSocket", "WebRTC", "jitter buffer", "Docusaurus"]}
-URL = "wss://api.deepgram.com/v1/listen?" + urlencode(PARAMS, doseq=True)
+
+
+def url_for(keyterms: list[str] | None = None) -> str:
+    """keyterms: an agent's own words (product names) that the recognizer should favour; None keeps the defaults."""
+    params = PARAMS if keyterms is None else {**PARAMS, "keyterm": keyterms}
+    return "wss://api.deepgram.com/v1/listen?" + urlencode(params, doseq=True)
+
+
+URL = url_for()
 PRICE_PER_MIN = 0.0077  # nova-3 streaming, pay as you go, deepgram.com/pricing 2026-10-29
 MAX_AUDIO_S = 300  # per-session cap (budget): 5 min of speech, $0.0385
 _CLOSED = object()

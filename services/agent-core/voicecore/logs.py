@@ -8,7 +8,7 @@ import time
 
 from voicecore import keys
 
-ALLOWED = ("session_id", "gen", "kind", "reason", "provider", "duration_ms")
+ALLOWED = ("session_id", "agent", "gen", "kind", "reason", "provider", "duration_ms")
 KEY_NAMES = ("DEEPGRAM_API_KEY", "OPENROUTER_API_KEY", "CARTESIA_API_KEY", "GATEWAY_SECRET")
 PATTERNS = re.compile(r"sk-or-v1-\S+|sk_car_\S+|(?i:(?<=token )\S{20,})")  # key-shaped strings, loaded or not
 

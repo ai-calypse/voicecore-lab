@@ -1,8 +1,10 @@
 """Orchestrator server for the gateway hop: ws://HOST:PORT/v1/session/{id}, one Session per connection.
 
-    uv run python -m voicecore.server [--providers mock|live] [--port 8765] [--trace-dir DIR]
+    uv run python -m voicecore.server [--providers mock|free|live] [--port 8765] [--trace-dir DIR] [--agents-dir DIR]
 
-Mock providers by default. Live providers spend money: each session reserves its caps first
+Mock providers by default. Free: no paid provider at all, text answers from the closest docs section (a fresh install
+before any key is set). With --agents-dir, the gateway's X-VoiceCore-Agent header picks a published agent bundle
+(ADR 0005); without the header the session gets the default agent, the --docs-dir corpus. Live providers spend money: each session reserves its caps first
 (STT 300 s, LLM up to $0.02, TTS 4,000 characters with Deepgram or 1,500 with Cartesia) and settles what it used.
 """
 import argparse
@@ -21,12 +23,12 @@ from pathlib import Path
 from websockets.asyncio.server import serve
 from websockets.exceptions import ConnectionClosed
 
-from voicecore import budget, logs, metrics, protocol
+from voicecore import agents, budget, logs, metrics, protocol
 from voicecore.answer.engine import AnswerEngine
 from voicecore.answer.extractive import closest_section
-from voicecore.answer.index import Index
+from voicecore.answer.index import Index, embedder
 from voicecore.answer.ingest import docusaurus, ingest
-from voicecore.providers import cartesia_tts, deepgram_tts
+from voicecore.providers import cartesia_tts, deepgram_stt, deepgram_tts
 from voicecore.providers.deepgram_stt import MAX_AUDIO_S, PRICE_PER_MIN
 from voicecore.providers.base import ProviderError
 from voicecore.providers.factory import make_live
@@ -41,12 +43,19 @@ log = logging.getLogger("voicecore.server")
 MOCK_ANSWER = "Eager endpointing asks the speech recognizer for a final transcript after 200 ms of silence [1]. A punctuated final ends the turn [2]."
 DOCS_DIR = Path(__file__).resolve().parents[3] / "apps/docs/docs"  # the Docusaurus site the assistant answers from
 LLM_CAP_USD = 0.02  # gpt-oss-120b on Cerebras: about $0.0006 per grounded turn, so about 30 turns a session
+AGENT_HEADER = "X-VoiceCore-Agent"  # set by the gateway from the session token, never by the browser
+FREE_GREETING = "Text answers from your docs. Voice turns on once provider keys are set."
 
 
 def mock_providers():
     stt = lambda: MockSTT(canned="how does eager endpointing work?")  # noqa: E731
     return {"stt": stt(), "stt_factory": stt, "llm": MockLLM(LLMScript(tokens=[w + " " for w in MOCK_ANSWER.split()])),
             "tts": MockTTS(), "tts_factory": MockTTS}, []
+
+
+def inert_providers():
+    """For text-only sessions: nothing is called, so nothing is reserved."""
+    return {"llm": MockLLM(LLMScript(tokens=[])), "tts": MockTTS()}, []
 
 
 MOCK_BILLED_USD = {"stt": 0.001, "llm": 0.0005, "tts": 0.0002}  # per session; lets tests check ledger maths for free
@@ -102,16 +111,20 @@ TTS = {  # factory kind, module, budget pool, reservation for MAX_CHARS characte
 }
 
 
-def live_providers(sid, llm_opts=None, tts_name="deepgram", sub=None):
-    """sub: a budget sub-cap every reservation also counts against (\"public\" for a public deployment)."""
+def live_providers(sid, llm_opts=None, tts_name="deepgram", sub=None, voice=None, keyterms=None):
+    """sub: a budget sub-cap every reservation also counts against (\"public\" for a public deployment).
+    voice (Deepgram speech only) and keyterms: an agent's settings; None keeps the defaults."""
     kind, mod, pool, amount, cost = TTS[tts_name]  # before reserving: an unknown name must not leak reservations
     stt_res, llm_res = budget.reserve_all([("usd", round(MAX_AUDIO_S / 60 * PRICE_PER_MIN, 6), f"server stt {sid}"),
                                            ("usd", LLM_CAP_USD, f"server llm {sid}")], sub=sub)
     tts = {"res": None, "streams": []}
     stt_streams = []
+    stt_url = deepgram_stt.url_for(list(keyterms) if keyterms else None)
+    voice_url = {"url": deepgram_tts.url_for(voice)} if voice and tts_name == "deepgram" else {}
+    opener = (lambda: mod.open_socket(url=voice_url["url"])) if voice_url else mod.open_socket
 
     def new_stt():  # a reconnect opens a second stream; both bill one reservation and share its audio cap
-        stt_streams.append(make_live("stt", stt_res, max_audio_s=MAX_AUDIO_S - sum(t.audio_s for t in stt_streams)))
+        stt_streams.append(make_live("stt", stt_res, url=stt_url, max_audio_s=MAX_AUDIO_S - sum(t.audio_s for t in stt_streams)))
         return stt_streams[-1]
 
     # ponytail: the first answer's TTS reservation runs on the event loop; with a Redis ledger that is down it can
@@ -123,12 +136,12 @@ def live_providers(sid, llm_opts=None, tts_name="deepgram", sub=None):
             except budget.BudgetExceeded as e:
                 raise ProviderError("fatal", f"TTS budget: {e}") from None
         used = sum(t.chars for t in tts["streams"])
-        tts["streams"].append(make_live(kind, tts["res"], max_chars=mod.MAX_CHARS - used, ws=ws))
+        tts["streams"].append(make_live(kind, tts["res"], max_chars=mod.MAX_CHARS - used, ws=ws, **voice_url))
         return tts["streams"][-1]
 
     try:
         p = {"stt": new_stt(), "stt_factory": new_stt, "llm": make_live("llm", llm_res, **(llm_opts or {})),
-             "tts": OnDemandTTS(new_tts, mod.open_socket), "tts_factory": lambda: OnDemandTTS(new_tts, mod.open_socket)}
+             "tts": OnDemandTTS(new_tts, opener), "tts_factory": lambda: OnDemandTTS(new_tts, opener)}
     except Exception:  # nothing was used: release the reservations instead of leaving them counting
         for r in (stt_res, llm_res):
             try:
@@ -200,17 +213,29 @@ def http_routes(state: AppState):
 
 
 def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Policy = Policy(), llm_opts: dict | None = None,
-                name: str = "VoiceCore", tts: str = "deepgram", make_providers=None, pool: str = "usd"):
-    """make_providers(sid) -> (providers, settle callables); defaults by mode. Tests inject their own.
+                name: str = "VoiceCore", tts: str = "deepgram", make_providers=None, pool: str = "usd",
+                agents_dir: Path | None = None, default_agent: bool = True):
+    """make_providers(sid, agent) -> (providers, settle callables); defaults by mode. Tests inject their own.
     pool "public": reservations also count against the public sub-cap, and a session refused by the budget is
-    served in text from the docs instead of ending."""
+    served in text from the docs instead of ending.
+    agents_dir: published agent bundles, picked by the gateway's X-VoiceCore-Agent header. default_agent: whether a
+    session without the header gets the --docs-dir corpus (off on customer installs)."""
     sub = "public" if pool == "public" else None
 
-    def default_providers(sid):
-        return (live_providers(sid, llm_opts, tts, sub=sub) if mode == "live"
-                else mock_billed_providers(sid, sub=sub) if mode == "mock-billed" else mock_providers())
+    def default_providers(sid, agent):
+        if mode == "live":
+            opts = {**(llm_opts or {}), "model": agent.llm} if agent.id else llm_opts
+            return live_providers(sid, opts, tts, sub=sub, voice=agent.voice, keyterms=agent.keyterms)
+        if mode == "mock-billed":
+            return mock_billed_providers(sid, sub=sub)
+        return inert_providers() if mode == "free" else mock_providers()
 
     make_providers = make_providers or default_providers
+
+    def find_agent(agent_id):
+        if agent_id:
+            return agents.resolve(agents_dir, agent_id) if agents_dir else None
+        return agents.default_agent(state.index, name) if default_agent and state.index else None
 
     async def handler(ws):  # ponytail: VAD runs inline on the event loop (~0.3 ms per window); move to a thread if sessions x frames saturate one core
         sid = ws.request.path.rsplit("/", 1)[-1]
@@ -221,8 +246,18 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
             state.sessions.discard(ws)
 
     async def serve_session(ws, sid):
+        agent_id = ws.request.headers.get(AGENT_HEADER)
+        agent = await asyncio.to_thread(find_agent, agent_id)  # a first load builds the agent's index
+        if agent is None:  # before any reservation: an unknown or disabled agent costs nothing
+            log.info("session refused: unknown agent", extra={"session_id": sid, "reason": "unavailable"})
+            if state.metrics:
+                Tracer(sid, state.metrics).emit("session", "ended", reason="unavailable")
+            await ws.send(protocol.event("session.ended", reason="unavailable"))
+            await ws.close()
+            return
+        greeting = agent.first_message
         try:
-            providers, settle = await asyncio.to_thread(make_providers, sid)  # a slow ledger must not stall the loop
+            providers, settle = await asyncio.to_thread(make_providers, sid, agent)  # a slow ledger must not stall the loop
         except budget.BudgetUnavailable as e:  # an outage, not a used-up budget: never "come back tomorrow"
             log.warning("session refused: %s", e, extra={"session_id": sid, "reason": "ledger_unavailable"})
             if state.metrics:
@@ -233,8 +268,8 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
         except budget.BudgetExceeded as e:
             if sub:  # public deployment: no spend left today, but the docs can still point the way
                 log.info("budget used up, text only: %s", e, extra={"session_id": sid, "reason": "budget"})
-                providers, settle = {"llm": MockLLM(LLMScript(tokens=[])), "tts": MockTTS()}, []  # inert: text_only never calls them
-                text_only = True
+                providers, settle = inert_providers()
+                text_only, greeting = True, None  # the session's own budget notice
             else:
                 log.warning("session refused: %s", e, extra={"session_id": sid, "reason": "budget"})
                 if state.metrics:
@@ -243,20 +278,22 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
                 await ws.close()
                 return
         else:
-            text_only = False
+            text_only = mode == "free"
+            if text_only:
+                greeting = FREE_GREETING
         started, sink, session, reason = time.monotonic(), None, None, None
         sinks = [state.metrics] if state.metrics else []
         tracer = Tracer(sid, lambda e: [s(e) for s in sinks])
         try:  # everything after the reservation: whatever fails, the finally settles it
             if trace_dir:
                 sinks.append(sink := JsonlSink(trace_dir / f"{sid}.jsonl"))
-            engine = AnswerEngine(state.index, providers["llm"], name=name)
+            engine = AnswerEngine(agent.index, providers["llm"], name=agent.name, notes=agent.instructions)
             extract = closest_section(engine.retrieve) if text_only else None
             session = Session(sid, send=ws.send, vad=SileroVAD(), policy=policy, tracer=tracer, answer=engine.stream,
-                              breakers=state.breakers, text_only=extract, **providers)
-            tracer.emit("session", "started")
+                              breakers=state.breakers, text_only=extract, greeting=greeting, **providers)
+            tracer.emit("session", "started", agent=agent.id or "default")
             await session.start()
-            log.info("session started", extra={"session_id": sid})
+            log.info("session started", extra={"session_id": sid, "agent": agent.id or "default"})
             async for m in ws:
                 if isinstance(m, bytes):
                     f = protocol.decode_frame(m)
@@ -310,13 +347,17 @@ def end_reason(close_reason: str | None, draining: bool) -> str:
 
 async def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--providers", choices=["mock", "mock-billed", "live"], default="mock",
-                    help="mock-billed: mock providers that reserve and settle small fixed amounts (ledger tests, no spend)")
+    ap.add_argument("--providers", choices=["mock", "mock-billed", "free", "live"], default="mock",
+                    help="mock-billed: mock providers that reserve and settle small fixed amounts (ledger tests, no spend); "
+                         "free: no paid provider, text answers from the closest docs section")
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--trace-dir", type=Path)
     ap.add_argument("--docs-dir", type=Path, default=DOCS_DIR, help="Docusaurus docs folder to answer from")
     ap.add_argument("--docs-url", default="http://localhost:3000/", help="base URL of that docs site (citations link there)")
+    ap.add_argument("--agents-dir", type=Path, default=None, help="published agent bundles (the console writes them; read-only here)")
+    ap.add_argument("--default-agent", choices=["on", "off"], default="on",
+                    help="off: a session must name a published agent, and the --docs-dir corpus is not indexed at startup")
     ap.add_argument("--policy", choices=["fixed", "adaptive", "asr_assisted", "eager"], default=None,
                     help="endpointing (ADR 0002); default eager with live providers, fixed with mocks (the mock STT "
                          "returns its canned final at every pause, which would end every turn early)")
@@ -348,7 +389,8 @@ async def main():
     state = AppState(providers=args.providers)
     if args.metrics_port:
         state.metrics = metrics.serve_metrics(args.metrics_port, args.metrics_host, state.breakers)
-    handler = handler_for(args.providers, args.trace_dir, state, policy, llm_opts, tts=args.tts, pool=args.pool)
+    handler = handler_for(args.providers, args.trace_dir, state, policy, llm_opts, tts=args.tts, pool=args.pool,
+                          agents_dir=args.agents_dir, default_agent=args.default_agent == "on")
     async with serve(handler, args.host, args.port, max_size=1 << 20, process_request=http_routes(state)):
         log.info("orchestrator listening on ws://%s:%d (%s providers), loading models", args.host, args.port, args.providers)
 
@@ -367,6 +409,9 @@ async def main():
 
         def load():  # serving already: /healthz answers and /readyz says 503 until this finishes
             SileroVAD()  # load the model now: loading it inside the first session stalls its mic frames
+            if args.default_agent == "off":
+                list(embedder().query_embed("warm up"))  # load the model the agents' indexes share
+                return None
             index = Index(ingest(args.docs_dir, site=docusaurus(args.docs_url)))  # vectors are cached under .cache
             index.dense("warm up", 1)
             return index

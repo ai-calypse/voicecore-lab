@@ -63,12 +63,14 @@ class Session:
                  answer: Answer | None = None, stall_s: float = 8.0, final_wait_s: float = 5.0,
                  tts_factory: Callable[[], TTSStream] | None = None, breakers: dict[str, Breaker] | None = None,
                  turn_deadline_s: float = 20.0, stt_factory: Callable[[], STTStream] | None = None,
-                 text_only: Callable[[str], tuple[str, list[dict]]] | None = None):
+                 text_only: Callable[[str], tuple[str, list[dict]]] | None = None, greeting: str | None = None):
         """tts_factory: builds a fresh TTS stream for the one retry after a TTS failure.
         breakers: the process's circuit breakers by provider kind (stt, llm, tts), shared by its sessions.
         stt_factory: opens a new STT stream for the one reconnect after a drop (same reservation and audio cap).
         text_only: no paid provider at all (the public budget is used up): the microphone is ignored, nothing is spoken,
-        and each typed question gets text_only(question) -> (reply, sources), e.g. the closest docs section."""
+        and each typed question gets text_only(question) -> (reply, sources), e.g. the closest docs section.
+        greeting: the first reply, sent when the session starts (an agent's first message; with text_only, the notice
+        that explains why there is no voice)."""
         self.sid, self.llm, self.tts, self.stt, self.vad = sid, llm, tts, stt, vad
         self.tts_factory = tts_factory
         self._send = send
@@ -84,6 +86,7 @@ class Session:
         self._stt_lock = asyncio.Lock()
         self._probes: set[str] = set()  # providers whose half-open probe this session holds
         self.text_only = text_only
+        self.greeting = greeting
         self._voice_input_down = text_only is not None
         self._speech_down_said = False
         self.state = State.LISTENING
@@ -129,12 +132,14 @@ class Session:
                 with contextlib.suppress(Exception):
                     await self.stt.close()
                 self.stt = None
-            await self.start_generation("t0", "", reply=BUDGET_TEXT_ONLY)
+            await self.start_generation("t0", "", reply=self.greeting or BUDGET_TEXT_ONLY)
         elif self.stt and not self._allow("stt"):  # voice input is down for new sessions; typing still works
             with contextlib.suppress(Exception):
                 await self.stt.close()
             self.stt, self._voice_input_down = None, True
             await self.start_generation("t0", "", reply=VOICE_INPUT_DOWN)
+        elif self.greeting:
+            await self.start_generation("t0", "", reply=self.greeting)
         for p in (self.stt, self.llm, self.tts):  # open provider connections now, not on the user's first turn
             if hasattr(p, "warm"):
                 self._tasks.append(asyncio.create_task(p.warm()))
