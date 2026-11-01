@@ -185,3 +185,58 @@ func TestWSAcceptUsesReloadedOrigins(t *testing.T) {
 		}
 	})
 }
+
+// TestConsoleBehindGateway: one host for voice and the dashboard. Every path the gateway does not serve goes to the
+// console, which sees the real client and scheme, never the ones a visitor claims.
+func TestConsoleBehindGateway(t *testing.T) {
+	console, _ := url.Parse("http://console:80")
+	runCfg(t, false, func(c *Config) { c.Console = console }, func(t *testing.T, r *rig) {
+		seen := make(chan *http.Request, 1)
+		srv, ln := &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			seen <- req.Clone(context.Background())
+			_, _ = io.WriteString(w, "console")
+		})}, r.net.Listen("console:80")
+		go func() { _ = srv.Serve(ln) }()
+		defer srv.Close()
+
+		req, _ := http.NewRequest("POST", "http://gw:80/api/login?next=1", strings.NewReader("{}"))
+		req.Header.Set("X-Forwarded-For", "6.6.6.6") // a visitor's claim: not believed (no trusted proxies)
+		req.Header.Set("X-Forwarded-Proto", "https")
+		resp, err := r.http.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		b, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		got := <-seen
+		if string(b) != "console" || got.URL.RequestURI() != "/api/login?next=1" || got.Host != "gw:80" {
+			t.Fatalf("got %q %s host %q", b, got.URL.RequestURI(), got.Host)
+		}
+		if xff, proto := got.Header.Get("X-Forwarded-For"), got.Header.Get("X-Forwarded-Proto"); xff == "" || xff == "6.6.6.6" || proto != "http" {
+			t.Fatalf("forwarded for %q proto %q", xff, proto)
+		}
+		resp, err = r.http.Get("http://gw:80/healthz") // the gateway's own paths stay its own
+		if err != nil {
+			t.Fatal(err)
+		}
+		b, _ = io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if !strings.Contains(string(b), `"status":"ok"`) {
+			t.Fatalf("healthz went elsewhere: %q", b)
+		}
+		r.http.CloseIdleConnections()
+	})
+}
+
+func TestNoConsoleNoProxy(t *testing.T) {
+	run(t, false, func(t *testing.T, r *rig) {
+		resp, err := r.http.Get("http://gw:80/")
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusNotFound {
+			t.Fatalf("status %d", resp.StatusCode)
+		}
+	})
+}

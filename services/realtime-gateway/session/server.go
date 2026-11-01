@@ -15,6 +15,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/netip"
 	"net/url"
 	"os"
@@ -74,6 +75,9 @@ type Config struct {
 	// an agent that has a live version there. Widget: the built voicecore.js, served at /widget.js; "" = not served.
 	AgentsDir string
 	Widget    string
+	// Console: the console's address. Every path the gateway does not serve goes there, so one host carries the voice
+	// endpoint and its dashboard (the hosted deploy; a public install does the same with Caddy). nil = not proxied.
+	Console *url.URL
 }
 
 // AgentHeader carries the token's agent to the orchestrator, which picks that agent's bundle.
@@ -112,7 +116,7 @@ type Server struct {
 	ups      []*upstream        // the orchestrators, each with its own breaker
 
 	site site // the console's "Websites allowed to embed", added to cfg.Origins
-	rot      int                // rotates the start among upstreams with equal load
+	rot  int  // rotates the start among upstreams with equal load
 }
 
 // bucket is a token bucket: rate per second, up to burst.
@@ -334,6 +338,9 @@ func (s *Server) Handler() http.Handler {
 			http.ServeFile(w, r, s.cfg.Widget)
 		})
 	}
+	if s.cfg.Console != nil {
+		mux.Handle("/", s.consoleProxy())
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !s.hostAllowed(r.Host) { // a DNS-rebinding page arrives with its own host name
 			s.c.RejectedHost.Add(1)
@@ -342,6 +349,21 @@ func (s *Server) Handler() http.Handler {
 		}
 		mux.ServeHTTP(w, r)
 	})
+}
+
+// consoleProxy passes a request on to the console with the real client and scheme: its login limit then counts per
+// visitor, and its session cookie is Secure behind HTTPS. A visitor's own X-Forwarded-* headers are dropped.
+func (s *Server) consoleProxy() http.Handler {
+	return &httputil.ReverseProxy{Transport: s.cfg.HTTPClient.Transport, Rewrite: func(p *httputil.ProxyRequest) {
+		p.SetURL(s.cfg.Console)
+		p.Out.Host = p.In.Host // the console compares a request's Origin with its own host
+		p.Out.Header.Set("X-Forwarded-For", s.clientIP(p.In))
+		proto := "http"
+		if p.In.TLS != nil || s.trusted(clientIP(p.In.RemoteAddr)) && p.In.Header.Get("X-Forwarded-Proto") == "https" {
+			proto = "https"
+		}
+		p.Out.Header.Set("X-Forwarded-Proto", proto)
+	}}
 }
 
 // requestedAgent reads the optional form field "agent": "" (the default agent), or an id with a live version in

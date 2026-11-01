@@ -31,6 +31,7 @@ Run the gateway with `go run ./cmd/gateway` from `services/realtime-gateway`, or
 | `-trusted-proxies` | empty | comma-separated CIDRs, such as a load balancer's, whose `X-Forwarded-For` header is believed for the client IP; empty ignores the header |
 | `-agents-dir` | empty | the console's published agent bundles, mounted read-only; a token request may then name an agent with a live version there, and `agents/_site/origins.json` adds the console's allowed websites to `-origins`, read again within a second of a change |
 | `-widget` | empty (not served) | the built `voicecore.js`, served at `/widget.js`, so a site's snippet loads the widget from the gateway |
+| `-console` | empty (not proxied) | the console's address, such as `http://127.0.0.1:8000`; every path the gateway does not serve goes there, with the client's address and scheme, so one host carries the voice server and its dashboard |
 | `-human-check` | `on` | `off` lets `-env prod` start without `TURNSTILE_SECRET`, on purpose, with a warning; the rate limits and spend caps still apply |
 
 The `-hosts` check refuses other host names with HTTP 421, which blocks DNS rebinding. The benchmark runner starts the gateway with `-max-sessions-per-ip 0 -tokens-per-minute 0`, because all its clients share one IP.
@@ -125,7 +126,8 @@ VoiceCore reads the environment variables below. The three provider keys, `GATEW
 | `VOICECORE_CAP_USD` | orchestrator, console | the install's total cap in US dollars; default 5 |
 | `VOICECORE_PUBLIC_TOTAL`, `VOICECORE_PUBLIC_DAILY` | orchestrator, console | the public sub-cap in total and per UTC day; defaults 2 and 0.50 |
 | `VOICECORE_VECTORS_DIR` | orchestrator, console | where computed vectors are cached when the image's own cache is read-only |
-| `CONSOLE_SETUP_TOKEN`, `PUBLIC_VOICE_URL`, `VOICECORE_PROVIDERS`, `CONSOLE_STATIC`, `TURNSTILE_SITEKEY` | console | the first-run setup token, the voice server's public address for the snippet, the provider mode for the banner, the built UI folder, and the sitekey added to the snippet; `create-voicecore` writes them ([install](../getting-started/install.md)) |
+| `CONSOLE_ADMIN_PASSWORD` | console | the admin's password, at least 12 characters; taken at start, and a changed one signs everyone out. `create-voicecore` generates it and `create-voicecore info` shows it ([install](../getting-started/install.md)) |
+| `CONSOLE_SETUP_TOKEN`, `PUBLIC_VOICE_URL`, `VOICECORE_PROVIDERS`, `CONSOLE_STATIC`, `TURNSTILE_SITEKEY` | console | a first-run setup token (instead of `CONSOLE_ADMIN_PASSWORD`), the voice server's public address for the snippet, the provider mode for the banner, the built UI folder, and the sitekey added to the snippet |
 
 `.env.example` lists the four that a live setup can use. `CARTESIA_API_KEY` is only needed with `--tts cartesia`. Copy it to `.env` (it is gitignored) and fill in the keys.
 

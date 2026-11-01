@@ -14,19 +14,29 @@ You need a computer or server with Docker running (Docker Compose 2.20 or newer)
 npx create-voicecore
 ```
 
-The installer checks Docker, asks which mode you want, writes everything into a `voicecore` folder (a `compose.yml`, a `Caddyfile` and a private `.env` with generated secrets) and starts the stack. It ends by printing a setup link for the console. `npx create-voicecore --yes` takes the defaults: free mode, on this machine.
+The installer checks Docker, asks which mode you want (live, unless you choose otherwise) and your two provider keys, writes everything into a `voicecore` folder (a `compose.yml`, a `Caddyfile` and a private `.env` with generated secrets) and starts the stack. It ends by printing the dashboard's address and its password:
+
+```text
+VoiceCore is running.
+
+  Dashboard  http://localhost:8000
+  Password   q3Vx9LdT2pWn7KcR0bYa
+  Voice      on
+```
+
+The password is generated for this install and kept in its `.env` as `CONSOLE_ADMIN_PASSWORD`. Run `npx create-voicecore info` in the same folder to see the address and password again. Press Enter at the key questions to skip them: VoiceCore then installs in free mode. `npx create-voicecore --yes` asks nothing; it uses the keys in the `DEEPGRAM_API_KEY` and `OPENROUTER_API_KEY` environment variables when they are set, and free mode otherwise.
 
 | Mode | For | Needs |
 |---|---|---|
+| `live` (the default) | voice and written answers, on this machine | a Deepgram key and an OpenRouter key |
 | `free` | trying it, at no cost: text answers from the closest docs section | nothing |
-| `live` | voice and written answers, on this machine | a Deepgram key and an OpenRouter key |
 | `public` | a public website: VoiceCore on its own domain with automatic HTTPS | the two keys, a domain whose DNS points at this server, and ports 80 and 443 open |
 
 In free and live mode, the console listens on `http://localhost:8000` and the voice server on `http://localhost:8080`, on this machine only. If a port is busy, the installer takes the next free one and prints it. Public mode puts both behind one HTTPS host, with Caddy getting and renewing the certificate. It also offers Cloudflare Turnstile, a human check on new sessions; without it the rate limits and spend caps still apply.
 
-## Set up the console and add your docs
+## Sign in to the dashboard and add your docs
 
-Open the setup link the installer printed and choose the admin password (at least 12 characters). Create an agent and give it docs on its Knowledge tab, in any of three ways:
+Open the dashboard address the installer printed and sign in with its password. Create an agent and give it docs on its Knowledge tab, in any of three ways:
 
 - **Upload files:** Markdown (`.md`, `.markdown`), plain text, or a zip of a docs folder, up to 20 MB.
 - **A Git repository:** a public repository over https and the folder that holds the Markdown.
@@ -50,10 +60,11 @@ The voice server serves the widget itself, and the widget talks to the server th
 
 | Command | What it does |
 |---|---|
+| `npx create-voicecore info` | shows the dashboard's address and password, and whether voice is on |
 | `npx create-voicecore keys` | adds or changes the provider keys, switches free mode to live, and restarts only the services that use them |
 | `npx create-voicecore@latest upgrade` | newer images with the same settings, agents and docs |
 | `npx create-voicecore uninstall` | stops VoiceCore and keeps its data; add `--delete-data` to remove agents, docs and the spend ledger too |
 
 ## How long the install takes
 
-On one Apple M4 laptop with the images already downloaded, the measured path from running the installer to a cited answer through the voice server took 13.5 s: 12.3 s for the install and start, 1.2 s for setup, an upload of the three-section Acme sample and its publish. A first install adds the image download, about 230 MB. CI runs the same path on every change and fails it past ten minutes.
+On one Apple M4 laptop with the images already downloaded, the measured path from running the installer to a cited answer through the voice server took 13.5 s: 12.3 s for the install and start, 1.2 s for signing in, an upload of the three-section Acme sample and its publish. A first install adds the image download, about 230 MB. CI runs the same path on every change and fails it past ten minutes.

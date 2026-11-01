@@ -58,7 +58,7 @@ services:
       VOICECORE_AGENTS_DIR: /data/agents
       VOICECORE_VECTORS_DIR: /data/console/vectors
       VOICECORE_LEDGER: /data/ledger/spend_ledger.json
-      CONSOLE_SETUP_TOKEN: ${CONSOLE_SETUP_TOKEN:-}
+      CONSOLE_ADMIN_PASSWORD: ${CONSOLE_ADMIN_PASSWORD:-}  # the admin's password (create-voicecore info shows it)
       CONSOLE_STATIC: /app/console-ui
       VOICECORE_PROVIDERS: ${PROVIDERS:-free}
       PUBLIC_VOICE_URL: ${PUBLIC_VOICE_URL:?}

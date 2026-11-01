@@ -84,6 +84,13 @@ class Store:
             db.execute("DELETE FROM setup")
             return True
 
+    def set_admin(self, password: str, now: float) -> None:
+        """The password from the environment (CONSOLE_ADMIN_PASSWORD): replaces any earlier one and signs everyone out."""
+        with self.db() as db:
+            db.execute("DELETE FROM sessions")
+            db.execute("DELETE FROM setup")
+            db.execute("INSERT OR REPLACE INTO admin (id, password, created) VALUES (1, ?, ?)", (password, now))
+
     def reset_admin(self, token_hash: str) -> None:
         with self.db() as db:
             db.execute("DELETE FROM admin")

@@ -1,7 +1,7 @@
 """python -m voicecore_console serve | reset-admin
 
-serve: the console on --host/--port (the installer runs it in Docker). The first-run setup token comes from the
-environment (CONSOLE_SETUP_TOKEN), never a flag, so it does not show up in ps.
+serve: the console on --host/--port (the installer runs it in Docker). The admin password (CONSOLE_ADMIN_PASSWORD) or a
+first-run setup token (CONSOLE_SETUP_TOKEN) comes from the environment, never a flag, so it does not show up in ps.
 reset-admin: forget the admin password and print a new setup link (for a lost password).
 """
 import argparse
@@ -42,7 +42,8 @@ def main(argv: list[str] | None = None) -> None:
                      providers=os.environ.get("VOICECORE_PROVIDERS", "free"),
                      voice_url=os.environ.get("PUBLIC_VOICE_URL", "http://localhost:8080"),
                      static_dir=Path(static) if static else None,
-                     turnstile_sitekey=os.environ.get("TURNSTILE_SITEKEY", ""))
+                     turnstile_sitekey=os.environ.get("TURNSTILE_SITEKEY", ""),
+                     admin_password=os.environ.get("CONSOLE_ADMIN_PASSWORD") or None)
     uvicorn.run(app, host=args.host, port=args.port, proxy_headers=True, forwarded_allow_ips=os.environ.get("FORWARDED_ALLOW_IPS", "127.0.0.1"))
 
 

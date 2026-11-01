@@ -11,16 +11,17 @@ Each app runs one machine that stops when idle, so the first request after a qui
 
 ## What gets deployed
 
-One Fly app, `voicecore`, from [`deploy/fly/`](../../deploy/fly/): one machine (`shared-cpu-1x`, 1 GB, `iad`) running both processes from one image.
+One Fly app, `voicecore`, from [`deploy/fly/`](../../deploy/fly/): one machine (`shared-cpu-1x`, 1 GB, `iad`, 512 MB of swap) running three processes from one image.
 
 - **The gateway** listens on :8080, the only public port. Its admin listener is on :9091 (metrics, private).
 - **The orchestrator** listens on :8765 on the machine itself; its metrics are on :9464 (private).
+- **The console**, the dashboard at `https://voicecore.fly.dev/`, runs when the `CONSOLE_ADMIN_PASSWORD` secret is set. It listens on :8000 on the machine, and the gateway passes it every path the gateway does not serve itself (`-console`), with the visitor's address and scheme. It runs at a lower CPU priority, so a Publish cannot slow a live call. It loads the embedding model (about 280 MB) only while it publishes, and idles at about 60 MB. Voice never depends on it.
 - **`entrypoint.sh`** runs both under `tini`. It starts as root only to take ownership of the volume (Fly mounts it root-owned), then runs everything as the `app` user. It starts the orchestrator first and the gateway once the orchestrator is ready. On Fly's SIGTERM it stops the gateway first (its drain ends every session, up to 25 s), then the orchestrator. If either process dies, or the orchestrator is not ready within 2 minutes, the script exits non-zero and Fly restarts the machine.
 - **`fly.toml` settings:**
   - `kill_signal = "SIGTERM"` and `kill_timeout = 45` (Fly's defaults, SIGINT and 5 s, would cut the drain off);
   - a `/readyz` check;
   - two `[[metrics]]` entries;
-  - the `voicecore_data` volume at `/data`, which holds the spend ledger.
+  - the `voicecore_data` volume at `/data`, which holds the spend ledger, the console's database and sources (`/data/console`) and the published agents (`/data/agents`).
 - **Production checks.** In prod, both processes refuse to start with an unsafe setup:
   - the orchestrator refuses a ledger on the image's own filesystem, so a cold start could never reset the caps;
   - the gateway refuses a missing `GATEWAY_SECRET` or `TURNSTILE_SECRET`, local origins or hosts, broad origin patterns, or missing trusted proxies.
@@ -31,7 +32,8 @@ Tested locally by `harness/tests/test_fly_image.py` (`make fly-image-test`):
 - the image boots and answers a smoke question;
 - SIGTERM during a session ends it with `shutdown` and exits 0 within 45 s;
 - a killed orchestrator makes the container exit non-zero;
-- prod without its settings refuses to start.
+- prod without its settings refuses to start;
+- with `CONSOLE_ADMIN_PASSWORD`, an agent published through the dashboard on the gateway's port answers at once.
 
 ## Before the first deploy
 
@@ -53,7 +55,8 @@ fly apps create voicecore
 fly volumes create voicecore_data --size 1 --region iad -a voicecore
 fly secrets set --stage -a voicecore \
   DEEPGRAM_API_KEY=... OPENROUTER_API_KEY=... \
-  GATEWAY_SECRET="$(openssl rand -hex 32)" TURNSTILE_SECRET=...
+  GATEWAY_SECRET="$(openssl rand -hex 32)" TURNSTILE_SECRET=... \
+  CONSOLE_ADMIN_PASSWORD="$(openssl rand -base64 15)"
 fly deploy . -c deploy/fly/fly.toml --ha=false
 
 fly apps create voicecore-docs
@@ -82,21 +85,13 @@ The ledger is on the volume, so a rollback keeps the money record. To stop every
 
 ## Another site's agent
 
-Besides the default docs agent, the app serves agents published into `AGENTS_DIR` (`/data/agents`, on the volume), and the widget at `/widget.js`. To put one on another website:
+Besides the default docs agent, the app serves the agents published in its dashboard, `https://voicecore.fly.dev/` (password: the `CONSOLE_ADMIN_PASSWORD` secret). To put one on another website:
 
-1. Build the agent with a VoiceCore console (a local install is enough), with its docs URL set to that site's address.
-2. Copy the published bundle (`agents/<id>/current` and the version folder it names) onto the volume:
+1. In the dashboard, create the agent, add its docs, set its docs URL to that site's address, and Publish.
+2. Under **Allowed websites**, add the site's host. Add it to the Turnstile widget's hostnames in Cloudflare too (`voicecore.fly.dev` needs to be there for the dashboard's Test tab).
+3. Paste the line from the agent's **Embed** tab into the site.
 
-   ```sh
-   tar -czf agent.tgz <id>                     # from the console's agents folder
-   fly ssh sftp put agent.tgz /data/agents/agent.tgz -a voicecore
-   fly ssh console -a voicecore -C "sh -c 'cd /data/agents && tar -xzf agent.tgz && rm agent.tgz'"
-   ```
-
-3. Add the site's host to `ORIGINS` in `fly.toml` and deploy, and add it to the Turnstile widget's hostnames in Cloudflare.
-4. On the site: `<script src="https://voicecore.fly.dev/widget.js" data-agent="<id>" data-turnstile-sitekey="…" async></script>`.
-
-New sessions use the new bundle at once; no restart. Its sessions share the public spend caps with the docs agent.
+New sessions use a new version at once; no restart, no deploy. Its sessions share the public spend caps with the docs agent.
 
 ## The docs site
 

@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // create-voicecore: install VoiceCore with Docker in one command (Step 10, ADR 0005). No dependencies.
 //
-//   npx create-voicecore                 install (asks a few questions; --yes takes the defaults: free mode)
+//   npx create-voicecore                 install (asks a few questions; --yes takes the defaults: live mode with the
+//                                        keys in DEEPGRAM_API_KEY and OPENROUTER_API_KEY, else free mode)
+//   npx create-voicecore info            the dashboard's address and password again
 //   npx create-voicecore@latest upgrade  newer images, same settings and data
 //   npx create-voicecore keys            add or change provider keys (turns voice on)
 //   npx create-voicecore uninstall       stop it (--delete-data also removes agents, docs and the spend ledger)
@@ -38,6 +40,7 @@ export function parseEnv(text) {
 }
 
 const hex = (bytes) => randomBytes(bytes).toString("hex");
+const password = () => randomBytes(15).toString("base64url"); // 20 characters: printed once, kept in .env
 
 export function renderEnv(o, existing = {}) {
   const mode = o.mode ?? "free";
@@ -68,7 +71,7 @@ export function renderEnv(o, existing = {}) {
     VOICECORE_PUBLIC_TOTAL: existing.VOICECORE_PUBLIC_TOTAL ?? "2",
     VOICECORE_PUBLIC_DAILY: existing.VOICECORE_PUBLIC_DAILY ?? "0.5",
     GATEWAY_SECRET: existing.GATEWAY_SECRET || hex(32), // a second run keeps the secrets
-    CONSOLE_SETUP_TOKEN: existing.CONSOLE_SETUP_TOKEN || hex(24),
+    CONSOLE_ADMIN_PASSWORD: existing.CONSOLE_ADMIN_PASSWORD || password(), // the console takes it at start: no setup link
   };
   return writeEnv(env);
 }
@@ -97,6 +100,7 @@ export function checkDocker(run) {
 
 const realDeps = {
   log: (s) => console.log(s),
+  env: process.env,
   run: (cmd, args, opts = {}) => spawnSync(cmd, args, { encoding: "utf8", stdio: opts.inherit ? "inherit" : "pipe", cwd: opts.cwd }),
   isPortFree: (port) => new Promise((done) => {
     const s = createServer().once("error", () => done(false)).once("listening", () => s.close(() => done(true)));
@@ -148,14 +152,20 @@ async function install(o, d) {
   const existing = fresh ? {} : parseEnv(readFileSync(resolve(dir, ".env"), "utf8"));
   const ask = (q, fallback) => (o.yes ? Promise.resolve(fallback) : d.prompt(q, fallback));
 
-  const mode = o.mode ?? (await ask("Mode: free (no keys, text answers), live (your provider keys) or public (a domain with HTTPS)?", "free"));
-  if (!["free", "live", "public"].includes(mode)) throw new Error(`unknown mode: ${mode} (free, live or public)`);
-  const settings = { mode, site: o.site ?? (await ask("Which website will you embed it on? (optional, e.g. docs.example.com)", "")) };
+  let mode = o.mode ?? (await ask("Mode: live (voice, with your provider keys), free (no keys, text answers) or public (live on your own domain, HTTPS)?", "live"));
+  if (!["free", "live", "public"].includes(mode)) throw new Error(`unknown mode: ${mode} (live, free or public)`);
+  const settings = { site: o.site ?? (await ask("Which website will you embed it on? (optional, e.g. docs.example.com)", "")) };
   if (mode !== "free") {
-    settings.deepgram = o.deepgram ?? existing.DEEPGRAM_API_KEY ?? (await ask("Deepgram API key (speech in and out):", ""));
-    settings.openrouter = o.openrouter ?? existing.OPENROUTER_API_KEY ?? (await ask("OpenRouter API key (the language model):", ""));
-    if (!settings.deepgram || !settings.openrouter) throw new Error("live and public modes need a Deepgram and an OpenRouter key");
+    const key = async (flag, name, question) => o[flag] || existing[name] || d.env[name] || (await ask(question, ""));
+    settings.deepgram = await key("deepgram", "DEEPGRAM_API_KEY", "Deepgram API key (speech in and out; Enter to skip, for text answers only):");
+    settings.openrouter = settings.deepgram && await key("openrouter", "OPENROUTER_API_KEY", "OpenRouter API key (the language model):");
+    if (!settings.deepgram || !settings.openrouter) {
+      if (mode === "public") throw new Error("public mode needs a Deepgram and an OpenRouter key");
+      mode = "free";
+      d.log("No provider keys, so voice is off: answers come as text from your docs.");
+    }
   }
+  settings.mode = mode;
   if (mode === "public") {
     settings.domain = o.domain ?? (await ask("Domain for VoiceCore (its DNS must point at this machine), e.g. voice.example.com:", ""));
     if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(settings.domain ?? "")) throw new Error(`not a domain name: ${settings.domain}`);
@@ -176,10 +186,23 @@ async function install(o, d) {
   compose(d, dir, [...profiles(env), "up", "-d", "--wait"]);
   d.log("");
   d.log("VoiceCore is running.");
-  d.log(fresh ? `Open ${env.PUBLIC_CONSOLE_URL}/#/setup?token=${env.CONSOLE_SETUP_TOKEN} to set the admin password.`
-              : `Console: ${env.PUBLIC_CONSOLE_URL}`);
-  if (mode === "free") d.log("Free mode: answers come as text from your docs. Turn on voice later: npx create-voicecore keys");
+  summary(env, d);
+  d.log("Next: in the dashboard, create an agent, add your docs and Publish. Its Embed tab has the one line for your site.");
+  d.log("Show this again: npx create-voicecore info");
   if (mode === "public" && env.HUMAN_CHECK === "off") d.log("Note: no Turnstile human check. The rate limits and spend caps in .env still apply.");
+  return 0;
+}
+
+function summary(env, d) {
+  d.log("");
+  d.log(`  Dashboard  ${env.PUBLIC_CONSOLE_URL}`);
+  d.log(`  Password   ${env.CONSOLE_ADMIN_PASSWORD ?? "(set in the console at first run)"}`);
+  d.log(`  Voice      ${env.PROVIDERS === "live" ? "on" : "off (free mode: text answers). Turn it on: npx create-voicecore keys"}`);
+  d.log("");
+}
+
+function info(o, d) {
+  summary(readSettings(resolve(o.dir ?? "voicecore")), d);
   return 0;
 }
 
@@ -217,8 +240,9 @@ async function uninstall(o, d) {
   return 0;
 }
 
-const HELP = `Usage: npx create-voicecore [install|upgrade|keys|uninstall] [options]
-  --yes              take the defaults (free mode, folder ./voicecore)
+const HELP = `Usage: npx create-voicecore [install|info|upgrade|keys|uninstall] [options]
+  --yes              take the defaults (live mode with keys from DEEPGRAM_API_KEY and OPENROUTER_API_KEY, else free;
+                     folder ./voicecore)
   --dir <folder>     where the install lives (default ./voicecore)
   --mode <m>         free | live | public
   --site <host>      the website you will embed it on
@@ -239,6 +263,12 @@ export async function main(argv = process.argv.slice(2), d = realDeps) {
   const { values: o, positionals } = parsed;
   if (o.help) return d.log(HELP), 0;
   const command = positionals[0] ?? "install";
+  try {
+    if (command === "info") return info(o, d); // reads .env only: works with Docker stopped
+  } catch (e) {
+    d.log(`create-voicecore: ${e.message}`);
+    return 1;
+  }
   const problem = checkDocker(d.run);
   if (problem) return d.log(problem), 1;
   try {

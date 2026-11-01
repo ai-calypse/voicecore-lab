@@ -198,3 +198,14 @@ def test_agents_need_sign_in(tmp_path):
     app = create_app(tmp_path / "console", tmp_path / "agents", setup_token="s")
     assert TestClient(app).get("/api/agents").status_code == 401
     assert json.loads(TestClient(app).post("/api/agents", json={"name": "x"}).text)["detail"] == "sign in first"
+
+
+def test_publish_frees_the_embedding_model(c):
+    """The console idles at about 60 MB and loads the model (about 280 MB) only while it builds: on the hosted
+    deploy it shares a 1 GB machine with the voice side."""
+    from voicecore.answer.index import embedder
+
+    c.post("/api/agents", json={"name": "Acme Docs"})
+    c.post("/api/agents/acme-docs/sources/text", json={"title": "Refunds", "text": "Refunds take 5 days."})
+    assert published(c, "acme-docs")["status"] == "done"
+    assert embedder.cache_info().currsize == 0

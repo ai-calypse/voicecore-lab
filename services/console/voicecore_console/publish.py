@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 
 from voicecore import agents
-from voicecore.answer.index import embed
+from voicecore.answer.index import embed, embedder
 from voicecore.answer.ingest import docusaurus, ingest
 
 log = logging.getLogger("voicecore_console.publish")
@@ -61,3 +61,5 @@ def build(store, data_dir: Path, agents_dir: Path, agent_id: str, build_id: int,
     except Exception:
         log.exception("build failed", extra={"agent": agent_id})
         store.finish_build(build_id, "failed", None, "build failed: see the console's log", now())
+    finally:
+        embedder.cache_clear()  # back to ~60 MB: the hosted console shares a 1 GB machine with the voice side

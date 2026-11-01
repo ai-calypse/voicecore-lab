@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/netip"
+	"net/url"
 	"os"
 	"os/signal"
 	"regexp"
@@ -42,6 +43,7 @@ func main() {
 	adminAddr := flag.String("admin-addr", "", "operator listener for /metrics and /debug/counters, e.g. :9091 (empty = off); keep it off the public internet")
 	agentsDir := flag.String("agents-dir", "", "the console's published agent bundles (read-only); token requests may name an agent there")
 	widget := flag.String("widget", "", "the built voicecore.js, served at /widget.js (empty = not served)")
+	console := flag.String("console", "", "the console's address, e.g. http://127.0.0.1:8000: every path the gateway does not serve goes there (one host for voice and the dashboard)")
 	humanCheck := flag.String("human-check", "on", "off: allow a prod install without TURNSTILE_SECRET (any visitor can start a session; the spend caps still apply)")
 	flag.Parse()
 	if *env != "dev" && *env != "prod" { // a typo must not silently mean dev
@@ -83,6 +85,14 @@ func main() {
 	}
 	cfg.Origins = splitList(*origins)
 	cfg.AgentsDir, cfg.Widget = *agentsDir, *widget
+	if *console != "" {
+		u, err := url.Parse(*console)
+		if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+			slog.Error("-console must be an http(s) URL", "console", *console)
+			os.Exit(2)
+		}
+		cfg.Console = u
+	}
 	if *humanCheck != "on" && *humanCheck != "off" {
 		slog.Error("-human-check must be on or off", "human_check", *humanCheck)
 		os.Exit(2)

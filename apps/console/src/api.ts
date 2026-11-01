@@ -4,7 +4,7 @@
 import type { Build } from "./lib.ts";
 
 export type Status = { setup_needed: boolean; providers: string; voice_url: string };
-export type Config = { name: string; docs_url: string; instructions: string; first_message: string | null; voice: string; llm: string; keyterms: string[] };
+export type Config = { name: string; docs_url: string; instructions: string; first_message: string | null; voice: string; llm: string; keyterms: string[]; turn_taking?: "quick" | "patient" };
 export type Source = { id: string; kind: string; label: string; ref: string | null; files: number; created: number };
 export type Published = { version: string; log: string; finished: number };
 export type Agent = { id: string; config: Config; enabled: boolean; live_version: string | null; sources: Source[]; build: (Build & { id: number }) | null;

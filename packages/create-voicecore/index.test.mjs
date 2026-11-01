@@ -20,7 +20,7 @@ function fakeDocker({ missing = false, down = false, compose = "2.40.0" } = {}) 
 
 function deps(over = {}) {
   const out = [];
-  return { out, log: (s) => out.push(s), prompt: async () => "", isPortFree: async () => true, ...fakeDocker(), ...over };
+  return { out, log: (s) => out.push(s), prompt: async () => "", isPortFree: async () => true, env: {}, ...fakeDocker(), ...over };
 }
 
 const dir = () => mkdtempSync(join(tmpdir(), "voicecore-"));
@@ -40,7 +40,7 @@ describe("renderEnv", () => {
     const env = parseEnv(renderEnv({ mode: "free" }));
     expect(env.PROVIDERS).toBe("free");
     expect(env.GATEWAY_SECRET).toMatch(/^[0-9a-f]{64}$/);
-    expect(env.CONSOLE_SETUP_TOKEN).toMatch(/^[0-9a-f]{48}$/);
+    expect(env.CONSOLE_ADMIN_PASSWORD).toMatch(/^[A-Za-z0-9_-]{20}$/);
     expect(env.VOICECORE_VERSION).toBe(VERSION);
     expect(env.PUBLIC_VOICE_URL).toBe("http://localhost:8080");
   });
@@ -63,7 +63,40 @@ describe("install", () => {
     expect(readFileSync(join(target, ".gitignore"), "utf8")).toContain(".env\n"); // installed inside a repo, the secrets stay out of it
     expect(d.calls).toContain("docker compose up -d --wait  (in voicecore)");
     const env = parseEnv(readFileSync(join(target, ".env"), "utf8"));
-    expect(d.out.join("\n")).toContain(`http://localhost:8000/#/setup?token=${env.CONSOLE_SETUP_TOKEN}`);
+    const said = d.out.join("\n");
+    expect(said).toContain("Dashboard  http://localhost:8000");
+    expect(said).toContain(`Password   ${env.CONSOLE_ADMIN_PASSWORD}`);
+    expect(said).toContain("npx create-voicecore keys");
+  });
+
+  it("is live by default, with the keys from the environment", async () => {
+    const d = deps({ env: { DEEPGRAM_API_KEY: "dg-env", OPENROUTER_API_KEY: "or-env" } });
+    const target = join(dir(), "v");
+    expect(await main(["--yes", "--dir", target], d)).toBe(0);
+    const env = parseEnv(readFileSync(join(target, ".env"), "utf8"));
+    expect([env.PROVIDERS, env.DEEPGRAM_API_KEY, env.OPENROUTER_API_KEY]).toEqual(["live", "dg-env", "or-env"]);
+    expect(d.out.join("\n")).toContain("Voice      on");
+  });
+
+  it("asks for the keys when live, and falls back to free mode without them", async () => {
+    const asked = [];
+    const d = deps({ prompt: async (q, fallback = "") => (asked.push(q), fallback) });
+    const target = join(dir(), "v");
+    expect(await main(["--dir", target], d)).toBe(0);
+    expect(asked[0]).toMatch(/^Mode: live/);
+    expect(asked.some((q) => q.startsWith("Deepgram API key"))).toBe(true);
+    expect(parseEnv(readFileSync(join(target, ".env"), "utf8")).PROVIDERS).toBe("free");
+    expect(d.out.join("\n")).toContain("No provider keys, so voice is off");
+  });
+
+  it("info shows the dashboard and password again, without Docker", async () => {
+    const target = join(dir(), "v");
+    await main(["--yes", "--dir", target], deps());
+    const env = parseEnv(readFileSync(join(target, ".env"), "utf8"));
+    const d = deps(fakeDocker({ missing: true }));
+    d.out = []; d.log = (s) => d.out.push(s);
+    expect(await main(["info", "--dir", target], d)).toBe(0);
+    expect(d.out.join("\n")).toContain(`Password   ${env.CONSOLE_ADMIN_PASSWORD}`);
   });
 
   it("stops with Docker's problem and exit code 1", async () => {
@@ -86,7 +119,7 @@ describe("install", () => {
     const first = parseEnv(readFileSync(join(target, ".env"), "utf8"));
     await main(["--yes", "--dir", target], deps());
     const second = parseEnv(readFileSync(join(target, ".env"), "utf8"));
-    expect([second.GATEWAY_SECRET, second.CONSOLE_SETUP_TOKEN]).toEqual([first.GATEWAY_SECRET, first.CONSOLE_SETUP_TOKEN]);
+    expect([second.GATEWAY_SECRET, second.CONSOLE_ADMIN_PASSWORD]).toEqual([first.GATEWAY_SECRET, first.CONSOLE_ADMIN_PASSWORD]);
   });
 });
 

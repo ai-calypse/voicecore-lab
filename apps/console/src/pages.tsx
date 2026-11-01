@@ -79,8 +79,8 @@ export function Login({ onDone }: { onDone: () => void }) {
         {error && <Alert kind="error">{error}</Alert>}
         <button className="button button-primary">Sign in</button>
         <div className="stack muted small">
-          <p>Lost the password? Run this where VoiceCore is installed for a new setup link:</p>
-          <pre className="command"><code>docker compose exec console python -m voicecore_console reset-admin</code></pre>
+          <p>Forgot it? It's <code>CONSOLE_ADMIN_PASSWORD</code> in the install's <code>.env</code>. In the install folder, this shows it:</p>
+          <pre className="command"><code>npx create-voicecore info</code></pre>
         </div>
       </form>
     </main>
@@ -453,7 +453,7 @@ function Knowledge({ agent, build, reload }: { agent: Agent; build: Agent["build
 
 function Settings({ agent, reload }: { agent: Agent; reload: () => void }) {
   const { data: catalog } = useLoad<Catalog>(api.catalog, []);
-  const [form, setForm] = useState<Config>(agent.config);
+  const [form, setForm] = useState<Config>({ ...agent.config, turn_taking: agent.config.turn_taking ?? "quick" });
   const [terms, setTerms] = useState(agent.config.keyterms.join(", "));
   const [state, setState] = useState<{ kind: "error" | "success"; text: string } | null>(null);
   const set = (k: keyof Config) => (e: { target: { value: string } }) => setForm({ ...form, [k]: e.target.value });
@@ -497,8 +497,14 @@ function Settings({ agent, reload }: { agent: Agent; reload: () => void }) {
             </select>
           </Field>
         </div>
-        <Field label="Key terms" help="Optional, comma separated: product names the speech recognizer should expect.">
+        <Field label="Key terms" help="Optional, comma separated: names the speech recognizer should expect. Skip everyday words: they get heard where they weren't said.">
           <input value={terms} onChange={(e) => setTerms(e.target.value)} disabled={DEMO} />
+        </Field>
+        <Field label="Turn-taking" help="When the assistant decides you've finished speaking.">
+          <select value={form.turn_taking} onChange={set("turn_taking")} disabled={DEMO}>
+            <option value="quick">Quick: replies after a short pause (best for short questions)</option>
+            <option value="patient">Patient: waits for 0.8 s of silence (people who pause mid-sentence)</option>
+          </select>
         </Field>
       </fieldset>
       {state && <Alert kind={state.kind}>{state.text}</Alert>}

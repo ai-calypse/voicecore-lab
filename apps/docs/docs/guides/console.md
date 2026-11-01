@@ -1,6 +1,6 @@
 ---
 title: Use the console
-description: Manage VoiceCore agents in the console - knowledge sources, publishing and versions, settings, the Test and Embed tabs, allowed websites, API keys and a lost password.
+description: Manage VoiceCore agents in the console - knowledge sources, publishing and versions, settings and turn-taking, the Test and Embed tabs, allowed websites, API keys and the admin password.
 ---
 
 ## What an agent is
@@ -37,7 +37,8 @@ Settings take effect at the next Publish.
 | Instructions | added after VoiceCore's own rules (answer only from the docs, cite every fact), never instead of them |
 | Voice | one of Deepgram's Aura-2 voices |
 | Model | the language model, from the models VoiceCore has prices for |
-| Key terms | words the speech recognizer should expect, such as product names |
+| Key terms | words the speech recognizer should expect, such as product names. Leave out everyday words: a boosted common word gets heard where it wasn't said |
+| Turn-taking | **Quick** (the default) answers after a short pause once the recognizer has a complete sentence. **Patient** waits for 0.8 s of silence, for people who pause mid-sentence; it never cut a question short in VoiceCore's endpoint study, and replies about 450 ms later |
 
 ## Allowed websites, API keys and spend
 
@@ -53,10 +54,12 @@ The list applies to every agent on the install and takes effect within a second,
 
 **Spend** on Home is the provider spend recorded by the voice server's budget ledger, against its cap. The caps are in the install's `.env` (`VOICECORE_CAP_USD`, `VOICECORE_PUBLIC_TOTAL`, `VOICECORE_PUBLIC_DAILY`); when one is reached, voice stops and typed questions still get the closest section of the docs.
 
-## A lost admin password
+## The admin password
 
-Run this in the install folder. It forgets the password and prints a new setup link:
+The installer generates the password and keeps it in the install's `.env` as `CONSOLE_ADMIN_PASSWORD`. To see it again, run this in the install folder:
 
 ```bash
-docker compose exec console python -m voicecore_console reset-admin --url http://localhost:8000
+npx create-voicecore info
 ```
+
+To change it, edit `CONSOLE_ADMIN_PASSWORD` in `.env` (at least 12 characters) and run `docker compose up -d console`. The console takes the new password when it starts and signs everyone out.

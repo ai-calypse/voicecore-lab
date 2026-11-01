@@ -4,6 +4,7 @@ import sqlite3
 import subprocess
 import sys
 
+import pytest
 from fastapi.testclient import TestClient
 
 from voicecore_console.app import create_app
@@ -109,3 +110,30 @@ def test_reset_admin_prints_fragment_url(tmp_path):
     token = out.split("token=")[1].split()[0]
     assert c.get("/api/me").status_code == 401  # the old session is gone
     assert setup(c, token=token).status_code == 201
+
+
+def test_admin_password_from_env(tmp_path):
+    """CONSOLE_ADMIN_PASSWORD: no setup link; the installer prints the password and keeps it in .env."""
+    c = client(tmp_path, token=None, admin_password=PASSWORD)
+    assert c.get("/api/status").json()["setup_needed"] is False
+    assert c.post("/api/login", json={"password": PASSWORD}).status_code == 200
+
+
+def test_changed_env_password_replaces_admin_and_signs_out(tmp_path):
+    c = client(tmp_path, token=None, admin_password=PASSWORD)
+    c.post("/api/login", json={"password": PASSWORD})
+    again = client(tmp_path, token=None, admin_password="a brand new passphrase")
+    assert again.get("/api/me", cookies=c.cookies).status_code == 401
+    assert again.post("/api/login", json={"password": PASSWORD}).status_code == 401
+    assert again.post("/api/login", json={"password": "a brand new passphrase"}).status_code == 200
+
+
+def test_same_env_password_keeps_sessions(tmp_path):
+    c = client(tmp_path, token=None, admin_password=PASSWORD)
+    c.post("/api/login", json={"password": PASSWORD})
+    assert client(tmp_path, token=None, admin_password=PASSWORD).get("/api/me", cookies=c.cookies).status_code == 200
+
+
+def test_short_env_password_refused(tmp_path):
+    with pytest.raises(ValueError, match="CONSOLE_ADMIN_PASSWORD must be at least 12 characters"):
+        client(tmp_path, token=None, admin_password="short")

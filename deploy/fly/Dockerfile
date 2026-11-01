@@ -1,5 +1,6 @@
-# One image, two processes (Step 09 Phase 11): the gateway (public :8080) and the orchestrator (:8765, private to
-# the machine). Build context: the repository root (fly deploy . -c deploy/fly/fly.toml).
+# One image, three processes (Step 09 Phase 11, Step 10): the gateway (public :8080), the orchestrator (:8765) and,
+# with CONSOLE_ADMIN_PASSWORD set, the console (:8000, reached through the gateway). Build context: the repository
+# root (fly deploy . -c deploy/fly/fly.toml).
 # The widget the gateway serves at /widget.js, built as in deploy/platform/gateway.Dockerfile.
 FROM node:24-slim AS widget
 RUN corepack enable
@@ -9,6 +10,16 @@ COPY packages ./packages
 COPY apps/demo ./apps/demo
 RUN pnpm install --frozen-lockfile --filter "@voicecore/demo..."
 RUN pnpm --filter @voicecore/demo build:widget
+
+# The console's UI, built as in deploy/platform/voicecore.Dockerfile.
+FROM node:24-slim AS ui
+RUN corepack enable
+WORKDIR /src
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+COPY packages ./packages
+COPY apps/console ./apps/console
+RUN pnpm install --frozen-lockfile --filter "@voicecore/console..."
+RUN pnpm --filter @voicecore/console exec vite build
 
 FROM golang:1.27 AS gateway
 WORKDIR /src
@@ -26,12 +37,13 @@ ENV UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1 UV_NO_DEV=1
 COPY pyproject.toml uv.lock .python-version ./
 COPY services/agent-core ./services/agent-core
 COPY services/console ./services/console
-RUN uv sync --locked --no-dev --package voicecore  # the voice side only; the console member must exist for uv's lock
+RUN uv sync --locked --no-dev --package voicecore-console  # the console and, through it, the voice side
 COPY apps/docs/docs ./apps/docs/docs
 # Bake the embedding model and the docs vectors in, so a cold start (a stopped machine waking up) takes seconds.
 RUN uv run python -c "from pathlib import Path; from voicecore.answer.ingest import docusaurus, ingest; from voicecore.answer.index import Index; Index(ingest(Path('apps/docs/docs'), site=docusaurus('http://localhost:3000/'))).dense('warm up', 1)"
 COPY --from=gateway /gateway /usr/local/bin/gateway
 COPY --from=widget /src/apps/demo/public/embed/voicecore.js /app/widget.js
+COPY --from=ui /src/apps/console/dist /app/console-ui
 COPY deploy/fly/entrypoint.sh /entrypoint.sh
 ARG VERSION=dev
 ENV VOICECORE_VERSION=$VERSION

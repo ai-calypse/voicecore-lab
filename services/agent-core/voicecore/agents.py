@@ -43,6 +43,8 @@ def validate(config: dict) -> dict:
     url = config.get("docs_url") or ""
     if url and not re.match(r"https?://[^\s/]+", url):
         raise ValueError(f"docs_url must be an http(s) URL: {url}")
+    if (turn := config.get("turn_taking") or "quick") not in ("quick", "patient"):
+        raise ValueError(f"turn_taking must be quick or patient: {turn}")
     terms = config.get("keyterms") or []
     if len(terms) > 50 or any(not isinstance(t, str) or len(t) > 40 for t in terms):
         raise ValueError("keyterms: at most 50 words of up to 40 characters")
@@ -70,6 +72,7 @@ class Agent:
     llm: str
     keyterms: tuple[str, ...] | None  # None: the recognizer's default key terms
     index: Index
+    turn_taking: str = "quick"  # quick: the process's policy; patient: a fixed 800 ms of silence ends the turn
 
 
 def default_agent(index: Index, name: str) -> Agent:
@@ -81,7 +84,8 @@ def load(root: Path, agent: str, version: str) -> Agent:
     b = read(root, agent, version)
     c = b.config
     return Agent(agent, version, c["name"], c.get("instructions") or "", c.get("first_message") or None, c["voice"],
-                 c["llm"], tuple(c.get("keyterms") or ()) or None, Index(b.passages, vectors=b.vectors))
+                 c["llm"], tuple(c.get("keyterms") or ()) or None, Index(b.passages, vectors=b.vectors),
+                 c.get("turn_taking") or "quick")
 
 
 def resolve(root: Path, agent: str) -> Agent | None:

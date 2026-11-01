@@ -1,4 +1,4 @@
-"""The ten-minute promise, measured (Step 10, seam 25): install with create-voicecore, set up the admin, create an
+"""The ten-minute promise, measured (Step 10, seam 25): install with create-voicecore, sign in with its password, create an
 agent, upload the Acme docs, publish, ask a question through the gateway, then stop the console and ask again.
 
     uv run python harness/install_smoke.py --dir /tmp/vc-install [--image-tag 0.1.0] [--keep]
@@ -89,7 +89,7 @@ def main() -> int:
     env = env_of(args.dir)
     console = Console(env["PUBLIC_CONSOLE_URL"])
     try:
-        console.call("POST", "/api/setup", {"token": env["CONSOLE_SETUP_TOKEN"], "password": "correct horse battery"})
+        console.call("POST", "/api/login", {"password": env["CONSOLE_ADMIN_PASSWORD"]})
         agent = console.call("POST", "/api/agents", {"name": "Acme Docs"})["id"]
         console.call("PUT", f"/api/agents/{agent}/sources/upload?name=acme.zip", raw=ACME_ZIP.read_bytes(), ctype="application/octet-stream")
         console.call("POST", f"/api/agents/{agent}/publish")

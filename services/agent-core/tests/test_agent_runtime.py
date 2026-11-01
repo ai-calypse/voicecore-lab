@@ -130,6 +130,24 @@ def test_bundle_rejects_unknown_llm():
         agents.validate({**CONFIG, "voice": "robot"})
 
 
+def test_patient_agent_waits_for_silence(tmp_path):
+    """turn_taking "patient": a fixed 800 ms of silence ends the turn, never a pause the recognizer punctuated."""
+    from voicecore.server import policy_for
+    from voicecore.turntaking.floor import Policy
+
+    eager = Policy("eager", asr_silence_ms=200)
+    publish(tmp_path, {"refunds.md": "# Refunds\n\n## How refunds work\n\nRefunds take 5 days.\n"}, turn_taking="patient")
+    patient = agents.resolve(tmp_path, "acme-docs")
+    assert patient.turn_taking == "patient"
+    assert policy_for(patient, eager) == Policy("fixed", silence_ms=800)
+    assert policy_for(agents.resolve(FIXTURE, "acme-docs"), eager) is eager  # no setting: quick, the process's policy
+
+
+def test_turn_taking_is_quick_or_patient():
+    with pytest.raises(ValueError, match=r"^turn_taking must be quick or patient: slow$"):
+        agents.validate({**CONFIG, "turn_taking": "slow"})
+
+
 def test_default_and_bundle_agent_parity():
     b = agents.resolve(FIXTURE, "acme-docs")
     d = agents.default_agent(b.index, "VoiceCore")

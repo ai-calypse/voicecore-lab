@@ -212,6 +212,15 @@ def http_routes(state: AppState):
     return process_request
 
 
+# An agent's "patient" turn-taking: no early cutoffs in the endpoint study (0 of 37 at 800 ms, against 5 for eager),
+# about 450 ms more before the reply. For questions people think through aloud, such as a portfolio's.
+PATIENT = Policy("fixed", silence_ms=800)
+
+
+def policy_for(agent: agents.Agent, policy: Policy) -> Policy:
+    return PATIENT if agent.turn_taking == "patient" else policy
+
+
 def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Policy = Policy(), llm_opts: dict | None = None,
                 name: str = "VoiceCore", tts: str = "deepgram", make_providers=None, pool: str = "usd",
                 agents_dir: Path | None = None, default_agent: bool = True):
@@ -289,7 +298,7 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
                 sinks.append(sink := JsonlSink(trace_dir / f"{sid}.jsonl"))
             engine = AnswerEngine(agent.index, providers["llm"], name=agent.name, notes=agent.instructions)
             extract = closest_section(engine.retrieve) if text_only else None
-            session = Session(sid, send=ws.send, vad=SileroVAD(), policy=policy, tracer=tracer, answer=engine.stream,
+            session = Session(sid, send=ws.send, vad=SileroVAD(), policy=policy_for(agent, policy), tracer=tracer, answer=engine.stream,
                               breakers=state.breakers, text_only=extract, greeting=greeting, **providers)
             tracer.emit("session", "started", agent=agent.id or "default")
             await session.start()

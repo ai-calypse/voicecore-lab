@@ -40,7 +40,7 @@ curl -s -H "Authorization: Bearer $KEY" -X POST http://localhost:8000/api/agents
 | GET | `/api/agents` | every agent with its live version, latest build status, number of sources, and what was last published and when |
 | POST | `/api/agents` | `{name}`: a new agent; its id is made from the name |
 | GET | `/api/agents/{agent_id}` | settings, sources, latest build, last published build, live version and the embed snippet |
-| PUT | `/api/agents/{agent_id}/settings` | name, docs URL, first message, instructions, voice, model and key terms; checked, used at the next publish |
+| PUT | `/api/agents/{agent_id}/settings` | name, docs URL, first message, instructions, voice, model, key terms and turn-taking (`quick` or `patient`); checked, used at the next publish |
 | DELETE | `/api/agents/{agent_id}` | the agent, its docs and its versions |
 | PUT | `/api/agents/{agent_id}/sources/upload` | `?name=file.zip`, body: a zip, `.md`, `.markdown` or `.txt` file, up to 20 MB |
 | POST | `/api/agents/{agent_id}/sources/text` | `{title, text}`: a page from pasted text |

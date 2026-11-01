@@ -72,6 +72,7 @@ class SettingsIn(BaseModel):
     voice: str = deepgram_tts.MODEL
     llm: str = openai_compat_llm.MODEL
     keyterms: list[str] = []
+    turn_taking: str = "quick"
 
 
 class GitIn(BaseModel):
@@ -107,12 +108,19 @@ def default_config(name: str) -> dict:
 
 def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None, now: Callable[[], float] = time.time,
                run_git=None, ledger: Path | None = None, max_passages: int = publish.MAX_PASSAGES, providers: str = "free",
-               voice_url: str = "http://localhost:8080", static_dir: Path | None = None, turnstile_sitekey: str = "") -> FastAPI:
+               voice_url: str = "http://localhost:8080", static_dir: Path | None = None, turnstile_sitekey: str = "",
+               admin_password: str | None = None) -> FastAPI:
     """providers: the voice side's mode (free shows the 'voice is off' banner). voice_url: the gateway's public address,
-    which the embed snippet loads the widget from. static_dir: the built console UI (apps/console/dist)."""
+    which the embed snippet loads the widget from. static_dir: the built console UI (apps/console/dist).
+    admin_password: CONSOLE_ADMIN_PASSWORD, the admin's password with no setup link (the installer writes it to .env)."""
     data_dir, agents_dir = Path(data_dir), Path(agents_dir)
     store = Store(data_dir / "console.db")
     store.fail_interrupted_builds(now())
+    if admin_password:
+        if len(admin_password) < 12:
+            raise ValueError("CONSOLE_ADMIN_PASSWORD must be at least 12 characters")
+        if not auth.check_password(admin_password, store.admin_password()):  # a changed password signs everyone out
+            store.set_admin(auth.hash_password(admin_password), now())
     if setup_token:
         store.offer_setup(auth.digest(setup_token))
     builds = ThreadPoolExecutor(max_workers=1, thread_name_prefix="build")  # one at a time: embedding is CPU-bound

@@ -134,3 +134,32 @@ def test_serves_the_widget_and_agents_from_the_volume(image):
         assert e.value.code == 404
     finally:
         remove(name)
+
+
+@pytest.mark.timeout(600)
+def test_dashboard_on_the_same_host_publishes_live(image):
+    """CONSOLE_ADMIN_PASSWORD: the console runs behind the gateway, and an agent published there answers at once."""
+    name = start(image, "VOICECORE_ENV=dev", "AGENTS_DIR=/data/agents", "CONSOLE_ADMIN_PASSWORD=correct horse battery", port=PORT + 4)
+    base = f"http://127.0.0.1:{PORT + 4}"
+    web = urllib.request.build_opener(urllib.request.HTTPCookieProcessor())
+
+    def api(method, path, body=None):
+        req = urllib.request.Request(f"{base}{path}", method=method, data=json.dumps(body).encode() if body is not None else None,
+                                     headers={"Content-Type": "application/json"})
+        return json.loads(web.open(req).read() or "null")
+
+    try:
+        wait_ready(name, port=PORT + 4)
+        assert b"<title>" in urllib.request.urlopen(f"{base}/").read()  # the console's page, from the gateway's port
+        api("POST", "/api/login", {"password": "correct horse battery"})
+        agent = api("POST", "/api/agents", {"name": "Acme Docs"})["id"]
+        api("POST", f"/api/agents/{agent}/sources/text", {"title": "Refunds", "text": "Refunds take 5 days."})
+        api("POST", f"/api/agents/{agent}/publish")
+        end = time.time() + 120
+        while (b := api("GET", f"/api/agents/{agent}/builds/latest"))["status"] not in ("done", "failed") and time.time() < end:
+            time.sleep(0.5)
+        assert b["status"] == "done", b
+        session = urllib.request.Request(f"{base}/v1/session", data=f"agent={agent}".encode(), method="POST")
+        assert json.loads(urllib.request.urlopen(session).read())["token"].split(".")[2] == agent
+    finally:
+        remove(name)
