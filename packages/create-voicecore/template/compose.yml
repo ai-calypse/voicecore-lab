@@ -59,6 +59,8 @@ services:
       VOICECORE_AGENTS_DIR: /data/agents
       VOICECORE_VECTORS_DIR: /data/console/vectors
       VOICECORE_LEDGER: /data/ledger/spend_ledger.json
+      VOICECORE_CAP_USD: ${VOICECORE_CAP_USD:-5}  # the spend line on Home shows the same limits the voice side enforces
+      VOICECORE_PUBLIC_DAILY: ${VOICECORE_PUBLIC_DAILY:-0.5}
       CONSOLE_ADMIN_PASSWORD: ${CONSOLE_ADMIN_PASSWORD:-}  # the admin's password (create-voicecore info shows it)
       CONSOLE_STATIC: /app/console-ui
       VOICECORE_PROVIDERS: ${PROVIDERS:-auto}

@@ -15,6 +15,8 @@ It runs as three processes that share one wire protocol:
 - the **Go gateway** owns the connection;
 - the **Python orchestrator** owns the conversation.
 
+**Want a voice assistant on your own website?** Follow [Add VoiceCore to your website](getting-started/install.md): plain steps from an empty server to a working button.
+
 The voice assistant in the corner of this site is VoiceCore itself. It answers from these pages only and opens the section it cites. With mock providers it needs no keys and spends nothing. With live providers it uses Deepgram for speech-to-text and text-to-speech, and a language model through OpenRouter. Cartesia is an alternative for text-to-speech.
 
 ## What a voice agent is

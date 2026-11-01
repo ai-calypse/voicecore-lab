@@ -6,15 +6,15 @@ description: Add the VoiceCore voice widget to a page with one script tag, and s
 
 ## Add the widget with one script tag
 
-The widget is one classic script, `voicecore.js`. Add it to any page:
+On your own VoiceCore install, copy the line from your agent's **Embed** tab in the dashboard and paste it before `</body>` on your pages:
 
 ```html
-<script src="https://docs.example.com/embed/voicecore.js"
-        data-endpoint="https://gateway.example.com"
-        data-title="Ask the docs"></script>
+<script src="https://voice.yoursite.com/widget.js" data-agent="help-center" async></script>
 ```
 
-Build the script with `pnpm --filter @voicecore/demo build:widget`. It lands in `apps/demo/public/embed/voicecore.js`. This docs site copies it to `static/embed/` when it starts or builds.
+Your VoiceCore server serves the script itself, and the widget talks to the server it came from, so this one line is all a page needs. [Add VoiceCore to your website](./install.md) walks through the whole setup, including where the line goes on WordPress, Webflow, Next.js and other platforms. The rest of this page explains how the widget works and every option it takes.
+
+Working on VoiceCore itself? The widget is one classic script, `voicecore.js`. Build it with `pnpm --filter @voicecore/demo build:widget`; it lands in `apps/demo/public/embed/voicecore.js`, and this docs site copies it to `static/embed/` when it starts or builds.
 
 The script mounts as soon as the page has a body, or on `DOMContentLoaded` if it loads in the head. It adds a launcher button in the bottom-right corner. Opening the launcher connects to the gateway; nothing connects on page load. The widget reads its attributes from its own script tag, so keep the `data-` attributes on that tag and load it as a classic script, not as a module.
 
