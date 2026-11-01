@@ -43,12 +43,13 @@ curl -s -H "Authorization: Bearer $KEY" -X POST http://localhost:8000/api/agents
 | GET | `/api/agents` | every agent with its live version, latest build status, number of sources, and what was last published and when |
 | POST | `/api/agents` | `{name}`: a new agent; its id is made from the name |
 | GET | `/api/agents/{agent_id}` | settings, sources, latest build, last published build, live version and the embed snippet |
-| PUT | `/api/agents/{agent_id}/settings` | name, docs URL, first message, instructions, voice, model, key terms and turn-taking (`quick` or `patient`); checked, used at the next publish |
+| PUT | `/api/agents/{agent_id}/settings` | name, docs URL, first message, instructions, voice, model, key terms and turn-taking (`quick` or `patient`); checked, used at the next publish. A new docs URL adds its website to the allowed websites; `allowed` lists what was added |
 | DELETE | `/api/agents/{agent_id}` | the agent, its docs and its versions |
 | PUT | `/api/agents/{agent_id}/sources/upload` | `?name=file.zip`, body: a zip, `.md`, `.markdown` or `.txt` file, up to 20 MB |
 | POST | `/api/agents/{agent_id}/sources/text` | `{title, text}`: a page from pasted text |
+| POST | `/api/agents/{agent_id}/sources/web` | `{url}`: the page at a public https address and every page linked below it on the same site, up to 200 pages in 60 s. Its website is added to the allowed websites; `allowed` lists what was added |
 | POST | `/api/agents/{agent_id}/sources/git` | `{url, folder, ref}`: one folder of a public https repository |
-| POST | `/api/agents/{agent_id}/sources/{source_id}/sync` | fetches a Git source's folder again |
+| POST | `/api/agents/{agent_id}/sources/{source_id}/sync` | fetches a Git source's folder, or reads a website source, again |
 | DELETE | `/api/agents/{agent_id}/sources/{source_id}` | removes a source |
 | POST | `/api/agents/{agent_id}/publish` | starts a build (202); 409 while one is running |
 | GET | `/api/agents/{agent_id}/builds/latest` | status, sections done of total, version and log |
@@ -62,5 +63,6 @@ curl -s -H "Authorization: Bearer $KEY" -X POST http://localhost:8000/api/agents
 |---|---|---|
 | GET | `/api/site` | the websites allowed to embed the assistant |
 | PUT | `/api/site` | `{origins: ["docs.example.com"]}`; the voice server reads it within a second |
-| GET | `/api/usage` | provider spend recorded by the voice server's ledger, and the caps |
+| GET | `/api/usage` | provider spend recorded by the voice server's ledger (`spent_usd`, `today_usd`), the limits (`cap_usd` in total, `daily_cap_usd` per day) and whether they can be changed here |
+| PUT | `/api/limits` | `{daily_usd, total_usd}`: the spending limits, in US dollars; the voice server uses them from the next conversation. 409 when the install sets them on the server only |
 | GET | `/api/catalog` | the voices and models an agent may use |

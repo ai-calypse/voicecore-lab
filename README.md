@@ -96,10 +96,13 @@ The hosted Deepgram Voice Agent, measured as a baseline, took 972 ms (n = 3, [br
 ## Use it for your own docs
 
 ```bash
-npx create-voicecore    # checks Docker, starts it, prints the dashboard's address and password
+# on a new Linux server: installs Docker and Node.js if needed, then VoiceCore at https://<the server's IP>
+curl -fsSL https://raw.githubusercontent.com/ai-calypse/voicecore-lab/main/install.sh | sudo sh
+# on a computer that already has Docker and Node.js
+npx create-voicecore
 ```
 
-In the dashboard: add your Deepgram and OpenRouter keys on the Voice page, create an agent, upload your Markdown (or point it at a Git folder), press Publish, try it on the Test tab, and paste the one-line snippet into your site. Without keys it answers typed questions from your docs, at no cost. The [install guide](apps/docs/docs/getting-started/install.md) has the details, the [control-plane page](apps/docs/docs/architecture/control-plane.md) the design.
+In the dashboard: add your Deepgram and OpenRouter keys on the Voice page (spending limits are there too), create an agent, paste the address of your help pages (or upload Markdown, or point it at a Git folder), press Publish, try it on the Test tab, and paste the one-line snippet into your site. Without keys it answers typed questions from your docs, at no cost. The [install guide](apps/docs/docs/getting-started/install.md) has the details, the [control-plane page](apps/docs/docs/architecture/control-plane.md) the design.
 
 ## Run it yourself (no keys, no spend)
 

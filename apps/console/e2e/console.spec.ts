@@ -19,6 +19,8 @@ test("first run to a cited answer in the Test tab, then the snippet", async ({ p
   await page.getByRole("button", { name: "Create agent" }).click();
   await expect(page.getByRole("heading", { name: "Acme Docs", exact: true })).toBeVisible();
 
+  await expect(page.getByLabel("Website address")).toBeVisible(); // a website is the first way offered
+  await page.getByLabel("Upload files").check();
   await page.getByLabel("Docs files").setInputFiles({ name: "logo.png", mimeType: "image/png", buffer: Buffer.from("png") });
   await expect(page.getByRole("alert")).toHaveText("logo.png: not a Markdown, text or zip file: logo.png");
   await page.getByLabel("Docs files").setInputFiles(ACME_ZIP);
@@ -46,6 +48,18 @@ test("first run to a cited answer in the Test tab, then the snippet", async ({ p
 
   await page.getByRole("link", { name: "Agents", exact: true }).first().click();
   await expect(page.getByRole("link", { name: /Acme Docs/ })).toContainText("3 sections from 2 pages");
+});
+
+test("spending limits are set on the Voice page", async ({ page }) => {
+  await page.goto("/#/voice");
+  await page.getByLabel("Admin password").fill("correct horse battery");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByLabel("Per day, in US dollars").fill("2");
+  await page.getByLabel("In total, in US dollars").fill("20");
+  await page.getByRole("button", { name: "Save limits" }).click();
+  await expect(page.getByText("Saved. The new limits apply from the next conversation.")).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel("In total, in US dollars")).toHaveValue("20");
 });
 
 test("a signed-out visitor is asked to sign in", async ({ browser }) => {

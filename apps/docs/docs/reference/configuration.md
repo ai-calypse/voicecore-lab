@@ -123,8 +123,9 @@ VoiceCore reads the environment variables below. The three provider keys, `GATEW
 | `VITE_GATEWAY` | demo app build | gateway URL for the demo page's widget; default `http://localhost:8080` |
 | `VOICECORE_GATEWAY` | docs site build | gateway URL for this site's widget; default `http://localhost:8080` |
 | `DOCS_URL` | docs site build | the site's public URL; default `http://localhost:3000` |
-| `VOICECORE_CAP_USD` | orchestrator, console | the install's total cap in US dollars; default 5 |
-| `VOICECORE_PUBLIC_TOTAL`, `VOICECORE_PUBLIC_DAILY` | orchestrator, console | the public sub-cap in total and per UTC day; defaults 2 and 0.50 |
+| `VOICECORE_CAP_USD` | orchestrator, console | the install's total cap in US dollars; default 5 (`create-voicecore` writes 10) |
+| `VOICECORE_PUBLIC_TOTAL`, `VOICECORE_PUBLIC_DAILY` | orchestrator, console | the public sub-cap in total and per UTC day; defaults 2 and 0.50 (`create-voicecore` writes 10 and 1) |
+| `VOICECORE_LIMITS_FILE` | orchestrator, console | the spending limits set on the dashboard's Voice page (`limits.json`: `daily_usd`, `total_usd`): the console writes it, the orchestrator reads it at each reservation. When set, its total replaces `VOICECORE_PUBLIC_TOTAL` (and raises `VOICECORE_CAP_USD` when higher), and its daily limit `VOICECORE_PUBLIC_DAILY` |
 | `VOICECORE_VECTORS_DIR` | orchestrator, console | where computed vectors are cached when the image's own cache is read-only |
 | `VOICECORE_KEYS_FILE` | orchestrator, console | the provider keys set on the dashboard's Voice page (`keys.json`, mode 600): the console writes it, the orchestrator reads it at each new session, ahead of the environment |
 | `CONSOLE_ADMIN_PASSWORD` | console | the admin's password, at least 12 characters; taken at start, and a changed one signs everyone out. `create-voicecore` generates it and `create-voicecore info` shows it ([install](../getting-started/install.md)) |

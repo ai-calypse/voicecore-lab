@@ -5,12 +5,13 @@ description: How the VoiceCore console publishes agent bundles that the voice si
 
 ## Two halves with one contract between them
 
-A self-hosted VoiceCore runs three services. The **console** is the control plane: it holds agents, their docs and settings, and builds versions. The **gateway** and the **orchestrator** are the data plane: they run voice sessions. The only contract between the halves is a folder of published agent bundles. The console writes it; the voice side mounts it read-only and never calls the console. So the console can be stopped, restarted or upgraded while conversations go on.
+A self-hosted VoiceCore runs three services. The **console** is the control plane: it holds agents, their docs and settings, and builds versions. The **gateway** and the **orchestrator** are the data plane: they run voice sessions. The contract between the halves is a few files: the published agent bundles, the allowed websites, and the provider keys and spending limits set in the dashboard. The console writes them; the voice side mounts them read-only and never calls the console. So the console can be stopped, restarted or upgraded while conversations go on.
 
 ```text
  console ──publishes──▶ agents/<id>/<version>/ + agents/<id>/current ◀──reads── orchestrator
     │                    agents/_site/origins.json                    ◀──reads── gateway
-    └── its own database (agents, sources, builds, keys)
+    │──writes─────────▶ providers/keys.json, providers/limits.json    ◀──reads── orchestrator
+    └── its own database (agents, sources, builds, API keys)
 ```
 
 ## What an agent bundle holds
@@ -28,4 +29,4 @@ Each new session reads the `current` file, so a publish reaches the next session
 
 ## Why this split, and what it costs
 
-The split keeps the real-time path independent of the management path. The console's work, such as unpacking an upload or computing vectors for a large docs set, runs in its own process with a CPU limit, so it cannot slow the audio. Each half has only the access it needs: provider keys live only in the orchestrator, and only the console can write bundles. The cost is one more service and a shared volume, so this shape fits one machine. Several machines would sync the bundle folder, for example through object storage, without changing its format. Everything about one install, from the console and its single admin to the spend caps, belongs to one organisation; VoiceCore is self-hosted, not a shared service.
+The split keeps the real-time path independent of the management path. The console's work, such as unpacking an upload or computing vectors for a large docs set, runs in its own process with a CPU limit, so it cannot slow the audio. Each half has only the access it needs: only the console can write bundles, keys and limits, and it never shows a provider key again once saved; the orchestrator reads them at each new session or reservation, so a change needs no restart. The cost is one more service and a shared volume, so this shape fits one machine. Several machines would sync the bundle folder, for example through object storage, without changing its format. Everything about one install, from the console and its single admin to the spend caps, belongs to one organisation; VoiceCore is self-hosted, not a shared service.

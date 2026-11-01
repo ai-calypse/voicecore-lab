@@ -40,11 +40,41 @@ def test_usage_reads_the_ledger_read_only(tmp_path):
     ledger.chmod(0o444)  # the console mounts it read-only
     c = signed_in(tmp_path, ledger=ledger)
     u = c.get("/api/usage").json()
-    assert (u["spent_usd"], u["cap_usd"]) == (0.25, 5.0)
+    assert (u["spent_usd"], u["cap_usd"]) == (0.25, 2.0)  # the lower of the $5 pool and the $2 public total
 
 
 def test_usage_without_a_ledger(tmp_path):
-    assert signed_in(tmp_path).get("/api/usage").json() == {"spent_usd": None, "cap_usd": None, "today_usd": None, "daily_cap_usd": None}
+    assert signed_in(tmp_path).get("/api/usage").json() == {"spent_usd": None, "today_usd": None, "cap_usd": 2.0,
+                                                            "daily_cap_usd": 0.5, "editable": False}
+
+
+def test_spending_limits_set_in_the_dashboard(tmp_path):
+    c = signed_in(tmp_path, limits_file=tmp_path / "providers" / "limits.json")
+    r = c.put("/api/limits", json={"daily_usd": 1, "total_usd": 12.345})
+    assert r.status_code == 200
+    assert r.json() == {"spent_usd": None, "today_usd": None, "cap_usd": 12.35, "daily_cap_usd": 1.0, "editable": True}
+    assert json.loads((tmp_path / "providers" / "limits.json").read_text()) == {"daily_usd": 1.0, "total_usd": 12.35}
+    assert c.put("/api/limits", json={"daily_usd": 0, "total_usd": 5}).status_code == 422
+
+
+def test_spending_limits_set_on_the_server_are_read_only(tmp_path):
+    r = signed_in(tmp_path).put("/api/limits", json={"daily_usd": 1, "total_usd": 10})
+    assert (r.status_code, r.json()) == (409, {"detail": "This install's spending limits are set on the server, in its .env file."})
+
+
+def test_the_docs_website_becomes_an_allowed_website(tmp_path):
+    c = signed_in(tmp_path)
+    c.put("/api/site", json={"origins": ["*.example.org"]})
+    c.post("/api/agents", json={"name": "Acme Docs"})
+    config = c.get("/api/agents/acme-docs").json()["config"]
+    r = c.put("/api/agents/acme-docs/settings", json={**config, "docs_url": "https://acme.com/help/"})
+    assert r.json()["allowed"] == ["acme.com", "www.acme.com"]
+    assert json.loads((tmp_path / "agents" / "_site" / "origins.json").read_text())["origins"] == [
+        "*.example.org", "acme.com", "www.acme.com"]
+    c.put("/api/site", json={"origins": ["*.example.org"]})  # removed on purpose: saving other settings leaves it out
+    assert c.put("/api/agents/acme-docs/settings", json={**config, "docs_url": "https://acme.com/help/", "name": "Acme"}).json()["allowed"] == []
+    r = c.put("/api/agents/acme-docs/settings", json={**config, "docs_url": "https://docs.example.org/"})
+    assert r.json()["allowed"] == []  # *.example.org covers it
 
 
 def test_migrations_from_v1(tmp_path):

@@ -1,6 +1,6 @@
 # VoiceCore, installed by create-voicecore (https://github.com/ai-calypse/voicecore-lab).
 # Settings live in .env next to this file. After changing it: docker compose up -d
-# Upgrade: npx create-voicecore@latest upgrade. Provider keys: the dashboard's Voice page.
+# Upgrade: npx create-voicecore@latest upgrade. Provider keys and spending limits: the dashboard's Voice page.
 name: voicecore
 
 x-image: &image ghcr.io/ai-calypse/voicecore:${VOICECORE_VERSION:?run create-voicecore}
@@ -13,11 +13,12 @@ services:
     environment:
       VOICECORE_LEDGER: /data/ledger/spend_ledger.json
       VOICECORE_KEYS_FILE: /data/providers/keys.json  # the dashboard's keys, read at each new session
+      VOICECORE_LIMITS_FILE: /data/providers/limits.json  # the dashboard's spending limits, read at each reservation
       DEEPGRAM_API_KEY: ${DEEPGRAM_API_KEY:-}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
-      VOICECORE_CAP_USD: ${VOICECORE_CAP_USD:-5}
-      VOICECORE_PUBLIC_TOTAL: ${VOICECORE_PUBLIC_TOTAL:-2}
-      VOICECORE_PUBLIC_DAILY: ${VOICECORE_PUBLIC_DAILY:-0.5}
+      VOICECORE_CAP_USD: ${VOICECORE_CAP_USD:-10}
+      VOICECORE_PUBLIC_TOTAL: ${VOICECORE_PUBLIC_TOTAL:-10}
+      VOICECORE_PUBLIC_DAILY: ${VOICECORE_PUBLIC_DAILY:-1}
       LOG_FORMAT: json
     volumes: ["agents:/data/agents:ro", "ledger:/data/ledger", "providers:/data/providers:ro"]
     healthcheck:
@@ -59,8 +60,10 @@ services:
       VOICECORE_AGENTS_DIR: /data/agents
       VOICECORE_VECTORS_DIR: /data/console/vectors
       VOICECORE_LEDGER: /data/ledger/spend_ledger.json
-      VOICECORE_CAP_USD: ${VOICECORE_CAP_USD:-5}  # the spend line on Home shows the same limits the voice side enforces
-      VOICECORE_PUBLIC_DAILY: ${VOICECORE_PUBLIC_DAILY:-0.5}
+      VOICECORE_CAP_USD: ${VOICECORE_CAP_USD:-10}  # the starting limits; the Voice page shows and changes them
+      VOICECORE_PUBLIC_TOTAL: ${VOICECORE_PUBLIC_TOTAL:-10}
+      VOICECORE_PUBLIC_DAILY: ${VOICECORE_PUBLIC_DAILY:-1}
+      VOICECORE_LIMITS_FILE: /data/providers/limits.json
       CONSOLE_ADMIN_PASSWORD: ${CONSOLE_ADMIN_PASSWORD:-}  # the admin's password (create-voicecore info shows it)
       CONSOLE_STATIC: /app/console-ui
       VOICECORE_PROVIDERS: ${PROVIDERS:-auto}
@@ -84,9 +87,10 @@ services:
 
   caddy:  # --domain: automatic HTTPS for one host, routed by path
     profiles: ["public"]
-    image: caddy:2.10
+    image: caddy:2.11  # 2.11: Let's Encrypt certificates for an IP address (--domain auto)
     environment:
       DOMAIN: ${DOMAIN:-}
+      ACME_PROFILE: ${ACME_PROFILE:-classic}
     ports: ["80:80", "443:443"]
     volumes: ["./Caddyfile:/etc/caddy/Caddyfile:ro", "caddy:/data"]
     depends_on: [gateway, console]
@@ -96,5 +100,5 @@ volumes:
   agents:
   console:
   ledger:
-  providers:  # the provider keys set in the dashboard: the console writes, the orchestrator reads
+  providers:  # provider keys and spending limits set in the dashboard: the console writes, the orchestrator reads
   caddy:

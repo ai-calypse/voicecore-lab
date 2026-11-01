@@ -3,10 +3,10 @@
     "build": "done",
     "enabled": true,
     "id": "voicecore-docs",
-    "live_version": "561e4ad43458",
+    "live_version": "82d9582cf022",
     "name": "VoiceCore docs",
     "published": 1793491200.0,
     "sources": 2,
-    "summary": "363 sections from 32 pages"
+    "summary": "381 sections from 32 pages"
   }
 ]

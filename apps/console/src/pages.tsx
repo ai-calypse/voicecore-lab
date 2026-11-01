@@ -2,12 +2,14 @@
 // reason when something is refused.
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { api, ApiError, DEMO, type Agent, type AgentRow, type Catalog, type Config, type Key, type ProviderKey, type Providers,
-  type Status } from "./api.ts";
+  type Status, type Usage } from "./api.ts";
 import { agentStatus, agentSummary, ago, buildLine, greeting, type Build } from "./lib.ts";
 import { Alert, CopyButton, Field, Icon, Logo, Pill, store } from "./ui.tsx";
 
 export const go = (hash: string) => { location.hash = hash; };
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
+const money = (v: number) => `$${v.toFixed(2)}`;
+const nowAllowed = (hosts: string[]) => hosts.length ? ` ${hosts.join(" and ")} ${hosts.length === 1 ? "is" : "are"} now allowed to show the assistant.` : "";
 
 function useLoad<T>(load: () => Promise<T>, deps: unknown[]): { data: T | null; error: string; reload: () => void } {
   const [data, setData] = useState<T | null>(null);
@@ -170,7 +172,6 @@ export function Home({ status }: { status: Status }) {
   const live = agents.data?.filter((a) => agentStatus(a) === "Live").length ?? 0;
   const origins = site.data?.origins ?? [];
   const u = usage.data;
-  const money = (v: number) => `$${v.toFixed(2)}`;
   return (
     <main>
       <header className="page-intro">
@@ -180,8 +181,8 @@ export function Home({ status }: { status: Status }) {
       <section className="tiles" aria-label="This install">
         <Tile label="Agents live" href="#/agents" value={agents.data ? live : "…"}
               note={agents.data ? `of ${agents.data.length} ${agents.data.length === 1 ? "agent" : "agents"}` : ""} />
-        <Tile label="Spend" value={free ? money(0) : u?.spent_usd != null ? money(u.spent_usd) : "Not recorded"}
-              note={free ? "Free mode spends nothing" : u?.cap_usd != null ? `of ${money(u.cap_usd)} cap${u.today_usd != null ? `, ${money(u.today_usd)} today` : ""}` : "No spend ledger on this install"} />
+        <Tile label="Spend" href="#/voice" value={free ? money(0) : u?.spent_usd != null ? money(u.spent_usd) : "Not recorded"}
+              note={free ? "Free mode spends nothing" : u?.spent_usd != null && u.cap_usd != null ? `of ${money(u.cap_usd)} limit${u.today_usd != null ? `, ${money(u.today_usd)} today` : ""}` : "No spend ledger on this install"} />
         <Tile label="Voice" href="#/voice" value={free ? "Off" : "On"} note={free ? "Add your provider keys to turn it on" : "Spoken answers with your provider keys"} />
         <Tile label="Allowed websites" href="#/websites" value={site.data ? origins.length : "…"}
               note={!site.data ? "" : origins.length ? `${origins[0]}${origins.length > 1 ? ` and ${origins.length - 1} more` : ""}` : "None yet: embeds are refused"} />
@@ -325,8 +326,8 @@ function LiveVersion({ agent, build }: { agent: Agent; build: Agent["build"] }) 
   );
 }
 
-const METHODS = [["upload", "Upload files"], ["text", "Paste text"], ["git", "Git repository"]] as const;
-const SOURCE_ICON: Record<string, string> = { text: "text", git: "git" };
+const METHODS = [["web", "Website"], ["upload", "Upload files"], ["text", "Paste text"], ["git", "Git repository"]] as const;
+const SOURCE_ICON: Record<string, string> = { text: "text", git: "git", web: "globe" };
 
 function Knowledge({ agent, build, reload }: { agent: Agent; build: Agent["build"]; reload: () => void }) {
   const [result, setResult] = useState<ReactNode>(null);
@@ -336,8 +337,20 @@ function Knowledge({ agent, build, reload }: { agent: Agent; build: Agent["build
   const [text, setText] = useState("");
   const [repo, setRepo] = useState({ url: "", folder: "docs", ref: "" });
   const [cloning, setCloning] = useState(false);
-  const [method, setMethod] = useState<(typeof METHODS)[number][0]>("upload");
+  const [site, setSite] = useState("");
+  const [method, setMethod] = useState<(typeof METHODS)[number][0]>("web");
   const input = useRef<HTMLInputElement>(null);
+  const read = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(""); setResult(null); setCloning(true);
+    try {
+      const r = await api.web(agent.id, site.trim());
+      setResult(<>Added {r.files} {r.files === 1 ? "page" : "pages"} from the website.{r.skipped.length > 0 && <> Not read: {r.skipped.join(", ")}.</>}{nowAllowed(r.allowed)}</>);
+      setSite("");
+      reload();
+    } catch (err) { setError(message(err)); }
+    setCloning(false);
+  };
   const clone = async (e: FormEvent) => {
     e.preventDefault();
     setError(""); setResult(null); setCloning(true);
@@ -374,7 +387,7 @@ function Knowledge({ agent, build, reload }: { agent: Agent; build: Agent["build
       <div className="split-main">
         <section className="panel stack" aria-labelledby="sources-h">
           <h2 id="sources-h">Sources</h2>
-          {agent.sources.length === 0 ? <p className="muted">No docs yet. Add files, text or a Git repository below, then publish.</p> : (
+          {agent.sources.length === 0 ? <p className="muted">No docs yet. Add your website, files, text or a Git repository below, then publish.</p> : (
           <ul className="rows compact">
             {agent.sources.map((s) => (
               <li key={s.id}>
@@ -384,9 +397,9 @@ function Knowledge({ agent, build, reload }: { agent: Agent; build: Agent["build
                   <span className="muted small">{s.kind === "text" ? "pasted text" : `${s.files} ${s.files === 1 ? "page" : "pages"}`}</span>
                 </span>
                 <span className="actions">
-                  {s.kind === "git" && (
+                  {(s.kind === "git" || s.kind === "web") && (
                     <button className="button button-quiet" disabled={DEMO} onClick={async () => {
-                      try { const r = await api.sync(agent.id, s.id); setResult(<>Synced: {r.files} {r.files === 1 ? "page" : "pages"}. Publish to put them live.</>); }
+                      try { const r = await api.sync(agent.id, s.id); setResult(<>Synced: {r.files} {r.files === 1 ? "page" : "pages"}. Publish to put them live.{nowAllowed(r.allowed ?? [])}</>); }
                       catch (e) { setError(message(e)); }
                       reload();
                     }}>Sync</button>
@@ -407,6 +420,14 @@ function Knowledge({ agent, build, reload }: { agent: Agent; build: Agent["build
               <label key={k}><input type="radio" name="method" value={k} checked={method === k} onChange={() => setMethod(k)} />{label}</label>
             ))}
           </fieldset>
+          {method === "web" && (
+            <form onSubmit={read} className="stack">
+              <Field label="Website address" help="Where your help or docs pages are. VoiceCore reads that page and every page linked below it on the same site, up to 200 pages.">
+                <input type="text" inputMode="url" autoComplete="url" spellCheck={false} required placeholder="https://example.com/help/" value={site} onChange={(e) => setSite(e.target.value)} disabled={DEMO} />
+              </Field>
+              <button className="button" disabled={DEMO || cloning}>{cloning ? "Reading pages… (up to a minute)" : "Read website"}</button>
+            </form>
+          )}
           {method === "upload" && (
             <div className={`dropzone${over ? " over" : ""}`} onDragOver={(e) => { e.preventDefault(); setOver(true); }}
                  onDragLeave={() => setOver(false)} onDrop={(e) => { e.preventDefault(); setOver(false); if (!DEMO) send(e.dataTransfer.files); }}>
@@ -462,8 +483,8 @@ function Settings({ agent, reload }: { agent: Agent; reload: () => void }) {
     e.preventDefault();
     try {
       const keyterms = terms.split(",").map((t) => t.trim()).filter(Boolean);
-      await api.saveSettings(agent.id, { ...form, first_message: form.first_message || null, keyterms });
-      setState({ kind: "success", text: "Saved. Publish to put these settings live." });
+      const r = await api.saveSettings(agent.id, { ...form, first_message: form.first_message || null, keyterms });
+      setState({ kind: "success", text: `Saved. Publish to put these settings live.${nowAllowed(r.allowed ?? [])}` });
       reload();
     } catch (err) { setState({ kind: "error", text: message(err) }); }
   };
@@ -634,7 +655,43 @@ export function Voice({ onChange }: { onChange: () => void }) {
         </Alert>
       )}
       {data && PROVIDERS.map((p) => <ProviderKeyForm key={p.id} {...p} state={data[p.id]} editable={data.editable} onChange={changed} />)}
+      <Limits />
     </main>
+  );
+}
+
+function Limits() {
+  const { data, error, reload } = useLoad<Usage>(api.usage, []);
+  const [form, setForm] = useState<{ daily: string; total: string } | null>(null);
+  const [result, setResult] = useState<{ kind: "error" | "success"; text: string } | null>(null);
+  if (!data) return error ? <Alert kind="error">{error}</Alert> : null;
+  const value = form ?? { daily: String(data.daily_cap_usd ?? ""), total: String(data.cap_usd ?? "") };
+  const save = async (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      await api.setLimits(Number(value.daily), Number(value.total));
+      setForm(null); setResult({ kind: "success", text: "Saved. The new limits apply from the next conversation." }); reload();
+    } catch (err) { setResult({ kind: "error", text: message(err) }); }
+  };
+  const spent = (v: number | null, of: number | null) => (v != null && of != null ? `${money(v)} of ${money(of)} spent` : "");
+  return (
+    <form onSubmit={save} className="panel stack" aria-labelledby="limits-title">
+      <h2 id="limits-title">Spending limits</h2>
+      <p className="muted">A spoken question costs about 1 cent. When a limit is reached, the assistant stops speaking and answers typed questions with text from your docs, at no cost.</p>
+      <div className="grid-2 tight">
+        <Field label="Per day, in US dollars" help={spent(data.today_usd, data.daily_cap_usd) || "Resets at midnight UTC."}>
+          <input type="number" min="0.01" step="0.01" required value={value.daily} disabled={DEMO || !data.editable}
+                 onChange={(e) => setForm({ ...value, daily: e.target.value })} />
+        </Field>
+        <Field label="In total, in US dollars" help={spent(data.spent_usd, data.cap_usd) || "Since VoiceCore was installed."}>
+          <input type="number" min="0.01" step="0.01" required value={value.total} disabled={DEMO || !data.editable}
+                 onChange={(e) => setForm({ ...value, total: e.target.value })} />
+        </Field>
+      </div>
+      {result && <Alert kind={result.kind}>{result.text}</Alert>}
+      {data.editable ? <div><button className="button button-primary" disabled={DEMO}>Save limits</button></div>
+        : <p className="muted small">This install's limits are set on its server, in its .env file.</p>}
+    </form>
   );
 }
 

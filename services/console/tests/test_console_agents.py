@@ -155,7 +155,7 @@ def test_flagged_sections_logged(c):
 def test_publish_without_sources_fails_clearly(c):
     c.post("/api/agents", json={"name": "Acme Docs"})
     b = published(c, "acme-docs")
-    assert (b["status"], b["log"]) == ("failed", "no docs yet: add a file, a Git repository or some text first")
+    assert (b["status"], b["log"]) == ("failed", "no docs yet: add a website, a file, a Git repository or some text first")
 
 
 def test_passage_cap(tmp_path):

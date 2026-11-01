@@ -1,6 +1,7 @@
 {
-  "cap_usd": null,
-  "daily_cap_usd": null,
+  "cap_usd": 2.0,
+  "daily_cap_usd": 0.5,
+  "editable": false,
   "spent_usd": null,
   "today_usd": null
 }

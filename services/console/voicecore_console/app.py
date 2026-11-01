@@ -13,6 +13,7 @@ import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.concurrency import run_in_threadpool
@@ -81,6 +82,15 @@ class GitIn(BaseModel):
     ref: str = Field("", max_length=100)
 
 
+class WebIn(BaseModel):
+    url: str = Field(min_length=4, max_length=300)
+
+
+class LimitsIn(BaseModel):
+    daily_usd: float = Field(gt=0, le=10_000)
+    total_usd: float = Field(gt=0, le=1_000_000)
+
+
 class TextIn(BaseModel):
     title: str = Field(min_length=1, max_length=120)
     text: str = Field(min_length=1, max_length=200_000)
@@ -109,6 +119,17 @@ def publish_site(agents_dir: Path, origins: list[str]) -> None:
     os.replace(tmp, d / "origins.json")
 
 
+def twins(netloc: str) -> list[str]:
+    """A website and its other usual name: acme.com and www.acme.com come as a pair; docs.acme.com stands alone."""
+    if netloc.startswith("www."):
+        return [netloc, netloc[4:]]
+    return [netloc, "www." + netloc] if netloc.count(".") == 1 and ":" not in netloc else [netloc]
+
+
+def covered(host: str, origins: list[str]) -> bool:
+    return any(o in (host, f"https://{host}", f"http://{host}") or (o.startswith("*.") and host.endswith(o[1:])) for o in origins)
+
+
 def default_config(name: str) -> dict:
     return SettingsIn(name=name).model_dump()
 
@@ -117,11 +138,13 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
                run_git=None, ledger: Path | None = None, max_passages: int = publish.MAX_PASSAGES, providers: str = "free",
                voice_url: str = "http://localhost:8080", static_dir: Path | None = None, turnstile_sitekey: str = "",
                admin_password: str | None = None, keys_file: Path | None = None,
-               check_key: Callable[[str, str], bool] = provider_keys.check) -> FastAPI:
+               check_key: Callable[[str, str], bool] = provider_keys.check, limits_file: Path | None = None,
+               read_site: Callable[[str, Path], dict] = sources.fetch_web) -> FastAPI:
     """providers: the voice side's mode (free shows the 'voice is off' banner). voice_url: the gateway's public address,
     which the embed snippet loads the widget from. static_dir: the built console UI (apps/console/dist).
     admin_password: CONSOLE_ADMIN_PASSWORD, the admin's password with no setup link (the installer writes it to .env).
-    keys_file: VOICECORE_KEYS_FILE, where provider keys entered here are kept for the voice side (providers "auto")."""
+    keys_file: VOICECORE_KEYS_FILE, where provider keys entered here are kept for the voice side (providers "auto").
+    limits_file: VOICECORE_LIMITS_FILE, the spending limits set here; the voice side reads them at each reservation."""
     data_dir, agents_dir = Path(data_dir), Path(agents_dir)
     store = Store(data_dir / "console.db")
     store.fail_interrupted_builds(now())
@@ -245,6 +268,15 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
         publish_site(agents_dir, origins)
         return {"origins": origins}
 
+    def allow(netloc: str) -> list[str]:
+        """The website an agent's docs live on is where its button will go: allow it, unless the list already does."""
+        origins = store.site_origins()
+        added = [h for h in twins(netloc.lower()) if WEBSITE.fullmatch(h) and not covered(h, origins)]
+        if added:
+            store.set_site_origins(origins + added)
+            publish_site(agents_dir, origins + added)
+        return added
+
     # --- provider keys: write-only; the voice side reads them at each new session -------------
 
     def provider_status() -> dict:
@@ -287,9 +319,16 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
 
     @app.get("/api/usage", dependencies=[Depends(admin)])
     def usage():
-        if ledger is None:
-            return {"spent_usd": None, "cap_usd": None, "today_usd": None, "daily_cap_usd": None}
-        return budget.read_totals(ledger)
+        budget.apply_limits(limits_file)
+        totals = budget.read_totals(ledger) if ledger else {"spent_usd": None, "today_usd": None, **budget.limits()}
+        return {**totals, "editable": limits_file is not None}
+
+    @app.put("/api/limits", dependencies=[Depends(admin)])
+    def set_limits(body: LimitsIn):
+        if limits_file is None:
+            raise HTTPException(409, "This install's spending limits are set on the server, in its .env file.")
+        keys.save(limits_file, {"daily_usd": round(body.daily_usd, 2), "total_usd": round(body.total_usd, 2)})
+        return usage()
 
     # --- agents ---------------------------------------------------------------------------
 
@@ -337,14 +376,15 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
 
     @app.put("/api/agents/{agent_id}/settings", dependencies=[Depends(admin)])
     def settings(agent_id: str, body: SettingsIn):
-        agent_or_404(agent_id)
+        before = agent_or_404(agent_id)["config"].get("docs_url")
         config = body.model_dump()
         try:
             agents.validate(config)
         except ValueError as e:
             raise HTTPException(422, str(e)) from None
         store.set_config(agent_id, config, now())
-        return {"config": config}  # takes effect at the next Publish
+        added = allow(urlsplit(config["docs_url"]).netloc) if config["docs_url"] and config["docs_url"] != before else []
+        return {"config": config, "allowed": added}  # the settings take effect at the next Publish
 
     @app.delete("/api/agents/{agent_id}", status_code=204, dependencies=[Depends(admin)])
     def delete_agent(agent_id: str):
@@ -383,6 +423,22 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
         store.add_source(sid, agent_id, "text", body.title, None, result["files"], now())
         return {"id": sid, **result}
 
+    def web_fetch(url: str, dest: Path) -> dict:
+        try:
+            return read_site(url, dest)
+        except sources.Rejected as e:
+            raise HTTPException(e.status, e.message) from None
+
+    @app.post("/api/agents/{agent_id}/sources/web", status_code=201, dependencies=[Depends(admin)])
+    def add_web(agent_id: str, body: WebIn):
+        """Read the pages at a website address. Its site becomes an allowed website (the button goes there)."""
+        agent_or_404(agent_id)
+        sid, dest = new_source_dir(agent_id)
+        result = web_fetch(body.url, dest)
+        ref = json.dumps({"url": body.url.strip(), "host": result["host"]})
+        store.add_source(sid, agent_id, "web", body.url.strip()[:200], ref, result["files"], now())
+        return {"id": sid, "files": result["files"], "skipped": result["skipped"], "allowed": allow(result["host"])}
+
     def git_fetch(body: GitIn, dest: Path) -> dict:
         try:
             return sources.fetch_git(body.url, body.folder, dest, body.ref, **({"run_git": run_git} if run_git else {}))
@@ -399,14 +455,19 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
         return {"id": sid, **result}
 
     @app.post("/api/agents/{agent_id}/sources/{source_id}/sync", dependencies=[Depends(admin)])
-    def sync_git(agent_id: str, source_id: str):
-        """Fetch the repository folder again; the new files replace the old ones (Publish to put them live)."""
-        source = next((s for s in store.sources(agent_id) if s["id"] == source_id and s["kind"] == "git"), None)
+    def sync(agent_id: str, source_id: str):
+        """Fetch a repository folder or a website again; the new files replace the old ones (Publish to put them live)."""
+        source = next((s for s in store.sources(agent_id) if s["id"] == source_id and s["kind"] in ("git", "web")), None)
         if source is None:
-            raise HTTPException(404, "no such Git source")
-        result = git_fetch(GitIn(**json.loads(source["ref"])), data_dir / "sources" / agent_id / source_id)
-        store.set_source_files(source_id, result["files"])
-        return result
+            raise HTTPException(404, "no such Git or website source")
+        ref, dest = json.loads(source["ref"]), data_dir / "sources" / agent_id / source_id
+        if source["kind"] == "git":
+            result = git_fetch(GitIn(**ref), dest)
+            store.set_source_files(source_id, result["files"])
+            return result
+        result = web_fetch(ref["url"], dest)
+        store.set_source_files(source_id, result["files"], json.dumps({**ref, "host": result["host"]}))
+        return {"files": result["files"], "skipped": result["skipped"], "allowed": allow(result["host"])}
 
     @app.delete("/api/agents/{agent_id}/sources/{source_id}", status_code=204, dependencies=[Depends(admin)])
     def delete_source(agent_id: str, source_id: str):

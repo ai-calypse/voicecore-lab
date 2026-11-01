@@ -14,10 +14,13 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 
+from voicecore import keys
+
 CAPS = {"usd": float(os.environ.get("VOICECORE_CAP_USD") or 5.00), "cartesia_credits": 16000}  # an install sets its own
 # Sub-caps inside a pool (Step 09 Phase 9): what a public deployment may spend, checked under the same lock as the pool.
 SUBCAPS = {"public": {"pool": "usd", "total": float(os.environ.get("VOICECORE_PUBLIC_TOTAL") or 2.00),
                       "daily": float(os.environ.get("VOICECORE_PUBLIC_DAILY") or 0.50)}}
+_FROM_ENV = (CAPS["usd"], SUBCAPS["public"]["total"], SUBCAPS["public"]["daily"])
 LEDGER = Path(__file__).resolve().parents[3] / "benchmarks/spend_ledger.json"  # default; VOICECORE_LEDGER overrides
 now = time.time  # wall clock for entry timestamps (daily caps); tests replace it
 
@@ -104,11 +107,27 @@ def _entries(path) -> list[dict]:
     return json.loads(text).get("entries", []) if text.strip() else []
 
 
+def apply_limits(path=None) -> None:
+    """Spending limits set in the dashboard (VOICECORE_LIMITS_FILE: {"daily_usd", "total_usd"}) replace the public
+    sub-cap's from the next reservation. A higher total also lifts the pool's cap, which never drops below its own."""
+    path = path or os.environ.get("VOICECORE_LIMITS_FILE")
+    saved = keys.saved(Path(path)) if path else {}
+    saved = saved if isinstance(saved, dict) else {}
+    total = saved.get("total_usd")
+    CAPS["usd"] = max(float(total), _FROM_ENV[0]) if total else _FROM_ENV[0]
+    SUBCAPS["public"]["total"] = float(total) if total else _FROM_ENV[1]
+    SUBCAPS["public"]["daily"] = float(saved.get("daily_usd") or _FROM_ENV[2])
+
+
+def limits() -> dict:
+    """What a public conversation may spend in total (the lower of the two caps) and in one UTC day."""
+    return {"cap_usd": min(CAPS["usd"], SUBCAPS["public"]["total"]), "daily_cap_usd": SUBCAPS["public"]["daily"]}
+
+
 def read_totals(ledger_path) -> dict:
     """What the console shows (it mounts the ledger read-only): one read under the shared lock, never a write."""
-    entries = _entries(Path(ledger_path))
-    return {"spent_usd": _sum(entries, "usd"), "cap_usd": CAPS["usd"],
-            "today_usd": _sum(entries, "public", day=int(now() // 86_400)), "daily_cap_usd": SUBCAPS["public"]["daily"]}
+    entries = _entries(Path(ledger_path))  # public spend, against the public limits
+    return {"spent_usd": _sum(entries, "public"), "today_usd": _sum(entries, "public", day=int(now() // 86_400)), **limits()}
 
 
 def total(pool, ledger_path=None):
@@ -139,6 +158,7 @@ def reserve_all(specs, ledger_path=None, sub=None) -> list[Reservation]:
     """Reserve several (pool, amount, label) atomically under one ledger lock: all are written, or none (an over-cap
     or unknown pool raises before anything is written, so no partial reservation ever counts against a cap).
     sub: a sub-cap (e.g. "public") every one of them also counts against, in total and for today (UTC)."""
+    apply_limits()
     if url := _redis_url(ledger_path):
         from voicecore import budget_redis
         return budget_redis.reserve_all(specs, url, sub)

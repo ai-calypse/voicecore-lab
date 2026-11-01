@@ -191,9 +191,9 @@ class Store:
                               (agent_id,)).fetchall()
         return [dict(r) for r in rows]
 
-    def set_source_files(self, source_id: str, files: int) -> None:
+    def set_source_files(self, source_id: str, files: int, ref: str | None = None) -> None:
         with self.db() as db:
-            db.execute("UPDATE sources SET files = ? WHERE id = ?", (files, source_id))
+            db.execute("UPDATE sources SET files = ?, ref = COALESCE(?, ref) WHERE id = ?", (files, ref, source_id))
 
     def delete_source(self, agent_id: str, source_id: str) -> bool:
         with self.db() as db:

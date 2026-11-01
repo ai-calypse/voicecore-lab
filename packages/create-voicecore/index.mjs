@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // create-voicecore: install VoiceCore with Docker in one command (Step 10, ADR 0005). No dependencies.
 //
-//   npx create-voicecore                 install (one question: a public domain, or this machine; --yes: this machine)
+//   npx create-voicecore                 install (one question: a public domain, auto, or this machine; --yes: this machine)
+//   npx create-voicecore --domain auto   a server's own address, https://<its IP>, with no domain or DNS needed
 //   npx create-voicecore info            the dashboard's address and password again
 //   npx create-voicecore@latest upgrade  newer images, same settings and data
 //   npx create-voicecore uninstall       stop it (--delete-data also removes agents, docs and the spend ledger)
-// Provider keys and allowed websites are set in the dashboard; voice turns on once both keys are there.
+// Provider keys, spending limits and allowed websites are set in the dashboard; voice turns on once both keys are there.
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -15,9 +16,10 @@ import { createInterface } from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
-export const VERSION = "0.2.0"; // the image tag this installer writes; they are released together
+export const VERSION = "0.3.0"; // the image tag this installer writes; they are released together
 const TEMPLATE = fileURLToPath(new URL("./template/", import.meta.url));
 const LOCAL_ORIGINS = "localhost:*,127.0.0.1:*";
+const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/;
 const DOCKER_PROXY_RANGES = "172.16.0.0/12,192.168.0.0/16,10.0.0.0/8"; // Caddy reaches the gateway over the compose network
 
 const OPTIONS = {
@@ -58,6 +60,7 @@ export function renderEnv(o, existing = {}) {
     PUBLIC_CONSOLE_URL: pub ? `https://${host}` : `http://localhost:${consolePort}`,
     ORIGINS: [pub ? host : LOCAL_ORIGINS, site].filter(Boolean).join(","),
     HOSTS: pub ? host : "localhost,127.0.0.1,::1",
+    ACME_PROFILE: IPV4.test(host) ? "shortlived" : "classic", // Let's Encrypt certifies an IP address for 6 days at a time
     GATEWAY_ENV: pub ? "prod" : "dev",
     TRUSTED_PROXIES: pub ? DOCKER_PROXY_RANGES : "",
     HUMAN_CHECK: o.humanCheck ?? "on",
@@ -65,9 +68,9 @@ export function renderEnv(o, existing = {}) {
     TURNSTILE_SECRET: o.turnstileSecret ?? existing.TURNSTILE_SECRET ?? "",
     DEEPGRAM_API_KEY: o.deepgram ?? existing.DEEPGRAM_API_KEY ?? "",
     OPENROUTER_API_KEY: o.openrouter ?? existing.OPENROUTER_API_KEY ?? "",
-    VOICECORE_CAP_USD: existing.VOICECORE_CAP_USD ?? "5",
-    VOICECORE_PUBLIC_TOTAL: existing.VOICECORE_PUBLIC_TOTAL ?? "2",
-    VOICECORE_PUBLIC_DAILY: existing.VOICECORE_PUBLIC_DAILY ?? "0.5",
+    VOICECORE_CAP_USD: existing.VOICECORE_CAP_USD ?? "10", // starting limits; the dashboard's Voice page changes them
+    VOICECORE_PUBLIC_TOTAL: existing.VOICECORE_PUBLIC_TOTAL ?? "10",
+    VOICECORE_PUBLIC_DAILY: existing.VOICECORE_PUBLIC_DAILY ?? "1",
     GATEWAY_SECRET: existing.GATEWAY_SECRET || hex(32), // a second run keeps the secrets
     CONSOLE_ADMIN_PASSWORD: existing.CONSOLE_ADMIN_PASSWORD || password(), // the console takes it at start: no setup link
   };
@@ -77,7 +80,8 @@ export function renderEnv(o, existing = {}) {
 function writeEnv(env) {
   return [
     `# VoiceCore settings, written by create-voicecore ${VERSION}. This file holds secrets: keep it private.`,
-    "# Spend caps are in US dollars; voice stops (text keeps working) when one is reached.",
+    "# Spend caps are in US dollars; voice stops (text keeps working) when one is reached. Limits set on the",
+    "# dashboard's Voice page take their place.",
     ...Object.entries(env).map(([k, v]) => `${k}=${v}`), "",
   ].join("\n");
 }
@@ -99,6 +103,21 @@ export function checkDocker(run) {
 const realDeps = {
   log: (s) => console.log(s),
   env: process.env,
+  publicIp: async () => { // the address the internet sees this server at (behind a cloud's NAT too)
+    try {
+      return (await (await fetch("https://api.ipify.org", { signal: AbortSignal.timeout(5000) })).text()).trim();
+    } catch {
+      return "";
+    }
+  },
+  reachable: async (url, seconds) => { // https answers once Caddy has its certificate, usually within a minute
+    for (const end = Date.now() + seconds * 1000; Date.now() < end; await new Promise((r) => setTimeout(r, 3000))) {
+      try {
+        if ((await fetch(url, { signal: AbortSignal.timeout(5000) })).ok) return true;
+      } catch { /* not yet */ }
+    }
+    return false;
+  },
   voiceOn: async (consoleUrl) => { // the dashboard's public status: keys may have been added there, not in .env
     try {
       return (await (await fetch(`${consoleUrl}/api/status`, { signal: AbortSignal.timeout(3000) })).json()).providers === "live";
@@ -160,10 +179,15 @@ async function install(o, d) {
   // Keys can also come in here (flags, or the environment) for a scripted install; they go to .env.
   const settings = { site: o.site, deepgram: o.deepgram || existing.DEEPGRAM_API_KEY || d.env.DEEPGRAM_API_KEY,
                      openrouter: o.openrouter || existing.OPENROUTER_API_KEY || d.env.OPENROUTER_API_KEY };
-  settings.domain = o.domain ?? existing.DOMAIN ?? (await ask("Public domain for VoiceCore, e.g. voice.example.com (Enter: this machine only):", ""));
+  settings.domain = o.domain ?? existing.DOMAIN ?? (await ask(
+    "Public domain for VoiceCore, e.g. voice.example.com (auto: this server's own address; Enter: this machine only):", ""));
+  if (settings.domain === "auto") {
+    settings.domain = await d.publicIp();
+    if (!IPV4.test(settings.domain)) throw new Error("couldn't find this server's public address: use --domain with your own domain");
+  }
   const mode = settings.domain ? "public" : "local";
   if (mode === "public") {
-    if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(settings.domain)) throw new Error(`not a domain name: ${settings.domain}`);
+    if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(settings.domain) && !IPV4.test(settings.domain)) throw new Error(`not a domain name: ${settings.domain}`);
     settings.turnstileSitekey = o["turnstile-sitekey"];
     settings.turnstileSecret = o["turnstile-secret"];
     settings.humanCheck = settings.turnstileSecret ? "on" : (o["human-check"] ?? "off");
@@ -181,6 +205,10 @@ async function install(o, d) {
   compose(d, dir, [...profiles(env), "up", "-d", "--wait"]);
   d.log("");
   d.log("VoiceCore is running.");
+  if (mode === "public" && !(await d.reachable(`${env.PUBLIC_CONSOLE_URL}/api/status`, 120))) {
+    d.log(`${env.PUBLIC_CONSOLE_URL} doesn't answer yet. Check that ports 80 and 443 are open in your server's firewall`
+      + (IPV4.test(env.DOMAIN) ? "." : `, and that ${env.DOMAIN} points at this server.`) + " Then open it again in a minute.");
+  }
   await summary(env, d);
   d.log("Next: in the dashboard, create an agent, add your docs and Publish. Its Embed tab has the one line for your site.");
   d.log("Show this again: npx create-voicecore info");
@@ -228,6 +256,7 @@ const HELP = `Usage: npx create-voicecore [install|info|upgrade|uninstall] [opti
   --yes              ask nothing: this machine only, folder ./voicecore
   --dir <folder>     where the install lives (default ./voicecore)
   --domain <host>    public: VoiceCore on its own domain, with HTTPS by Caddy (its DNS must point at this machine)
+  --domain auto      public, on this server's own address (https://<its IP>): no domain or DNS needed
   --site <host>      a website allowed to embed it (more in the dashboard)
   --deepgram <key>, --openrouter <key>   provider keys for a scripted install (default: DEEPGRAM_API_KEY and
                      OPENROUTER_API_KEY from the environment; otherwise add them in the dashboard)

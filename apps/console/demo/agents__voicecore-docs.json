@@ -2,13 +2,13 @@
   "build": {
     "agent": "voicecore-docs",
     "created": 1793491200.0,
-    "done": 363,
+    "done": 381,
     "finished": 1793491200.0,
     "id": 1,
-    "log": "363 sections from 32 pages\n1 section skipped: it reads like instructions to the assistant\npublished version 561e4ad43458",
+    "log": "381 sections from 32 pages\n2 sections skipped: they read like instructions to the assistant\npublished version 82d9582cf022",
     "status": "done",
-    "total": 363,
-    "version": "561e4ad43458"
+    "total": 381,
+    "version": "82d9582cf022"
   },
   "config": {
     "docs_url": "https://voicecore-docs.fly.dev/",
@@ -27,28 +27,28 @@
   },
   "enabled": true,
   "id": "voicecore-docs",
-  "live_version": "561e4ad43458",
+  "live_version": "82d9582cf022",
   "published": {
     "finished": 1793491200.0,
-    "log": "363 sections from 32 pages\n1 section skipped: it reads like instructions to the assistant\npublished version 561e4ad43458",
-    "version": "561e4ad43458"
+    "log": "381 sections from 32 pages\n2 sections skipped: they read like instructions to the assistant\npublished version 82d9582cf022",
+    "version": "82d9582cf022"
   },
   "snippet": "<script src=\"https://voicecore.fly.dev/widget.js\" data-agent=\"voicecore-docs\" async></script>",
   "sources": [
     {
       "created": 1793491200.0,
-      "files": 31,
-      "id": "src_83b4aca3533a",
-      "kind": "upload",
-      "label": "voicecore-docs.zip",
+      "files": 1,
+      "id": "src_8b732785a99b",
+      "kind": "text",
+      "label": "Support hours",
       "ref": null
     },
     {
       "created": 1793491200.0,
-      "files": 1,
-      "id": "src_cd85ea31789d",
-      "kind": "text",
-      "label": "Support hours",
+      "files": 31,
+      "id": "src_dfa09718a371",
+      "kind": "upload",
+      "label": "voicecore-docs.zip",
       "ref": null
     }
   ]

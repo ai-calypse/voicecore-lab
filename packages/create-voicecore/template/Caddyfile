@@ -1,5 +1,17 @@
 # VoiceCore behind one HTTPS host (create-voicecore --domain). Caddy gets and renews the certificate.
+# DOMAIN is a domain name, or this server's IP address (--domain auto): Let's Encrypt certifies an IP address only
+# with its 6-day "shortlived" profile, which Caddy renews on its own. Browsers send no name for an IP address, hence
+# default_sni.
+{
+	default_sni {$DOMAIN}
+}
+
 {$DOMAIN} {
+	tls {
+		issuer acme {
+			profile {$ACME_PROFILE:classic}
+		}
+	}
 	encode gzip
 	@voice path /v1/* /widget.js /healthz /readyz
 	handle @voice {

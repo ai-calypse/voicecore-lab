@@ -20,7 +20,8 @@ function fakeDocker({ missing = false, down = false, compose = "2.40.0" } = {}) 
 
 function deps(over = {}) {
   const out = [];
-  return { out, log: (s) => out.push(s), prompt: async () => "", isPortFree: async () => true, env: {}, voiceOn: async () => null, ...fakeDocker(), ...over };
+  return { out, log: (s) => out.push(s), prompt: async () => "", isPortFree: async () => true, env: {}, voiceOn: async () => null,
+    publicIp: async () => "203.0.113.10", reachable: async () => true, ...fakeDocker(), ...over };
 }
 
 const dir = () => mkdtempSync(join(tmpdir(), "voicecore-"));
@@ -43,6 +44,7 @@ describe("renderEnv", () => {
     expect(env.CONSOLE_ADMIN_PASSWORD).toMatch(/^[A-Za-z0-9_-]{20}$/);
     expect(env.VOICECORE_VERSION).toBe(VERSION);
     expect(env.PUBLIC_VOICE_URL).toBe("http://localhost:8080");
+    expect([env.VOICECORE_PUBLIC_DAILY, env.VOICECORE_PUBLIC_TOTAL, env.VOICECORE_CAP_USD]).toEqual(["1", "10", "10"]); // about 100 questions a day
   });
 
   it("public mode serves one https host and needs no open voice port", () => {
@@ -83,8 +85,33 @@ describe("install", () => {
     const d = deps({ prompt: async (q, fallback = "") => (asked.push(q), fallback) });
     const target = join(dir(), "v");
     expect(await main(["--dir", target], d)).toBe(0);
-    expect(asked).toEqual(["Public domain for VoiceCore, e.g. voice.example.com (Enter: this machine only):"]);
+    expect(asked).toEqual(["Public domain for VoiceCore, e.g. voice.example.com (auto: this server's own address; Enter: this machine only):"]);
     expect(parseEnv(readFileSync(join(target, ".env"), "utf8")).HOSTS).toBe("localhost,127.0.0.1,::1");
+  });
+
+  it("--domain auto serves the dashboard on this server's own address, with a certificate for it", async () => {
+    const checked = [];
+    const d = deps({ reachable: async (url, s) => (checked.push([url, s]), true) });
+    const target = join(dir(), "v");
+    expect(await main(["--yes", "--domain", "auto", "--dir", target], d)).toBe(0);
+    const env = parseEnv(readFileSync(join(target, ".env"), "utf8"));
+    expect([env.DOMAIN, env.HOSTS, env.PUBLIC_CONSOLE_URL, env.ACME_PROFILE]).toEqual(["203.0.113.10", "203.0.113.10", "https://203.0.113.10", "shortlived"]);
+    expect(d.calls).toContain("docker compose --profile public up -d --wait  (in v)");
+    expect(checked).toEqual([["https://203.0.113.10/api/status", 120]]);
+    expect(d.out.join("\n")).toContain("Dashboard  https://203.0.113.10");
+  });
+
+  it("says which ports to open when the address doesn't answer", async () => {
+    const d = deps({ reachable: async () => false });
+    expect(await main(["--yes", "--domain", "voice.acme.com", "--dir", join(dir(), "v")], d)).toBe(0);
+    expect(d.out.join("\n")).toContain("https://voice.acme.com doesn't answer yet. Check that ports 80 and 443 are open in your server's firewall, and that voice.acme.com points at this server.");
+    expect(parseEnv(renderEnv({ domain: "voice.acme.com" })).ACME_PROFILE).toBe("classic");
+  });
+
+  it("--domain auto stops when the public address can't be found", async () => {
+    const d = deps({ publicIp: async () => "" });
+    expect(await main(["--yes", "--domain", "auto", "--dir", join(dir(), "v")], d)).toBe(1);
+    expect(d.out.join("\n")).toContain("couldn't find this server's public address: use --domain with your own domain");
   });
 
   it("info shows the dashboard and password again, without Docker", async () => {

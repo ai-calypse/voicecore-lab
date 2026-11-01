@@ -1,6 +1,6 @@
 ---
 title: Use the dashboard
-description: A plain-language tour of every page of the VoiceCore dashboard (the console) - Home, agents and their docs, publishing, settings and turn-taking, testing, the snippet, the Voice page, allowed websites, API keys and the password.
+description: A plain-language tour of every page of the VoiceCore dashboard (the console) - Home, agents and their docs (from a website, files, text or Git), publishing, settings and turn-taking, testing, the snippet, the Voice page with keys and spending limits, allowed websites, API keys and the password.
 ---
 
 ## What the dashboard is for
@@ -16,7 +16,7 @@ New to VoiceCore? [Add VoiceCore to your website](../getting-started/install.md)
 | Tile | What it tells you |
 |---|---|
 | Agents live | How many assistants are answering right now |
-| Spend | What voice has spent in total and today, against your limits |
+| Spend | What voice has spent in total and today, against your limits. Opens the Voice page |
 | Voice | On, once both provider keys are saved. Off means typed questions get text answers only |
 | Allowed websites | The websites where your assistants may answer |
 
@@ -32,9 +32,12 @@ An agent can have as many sources of docs as you like. Pick one way at a time:
 
 | Way | Takes | Limits |
 |---|---|---|
+| **Website** | The address of your help or docs pages, such as `https://yoursite.com/help/`. VoiceCore reads that page and every page linked below it on the same site, leaving out menus, headers and footers. Each page keeps its real address, so answers link to it | 200 pages, read within 60 s. Public `https` addresses only. Pages that need JavaScript to show their text can't be read. **Sync** reads the site again |
 | **Upload files** | Markdown (`.md`, `.markdown`), text (`.txt`), or a `.zip` of a folder of them. A `.txt` file's name becomes its title | 20 MB per upload. A zip can unpack to 50 MB and 2,000 files. Other file types are skipped, and the dashboard lists what it skipped |
 | **Paste text** | A title and some text, such as an FAQ | 200,000 characters |
 | **Git repository** | One folder of a public repository, over `https` | 20 MB of files, fetched within 60 s. **Sync** fetches the folder again |
+
+**The website becomes an allowed website.** Adding docs from a website also adds that site to [Allowed websites](#allowed-websites), with and without `www`, since that is where the button will go. The Knowledge tab says when it does.
 
 **How docs become answers.** Every heading starts a section. When a visitor asks something, VoiceCore finds the sections that match and answers from them only, citing each one. A heading with no text under it doesn't become a section. If two sources have a page at the same path, the one added later wins.
 
@@ -58,7 +61,7 @@ Change settings on the **Settings** tab, press **Save settings**, then **Publish
 | Setting | What it does |
 |---|---|
 | Name | The assistant's name for your docs |
-| Docs URL | Where these docs live on your website, such as `https://yoursite.com/help/`. Answers then link to the section they used. Empty: answers name the section without a link |
+| Docs URL | Where uploaded or pasted docs live on your website, such as `https://yoursite.com/help/`. Answers then link to the section they used. Empty: answers name the section without a link. Docs read from a website always link to their own pages. A new Docs URL also adds its website to Allowed websites |
 | First message | What the assistant says when someone opens it |
 | Instructions | Extra rules, such as "Keep answers short". They come after VoiceCore's own rules (answer only from the docs, cite every fact) and can't replace them |
 | Voice | Which of Deepgram's voices speaks |
@@ -72,7 +75,7 @@ Change settings on the **Settings** tab, press **Save settings**, then **Publish
 
 The **Test** tab holds a page with exactly the line your website will use. Click the button in its corner, allow the microphone, and ask something. It always works here, even before you list any websites.
 
-The **Embed** tab gives that line, with a **Copy snippet** button. Paste it before `</body>` on your pages. [Step 10 of the setup guide](../getting-started/install.md#step-10-put-the-button-on-your-website) shows where it goes for WordPress, Webflow, Next.js and other platforms.
+The **Embed** tab gives that line, with a **Copy snippet** button. Paste it before `</body>` on your pages. [Step 7 of the setup guide](../getting-started/install.md#step-7-put-the-button-on-your-website) shows where it goes for WordPress, Webflow, Next.js and other platforms.
 
 ## The Voice page: your provider keys
 
@@ -88,6 +91,8 @@ Until both keys are there, visitors can still type questions, and they get the c
 ## Allowed websites
 
 These are the websites where your assistants may answer. When someone opens the button, VoiceCore checks which website the page is on and refuses any site not on this list. Without it, anyone could copy your line onto their own site and spend your credit.
+
+A website you read docs from, or set as an agent's Docs URL, is added for you. Remove it here if you don't want it; VoiceCore adds it again only if you read that website again or set a new Docs URL.
 
 Write one address per line, without a path:
 
@@ -107,15 +112,16 @@ These are not your Deepgram or OpenRouter keys; those go on the Voice page.
 
 ## Spending limits
 
-The **Spend** tile on Home shows what voice has spent. VoiceCore stops speaking once a limit is reached, and keeps answering typed questions with text from your docs. The limits are in the install's `.env` file:
+The **Voice** page also holds the spending limits. VoiceCore stops speaking once one is reached, and keeps answering typed questions with text from your docs, at no cost. Change them and press **Save limits**; they apply from the next conversation, with no restart.
 
-| Setting | What it limits | Starts at |
+| Limit | What it limits | Starts at |
 |---|---|---:|
-| `VOICECORE_PUBLIC_DAILY` | voice spending in one day (from midnight UTC) | $0.50 |
-| `VOICECORE_PUBLIC_TOTAL` | voice spending since you installed it | $2.00 |
-| `VOICECORE_CAP_USD` | all spending since you installed it | $5.00 |
+| Per day | voice spending in one day (from midnight UTC) | $1 |
+| In total | voice spending since you installed it | $10 |
 
-To change them, edit the numbers in `.env` and run `docker compose up -d` in the install folder. [What it costs](../getting-started/install.md#what-it-costs) explains what a question costs and how the limits work.
+Under each limit, the page shows what has been spent so far. The **Spend** tile on Home shows the same. [What it costs](../getting-started/install.md#what-it-costs) explains what a question costs and how the limits work.
+
+The starting values come from the install's `.env` file (`VOICECORE_PUBLIC_DAILY`, `VOICECORE_PUBLIC_TOTAL` and `VOICECORE_CAP_USD`). Limits saved on the Voice page take their place.
 
 ## The password
 

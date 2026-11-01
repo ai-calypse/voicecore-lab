@@ -157,3 +157,18 @@ def test_caps_from_env():
     assert cap({"VOICECORE_CAP_USD": "20"})[0] == "20.0"
     assert cap({})[:3] == ["5.0", "0.5", "2.0"]
     assert cap({"VOICECORE_PUBLIC_DAILY": "1", "VOICECORE_PUBLIC_TOTAL": "10"})[1:] == ["1.0", "10.0"]
+
+
+def test_dashboard_limits_replace_the_environments(tmp_path, monkeypatch):
+    """Limits saved on the dashboard's Voice page (VOICECORE_LIMITS_FILE) apply from the next reservation, no restart."""
+    path, limits = ledger_with(tmp_path, []), tmp_path / "limits.json"
+    monkeypatch.setenv("VOICECORE_LIMITS_FILE", str(limits))
+    limits.write_text(json.dumps({"daily_usd": 0.3, "total_usd": 8}))
+    budget.reserve("usd", 0.25, "a", ledger_path=path, sub="public")
+    with pytest.raises(budget.DailyCapReached):
+        budget.reserve("usd", 0.10, "b", ledger_path=path, sub="public")
+    assert budget.limits() == {"cap_usd": 8.0, "daily_cap_usd": 0.3}
+    budget.reserve("usd", 5.5, "c", ledger_path=path)  # the total also raises the pool's own $5 cap
+    limits.unlink()
+    budget.apply_limits()
+    assert budget.limits() == {"cap_usd": 2.0, "daily_cap_usd": 0.5}  # back to the environment's
