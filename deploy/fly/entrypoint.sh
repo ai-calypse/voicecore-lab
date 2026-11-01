@@ -19,8 +19,11 @@ stop() {
 }
 trap stop TERM INT # before anything starts: a stop during the model load still drains
 
+# AGENTS_DIR (on the volume): agents published there answer as data-agent="<id>", next to the default docs agent
+[ -n "${AGENTS_DIR:-}" ] && mkdir -p "$AGENTS_DIR"
+
 /app/.venv/bin/python -m voicecore.server --host 127.0.0.1 --port 8765 --env "$ENV_MODE" --providers "${PROVIDERS:-live}" \
-  --pool "${POOL:-public}" --metrics-port 9464 --docs-url "${DOCS_URL:-http://localhost:3000/}" &
+  --pool "${POOL:-public}" --metrics-port 9464 --docs-url "${DOCS_URL:-http://localhost:3000/}" ${AGENTS_DIR:+--agents-dir "$AGENTS_DIR"} &
 orch=$!
 
 ready=""
@@ -33,7 +36,8 @@ done
 
 /usr/local/bin/gateway -addr 0.0.0.0:8080 -upstream ws://127.0.0.1:8765 -env "$ENV_MODE" -admin-addr 0.0.0.0:9091 \
   -origins "${ORIGINS:-localhost:*,127.0.0.1:*}" -hosts "${HOSTS:-localhost,127.0.0.1,::1}" \
-  -trusted-proxies "${TRUSTED_PROXIES:-}" -sessions-per-ip-per-day "${SESSIONS_PER_IP_PER_DAY:-20}" &
+  -trusted-proxies "${TRUSTED_PROXIES:-}" -sessions-per-ip-per-day "${SESSIONS_PER_IP_PER_DAY:-20}" \
+  -widget /app/widget.js ${AGENTS_DIR:+-agents-dir "$AGENTS_DIR"} &
 gw=$!
 
 wait -n "$orch" "$gw" # returns when either exits on its own (a trapped SIGTERM runs stop instead)

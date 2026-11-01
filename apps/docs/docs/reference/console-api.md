@@ -37,9 +37,9 @@ curl -s -H "Authorization: Bearer $KEY" -X POST http://localhost:8000/api/agents
 
 | Method | Route | What it does |
 |---|---|---|
-| GET | `/api/agents` | every agent with its live version and latest build status |
+| GET | `/api/agents` | every agent with its live version, latest build status, number of sources, and what was last published and when |
 | POST | `/api/agents` | `{name}`: a new agent; its id is made from the name |
-| GET | `/api/agents/{agent_id}` | settings, sources, latest build, live version and the embed snippet |
+| GET | `/api/agents/{agent_id}` | settings, sources, latest build, last published build, live version and the embed snippet |
 | PUT | `/api/agents/{agent_id}/settings` | name, docs URL, first message, instructions, voice, model and key terms; checked, used at the next publish |
 | DELETE | `/api/agents/{agent_id}` | the agent, its docs and its versions |
 | PUT | `/api/agents/{agent_id}/sources/upload` | `?name=file.zip`, body: a zip, `.md`, `.markdown` or `.txt` file, up to 20 MB |

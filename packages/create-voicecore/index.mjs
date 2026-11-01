@@ -134,6 +134,8 @@ function saveSettings(dir, text) {
 
 function copyTemplate(dir) {
   for (const f of ["compose.yml", "Caddyfile"]) copyFileSync(resolve(TEMPLATE, f), resolve(dir, f));
+  // installed inside a project's repository, the secrets in .env must never be committed
+  if (!existsSync(resolve(dir, ".gitignore"))) writeFileSync(resolve(dir, ".gitignore"), ".env\n");
 }
 
 const profiles = (env) => (env.DOMAIN ? ["--profile", "public"] : []);

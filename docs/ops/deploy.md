@@ -80,6 +80,24 @@ fly deploy -a voicecore --image <image of that release>
 
 The ledger is on the volume, so a rollback keeps the money record. To stop everything at once: `fly scale count 0 -a voicecore`. The volume, and its record, stay.
 
+## Another site's agent
+
+Besides the default docs agent, the app serves agents published into `AGENTS_DIR` (`/data/agents`, on the volume), and the widget at `/widget.js`. To put one on another website:
+
+1. Build the agent with a VoiceCore console (a local install is enough), with its docs URL set to that site's address.
+2. Copy the published bundle (`agents/<id>/current` and the version folder it names) onto the volume:
+
+   ```sh
+   tar -czf agent.tgz <id>                     # from the console's agents folder
+   fly ssh sftp put agent.tgz /data/agents/agent.tgz -a voicecore
+   fly ssh console -a voicecore -C "sh -c 'cd /data/agents && tar -xzf agent.tgz && rm agent.tgz'"
+   ```
+
+3. Add the site's host to `ORIGINS` in `fly.toml` and deploy, and add it to the Turnstile widget's hostnames in Cloudflare.
+4. On the site: `<script src="https://voicecore.fly.dev/widget.js" data-agent="<id>" data-turnstile-sitekey="…" async></script>`.
+
+New sessions use the new bundle at once; no restart. Its sessions share the public spend caps with the docs agent.
+
 ## The docs site
 
 The docs site is static: `apps/docs` builds to plain files, served by its nginx image with the security headers. It runs as the second Fly app, `voicecore-docs`, from [`deploy/fly/docs.fly.toml`](../../deploy/fly/docs.fly.toml). Its build arguments set:

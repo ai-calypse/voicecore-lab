@@ -6,6 +6,7 @@ import json
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.request
 import uuid
 from pathlib import Path
@@ -110,5 +111,26 @@ def test_prod_without_its_settings_refuses_to_start(image):
     try:
         assert docker("wait", name).stdout.strip() not in ("0", "")
         assert "refusing to start" in docker("logs", name, check=False).stdout + docker("logs", name, check=False).stderr
+    finally:
+        remove(name)
+
+
+@pytest.mark.timeout(600)
+def test_serves_the_widget_and_agents_from_the_volume(image):
+    """The portfolio embed: /widget.js from the gateway, and agents published into AGENTS_DIR on the volume."""
+    name = start(image, "VOICECORE_ENV=dev", "AGENTS_DIR=/data/agents", port=PORT + 3)
+    base = f"http://127.0.0.1:{PORT + 3}"
+    try:
+        wait_ready(name, port=PORT + 3)
+        widget = urllib.request.urlopen(f"{base}/widget.js")
+        assert widget.status == 200 and b"data-voicecore" in widget.read()
+        bundle = subprocess.run(["tar", "-C", str(ROOT / "fixtures/agents"), "-c", "acme-docs"], capture_output=True, check=True).stdout
+        subprocess.run(["docker", "exec", "-i", name, "tar", "-x", "-C", "/data/agents"], input=bundle, check=True)  # as an upload would
+        session = lambda agent: urllib.request.Request(f"{base}/v1/session", data=f"agent={agent}".encode(), method="POST")
+        token = json.loads(urllib.request.urlopen(session("acme-docs")).read())["token"]
+        assert token.split(".")[2] == "acme-docs"
+        with pytest.raises(urllib.error.HTTPError) as e:
+            urllib.request.urlopen(session("nobody"))
+        assert e.value.code == 404
     finally:
         remove(name)

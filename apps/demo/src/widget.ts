@@ -18,6 +18,7 @@ const label = script?.dataset.title ?? "Ask the docs";
 const name = script?.dataset.name ?? "Docs assistant";
 const sitekey = script?.dataset.turnstileSitekey; // data-turnstile-sitekey: ask Cloudflare Turnstile before each new session
 const privacy = script?.dataset.privacyUrl; // data-privacy-url: a "Privacy" link in the footer
+const left = script?.dataset.position === "left"; // data-position="left": for a page whose bottom-right corner is taken
 
 type Turnstile = { render(el: HTMLElement, o: Record<string, unknown>): string; remove(id: string): void };
 class HumanCheckFailed extends Error {}
@@ -70,7 +71,7 @@ function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Record<string, 
 }
 
 function mount() {
-  const host = h("div", { "data-voicecore": "" });
+  const host = h("div", left ? { "data-voicecore": "", "data-position": "left" } : { "data-voicecore": "" });
   const root = host.attachShadow({ mode: "open" });
   root.append(h("style", {}, css));
   document.body.append(host);

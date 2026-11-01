@@ -5,7 +5,7 @@ description: Manage VoiceCore agents in the console - knowledge sources, publish
 
 ## What an agent is
 
-An agent is one voice assistant: a set of docs, the settings it answers with, and a live version. One VoiceCore install can run several agents, for example one per product, each with its own snippet. The agent page shows four steps with a tick when each is done: **Add docs**, **Publish**, **Test** and **Embed**.
+An agent is one voice assistant: a set of docs, the settings it answers with, and a live version. One VoiceCore install can run several agents, for example one per product, each with its own snippet. The console opens on Home: how many agents are live, spend against the cap, whether voice is on, and which websites are allowed to run an agent. Until an agent is live and on your site, its page shows four steps with a tick when each is done: **Add docs**, **Publish**, **Test** and **Embed**. The steps go away once all four are done. The Knowledge tab also shows the live version: how many sections it holds, when it was published and its version.
 
 ## Add knowledge sources to an agent
 
@@ -39,13 +39,19 @@ Settings take effect at the next Publish.
 | Model | the language model, from the models VoiceCore has prices for |
 | Key terms | words the speech recognizer should expect, such as product names |
 
-## Websites, API keys and the spend line
+## Allowed websites, API keys and spend
 
-**Websites** lists the sites allowed to embed the assistant, as hosts such as `docs.example.com`. Browsers on other sites are refused. The voice server reads the list again within a second of a change.
+**Allowed websites** are the sites where your agents may answer. When someone opens the assistant, the voice server checks the address of the page it is on and refuses any site not on the list. Without this, anyone could copy your snippet onto their own site and spend your provider credit. Write one address per line, without a path:
+
+- `docs.acme.com` allows that site;
+- `https://www.acme.com` allows its secure pages only;
+- `*.acme.com` allows every subdomain of acme.com.
+
+The list applies to every agent on the install and takes effect within a second, with no restart. The console's own Test tab always works, so an empty list only matters once the snippet is on your site.
 
 **API keys** are for scripts and CI: send `Authorization: Bearer vck_...` to the same API the console uses ([console API](../reference/console-api.md)). A key is shown once and stored only as a hash; revoking it takes effect at once.
 
-The header shows the provider spend recorded by the voice server's budget ledger against its cap. The caps are in the install's `.env` (`VOICECORE_CAP_USD`, `VOICECORE_PUBLIC_TOTAL`, `VOICECORE_PUBLIC_DAILY`); when one is reached, voice stops and typed questions still get the closest section of the docs.
+**Spend** on Home is the provider spend recorded by the voice server's budget ledger, against its cap. The caps are in the install's `.env` (`VOICECORE_CAP_USD`, `VOICECORE_PUBLIC_TOTAL`, `VOICECORE_PUBLIC_DAILY`); when one is reached, voice stops and typed questions still get the closest section of the docs.
 
 ## A lost admin password
 

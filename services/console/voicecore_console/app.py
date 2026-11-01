@@ -243,7 +243,10 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
     def list_agents():
         return [{"id": a["id"], "name": a["config"]["name"], "enabled": a["enabled"],
                  "live_version": agents.current(agents_dir, a["id"]),
-                 "build": (b := store.latest_build(a["id"])) and b["status"]} for a in store.agents()]
+                 "build": (b := store.latest_build(a["id"])) and b["status"],
+                 "sources": len(store.sources(a["id"])),
+                 "summary": (p := store.last_published(a["id"])) and p["log"].split("\n")[0],
+                 "published": p and p["finished"]} for a in store.agents()]
 
     @app.post("/api/agents", status_code=201, dependencies=[Depends(admin)])
     def create_agent(body: AgentIn):
@@ -255,7 +258,8 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
     def get_agent(agent_id: str):
         a = agent_or_404(agent_id)
         return {"id": agent_id, "config": a["config"], "enabled": a["enabled"], "live_version": agents.current(agents_dir, agent_id),
-                "sources": store.sources(agent_id), "build": store.latest_build(agent_id), "snippet": snippet(agent_id)}
+                "sources": store.sources(agent_id), "build": store.latest_build(agent_id), "published": store.last_published(agent_id),
+                "snippet": snippet(agent_id)}
 
     @app.get("/preview/{agent_id}", response_class=HTMLResponse, dependencies=[Depends(admin)])
     def preview(agent_id: str):
@@ -370,8 +374,9 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
     @app.post("/api/agents/{agent_id}/enable", dependencies=[Depends(admin)])
     def enable(agent_id: str):
         agent_or_404(agent_id)
-        if not (version := store.last_version(agent_id)):
+        if not (last := store.last_published(agent_id)):
             raise HTTPException(409, "publish first")
+        version = last["version"]
         try:
             agents.activate(agents_dir, agent_id, version)
         except FileNotFoundError:

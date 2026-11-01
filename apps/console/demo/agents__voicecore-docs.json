@@ -27,22 +27,27 @@
   "enabled": true,
   "id": "voicecore-docs",
   "live_version": "64e2e45a0de3",
+  "published": {
+    "finished": 1793491200.0,
+    "log": "363 sections from 32 pages\n1 section skipped: it reads like instructions to the assistant\npublished version 64e2e45a0de3",
+    "version": "64e2e45a0de3"
+  },
   "snippet": "<script src=\"https://voicecore.fly.dev/widget.js\" data-agent=\"voicecore-docs\" async></script>",
   "sources": [
     {
       "created": 1793491200.0,
-      "files": 31,
-      "id": "src_74562e2cbe3a",
-      "kind": "upload",
-      "label": "voicecore-docs.zip",
+      "files": 1,
+      "id": "src_73c50b8bcbc1",
+      "kind": "text",
+      "label": "Support hours",
       "ref": null
     },
     {
       "created": 1793491200.0,
-      "files": 1,
-      "id": "src_c2448d030d01",
-      "kind": "text",
-      "label": "Support hours",
+      "files": 31,
+      "id": "src_be7a07f2c672",
+      "kind": "upload",
+      "label": "voicecore-docs.zip",
       "ref": null
     }
   ]

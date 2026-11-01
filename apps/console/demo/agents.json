@@ -4,6 +4,9 @@
     "enabled": true,
     "id": "voicecore-docs",
     "live_version": "64e2e45a0de3",
-    "name": "VoiceCore docs"
+    "name": "VoiceCore docs",
+    "published": 1793491200.0,
+    "sources": 2,
+    "summary": "363 sections from 32 pages"
   }
 ]

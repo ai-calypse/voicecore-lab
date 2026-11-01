@@ -60,6 +60,7 @@ describe("install", () => {
     expect(await main(["--yes", "--mode", "free", "--dir", target], d)).toBe(0);
     expect(statSync(join(target, ".env")).mode & 0o777).toBe(0o600);
     expect(existsSync(join(target, "compose.yml"))).toBe(true);
+    expect(readFileSync(join(target, ".gitignore"), "utf8")).toContain(".env\n"); // installed inside a repo, the secrets stay out of it
     expect(d.calls).toContain("docker compose up -d --wait  (in voicecore)");
     const env = parseEnv(readFileSync(join(target, ".env"), "utf8"));
     expect(d.out.join("\n")).toContain(`http://localhost:8000/#/setup?token=${env.CONSOLE_SETUP_TOKEN}`);

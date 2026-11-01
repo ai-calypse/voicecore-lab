@@ -14,7 +14,8 @@ test("first run to a cited answer in the Test tab, then the snippet", async ({ p
   await expect(page.getByText("No agents yet")).toBeVisible();
   await expect(page.getByText("Voice is off.")).toBeVisible(); // free mode
 
-  await page.getByLabel("New agent name").fill("Acme Docs");
+  await page.getByRole("button", { name: "New agent" }).click();
+  await page.getByLabel("Agent name").fill("Acme Docs");
   await page.getByRole("button", { name: "Create agent" }).click();
   await expect(page.getByRole("heading", { name: "Acme Docs", exact: true })).toBeVisible();
 
@@ -25,7 +26,9 @@ test("first run to a cited answer in the Test tab, then the snippet", async ({ p
   await expect(page.locator(".steps li").nth(0)).toHaveClass("done");
 
   await page.getByRole("button", { name: "Publish", exact: true }).click();
-  await expect(page.getByText(/^Live: version [0-9a-f]{12}\. 3 sections from 2 pages\.$/)).toBeVisible({ timeout: 90_000 });
+  await expect(page.getByRole("heading", { name: "Live version" })).toBeVisible({ timeout: 90_000 });
+  await expect(page.locator(".live-summary")).toHaveText("3 sections from 2 pages");
+  await expect(page.getByText(/^Version [0-9a-f]{12}$/)).toBeVisible();
   await expect(page.locator(".steps li").nth(1)).toHaveClass("done");
 
   await page.getByRole("tab", { name: "Test" }).click();
@@ -40,6 +43,9 @@ test("first run to a cited answer in the Test tab, then the snippet", async ({ p
 
   await page.getByRole("tab", { name: "Embed" }).click();
   await expect(page.locator(".snippet code")).toHaveText(SNIPPET);
+
+  await page.getByRole("link", { name: "Agents", exact: true }).first().click();
+  await expect(page.getByRole("link", { name: /Acme Docs/ })).toContainText("3 sections from 2 pages");
 });
 
 test("a signed-out visitor is asked to sign in", async ({ browser }) => {

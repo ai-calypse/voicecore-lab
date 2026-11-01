@@ -15,6 +15,16 @@ test("an unrelated page embeds the widget with one script tag and its CSS does n
   await expect(page.getByRole("status")).toContainText("Ready", { timeout: 10_000 });
 });
 
+test("data-position=left moves the launcher and the panel to the left corner", async ({ page }) => {
+  await page.goto("/embed-left.html");
+  const launcher = page.getByRole("button", { name: "Ask the docs" });
+  const box = await launcher.boundingBox();
+  expect(box!.x).toBeLessThan(40); // 20 px from the left edge, clear of the page's own button on the right
+  await launcher.click();
+  const panel = await page.getByRole("dialog", { name: "Docs assistant" }).boundingBox();
+  expect(panel!.x).toBeLessThan(40);
+});
+
 test("a typed question gets an answer that links to the docs it cites", async ({ page }) => {
   await page.goto("/embed-test.html");
   await page.getByRole("button", { name: "Ask the docs" }).click();

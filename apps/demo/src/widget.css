@@ -92,8 +92,12 @@ header { display: flex; align-items: center; justify-content: space-between; }
 .foot { margin: 0; text-align: center; font-size: 12px; color: var(--muted); }
 .foot a { color: inherit; }
 
+:host([data-position="left"]) :is(.launcher, .panel) { right: auto; left: 20px; }
+
 @media (max-width: 480px) {
   .panel { right: 0; bottom: 0; width: 100%; height: 100dvh; border-radius: 0; border: 0; }
   .orb.big { width: 150px; height: 150px; }
   .launcher { right: 16px; bottom: 16px; }
+  :host([data-position="left"]) .launcher { left: 16px; }
+  :host([data-position="left"]) .panel { left: 0; }
 }

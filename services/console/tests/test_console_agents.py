@@ -119,6 +119,21 @@ def test_publish_end_to_end(c, tmp_path):
     assert [p.url for p in bundle.passages] == ["https://docs.acme.test/refunds#how-refunds-work",
                                                "https://docs.acme.test/refunds#refund-requests", "https://docs.acme.test/shipping"]
     assert c.get("/api/agents/acme-docs").json()["live_version"] == b["version"]
+    row = c.get("/api/agents").json()[0]
+    assert (row["sources"], row["summary"], row["published"]) == (1, "3 sections from 2 pages", b["finished"])
+    assert c.get("/api/agents/acme-docs").json()["published"] == {"version": b["version"], "log": b["log"], "finished": b["finished"]}
+
+
+def test_list_row_before_publish(c):
+    c.post("/api/agents", json={"name": "Acme Docs"})
+    row = c.get("/api/agents").json()[0]
+    assert (row["sources"], row["summary"], row["published"]) == (0, None, None)
+
+
+def test_one_page_summary_is_singular(c):
+    c.post("/api/agents", json={"name": "Acme Docs"})
+    c.post("/api/agents/acme-docs/sources/text", json={"title": "Refunds", "text": "Refunds take 5 days."})
+    assert published(c, "acme-docs")["log"].startswith("1 section from 1 page\n")
 
 
 def test_no_docs_url_blank_urls(c, tmp_path):

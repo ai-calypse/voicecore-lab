@@ -215,11 +215,12 @@ class Store:
             row = db.execute("SELECT * FROM builds WHERE agent = ? ORDER BY id DESC LIMIT 1", (agent_id,)).fetchone()
         return row and dict(row)
 
-    def last_version(self, agent_id: str) -> str | None:
+    def last_published(self, agent_id: str) -> dict | None:
+        """The latest successful build: its version, log and when it finished."""
         with self.db() as db:
-            row = db.execute("SELECT version FROM builds WHERE agent = ? AND status = 'done' ORDER BY id DESC LIMIT 1",
+            row = db.execute("SELECT version, log, finished FROM builds WHERE agent = ? AND status = 'done' ORDER BY id DESC LIMIT 1",
                              (agent_id,)).fetchone()
-        return row and row["version"]
+        return row and dict(row)
 
     def fail_interrupted_builds(self, now: float) -> None:
         """At start: a build still queued or running was cut off by a restart."""

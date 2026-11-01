@@ -30,6 +30,7 @@ The script tag takes these attributes:
 | `data-name` | the assistant's name, shown at the top of the open panel and used as the dialog's accessible name | "Docs assistant" |
 | `data-turnstile-sitekey` | a Cloudflare Turnstile sitekey. The widget then runs the human check before each new session and sends its token with the token request. Use it when the gateway has `TURNSTILE_SECRET`. The check appears only if Cloudflare needs the visitor to act; if it fails, the widget says "Couldn't verify you're human. Reload and try again." | none: no check |
 | `data-privacy-url` | a URL for a "Privacy" link in the panel's footer, opened in a new tab so the session keeps running. This site sets `/privacy`. | none: no link |
+| `data-position` | `left` puts the launcher and the panel in the bottom-left corner, for a page that already has a chat button or banner in the bottom right | bottom right |
 
 The widget derives both gateway addresses from `data-endpoint`:
 

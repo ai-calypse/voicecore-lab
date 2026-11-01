@@ -16,7 +16,8 @@ kill_timeout = 45        # the gateway's 25 s drain, then the orchestrator's, pl
   VOICECORE_LEDGER = "/data/spend_ledger.json"    # on the volume: prod refuses to start otherwise
   LOG_FORMAT = "json"
   DOCS_URL = "https://voicecore-docs.fly.dev/"
-  ORIGINS = "voicecore-docs.fly.dev"
+  ORIGINS = "voicecore-docs.fly.dev,yaksh-portfolio-nine.vercel.app"  # the docs site and the portfolio that embeds an agent
+  AGENTS_DIR = "/data/agents"                     # published agents (data-agent="<id>"), next to the default docs agent
   HOSTS = "voicecore.fly.dev"
   SESSIONS_PER_IP_PER_DAY = "20"
   # Fly's proxy reaches the machine from its private IPv4 range, and appends the app's own public IPs as the

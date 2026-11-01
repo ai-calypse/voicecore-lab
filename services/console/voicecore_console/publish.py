@@ -45,7 +45,8 @@ def build(store, data_dir: Path, agents_dir: Path, agent_id: str, build_id: int,
             raise Failed("no sections found: the pages have no text under their headings")
         if len(passages) > max_passages:
             raise Failed(f"too many sections: {len(passages):,} (the limit is {max_passages:,})")
-        lines = [f"{len(passages)} sections from {len({p.file for p in passages})} pages"]
+        pages = len({p.file for p in passages})
+        lines = [f"{len(passages)} section{'s' * (len(passages) != 1)} from {pages} page{'s' * (pages != 1)}"]
         if flagged := sum(p.suspicious for p in passages):
             lines.append(f"{flagged} section skipped: it reads like instructions to the assistant" if flagged == 1
                          else f"{flagged} sections skipped: they read like instructions to the assistant")
