@@ -43,7 +43,8 @@ def main(argv: list[str] | None = None) -> None:
                      voice_url=os.environ.get("PUBLIC_VOICE_URL", "http://localhost:8080"),
                      static_dir=Path(static) if static else None,
                      turnstile_sitekey=os.environ.get("TURNSTILE_SITEKEY", ""),
-                     admin_password=os.environ.get("CONSOLE_ADMIN_PASSWORD") or None)
+                     admin_password=os.environ.get("CONSOLE_ADMIN_PASSWORD") or None,
+                     keys_file=Path(f) if (f := os.environ.get("VOICECORE_KEYS_FILE")) else None)
     uvicorn.run(app, host=args.host, port=args.port, proxy_headers=True, forwarded_allow_ips=os.environ.get("FORWARDED_ALLOW_IPS", "127.0.0.1"))
 
 

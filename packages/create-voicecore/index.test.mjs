@@ -20,7 +20,7 @@ function fakeDocker({ missing = false, down = false, compose = "2.40.0" } = {}) 
 
 function deps(over = {}) {
   const out = [];
-  return { out, log: (s) => out.push(s), prompt: async () => "", isPortFree: async () => true, env: {}, ...fakeDocker(), ...over };
+  return { out, log: (s) => out.push(s), prompt: async () => "", isPortFree: async () => true, env: {}, voiceOn: async () => null, ...fakeDocker(), ...over };
 }
 
 const dir = () => mkdtempSync(join(tmpdir(), "voicecore-"));
@@ -36,9 +36,9 @@ describe("checkDocker", () => {
 });
 
 describe("renderEnv", () => {
-  it("writes free mode with fresh secrets", () => {
-    const env = parseEnv(renderEnv({ mode: "free" }));
-    expect(env.PROVIDERS).toBe("free");
+  it("writes fresh secrets, and voice follows the keys", () => {
+    const env = parseEnv(renderEnv({}));
+    expect(env.PROVIDERS).toBe("auto");
     expect(env.GATEWAY_SECRET).toMatch(/^[0-9a-f]{64}$/);
     expect(env.CONSOLE_ADMIN_PASSWORD).toMatch(/^[A-Za-z0-9_-]{20}$/);
     expect(env.VOICECORE_VERSION).toBe(VERSION);
@@ -46,7 +46,7 @@ describe("renderEnv", () => {
   });
 
   it("public mode serves one https host and needs no open voice port", () => {
-    const env = parseEnv(renderEnv({ mode: "public", domain: "voice.acme.com", site: "docs.acme.com", humanCheck: "off" }));
+    const env = parseEnv(renderEnv({ domain: "voice.acme.com", site: "docs.acme.com", humanCheck: "off" }));
     expect([env.PUBLIC_VOICE_URL, env.PUBLIC_CONSOLE_URL, env.HOSTS, env.GATEWAY_ENV, env.HUMAN_CHECK])
       .toEqual(["https://voice.acme.com", "https://voice.acme.com", "voice.acme.com", "prod", "off"]);
     expect(env.ORIGINS).toBe("voice.acme.com,docs.acme.com");
@@ -54,10 +54,10 @@ describe("renderEnv", () => {
 });
 
 describe("install", () => {
-  it("--yes --mode free writes a private .env and starts the stack", async () => {
+  it("--yes writes a private .env and starts the stack", async () => {
     const d = deps();
     const target = join(dir(), "voicecore");
-    expect(await main(["--yes", "--mode", "free", "--dir", target], d)).toBe(0);
+    expect(await main(["--yes", "--dir", target], d)).toBe(0);
     expect(statSync(join(target, ".env")).mode & 0o777).toBe(0o600);
     expect(existsSync(join(target, "compose.yml"))).toBe(true);
     expect(readFileSync(join(target, ".gitignore"), "utf8")).toContain(".env\n"); // installed inside a repo, the secrets stay out of it
@@ -66,7 +66,7 @@ describe("install", () => {
     const said = d.out.join("\n");
     expect(said).toContain("Dashboard  http://localhost:8000");
     expect(said).toContain(`Password   ${env.CONSOLE_ADMIN_PASSWORD}`);
-    expect(said).toContain("npx create-voicecore keys");
+    expect(said).toContain("Voice      off: add your Deepgram and OpenRouter keys on the dashboard's Voice page");
   });
 
   it("is live by default, with the keys from the environment", async () => {
@@ -74,19 +74,17 @@ describe("install", () => {
     const target = join(dir(), "v");
     expect(await main(["--yes", "--dir", target], d)).toBe(0);
     const env = parseEnv(readFileSync(join(target, ".env"), "utf8"));
-    expect([env.PROVIDERS, env.DEEPGRAM_API_KEY, env.OPENROUTER_API_KEY]).toEqual(["live", "dg-env", "or-env"]);
+    expect([env.PROVIDERS, env.DEEPGRAM_API_KEY, env.OPENROUTER_API_KEY]).toEqual(["auto", "dg-env", "or-env"]);
     expect(d.out.join("\n")).toContain("Voice      on");
   });
 
-  it("asks for the keys when live, and falls back to free mode without them", async () => {
+  it("asks one question: where it runs (keys and websites are set in the dashboard)", async () => {
     const asked = [];
     const d = deps({ prompt: async (q, fallback = "") => (asked.push(q), fallback) });
     const target = join(dir(), "v");
     expect(await main(["--dir", target], d)).toBe(0);
-    expect(asked[0]).toMatch(/^Mode: live/);
-    expect(asked.some((q) => q.startsWith("Deepgram API key"))).toBe(true);
-    expect(parseEnv(readFileSync(join(target, ".env"), "utf8")).PROVIDERS).toBe("free");
-    expect(d.out.join("\n")).toContain("No provider keys, so voice is off");
+    expect(asked).toEqual(["Public domain for VoiceCore, e.g. voice.example.com (Enter: this machine only):"]);
+    expect(parseEnv(readFileSync(join(target, ".env"), "utf8")).HOSTS).toBe("localhost,127.0.0.1,::1");
   });
 
   it("info shows the dashboard and password again, without Docker", async () => {
@@ -135,14 +133,13 @@ describe("upgrade, keys, uninstall", () => {
     expect(d.calls.filter(composeCall)).toEqual(["docker compose pull  (in v)", "docker compose up -d --wait  (in v)"]);
   });
 
-  it("keys turns on live mode and restarts only the services that read them", async () => {
+  it("upgrade moves an older install to voice that follows the dashboard's keys", async () => {
     const target = join(dir(), "v");
     await main(["--yes", "--dir", target], deps());
-    const d = deps();
-    expect(await main(["keys", "--dir", target, "--deepgram", "dg-test", "--openrouter", "or-test"], d)).toBe(0);
-    const env = parseEnv(readFileSync(join(target, ".env"), "utf8"));
-    expect([env.PROVIDERS, env.DEEPGRAM_API_KEY, env.OPENROUTER_API_KEY]).toEqual(["live", "dg-test", "or-test"]);
-    expect(d.calls.filter(composeCall)).toEqual(["docker compose up -d --wait orchestrator console  (in v)"]);
+    const file = join(target, ".env");
+    writeFileSync(file, readFileSync(file, "utf8").replace("PROVIDERS=auto", "PROVIDERS=free"));
+    await main(["upgrade", "--dir", target], deps());
+    expect(parseEnv(readFileSync(file, "utf8")).PROVIDERS).toBe("auto");
   });
 
   it("uninstall keeps the data unless asked", async () => {
@@ -161,7 +158,7 @@ const hasDocker = spawnSync("docker", ["compose", "version"]).status === 0;
 describe.skipIf(!hasDocker)("the compose template (needs Docker)", () => {
   it("is valid with and without the public profile", () => {
     const d = dir();
-    writeFileSync(join(d, ".env"), renderEnv({ mode: "public", domain: "voice.acme.com", humanCheck: "off" }));
+    writeFileSync(join(d, ".env"), renderEnv({ domain: "voice.acme.com", humanCheck: "off" }));
     const base = ["compose", "-f", new URL("./template/compose.yml", import.meta.url).pathname, "--env-file", join(d, ".env")];
     expect(spawnSync("docker", [...base, "config", "--quiet"]).status).toBe(0);
     expect(spawnSync("docker", [...base, "--profile", "public", "config", "--quiet"]).status).toBe(0);

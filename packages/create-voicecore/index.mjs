@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 // create-voicecore: install VoiceCore with Docker in one command (Step 10, ADR 0005). No dependencies.
 //
-//   npx create-voicecore                 install (asks a few questions; --yes takes the defaults: live mode with the
-//                                        keys in DEEPGRAM_API_KEY and OPENROUTER_API_KEY, else free mode)
+//   npx create-voicecore                 install (one question: a public domain, or this machine; --yes: this machine)
 //   npx create-voicecore info            the dashboard's address and password again
 //   npx create-voicecore@latest upgrade  newer images, same settings and data
-//   npx create-voicecore keys            add or change provider keys (turns voice on)
 //   npx create-voicecore uninstall       stop it (--delete-data also removes agents, docs and the spend ledger)
+// Provider keys and allowed websites are set in the dashboard; voice turns on once both keys are there.
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -16,13 +15,13 @@ import { createInterface } from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
-export const VERSION = "0.1.0"; // the image tag this installer writes; they are released together
+export const VERSION = "0.2.0"; // the image tag this installer writes; they are released together
 const TEMPLATE = fileURLToPath(new URL("./template/", import.meta.url));
 const LOCAL_ORIGINS = "localhost:*,127.0.0.1:*";
 const DOCKER_PROXY_RANGES = "172.16.0.0/12,192.168.0.0/16,10.0.0.0/8"; // Caddy reaches the gateway over the compose network
 
 const OPTIONS = {
-  yes: { type: "boolean", short: "y" }, dir: { type: "string" }, mode: { type: "string" }, site: { type: "string" },
+  yes: { type: "boolean", short: "y" }, dir: { type: "string" }, site: { type: "string" },
   domain: { type: "string" }, deepgram: { type: "string" }, openrouter: { type: "string" },
   "turnstile-sitekey": { type: "string" }, "turnstile-secret": { type: "string" }, "human-check": { type: "string" },
   "image-tag": { type: "string" }, "delete-data": { type: "boolean" }, help: { type: "boolean", short: "h" },
@@ -43,15 +42,14 @@ const hex = (bytes) => randomBytes(bytes).toString("hex");
 const password = () => randomBytes(15).toString("base64url"); // 20 characters: printed once, kept in .env
 
 export function renderEnv(o, existing = {}) {
-  const mode = o.mode ?? "free";
-  const pub = mode === "public";
   const host = (o.domain ?? "").toLowerCase();
+  const pub = Boolean(host);
   const voicePort = o.voicePort ?? 8080;
   const consolePort = o.consolePort ?? 8000;
   const site = (o.site ?? "").trim().toLowerCase().replace(/\/+$/, "");
   const env = {
     VOICECORE_VERSION: o.version ?? existing.VOICECORE_VERSION ?? VERSION,
-    PROVIDERS: mode === "free" ? "free" : "live",
+    PROVIDERS: "auto", // voice once both keys are set, in the dashboard or below; text answers until then
     BIND: "127.0.0.1",
     VOICE_PORT: String(voicePort),
     CONSOLE_PORT: String(consolePort),
@@ -101,6 +99,13 @@ export function checkDocker(run) {
 const realDeps = {
   log: (s) => console.log(s),
   env: process.env,
+  voiceOn: async (consoleUrl) => { // the dashboard's public status: keys may have been added there, not in .env
+    try {
+      return (await (await fetch(`${consoleUrl}/api/status`, { signal: AbortSignal.timeout(3000) })).json()).providers === "live";
+    } catch {
+      return null;
+    }
+  },
   run: (cmd, args, opts = {}) => spawnSync(cmd, args, { encoding: "utf8", stdio: opts.inherit ? "inherit" : "pipe", cwd: opts.cwd }),
   isPortFree: (port) => new Promise((done) => {
     const s = createServer().once("error", () => done(false)).once("listening", () => s.close(() => done(true)));
@@ -152,23 +157,13 @@ async function install(o, d) {
   const existing = fresh ? {} : parseEnv(readFileSync(resolve(dir, ".env"), "utf8"));
   const ask = (q, fallback) => (o.yes ? Promise.resolve(fallback) : d.prompt(q, fallback));
 
-  let mode = o.mode ?? (await ask("Mode: live (voice, with your provider keys), free (no keys, text answers) or public (live on your own domain, HTTPS)?", "live"));
-  if (!["free", "live", "public"].includes(mode)) throw new Error(`unknown mode: ${mode} (live, free or public)`);
-  const settings = { site: o.site ?? (await ask("Which website will you embed it on? (optional, e.g. docs.example.com)", "")) };
-  if (mode !== "free") {
-    const key = async (flag, name, question) => o[flag] || existing[name] || d.env[name] || (await ask(question, ""));
-    settings.deepgram = await key("deepgram", "DEEPGRAM_API_KEY", "Deepgram API key (speech in and out; Enter to skip, for text answers only):");
-    settings.openrouter = settings.deepgram && await key("openrouter", "OPENROUTER_API_KEY", "OpenRouter API key (the language model):");
-    if (!settings.deepgram || !settings.openrouter) {
-      if (mode === "public") throw new Error("public mode needs a Deepgram and an OpenRouter key");
-      mode = "free";
-      d.log("No provider keys, so voice is off: answers come as text from your docs.");
-    }
-  }
-  settings.mode = mode;
+  // Keys can also come in here (flags, or the environment) for a scripted install; they go to .env.
+  const settings = { site: o.site, deepgram: o.deepgram || existing.DEEPGRAM_API_KEY || d.env.DEEPGRAM_API_KEY,
+                     openrouter: o.openrouter || existing.OPENROUTER_API_KEY || d.env.OPENROUTER_API_KEY };
+  settings.domain = o.domain ?? existing.DOMAIN ?? (await ask("Public domain for VoiceCore, e.g. voice.example.com (Enter: this machine only):", ""));
+  const mode = settings.domain ? "public" : "local";
   if (mode === "public") {
-    settings.domain = o.domain ?? (await ask("Domain for VoiceCore (its DNS must point at this machine), e.g. voice.example.com:", ""));
-    if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(settings.domain ?? "")) throw new Error(`not a domain name: ${settings.domain}`);
+    if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(settings.domain)) throw new Error(`not a domain name: ${settings.domain}`);
     settings.turnstileSitekey = o["turnstile-sitekey"];
     settings.turnstileSecret = o["turnstile-secret"];
     settings.humanCheck = settings.turnstileSecret ? "on" : (o["human-check"] ?? "off");
@@ -186,23 +181,24 @@ async function install(o, d) {
   compose(d, dir, [...profiles(env), "up", "-d", "--wait"]);
   d.log("");
   d.log("VoiceCore is running.");
-  summary(env, d);
+  await summary(env, d);
   d.log("Next: in the dashboard, create an agent, add your docs and Publish. Its Embed tab has the one line for your site.");
   d.log("Show this again: npx create-voicecore info");
   if (mode === "public" && env.HUMAN_CHECK === "off") d.log("Note: no Turnstile human check. The rate limits and spend caps in .env still apply.");
   return 0;
 }
 
-function summary(env, d) {
+async function summary(env, d) {
+  const on = (await d.voiceOn(env.PUBLIC_CONSOLE_URL)) ?? Boolean(env.DEEPGRAM_API_KEY && env.OPENROUTER_API_KEY);
   d.log("");
   d.log(`  Dashboard  ${env.PUBLIC_CONSOLE_URL}`);
   d.log(`  Password   ${env.CONSOLE_ADMIN_PASSWORD ?? "(set in the console at first run)"}`);
-  d.log(`  Voice      ${env.PROVIDERS === "live" ? "on" : "off (free mode: text answers). Turn it on: npx create-voicecore keys"}`);
+  d.log(`  Voice      ${on ? "on" : "off: add your Deepgram and OpenRouter keys on the dashboard's Voice page"}`);
   d.log("");
 }
 
-function info(o, d) {
-  summary(readSettings(resolve(o.dir ?? "voicecore")), d);
+async function info(o, d) {
+  await summary(readSettings(resolve(o.dir ?? "voicecore")), d);
   return 0;
 }
 
@@ -210,24 +206,12 @@ async function upgrade(o, d) {
   const dir = resolve(o.dir ?? "voicecore");
   const env = readSettings(dir);
   env.VOICECORE_VERSION = o["image-tag"] ?? VERSION;
+  env.PROVIDERS = "auto"; // from 0.2.0 voice follows the keys, so the dashboard can set them
   saveSettings(dir, writeEnv(env));
   copyTemplate(dir);
   compose(d, dir, [...profiles(env), "pull"]);
   compose(d, dir, [...profiles(env), "up", "-d", "--wait"]); // the console migrates its database on start
   d.log(`VoiceCore is on ${env.VOICECORE_VERSION}. Your agents, docs and settings are unchanged.`);
-  return 0;
-}
-
-async function keys(o, d) {
-  const dir = resolve(o.dir ?? "voicecore");
-  const env = readSettings(dir);
-  env.DEEPGRAM_API_KEY = o.deepgram ?? (await d.prompt("Deepgram API key:", env.DEEPGRAM_API_KEY));
-  env.OPENROUTER_API_KEY = o.openrouter ?? (await d.prompt("OpenRouter API key:", env.OPENROUTER_API_KEY));
-  if (!env.DEEPGRAM_API_KEY || !env.OPENROUTER_API_KEY) throw new Error("both keys are needed for voice");
-  env.PROVIDERS = "live";
-  saveSettings(dir, writeEnv(env));
-  compose(d, dir, [...profiles(env), "up", "-d", "--wait", "orchestrator", "console"]); // the gateway holds no keys
-  d.log("Voice is on. Open a new assistant session to use it.");
   return 0;
 }
 
@@ -240,14 +224,13 @@ async function uninstall(o, d) {
   return 0;
 }
 
-const HELP = `Usage: npx create-voicecore [install|info|upgrade|keys|uninstall] [options]
-  --yes              take the defaults (live mode with keys from DEEPGRAM_API_KEY and OPENROUTER_API_KEY, else free;
-                     folder ./voicecore)
+const HELP = `Usage: npx create-voicecore [install|info|upgrade|uninstall] [options]
+  --yes              ask nothing: this machine only, folder ./voicecore
   --dir <folder>     where the install lives (default ./voicecore)
-  --mode <m>         free | live | public
-  --site <host>      the website you will embed it on
-  --domain <host>    public mode: VoiceCore's own domain (HTTPS by Caddy)
-  --deepgram <key>, --openrouter <key>        provider keys (live and public)
+  --domain <host>    public: VoiceCore on its own domain, with HTTPS by Caddy (its DNS must point at this machine)
+  --site <host>      a website allowed to embed it (more in the dashboard)
+  --deepgram <key>, --openrouter <key>   provider keys for a scripted install (default: DEEPGRAM_API_KEY and
+                     OPENROUTER_API_KEY from the environment; otherwise add them in the dashboard)
   --turnstile-sitekey <k>, --turnstile-secret <s>   the human check (public)
   --image-tag <t>    a specific release (default ${VERSION})
   --delete-data      uninstall: also delete agents, docs and the spend ledger`;
@@ -264,7 +247,7 @@ export async function main(argv = process.argv.slice(2), d = realDeps) {
   if (o.help) return d.log(HELP), 0;
   const command = positionals[0] ?? "install";
   try {
-    if (command === "info") return info(o, d); // reads .env only: works with Docker stopped
+    if (command === "info") return await info(o, d); // .env and the dashboard's status: no Docker needed
   } catch (e) {
     d.log(`create-voicecore: ${e.message}`);
     return 1;
@@ -274,7 +257,6 @@ export async function main(argv = process.argv.slice(2), d = realDeps) {
   try {
     if (command === "install") return await install(o, d);
     if (command === "upgrade") return await upgrade(o, d);
-    if (command === "keys") return await keys(o, d);
     if (command === "uninstall") return await uninstall(o, d);
     d.log(`Unknown command: ${command}\n\n${HELP}`);
     return 2;

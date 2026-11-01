@@ -19,10 +19,12 @@ class Formatter(logging.Formatter):
     def __init__(self, json_lines: bool = True):
         super().__init__()
         self.json_lines = json_lines
-        self.values = [v for v in (keys.key(n) for n in KEY_NAMES) if v and len(v) >= 8]  # read once: keys don't change
+        self._read_at, self._values = float("-inf"), []
 
     def redact(self, s: str) -> str:
-        for v in self.values:
+        if (now := time.monotonic()) - self._read_at >= 1:  # a key set in the dashboard arrives while running
+            self._read_at, self._values = now, [v for v in (keys.key(n) for n in KEY_NAMES) if v and len(v) >= 8]
+        for v in self._values:
             s = s.replace(v, "[redacted]")
         return PATTERNS.sub("[redacted]", s)
 

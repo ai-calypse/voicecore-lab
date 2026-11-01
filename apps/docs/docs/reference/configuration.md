@@ -60,7 +60,7 @@ Run the orchestrator with `uv run python -m voicecore.server` from the repositor
 
 | Flag | Default | What it sets |
 |---|---|---|
-| `--providers` | `mock` | `mock` (no keys, no spend), `mock-billed` (mock providers that reserve and settle small fixed amounts, for ledger tests), `free` (no paid provider: each typed question gets the closest docs section, as text) or `live` (Deepgram, OpenRouter and the `--tts` provider; spends money) |
+| `--providers` | `mock` | `mock` (no keys, no spend), `mock-billed` (mock providers that reserve and settle small fixed amounts, for ledger tests), `free` (no paid provider: each typed question gets the closest docs section, as text) `live` (Deepgram, OpenRouter and the `--tts` provider; spends money), or `auto` (per session: live once both `DEEPGRAM_API_KEY` and `OPENROUTER_API_KEY` are set, in the dashboard's key file or the environment, else free; what `create-voicecore` installs run, so keys added in the dashboard turn voice on with no restart) |
 | `--agents-dir` | none | the console's published agent bundles; the gateway's `X-VoiceCore-Agent` header picks one per session ([control plane](../architecture/control-plane.md)) |
 | `--default-agent` | `on` | `off`: every session must name a published agent, and the `--docs-dir` corpus is not indexed at startup (a console install) |
 | `--host` | `127.0.0.1` | listen address; the Docker image passes `0.0.0.0` |
@@ -126,6 +126,7 @@ VoiceCore reads the environment variables below. The three provider keys, `GATEW
 | `VOICECORE_CAP_USD` | orchestrator, console | the install's total cap in US dollars; default 5 |
 | `VOICECORE_PUBLIC_TOTAL`, `VOICECORE_PUBLIC_DAILY` | orchestrator, console | the public sub-cap in total and per UTC day; defaults 2 and 0.50 |
 | `VOICECORE_VECTORS_DIR` | orchestrator, console | where computed vectors are cached when the image's own cache is read-only |
+| `VOICECORE_KEYS_FILE` | orchestrator, console | the provider keys set on the dashboard's Voice page (`keys.json`, mode 600): the console writes it, the orchestrator reads it at each new session, ahead of the environment |
 | `CONSOLE_ADMIN_PASSWORD` | console | the admin's password, at least 12 characters; taken at start, and a changed one signs everyone out. `create-voicecore` generates it and `create-voicecore info` shows it ([install](../getting-started/install.md)) |
 | `CONSOLE_SETUP_TOKEN`, `PUBLIC_VOICE_URL`, `VOICECORE_PROVIDERS`, `CONSOLE_STATIC`, `TURNSTILE_SITEKEY` | console | a first-run setup token (instead of `CONSOLE_ADMIN_PASSWORD`), the voice server's public address for the snippet, the provider mode for the banner, the built UI folder, and the sitekey added to the snippet |
 

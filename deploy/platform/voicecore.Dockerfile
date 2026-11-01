@@ -25,7 +25,7 @@ COPY --from=ui /src/apps/console/dist /app/console-ui
 ARG VERSION=dev
 ENV VOICECORE_VERSION=$VERSION
 # the named volumes start with the image's ownership, so both services can write theirs
-RUN useradd --uid 10001 app && mkdir -p /data/agents /data/console /data/ledger && chown -R app /data
+RUN useradd --uid 10001 app && mkdir -p /data/agents /data/console /data/ledger /data/providers && chown -R app /data
 USER app
 EXPOSE 8765 8000
 CMD ["python", "-m", "voicecore.server", "--host", "0.0.0.0"]

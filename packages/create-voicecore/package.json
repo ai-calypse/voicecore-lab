@@ -1,6 +1,6 @@
 {
   "name": "create-voicecore",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Install VoiceCore, a self-hosted voice assistant for your docs, with Docker in one command.",
   "type": "module",
   "bin": { "create-voicecore": "index.mjs" },

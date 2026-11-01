@@ -3,7 +3,7 @@ import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { api, DEMO, DEMO_REFUSAL, type Status } from "./api.ts";
 import { parseHash } from "./lib.ts";
-import { AgentPage, Agents, go, Home, Keys, Login, Setup, Websites } from "./pages.tsx";
+import { AgentPage, Agents, go, Home, Keys, Login, Setup, Voice, Websites } from "./pages.tsx";
 import { Alert, Icon, Logo } from "./ui.tsx";
 import "./styles.css";
 
@@ -37,16 +37,18 @@ function App() {
     return <Setup token={route.query.token} onDone={() => { setStatus({ ...status, setup_needed: false }); setSignedIn(true); go("#/"); }} />;
   }
   if (!signedIn) return <Login onDone={() => { setSignedIn(true); if (route.path[0] === "login") go("#/"); }} />;
-  return <Shell status={status} path={route.path} onSignOut={() => setSignedIn(false)} />;
+  return <Shell status={status} path={route.path} onSignOut={() => setSignedIn(false)} onStatus={() => api.status().then(setStatus)} />;
 }
 
-const NAV = [["home", "Home", "home"], ["agents", "Agents", "mic"], ["websites", "Allowed websites", "globe"], ["keys", "API keys", "key"]] as const;
+const NAV = [["home", "Home", "home"], ["agents", "Agents", "mic"], ["voice", "Voice", "wave"], ["websites", "Allowed websites", "globe"],
+  ["keys", "API keys", "key"]] as const;
 const DOCS = "https://voicecore-docs.fly.dev/guides/console";
 
-function Shell({ status, path, onSignOut }: { status: Status; path: string[]; onSignOut: () => void }) {
+function Shell({ status, path, onSignOut, onStatus }: { status: Status; path: string[]; onSignOut: () => void; onStatus: () => void }) {
   const [section = "home", id, tab] = path;
   const page = section === "agents" && id ? <AgentPage id={id} tab={tab ?? "knowledge"} status={status} />
     : section === "agents" ? <Agents />
+    : section === "voice" ? <Voice onChange={onStatus} />
     : section === "websites" ? <Websites />
     : section === "keys" ? <Keys />
     : <Home status={status} />;
@@ -63,7 +65,7 @@ function Shell({ status, path, onSignOut }: { status: Status; path: string[]; on
           </nav>
           <div className="side-end">
             {status.providers === "free" && !DEMO && (
-              <p className="side-note" role="note"><strong>Voice is off.</strong> Add provider keys with <code>npx create-voicecore keys</code></p>
+              <p className="side-note" role="note"><strong>Voice is off.</strong> <a href="#/voice">Add your provider keys</a> to turn it on.</p>
             )}
             <a href={DOCS} target="_blank" rel="noopener" className="side-link"><Icon name="book" />Docs</a>
             {!DEMO && <button className="side-link" onClick={() => api.logout().finally(onSignOut)}><Icon name="out" />Sign out</button>}

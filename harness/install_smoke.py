@@ -80,7 +80,7 @@ def main() -> int:
         return time.monotonic()
 
     t = time.monotonic()
-    cmd = ["node", str(INSTALLER), "--yes", "--mode", "free", "--dir", str(args.dir)] + (["--image-tag", args.image_tag] if args.image_tag else [])
+    cmd = ["node", str(INSTALLER), "--yes", "--dir", str(args.dir)] + (["--image-tag", args.image_tag] if args.image_tag else [])
     out = subprocess.run(cmd, capture_output=True, text=True)
     if out.returncode != 0:
         print(out.stdout[-2000:], out.stderr[-2000:], file=sys.stderr)

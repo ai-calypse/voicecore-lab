@@ -1,6 +1,6 @@
 # VoiceCore, installed by create-voicecore (https://github.com/ai-calypse/voicecore-lab).
 # Settings live in .env next to this file. After changing it: docker compose up -d
-# Upgrade: npx create-voicecore@latest upgrade. Provider keys: npx create-voicecore keys.
+# Upgrade: npx create-voicecore@latest upgrade. Provider keys: the dashboard's Voice page.
 name: voicecore
 
 x-image: &image ghcr.io/ai-calypse/voicecore:${VOICECORE_VERSION:?run create-voicecore}
@@ -8,17 +8,18 @@ x-image: &image ghcr.io/ai-calypse/voicecore:${VOICECORE_VERSION:?run create-voi
 services:
   orchestrator:  # the voice side: turn-taking, answers, speech; reads published agents, never calls the console
     image: *image
-    command: ["python", "-m", "voicecore.server", "--host", "0.0.0.0", "--providers", "${PROVIDERS:-free}",
+    command: ["python", "-m", "voicecore.server", "--host", "0.0.0.0", "--providers", "${PROVIDERS:-auto}",
               "--agents-dir", "/data/agents", "--default-agent", "off", "--pool", "public", "--env", "${GATEWAY_ENV:-dev}"]
     environment:
       VOICECORE_LEDGER: /data/ledger/spend_ledger.json
+      VOICECORE_KEYS_FILE: /data/providers/keys.json  # the dashboard's keys, read at each new session
       DEEPGRAM_API_KEY: ${DEEPGRAM_API_KEY:-}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       VOICECORE_CAP_USD: ${VOICECORE_CAP_USD:-5}
       VOICECORE_PUBLIC_TOTAL: ${VOICECORE_PUBLIC_TOTAL:-2}
       VOICECORE_PUBLIC_DAILY: ${VOICECORE_PUBLIC_DAILY:-0.5}
       LOG_FORMAT: json
-    volumes: ["agents:/data/agents:ro", "ledger:/data/ledger"]
+    volumes: ["agents:/data/agents:ro", "ledger:/data/ledger", "providers:/data/providers:ro"]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/readyz', timeout=3)"]
       interval: 5s
@@ -60,12 +61,15 @@ services:
       VOICECORE_LEDGER: /data/ledger/spend_ledger.json
       CONSOLE_ADMIN_PASSWORD: ${CONSOLE_ADMIN_PASSWORD:-}  # the admin's password (create-voicecore info shows it)
       CONSOLE_STATIC: /app/console-ui
-      VOICECORE_PROVIDERS: ${PROVIDERS:-free}
+      VOICECORE_PROVIDERS: ${PROVIDERS:-auto}
+      VOICECORE_KEYS_FILE: /data/providers/keys.json  # keys entered on the Voice page, checked and kept here
+      DEEPGRAM_API_KEY: ${DEEPGRAM_API_KEY:-}  # only to show that the server has its own key (last four characters)
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       PUBLIC_VOICE_URL: ${PUBLIC_VOICE_URL:?}
       TURNSTILE_SITEKEY: ${TURNSTILE_SITEKEY:-}
       FORWARDED_ALLOW_IPS: "*"  # reachable only from this machine or through Caddy
     ports: ["${BIND:-127.0.0.1}:${CONSOLE_PORT:-8000}:8000"]
-    volumes: ["console:/data/console", "agents:/data/agents", "ledger:/data/ledger:ro"]
+    volumes: ["console:/data/console", "agents:/data/agents", "ledger:/data/ledger:ro", "providers:/data/providers"]
     cpus: 1.0  # embedding a large upload must not take the CPU the voice side needs
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/status', timeout=3)"]
@@ -76,7 +80,7 @@ services:
     init: true
     restart: unless-stopped
 
-  caddy:  # --mode public: automatic HTTPS for one host, routed by path
+  caddy:  # --domain: automatic HTTPS for one host, routed by path
     profiles: ["public"]
     image: caddy:2.10
     environment:
@@ -90,4 +94,5 @@ volumes:
   agents:
   console:
   ledger:
+  providers:  # the provider keys set in the dashboard: the console writes, the orchestrator reads
   caddy:

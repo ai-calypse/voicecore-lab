@@ -96,10 +96,10 @@ The hosted Deepgram Voice Agent, measured as a baseline, took 972 ms (n = 3, [br
 ## Use it for your own docs
 
 ```bash
-npx create-voicecore    # checks Docker, asks free / live / public, starts it and prints the console's setup link
+npx create-voicecore    # checks Docker, starts it, prints the dashboard's address and password
 ```
 
-In the console: create an agent, upload your Markdown (or point it at a Git folder), press Publish, try it on the Test tab, and paste the one-line snippet into your site. Free mode needs no keys; `npx create-voicecore keys` turns on voice. The [install guide](apps/docs/docs/getting-started/install.md) has the details, the [control-plane page](apps/docs/docs/architecture/control-plane.md) the design. Until the first release is published to npm and GHCR, run it from a clone with the images built locally ([deploy/platform](deploy/platform/README.md)).
+In the dashboard: add your Deepgram and OpenRouter keys on the Voice page, create an agent, upload your Markdown (or point it at a Git folder), press Publish, try it on the Test tab, and paste the one-line snippet into your site. Without keys it answers typed questions from your docs, at no cost. The [install guide](apps/docs/docs/getting-started/install.md) has the details, the [control-plane page](apps/docs/docs/architecture/control-plane.md) the design.
 
 ## Run it yourself (no keys, no spend)
 

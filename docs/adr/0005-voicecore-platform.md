@@ -16,7 +16,7 @@
 - Volumes give least privilege:
   - the console alone writes `agents`;
   - the gateway and orchestrator mount it read-only;
-  - provider keys exist only in the orchestrator's environment.
+  - provider keys live in the orchestrator's environment, or in the `providers` volume when set in the dashboard (amended 2026-11-01, below).
 
 ## Agent bundle format v1
 
@@ -53,3 +53,10 @@
 - One more Python service, the console, and two published images: `voicecore` and `voicecore-gateway`.
 - The token format gains an optional agent part. `SPEC.md` §4 documents it; the event vectors are unchanged.
 - The default agent (this repository's docs) stays the behaviour when no agent is given. Customer installs turn it off with `--default-agent off`.
+
+## Amendment, 2026-11-01: provider keys in the dashboard
+
+The owner asked for the provider keys to be managed from the dashboard, like the rest of an install. The console now writes keys entered on its Voice page to a `providers` volume (`keys.json`, mode 600); the orchestrator mounts it read-only and reads it at each new session, ahead of its environment (`voicecore.keys`). With `--providers auto`, a session is live once both keys are present and free otherwise, so a key added in the dashboard turns voice on for the next conversation, with no restart. The data plane still never calls the console.
+
+- **What changes for least privilege:** the console now holds provider keys. It never returns them (only their last four characters), checks each with one free call to its provider before saving it, and needs a signed-in admin to change them. Someone with the admin password could replace a key, which would redirect spend to their own provider account, not read the owner's key.
+- **Why not leave keys in `.env`:** changing them needed a terminal and a restart, the step the owner found hardest. Keys in `.env` or the environment (Fly secrets) still work, and a dashboard key takes their place.

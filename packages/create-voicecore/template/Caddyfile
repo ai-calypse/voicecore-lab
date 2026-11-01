@@ -1,4 +1,4 @@
-# VoiceCore behind one HTTPS host (create-voicecore --mode public). Caddy gets and renews the certificate.
+# VoiceCore behind one HTTPS host (create-voicecore --domain). Caddy gets and renews the certificate.
 {$DOMAIN} {
 	encode gzip
 	@voice path /v1/* /widget.js /healthz /readyz

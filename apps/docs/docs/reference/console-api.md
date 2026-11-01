@@ -24,7 +24,7 @@ curl -s -H "Authorization: Bearer $KEY" -X POST http://localhost:8000/api/agents
 
 | Method | Route | What it does |
 |---|---|---|
-| GET | `/api/status` | whether setup is needed, the provider mode and the voice server's address; no sign-in needed |
+| GET | `/api/status` | whether setup is needed, whether voice is on (`live` or `free`) and the voice server's address; no sign-in needed |
 | POST | `/api/setup` | first run: `{token, password}` makes the admin, once |
 | POST | `/api/login` | `{password}`; at most 5 attempts a minute per address |
 | POST | `/api/logout` | ends this session |
@@ -32,6 +32,9 @@ curl -s -H "Authorization: Bearer $KEY" -X POST http://localhost:8000/api/agents
 | GET | `/api/keys` | the API keys, without the keys themselves |
 | POST | `/api/keys` | `{label}`: a new key, shown in this response only |
 | DELETE | `/api/keys/{key_id}` | revokes a key at once |
+| GET | `/api/providers` | for Deepgram and OpenRouter: where the key comes from (`dashboard`, `server` or none) and its last four characters, never the key; whether voice is on; whether keys can be set here |
+| PUT | `/api/providers/{provider}` | `{key}` for `deepgram` or `openrouter`: checked with the provider by one free call, then saved; voice uses it from the next conversation |
+| DELETE | `/api/providers/{provider}` | removes the dashboard's key; the server's own key, if any, applies again |
 
 ## Routes for agents and their docs
 

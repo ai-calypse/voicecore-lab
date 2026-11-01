@@ -87,7 +87,7 @@ The ledger is on the volume, so a rollback keeps the money record. To stop every
 
 Besides the default docs agent, the app serves the agents published in its dashboard, `https://voicecore.fly.dev/` (password: the `CONSOLE_ADMIN_PASSWORD` secret). To put one on another website:
 
-1. In the dashboard, create the agent, add its docs, set its docs URL to that site's address, and Publish.
+1. In the dashboard, create the agent, add its docs, set its docs URL to that site's address, and Publish. (Provider keys: the Fly secrets, unless keys are saved on the dashboard's Voice page, which take their place at the next session.)
 2. Under **Allowed websites**, add the site's host. Add it to the Turnstile widget's hostnames in Cloudflare too (`voicecore.fly.dev` needs to be there for the dashboard's Test tab).
 3. Paste the line from the agent's **Embed** tab into the site.
 

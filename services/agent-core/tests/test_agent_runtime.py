@@ -8,7 +8,7 @@ import pytest
 from websockets.asyncio.client import connect
 from websockets.asyncio.server import serve
 
-from voicecore import agents, budget, protocol
+from voicecore import agents, budget, keys, protocol
 from voicecore.answer.index import Index
 from voicecore.answer.ingest import docusaurus, ingest
 
@@ -57,6 +57,33 @@ def publish(root, docs: dict[str, str], **config):
 
 async def test_free_mode_greets_then_answers():
     async with running("free", FIXTURE) as addr, connect(f"ws://{addr}/v1/session/s-1", additional_headers={HEADER: "acme-docs"}) as ws:
+        assert await texts(ws, 1) == ["Text answers from your docs. Voice turns on once provider keys are set."]
+
+
+@pytest.fixture
+def no_keys(tmp_path, monkeypatch):
+    """No provider key anywhere: not in the environment, the repo's .env or the dashboard's file."""
+    path = tmp_path / "providers" / "keys.json"
+    monkeypatch.setenv("VOICECORE_KEYS_FILE", str(path))
+    monkeypatch.setattr(keys, "ENV", tmp_path / "no.env")
+    for name in ("DEEPGRAM_API_KEY", "OPENROUTER_API_KEY"):
+        monkeypatch.delenv(name, raising=False)
+    return path
+
+
+def test_auto_mode_is_live_once_both_keys_are_set(no_keys):
+    from voicecore.server import session_mode
+
+    assert session_mode("auto") == "free"
+    keys.save(no_keys, {"DEEPGRAM_API_KEY": "dg-test"})
+    assert session_mode("auto") == "free"  # one key is not enough for voice
+    keys.save(no_keys, {"DEEPGRAM_API_KEY": "dg-test", "OPENROUTER_API_KEY": "or-test"})
+    assert session_mode("auto") == "live"
+    assert session_mode("mock") == "mock"
+
+
+async def test_auto_mode_without_keys_answers_in_text(no_keys):
+    async with running("auto", FIXTURE) as addr, connect(f"ws://{addr}/v1/session/s-auto", additional_headers={HEADER: "acme-docs"}) as ws:
         assert await texts(ws, 1) == ["Text answers from your docs. Voice turns on once provider keys are set."]
 
 

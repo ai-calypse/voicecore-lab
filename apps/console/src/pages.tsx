@@ -1,7 +1,8 @@
 // The console's pages. Each one loads what it shows, says when it is loading or empty, and shows the server's
 // reason when something is refused.
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { api, ApiError, DEMO, type Agent, type AgentRow, type Catalog, type Config, type Key, type Status } from "./api.ts";
+import { api, ApiError, DEMO, type Agent, type AgentRow, type Catalog, type Config, type Key, type ProviderKey, type Providers,
+  type Status } from "./api.ts";
 import { agentStatus, agentSummary, ago, buildLine, greeting, type Build } from "./lib.ts";
 import { Alert, CopyButton, Field, Icon, Logo, Pill, store } from "./ui.tsx";
 
@@ -181,7 +182,7 @@ export function Home({ status }: { status: Status }) {
               note={agents.data ? `of ${agents.data.length} ${agents.data.length === 1 ? "agent" : "agents"}` : ""} />
         <Tile label="Spend" value={free ? money(0) : u?.spent_usd != null ? money(u.spent_usd) : "Not recorded"}
               note={free ? "Free mode spends nothing" : u?.cap_usd != null ? `of ${money(u.cap_usd)} cap${u.today_usd != null ? `, ${money(u.today_usd)} today` : ""}` : "No spend ledger on this install"} />
-        <Tile label="Voice" value={free ? "Off" : "On"} note={free ? "Text answers from your docs" : "Spoken answers with your provider keys"} />
+        <Tile label="Voice" href="#/voice" value={free ? "Off" : "On"} note={free ? "Add your provider keys to turn it on" : "Spoken answers with your provider keys"} />
         <Tile label="Allowed websites" href="#/websites" value={site.data ? origins.length : "…"}
               note={!site.data ? "" : origins.length ? `${origins[0]}${origins.length > 1 ? ` and ${origins.length - 1} more` : ""}` : "None yet: embeds are refused"} />
       </section>
@@ -609,6 +610,73 @@ export function Websites() {
         <div><button className="button button-primary" disabled={DEMO}>Save websites</button></div>
       </form>
     </main>
+  );
+}
+
+const PROVIDERS = [
+  { id: "deepgram", name: "Deepgram", what: "Hears the visitor and speaks the answers.", link: "https://console.deepgram.com/" },
+  { id: "openrouter", name: "OpenRouter", what: "Runs the language model that writes the answers.", link: "https://openrouter.ai/settings/keys" },
+] as const;
+
+export function Voice({ onChange }: { onChange: () => void }) {
+  const { data, error, reload } = useLoad<Providers>(api.providers, []);
+  const changed = () => { reload(); onChange(); };
+  return (
+    <main className="narrow-wide">
+      <header className="page-intro">
+        <h1>Voice</h1>
+        <p className="lead">Voice runs on two providers, billed to your own accounts. Add a key for each and the next conversation speaks and listens, with no restart. Each key is checked with its provider when you save it, and never shown again.</p>
+      </header>
+      {error && <Alert kind="error">{error}</Alert>}
+      {data && (
+        <Alert kind={data.voice ? "success" : "info"}>
+          {data.voice ? "Voice is on: new conversations speak and listen." : "Voice is off: the assistant answers typed questions with the closest section of your docs."}
+        </Alert>
+      )}
+      {data && PROVIDERS.map((p) => <ProviderKeyForm key={p.id} {...p} state={data[p.id]} editable={data.editable} onChange={changed} />)}
+    </main>
+  );
+}
+
+function ProviderKeyForm({ id, name, what, link, state, editable, onChange }: { id: string; name: string; what: string; link: string;
+  state: ProviderKey; editable: boolean; onChange: () => void }) {
+  const [key, setKey] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ kind: "error" | "success"; text: string } | null>(null);
+  const run = async (action: () => Promise<unknown>, done: string) => {
+    setBusy(true);
+    try {
+      await action();
+      setKey(""); setResult({ kind: "success", text: done }); onChange();
+    } catch (err) { setResult({ kind: "error", text: message(err) }); } finally { setBusy(false); }
+  };
+  const save = (e: FormEvent) => { e.preventDefault(); run(() => api.setProviderKey(id, key), `Saved. ${name} accepted the key.`); };
+  const where = state.source === "dashboard" ? <>Saved here, ending in <code>…{state.last4}</code>.</>
+    : state.source === "server" ? <>Set on the server, ending in <code>…{state.last4}</code>.{editable && " A key saved here takes its place."}</>
+    : "No key yet.";
+  return (
+    <form onSubmit={save} className="panel stack" aria-labelledby={`${id}-title`}>
+      <div className="panel-head">
+        <h2 id={`${id}-title`}>{name}</h2>
+        <Pill status={state.source ? "Set" : "Missing"} />
+      </div>
+      <p className="muted">{what} <a href={link} target="_blank" rel="noopener">Create a key at {name}</a></p>
+      <p>{where}</p>
+      {editable ? (
+        <>
+          <Field label={`${state.source ? "New" : ""} ${name} API key`.trim()}>
+            <input type="password" autoComplete="off" spellCheck={false} required value={key} onChange={(e) => setKey(e.target.value)} disabled={DEMO || busy} />
+          </Field>
+          {result && <Alert kind={result.kind}>{result.text}</Alert>}
+          <div className="actions">
+            <button className="button button-primary" disabled={DEMO || busy}>{busy ? `Checking with ${name}…` : "Save key"}</button>
+            {state.source === "dashboard" && (
+              <button type="button" className="button" disabled={DEMO || busy} onClick={() => run(() => api.removeProviderKey(id), "Removed.")}>Remove</button>
+            )}
+          </div>
+        </>
+      ) : <p className="muted small">This install's keys are set on its server, in its environment.</p>}
+    </form>
   );
 }
 

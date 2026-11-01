@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from voicecore import keys
 from voicecore_console.app import create_app
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -32,8 +33,10 @@ def docs_zip() -> bytes:
 
 
 def snapshots(tmp_path) -> dict:
-    app = create_app(tmp_path / "console", tmp_path / "agents", setup_token="demo", now=lambda: NOW, providers="live",
-                     voice_url="https://voicecore.fly.dev")
+    keys_file = tmp_path / "providers" / "keys.json"  # made-up keys: the demo shows only their last four characters
+    keys.save(keys_file, {"DEEPGRAM_API_KEY": "demo-not-a-key-dg01", "OPENROUTER_API_KEY": "demo-not-a-key-or02"})
+    app = create_app(tmp_path / "console", tmp_path / "agents", setup_token="demo", now=lambda: NOW, providers="auto",
+                     keys_file=keys_file, voice_url="https://voicecore.fly.dev")
     with TestClient(app, base_url="http://localhost:8000") as c:
         c.post("/api/setup", json={"token": "demo", "password": "a demo password only"})
         agent = c.post("/api/agents", json={"name": "VoiceCore docs"}).json()["id"]
@@ -51,7 +54,7 @@ def snapshots(tmp_path) -> dict:
             time.sleep(0.2)
         c.put("/api/site", json={"origins": ["voicecore-docs.fly.dev"]})
         c.post("/api/keys", json={"label": "docs CI"})
-        paths = ["status", "me", "agents", f"agents/{agent}", f"agents/{agent}/builds/latest", "catalog", "site", "keys", "usage"]
+        paths = ["status", "me", "agents", f"agents/{agent}", f"agents/{agent}/builds/latest", "catalog", "site", "keys", "usage", "providers"]
         return {p.replace("/", "__"): c.get(f"/api/{p}").json() for p in paths}
 
 

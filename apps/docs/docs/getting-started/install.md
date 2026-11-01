@@ -6,7 +6,7 @@ description: Install VoiceCore with one command, add your docs in the console, t
 
 ## What you need before installing
 
-You need a computer or server with Docker running (Docker Compose 2.20 or newer) and Node.js 20 or newer for the one-command installer. Nothing else: the installer downloads two images, VoiceCore's own (`ghcr.io/ai-calypse/voicecore`, about 230 MB compressed) and its gateway (about 5 MB). For voice, you also need a Deepgram API key (speech in and out) and an OpenRouter API key (the language model). Without keys, VoiceCore runs in free mode: it answers typed questions with the closest section of your docs, at no cost.
+You need a computer or server with Docker running (Docker Compose 2.20 or newer) and Node.js 20 or newer for the one-command installer. Nothing else: the installer downloads two images, VoiceCore's own (`ghcr.io/ai-calypse/voicecore`, about 230 MB compressed) and its gateway (about 5 MB). For voice, you also need a Deepgram API key (speech in and out) and an OpenRouter API key (the language model); you add them in the dashboard after installing. Until both are there, VoiceCore answers typed questions with the closest section of your docs, at no cost.
 
 ## Install with one command
 
@@ -14,25 +14,19 @@ You need a computer or server with Docker running (Docker Compose 2.20 or newer)
 npx create-voicecore
 ```
 
-The installer checks Docker, asks which mode you want (live, unless you choose otherwise) and your two provider keys, writes everything into a `voicecore` folder (a `compose.yml`, a `Caddyfile` and a private `.env` with generated secrets) and starts the stack. It ends by printing the dashboard's address and its password:
+The installer checks Docker and asks one question: a public domain for VoiceCore, or Enter to run it on this machine only. It writes everything into a `voicecore` folder (a `compose.yml`, a `Caddyfile` and a private `.env` with generated secrets), starts the stack, and ends by printing the dashboard's address and its password:
 
 ```text
 VoiceCore is running.
 
   Dashboard  http://localhost:8000
   Password   q3Vx9LdT2pWn7KcR0bYa
-  Voice      on
+  Voice      off: add your Deepgram and OpenRouter keys on the dashboard's Voice page
 ```
 
-The password is generated for this install and kept in its `.env` as `CONSOLE_ADMIN_PASSWORD`. Run `npx create-voicecore info` in the same folder to see the address and password again. Press Enter at the key questions to skip them: VoiceCore then installs in free mode. `npx create-voicecore --yes` asks nothing; it uses the keys in the `DEEPGRAM_API_KEY` and `OPENROUTER_API_KEY` environment variables when they are set, and free mode otherwise.
+The password is generated for this install and kept in its `.env` as `CONSOLE_ADMIN_PASSWORD`. Run `npx create-voicecore info` in the same folder to see the address and password again. `npx create-voicecore --yes` asks nothing and installs on this machine.
 
-| Mode | For | Needs |
-|---|---|---|
-| `live` (the default) | voice and written answers, on this machine | a Deepgram key and an OpenRouter key |
-| `free` | trying it, at no cost: text answers from the closest docs section | nothing |
-| `public` | a public website: VoiceCore on its own domain with automatic HTTPS | the two keys, a domain whose DNS points at this server, and ports 80 and 443 open |
-
-In free and live mode, the console listens on `http://localhost:8000` and the voice server on `http://localhost:8080`, on this machine only. If a port is busy, the installer takes the next free one and prints it. Public mode puts both behind one HTTPS host, with Caddy getting and renewing the certificate. It also offers Cloudflare Turnstile, a human check on new sessions; without it the rate limits and spend caps still apply.
+On this machine, the dashboard listens on `http://localhost:8000` and the voice server on `http://localhost:8080`, reachable from this machine only. If a port is busy, the installer takes the next free one and prints it. With a domain (`--domain voice.example.com`), both sit behind one HTTPS host, with Caddy getting and renewing the certificate; the domain's DNS must point at the server, with ports 80 and 443 open. Add Cloudflare Turnstile, a human check on new sessions, with `--turnstile-sitekey` and `--turnstile-secret`; without it the rate limits and spend caps still apply.
 
 ## Sign in to the dashboard and add your docs
 
@@ -44,6 +38,10 @@ Open the dashboard address the installer printed and sign in with its password. 
 
 On the Settings tab, set **Docs URL** to where these docs are published, so answers link to the section they cite. Then press **Publish**. VoiceCore splits the docs into sections at their headings, computes a vector for each section, and puts the new version live. The console shows the progress, for example "Embedding 120 of 342 sections".
 
+## Turn on voice
+
+On the dashboard's **Voice** page, paste a Deepgram key and an OpenRouter key. VoiceCore checks each one with its provider when you save it, and the next conversation speaks and listens, with no restart. A saved key is never shown again, only its last four characters. For a scripted install, pass the keys with `--deepgram` and `--openrouter`, or set `DEEPGRAM_API_KEY` and `OPENROUTER_API_KEY` in the environment before running the installer; they go to `.env`.
+
 ## Test the agent and put it on your website
 
 The **Test** tab holds a page with exactly the snippet your site will use. Open the assistant in its corner and ask a question from your docs.
@@ -54,14 +52,13 @@ The **Embed** tab gives one line to paste before `</body>` on your pages:
 <script src="http://localhost:8080/widget.js" data-agent="acme-docs" async></script>
 ```
 
-The voice server serves the widget itself, and the widget talks to the server that served it. Add your website under **Websites** in the console, or browsers on it are refused. The change takes effect within a second, with no restart.
+The voice server serves the widget itself, and the widget talks to the server that served it. Add your website under **Allowed websites** in the dashboard, or browsers on it are refused. The change takes effect within a second, with no restart.
 
-## Turn on voice, upgrade or remove VoiceCore
+## Upgrade or remove VoiceCore
 
 | Command | What it does |
 |---|---|
 | `npx create-voicecore info` | shows the dashboard's address and password, and whether voice is on |
-| `npx create-voicecore keys` | adds or changes the provider keys, switches free mode to live, and restarts only the services that use them |
 | `npx create-voicecore@latest upgrade` | newer images with the same settings, agents and docs |
 | `npx create-voicecore uninstall` | stops VoiceCore and keeps its data; add `--delete-data` to remove agents, docs and the spend ledger too |
 

@@ -14,6 +14,8 @@ export type AgentRow = { id: string; name: string; enabled: boolean; live_versio
 export type Catalog = { voices: Record<string, string>; llms: string[] };
 export type Usage = { spent_usd: number | null; cap_usd: number | null; today_usd: number | null; daily_cap_usd: number | null };
 export type Key = { id: string; label: string; created: number };
+export type ProviderKey = { source: "dashboard" | "server" | null; last4: string | null };
+export type Providers = { deepgram: ProviderKey; openrouter: ProviderKey; voice: boolean; editable: boolean };
 
 export const DEMO = import.meta.env.VITE_DEMO === "1";
 export const DEMO_REFUSAL = "Read-only demo. Install it to try: npx create-voicecore";
@@ -78,6 +80,9 @@ export const api = {
   latestBuild: (id: string) => call<Build | { status: "none" }>("GET", `/api/agents/${id}/builds/latest`),
   setEnabled: (id: string, on: boolean) => call("POST", `/api/agents/${id}/${on ? "enable" : "disable"}`),
   site: () => call<{ origins: string[] }>("GET", "/api/site"),
+  providers: () => call<Providers>("GET", "/api/providers"),
+  setProviderKey: (provider: string, key: string) => call<Providers>("PUT", `/api/providers/${provider}`, { json: { key } }),
+  removeProviderKey: (provider: string) => call("DELETE", `/api/providers/${provider}`),
   saveSite: (origins: string[]) => call<{ origins: string[] }>("PUT", "/api/site", { json: { origins } }),
   keys: () => call<Key[]>("GET", "/api/keys"),
   createKey: (label: string) => call<Key & { key: string }>("POST", "/api/keys", { json: { label } }),

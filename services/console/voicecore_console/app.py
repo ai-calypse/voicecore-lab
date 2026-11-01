@@ -20,10 +20,10 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from voicecore import agents, budget
+from voicecore import agents, budget, keys
 from voicecore.providers import deepgram_tts, openai_compat_llm
 
-from . import auth, publish, sources
+from . import auth, provider_keys, publish, sources
 from .store import Store
 
 COOKIE = "vc_session"
@@ -86,6 +86,13 @@ class TextIn(BaseModel):
     text: str = Field(min_length=1, max_length=200_000)
 
 
+class ProviderKeyIn(BaseModel):
+    key: str = Field(max_length=300)
+
+
+API_KEY = re.compile(r"[\x21-\x7e]{8,300}")  # printable, no spaces
+
+
 class SiteIn(BaseModel):
     origins: list[str] = Field(default_factory=list, max_length=50)
 
@@ -109,10 +116,12 @@ def default_config(name: str) -> dict:
 def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None, now: Callable[[], float] = time.time,
                run_git=None, ledger: Path | None = None, max_passages: int = publish.MAX_PASSAGES, providers: str = "free",
                voice_url: str = "http://localhost:8080", static_dir: Path | None = None, turnstile_sitekey: str = "",
-               admin_password: str | None = None) -> FastAPI:
+               admin_password: str | None = None, keys_file: Path | None = None,
+               check_key: Callable[[str, str], bool] = provider_keys.check) -> FastAPI:
     """providers: the voice side's mode (free shows the 'voice is off' banner). voice_url: the gateway's public address,
     which the embed snippet loads the widget from. static_dir: the built console UI (apps/console/dist).
-    admin_password: CONSOLE_ADMIN_PASSWORD, the admin's password with no setup link (the installer writes it to .env)."""
+    admin_password: CONSOLE_ADMIN_PASSWORD, the admin's password with no setup link (the installer writes it to .env).
+    keys_file: VOICECORE_KEYS_FILE, where provider keys entered here are kept for the voice side (providers "auto")."""
     data_dir, agents_dir = Path(data_dir), Path(agents_dir)
     store = Store(data_dir / "console.db")
     store.fail_interrupted_builds(now())
@@ -164,9 +173,15 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
         human = f' data-turnstile-sitekey="{html.escape(turnstile_sitekey)}"' if turnstile_sitekey else ""
         return f'<script src="{voice_url}/widget.js" data-agent="{agent_id}"{human} async></script>'
 
+    def voice_on() -> bool:
+        if providers != "auto":
+            return providers == "live"
+        saved = keys.saved(keys_file) if keys_file else {}
+        return all(saved.get(n) or os.environ.get(n) for n in keys.VOICE)
+
     @app.get("/api/status")
     def status():
-        return {"setup_needed": store.admin_password() is None, "providers": providers, "voice_url": voice_url}
+        return {"setup_needed": store.admin_password() is None, "providers": "live" if voice_on() else "free", "voice_url": voice_url}
 
     @app.post("/api/setup", status_code=201)
     def setup(body: SetupIn, request: Request, response: Response):
@@ -199,7 +214,7 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
         return {"admin": True}
 
     @app.get("/api/keys", dependencies=[Depends(admin)])
-    def keys():
+    def api_keys():
         return store.keys()
 
     @app.post("/api/keys", status_code=201, dependencies=[Depends(admin)])
@@ -229,6 +244,46 @@ def create_app(data_dir: Path, agents_dir: Path, setup_token: str | None = None,
         store.set_site_origins(origins)
         publish_site(agents_dir, origins)
         return {"origins": origins}
+
+    # --- provider keys: write-only; the voice side reads them at each new session -------------
+
+    def provider_status() -> dict:
+        saved = keys.saved(keys_file) if keys_file else {}
+        out = {}
+        for provider, name in provider_keys.NAMES.items():
+            value, source = (saved[name], "dashboard") if saved.get(name) else (os.environ.get(name), "server")
+            out[provider] = {"source": source if value else None, "last4": value[-4:] if value else None}
+        return {**out, "voice": voice_on(), "editable": keys_file is not None and providers == "auto"}
+
+    def editable_provider(provider: str) -> str:
+        if provider not in provider_keys.NAMES:
+            raise HTTPException(404, "no such provider")
+        if keys_file is None or providers != "auto":
+            raise HTTPException(409, "This install's provider keys are set on the server, not here.")
+        return provider_keys.NAMES[provider]
+
+    @app.get("/api/providers", dependencies=[Depends(admin)])
+    def get_providers():
+        return provider_status()
+
+    @app.put("/api/providers/{provider}", dependencies=[Depends(admin)])
+    def set_provider_key(provider: str, body: ProviderKeyIn):
+        name, key, label = editable_provider(provider), body.key.strip(), provider_keys.LABELS.get(provider)
+        if not API_KEY.fullmatch(key):
+            raise HTTPException(422, "That doesn't look like an API key.")
+        try:
+            accepted = check_key(provider, key)
+        except provider_keys.Unreachable:
+            raise HTTPException(502, f"Couldn't reach {label} to check the key. Try again.") from None
+        if not accepted:
+            raise HTTPException(422, f"{label} did not accept this key")
+        keys.save(keys_file, {**keys.saved(keys_file), name: key})
+        return provider_status()
+
+    @app.delete("/api/providers/{provider}", status_code=204, dependencies=[Depends(admin)])
+    def remove_provider_key(provider: str):
+        name = editable_provider(provider)
+        keys.save(keys_file, {k: v for k, v in keys.saved(keys_file).items() if k != name})
 
     @app.get("/api/usage", dependencies=[Depends(admin)])
     def usage():

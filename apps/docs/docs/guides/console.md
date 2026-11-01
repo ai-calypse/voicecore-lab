@@ -1,6 +1,6 @@
 ---
 title: Use the console
-description: Manage VoiceCore agents in the console - knowledge sources, publishing and versions, settings and turn-taking, the Test and Embed tabs, allowed websites, API keys and the admin password.
+description: Manage VoiceCore in the console - provider keys, knowledge sources, publishing and versions, settings and turn-taking, the Test and Embed tabs, allowed websites, API keys and the admin password.
 ---
 
 ## What an agent is
@@ -39,6 +39,12 @@ Settings take effect at the next Publish.
 | Model | the language model, from the models VoiceCore has prices for |
 | Key terms | words the speech recognizer should expect, such as product names. Leave out everyday words: a boosted common word gets heard where it wasn't said |
 | Turn-taking | **Quick** (the default) answers after a short pause once the recognizer has a complete sentence. **Patient** waits for 0.8 s of silence, for people who pause mid-sentence; it never cut a question short in VoiceCore's endpoint study, and replies about 450 ms later |
+
+## Provider keys on the Voice page
+
+Voice runs on two providers, billed to your own accounts: Deepgram hears the visitor and speaks the answers, and OpenRouter runs the language model. On the **Voice** page, paste a key for each. VoiceCore checks a key with one free call to its provider before saving it, so a mistyped key is refused there and then. Voice turns on for the next conversation once both keys are saved, with no restart; until then, typed questions get the closest section of the docs.
+
+A saved key is never shown again, only its last four characters. Keys saved here take the place of any set on the server (in `.env` or the environment). **Remove** puts the server's key back, if there is one.
 
 ## Allowed websites, API keys and spend
 

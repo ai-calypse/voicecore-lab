@@ -1,0 +1,12 @@
+{
+  "deepgram": {
+    "last4": "dg01",
+    "source": "dashboard"
+  },
+  "editable": true,
+  "openrouter": {
+    "last4": "or02",
+    "source": "dashboard"
+  },
+  "voice": true
+}

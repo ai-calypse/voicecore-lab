@@ -12,12 +12,13 @@ swap_size_mb = 512       # free: a Publish briefly loads the embedding model (~2
 
 [env]
   VOICECORE_ENV = "prod"
-  PROVIDERS = "live"
+  PROVIDERS = "auto"                              # live with the keys (Fly secrets, or the dashboard's Voice page)
   POOL = "public"                                 # the public sub-cap; over it, answers in text
   VOICECORE_LEDGER = "/data/spend_ledger.json"    # on the volume: prod refuses to start otherwise
   LOG_FORMAT = "json"
   DOCS_URL = "https://voicecore-docs.fly.dev/"
   ORIGINS = "voicecore-docs.fly.dev"              # the docs site; other websites are added in the dashboard
+  VOICECORE_KEYS_FILE = "/data/providers/keys.json"  # keys saved on the dashboard's Voice page, ahead of the secrets
   AGENTS_DIR = "/data/agents"                     # agents published in the dashboard (data-agent="<id>"), next to the default docs agent
   PUBLIC_VOICE_URL = "https://voicecore.fly.dev"  # the dashboard's embed snippets load the widget from here
   TURNSTILE_SITEKEY = "0x4AAAAAAFuRyEEpXO8YZCvW"  # public: the human check the dashboard's snippets carry

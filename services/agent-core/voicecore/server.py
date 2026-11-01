@@ -10,6 +10,7 @@ before any key is set). With --agents-dir, the gateway's X-VoiceCore-Agent heade
 import argparse
 import asyncio
 import contextlib
+import functools
 import json
 import logging
 import os
@@ -23,7 +24,7 @@ from pathlib import Path
 from websockets.asyncio.server import serve
 from websockets.exceptions import ConnectionClosed
 
-from voicecore import agents, budget, logs, metrics, protocol
+from voicecore import agents, budget, keys, logs, metrics, protocol
 from voicecore.answer.engine import AnswerEngine
 from voicecore.answer.extractive import closest_section
 from voicecore.answer.index import Index, embedder
@@ -221,6 +222,12 @@ def policy_for(agent: agents.Agent, policy: Policy) -> Policy:
     return PATIENT if agent.turn_taking == "patient" else policy
 
 
+def session_mode(mode: str) -> str:
+    """auto: live once both voice keys are set (in the dashboard or the environment), else free; decided per session,
+    so keys added in the dashboard turn voice on for the next conversation."""
+    return ("live" if keys.voice_ready() else "free") if mode == "auto" else mode
+
+
 def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Policy = Policy(), llm_opts: dict | None = None,
                 name: str = "VoiceCore", tts: str = "deepgram", make_providers=None, pool: str = "usd",
                 agents_dir: Path | None = None, default_agent: bool = True):
@@ -231,7 +238,7 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
     session without the header gets the --docs-dir corpus (off on customer installs)."""
     sub = "public" if pool == "public" else None
 
-    def default_providers(sid, agent):
+    def default_providers(sid, agent, mode=mode):
         if mode == "live":
             opts = {**(llm_opts or {}), "model": agent.llm} if agent.id else llm_opts
             return live_providers(sid, opts, tts, sub=sub, voice=agent.voice, keyterms=agent.keyterms)
@@ -239,7 +246,7 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
             return mock_billed_providers(sid, sub=sub)
         return inert_providers() if mode == "free" else mock_providers()
 
-    make_providers = make_providers or default_providers
+    injected = make_providers
 
     def find_agent(agent_id):
         if agent_id:
@@ -264,7 +271,8 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
             await ws.send(protocol.event("session.ended", reason="unavailable"))
             await ws.close()
             return
-        greeting = agent.first_message
+        greeting, m = agent.first_message, session_mode(mode)
+        make_providers = injected or functools.partial(default_providers, mode=m)
         try:
             providers, settle = await asyncio.to_thread(make_providers, sid, agent)  # a slow ledger must not stall the loop
         except budget.BudgetUnavailable as e:  # an outage, not a used-up budget: never "come back tomorrow"
@@ -287,7 +295,7 @@ def handler_for(mode: str, trace_dir: Path | None, state: AppState, policy: Poli
                 await ws.close()
                 return
         else:
-            text_only = mode == "free"
+            text_only = m == "free"
             if text_only:
                 greeting = FREE_GREETING
         started, sink, session, reason = time.monotonic(), None, None, None
@@ -356,9 +364,10 @@ def end_reason(close_reason: str | None, draining: bool) -> str:
 
 async def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--providers", choices=["mock", "mock-billed", "free", "live"], default="mock",
+    ap.add_argument("--providers", choices=["mock", "mock-billed", "free", "live", "auto"], default="mock",
                     help="mock-billed: mock providers that reserve and settle small fixed amounts (ledger tests, no spend); "
-                         "free: no paid provider, text answers from the closest docs section")
+                         "free: no paid provider, text answers from the closest docs section; "
+                         "auto: live once both voice keys are set (the dashboard's or the environment's), else free")
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8765)
     ap.add_argument("--trace-dir", type=Path)
@@ -386,7 +395,7 @@ async def main():
         for problem in problems:
             log.error("refusing to start with --env prod: %s", problem)
         raise SystemExit(1)
-    args.policy = args.policy or ("eager" if args.providers == "live" else "fixed")
+    args.policy = args.policy or ("eager" if args.providers in ("live", "auto") else "fixed")
     policy = Policy("eager", asr_silence_ms=200) if args.policy == "eager" else Policy(args.policy)
     llm_opts = {}
     if args.llm_model:
