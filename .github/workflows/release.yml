@@ -65,8 +65,12 @@ jobs:
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
-      - run: npm publish --provenance --access public
+      - name: publish (a version already on npm, such as the hand-published first one, is left as it is)
         working-directory: packages/create-voicecore
+        run: |
+          v=$(node -p 'require("./package.json").version')
+          if npm view "create-voicecore@$v" version >/dev/null 2>&1; then echo "create-voicecore@$v is already on npm"; exit 0; fi
+          npm publish --provenance --access public
 
   install-timed:  # what a new user gets: published images, a clean runner, ten minutes at most
     needs: npm
