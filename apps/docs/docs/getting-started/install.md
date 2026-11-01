@@ -4,6 +4,23 @@ sidebar_label: Add it to your website
 description: A plain-language, step-by-step guide to putting a voice assistant on your website that answers from your own docs, from an empty server to a working button, including costs, spending limits and fixes for common problems.
 ---
 
+## Copy a prompt for your AI agent
+
+Using an AI assistant such as Claude Code, Cursor or ChatGPT? Copy this prompt into it with the button in the box's corner. It points the assistant at this guide; the assistant then walks you through each step, and can add the button to your website's code for you.
+
+```prompt title="Prompt for your AI agent"
+Help me add VoiceCore to my website. VoiceCore is a voice assistant that runs on my own server and answers visitors' questions from my own docs.
+
+Follow this guide, one step at a time:
+https://voicecore-docs.fly.dev/getting-started/install
+
+How to help me:
+- First ask what I already have: a server, a domain name, Deepgram and OpenRouter accounts, and what my website is built with.
+- For each step, tell me exactly what to run or click, wait until I say it is done, and check the result with me before the next step.
+- At step 10, add the snippet from my VoiceCore dashboard to my website's code in this project, in the right place for its framework.
+- Never ask me to paste passwords or API keys into this chat. I will type them into the VoiceCore dashboard myself.
+```
+
 ## What you get at the end
 
 A button in the corner of your website. A visitor clicks it and asks a question out loud, or types it. A spoken answer starts in about a second: [841 ms](../concepts/latency.md) is the median in VoiceCore's own measurements. Every answer comes from your own docs, and links to the part it used. If your docs don't cover the question, the assistant says so instead of making something up.
