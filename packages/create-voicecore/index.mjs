@@ -9,14 +9,14 @@
 // Provider keys, spending limits and allowed websites are set in the dashboard; voice turns on once both keys are there.
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
-import { basename, resolve } from "node:path";
+import { resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 
-export const VERSION = "0.3.0"; // the image tag this installer writes; they are released together
+export const VERSION = "0.3.1"; // the image tag this installer writes; they are released together
 const TEMPLATE = fileURLToPath(new URL("./template/", import.meta.url));
 const LOCAL_ORIGINS = "localhost:*,127.0.0.1:*";
 const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/;
@@ -295,6 +295,7 @@ export async function main(argv = process.argv.slice(2), d = realDeps) {
   }
 }
 
-if (process.argv[1] && basename(fileURLToPath(import.meta.url)) === basename(process.argv[1]).replace(/\.cmd$/, "")) {
+// npx starts it through a node_modules/.bin link, so compare real paths, not names
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().then((code) => process.exit(code));
 }

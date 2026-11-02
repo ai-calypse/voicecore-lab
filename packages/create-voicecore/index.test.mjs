@@ -1,6 +1,7 @@
-import { mkdtempSync, readFileSync, statSync, writeFileSync, existsSync } from "node:fs";
+import { mkdtempSync, readFileSync, statSync, symlinkSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 import { checkDocker, main, parseEnv, renderEnv, VERSION } from "./index.mjs";
@@ -178,6 +179,15 @@ describe("upgrade, keys, uninstall", () => {
     const wipe = deps();
     await main(["uninstall", "--dir", target, "--delete-data"], wipe);
     expect(wipe.calls.filter(composeCall)).toEqual(["docker compose down -v  (in v)"]);
+  });
+});
+
+describe("started the way npx starts it", () => {
+  it("runs through the node_modules/.bin link", () => {
+    const bin = join(dir(), "create-voicecore");
+    symlinkSync(fileURLToPath(new URL("./index.mjs", import.meta.url)), bin);
+    const out = spawnSync(process.execPath, [bin, "--help"], { encoding: "utf8" });
+    expect(out.stdout).toMatch(/^Usage: npx create-voicecore/);
   });
 });
 
