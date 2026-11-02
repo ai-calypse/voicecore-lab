@@ -12,6 +12,7 @@ import uuid
 from pathlib import Path
 
 import pytest
+from websockets.exceptions import ConnectionClosed
 from websockets.sync.client import connect
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -77,7 +78,10 @@ def test_dev_run_answers_and_sigterm_drains_then_exits_0(image):
             docker("kill", "-s", "TERM", name)  # what Fly sends (kill_signal)
             ended = None
             while ended is None and time.time() - t0 < 45:  # the gateway drains up to 25 s, then ends the session
-                ws.send(json.dumps({"type": "ping", "t_client_us": 1}))  # a live client pings every 2 s (heartbeat 10 s)
+                try:
+                    ws.send(json.dumps({"type": "ping", "t_client_us": 1}))  # a live client pings every 2 s (heartbeat 10 s)
+                except ConnectionClosed:
+                    pass  # the server ended the session and closed; its session.ended is still waiting to be read
                 try:
                     m = ws.recv(timeout=2)
                 except TimeoutError:
